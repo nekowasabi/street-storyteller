@@ -17,6 +17,7 @@ Under construction...
 - Validate typo
 - Output writing status for statusline in vim
 - Visualize writing progress
+- Integrate AI for writing(Just a idea)
 
 ## Misc
 
