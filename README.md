@@ -7,6 +7,7 @@ Aid for creating a story.
 ## Feature
 
 * aaaaaaa
+* bbbbbb
 
 ## Misc
 
