@@ -8,8 +8,12 @@ Aid for creating a story.
 
 * aaaaaaa
 * bbbbbb
+* cccccccccccc
+* dddddddddd
 
 ## Misc
 
 Inspired by
 [StreetStoryteller in StrategicStoratosphere](http://motonaga.world.coocan.jp/)
+
+Thank you.
