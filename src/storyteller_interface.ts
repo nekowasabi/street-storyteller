@@ -13,6 +13,8 @@ import { Theme } from "./type/theme.ts";
 // MEMO: 妥協の要素を入れる
 // MEMO: 整合性の要素を入れる（あるシーンでは整合性取れているけど、あるシーンでは取れなくなるのを防ぐには？ユニットテストとして実現したい）
 
+// TODO: 一番単純なところから作っていく——output()でテキストファイルを出力する
+
 export interface StoryTeller {
   // 表現したいことは1つだけに絞る
   purpose: Purpose;
