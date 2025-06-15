@@ -4,7 +4,3 @@ import { runCLI } from "./src/cli.ts";
 if (import.meta.main) {
   await runCLI();
 }
-
-export function testAaa() {
-  return "ok";
-}
