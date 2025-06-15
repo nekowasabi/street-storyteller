@@ -1,8 +1,9 @@
-import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { test } from "../main.ts";
+import { testAaa } from "../main.ts";
+import { assertEquals } from "jsr:@std/assert";
+import { test } from "jsr:@denops/test";
 
 Deno.test("hello world", () => {
-  assertEquals(test(), "ok");
+  assertEquals(testAaa(), "ok");
 });
 
 let a = 1;
