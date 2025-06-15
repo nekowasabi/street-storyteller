@@ -4,20 +4,23 @@
 
 SaC(StoryWriting as Code).
 
-Support for creating a story.
+Support for writing a story.
 
 ## Usage
 
-Under construction...
+`storyteller` is a command line tool for writing stories in a structured way.
 
 ## Feature(TODO)
-
-- Validate a setting of a story in a manuscript
-- Validate a foreshadowing in a manuscript
-- Validate typo
-- Output writing status for statusline in vim
-- Visualize writing progress
-- Integrate AI for writing(Just a idea)
+- [ ] Generate a project directory for storytelling
+- [ ] Extract idea from own datalake with shellscript.
+- [ ] Unit test for story with AI.
+- [ ] Validate a setting of a story in a manuscript 
+- [ ] Validate a foreshadowing in a manuscript
+- [ ] Validate typo with textlint
+- [ ] Output writing status for statusline in vim
+- [ ] Visualize story structure
+- [ ] Integrate AI for writing(Just a idea)
+- [ ] Talk with AI.
 
 ## Misc
 

@@ -1,7 +1,7 @@
 import { StoryTeller } from "./src/storyteller_interface.ts";
 import { Purpose } from "./src/type/purpose.ts";
 
-export function test() {
+export function testAaa() {
   return "ok";
 }
 
