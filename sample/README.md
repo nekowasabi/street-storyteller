@@ -133,6 +133,49 @@ deno run --allow-read validate.ts
 彼は考えた。                <!-- 代名詞参照（文脈依存、信頼度: 0.5-0.7） -->
 ```
 
+## 🤖 LLMベース自然言語テスト
+
+### 概要
+従来の文字列マッチングでは検証できない、物語の意味的・感情的整合性をLLMで検証します。
+
+### テスト実行
+
+```bash
+# LLMテストを実行（モックプロバイダー使用）
+cd sample
+deno run --allow-read tests/llm/run-llm-test.ts
+```
+
+### テスト定義例
+
+```yaml
+# tests/llm/chapter01.llm-test.yaml
+character_tests:
+  - name: "勇者の性格描写の一貫性"
+    assertion: |
+      勇者アレクスは「正義感が強いが、やや天然」
+      という性格設定に沿って描写されているか
+    expected: true
+    severity: error
+```
+
+### 実装ファイル
+
+- `tests/llm/chapter01.llm-test.yaml` - テスト定義
+- `tests/llm/llm-test-runner.ts` - テストランナー
+- `tests/llm/mock-llm-provider.ts` - モックLLMプロバイダー
+- `tests/llm/run-llm-test.ts` - 実行スクリプト
+
+### 本番環境での使用
+
+モックプロバイダーを実際のLLM APIに置き換えてください：
+
+```typescript
+// OpenAI APIを使用する例
+import { OpenAIProvider } from "./openai-provider.ts";
+const llmProvider = new OpenAIProvider(apiKey);
+```
+
 ## 🔮 将来の拡張
 
 1. **LSPサーバー実装**

@@ -1,0 +1,180 @@
+# Chapter 01: LLMベース自然言語テスト定義
+# このファイルは、LLMを使って原稿の品質を自然言語で検証するテストを定義します
+
+metadata:
+  chapter: chapter01
+  title: "旅の始まり"
+  test_suite: "narrative_quality"
+  llm_model: "gpt-4"  # 使用するLLMモデル
+
+# キャラクター描写のテスト
+character_tests:
+  - id: hero_personality_consistency
+    name: "勇者の性格描写の一貫性"
+    assertion: |
+      この章で勇者アレクスは「正義感が強いが、やや天然」という性格設定に沿って描写されているか。
+      特に以下の点を確認してください：
+      1. 困っている人を助けようとする正義感のある行動
+      2. 天然さや純粋さを示すエピソード
+      3. 性格設定に矛盾する行動がないこと
+    expected: true
+    severity: error
+    evaluation_criteria:
+      - 性格の一貫性
+      - 行動の妥当性
+      - 設定との整合性
+
+  - id: heroine_introduction
+    name: "ヒロインの魅力的な登場"
+    assertion: |
+      エリーゼの初登場シーンは読者にとって魅力的で印象的か。
+      以下の観点で評価してください：
+      1. キャラクターの個性が明確に表現されているか
+      2. 「自由奔放で天才魔法使い」という設定が自然に示されているか
+      3. 説明的すぎず、行動や台詞で性格が表現されているか
+    expected: true
+    severity: warning
+
+# 感情・関係性のテスト
+emotional_tests:
+  - id: meeting_naturalness
+    name: "出会いの自然さ"
+    assertion: |
+      勇者とエリーゼの出会いから仲間になるまでの流れが自然で説得力があるか。
+      以下を確認してください：
+      1. 初対面から信頼関係構築への段階が適切か
+      2. お互いに惹かれる理由が明確か
+      3. 急すぎたり不自然な展開になっていないか
+    expected: true
+    severity: error
+
+  - id: emotional_depth
+    name: "感情描写の深さ"
+    assertion: |
+      キャラクターの感情が表面的でなく、深みを持って描かれているか。
+      特に：
+      1. 勇者の旅立ちへの不安と決意が共に描かれているか
+      2. 内面の葛藤や複雑な感情が表現されているか
+      3. 読者が共感できる感情描写になっているか
+    expected: true
+    severity: warning
+
+# 世界観・設定のテスト
+worldbuilding_tests:
+  - id: setting_consistency
+    name: "世界観の一貫性"
+    assertion: |
+      王都の描写が「魔法と剣術が共存する文明国家」という設定と一致しているか。
+      確認点：
+      1. 魔法と剣術の両方の要素が自然に描写されているか
+      2. どちらか一方に偏っていないか
+      3. 両者の共存が違和感なく表現されているか
+    expected: true
+    severity: error
+
+  - id: atmosphere_building
+    name: "雰囲気の構築"
+    assertion: |
+      章全体を通して、冒険の始まりにふさわしい期待感とワクワク感が醸成されているか。
+      同時に、これから待ち受ける困難への緊張感も適切に表現されているか。
+    expected: true
+    severity: info
+
+# 文章技術のテスト
+writing_quality_tests:
+  - id: show_dont_tell
+    name: "Show Don't Tellの実践"
+    assertion: |
+      キャラクターの性格や感情が、直接的な説明ではなく、
+      行動、台詞、描写を通じて表現されているか。
+      説明的な文章が多すぎないか。
+    expected: true
+    severity: warning
+
+  - id: dialogue_naturalness
+    name: "対話の自然さ"
+    assertion: |
+      キャラクター間の対話が自然で、それぞれの個性が反映されているか。
+      以下を評価してください：
+      1. 各キャラクターの口調が一貫しているか
+      2. 対話が状況に適しているか
+      3. 不自然な説明台詞がないか
+    expected: true
+    severity: warning
+
+# プロット・構成のテスト
+plot_tests:
+  - id: chapter_opening
+    name: "章の導入の効果性"
+    assertion: |
+      第1章の冒頭は読者を物語に引き込む力があるか。
+      「勇者は朝日とともに目を覚ました」という始まりは効果的か。
+      ありきたりすぎないか、逆に突飛すぎないか。
+    expected: true
+    severity: info
+
+  - id: foreshadowing
+    name: "伏線の配置"
+    assertion: |
+      今後の展開への伏線が適切に配置されているか。
+      特に：
+      1. 魔王復活の兆候が自然に示唆されているか
+      2. 勇者の出自の秘密がさりげなく示されているか
+      3. 伏線が露骨すぎたり、逆に分かりにくすぎたりしないか
+    expected: true
+    severity: warning
+
+  - id: pacing
+    name: "ペーシング"
+    assertion: |
+      章全体のペース配分が適切か。
+      急ぎすぎたり、逆に冗長になったりしていないか。
+      場面転換がスムーズか。
+    expected: true
+    severity: warning
+
+# 読者体験のテスト
+reader_experience_tests:
+  - id: engagement
+    name: "読者の関心維持"
+    assertion: |
+      この章を読んだ読者が次の章を読みたくなるか。
+      物語への興味と関心が維持されているか。
+      適切なフックや引きが設定されているか。
+    expected: true
+    severity: error
+
+  - id: immersion
+    name: "没入感"
+    assertion: |
+      読者が物語世界に没入できる描写になっているか。
+      五感に訴える描写が適切に使われているか。
+      場面が頭の中で映像として浮かぶか。
+    expected: true
+    severity: info
+
+# テーマ・メッセージのテスト
+theme_tests:
+  - id: theme_introduction
+    name: "テーマの導入"
+    assertion: |
+      物語の中心テーマ（成長、友情、勇気など）が
+      説教臭くならずに自然に導入されているか。
+      読者に押し付けがましくないか。
+    expected: true
+    severity: info
+
+# 総合評価
+overall_evaluation:
+  - id: chapter_quality
+    name: "章全体の品質"
+    assertion: |
+      第1章として総合的に見て、以下の基準を満たしているか：
+      1. プロとして出版できるレベルの品質か
+      2. ターゲット読者（ファンタジー好きの若者）に訴求するか
+      3. 続きを読みたくなる魅力があるか
+      
+      10点満点で評価し、改善点を3つ挙げてください。
+    expected: true
+    severity: error
+    output_format: detailed  # 詳細なフィードバックを要求
