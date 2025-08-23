@@ -2,6 +2,9 @@ import type { ChapterMeta } from "../src/types/chapter.ts";
 import { hero } from "../src/characters/hero.ts";
 import { heroine } from "../src/characters/heroine.ts";
 import { kingdom } from "../src/settings/kingdom.ts";
+import { legendarySword } from "../src/terms/legendary_sword.ts";
+import { adventurerGuild } from "../src/terms/adventurer_guild.ts";
+import { demonLordTitle } from "../src/terms/demon_lord_title.ts";
 
 export const chapter01Meta: ChapterMeta = {
   id: "chapter01",
@@ -72,6 +75,11 @@ export const chapter01Meta: ChapterMeta = {
     "王国": kingdom,
     "エルフィード": kingdom,
     "城門": kingdom,
-    "中央市場": kingdom
+    "中央市場": kingdom,
+    "黎明": legendarySword,
+    "愛剣": legendarySword,
+    "冒険者ギルド": adventurerGuild,
+    "ギルド": adventurerGuild,
+    "魔王": demonLordTitle
   }
 };

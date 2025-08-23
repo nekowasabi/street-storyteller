@@ -23,6 +23,9 @@ storyteller:
 アレクスは静かにつぶやいた。<!-- @hero:explicit confidence:0.95 -->
 18年間過ごしたこの部屋とも、今日でお別れだ。
 
+腰には愛剣「黎明」を佩いている。<!-- @legendary_sword:implicit confidence:0.9 -->
+この剣は村の鍛冶屋から贈られたもので、特別な力はないが、彼にとっては何より大切な相棒である。
+
 ## 王都への道
 
 王都の城門は、朝から多くの人で賑わっていた。<!-- @kingdom:implicit confidence:0.85 -->
@@ -35,6 +38,11 @@ storyteller:
 「私はエリーゼ。魔法使いよ」<!-- @heroine:explicit confidence:1.0 -->
 
 彼女の手には、高位の魔法使いしか持てないはずの杖が握られていた。
+
+「あら、面白そうな依頼があるわね」
+
+エリーゼは冒険者ギルドの掲示板を指差した。<!-- @adventurer_guild:implicit confidence:0.85 -->
+そこには「魔王復活の兆候調査」という不穏な文字が。<!-- @demon_lord_title:implicit confidence:0.95 -->
 
 ## 運命の出会い
 
