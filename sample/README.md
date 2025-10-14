@@ -75,6 +75,22 @@ sample/
 deno run --allow-read validate.ts
 ```
 
+### CLIテンプレート生成の統合フロー
+
+```bash
+# ルートでCLIを実行し、新しいプロジェクトを生成
+deno run --allow-read --allow-write main.ts generate \
+  --name demo-story \
+  --template novel \
+  --path ./generated
+
+# 生成後、.storyteller.json が自動作成され、
+# マイグレーションガイドとTDDガイドが標準出力へ表示されます
+```
+
+生成された `.storyteller.json` にはスキーマバージョンが記録され、
+旧構成プロジェクトをアップグレードする際は CLI のマイグレーションガイドに従います。
+
 ### 期待される出力
 
 ```
