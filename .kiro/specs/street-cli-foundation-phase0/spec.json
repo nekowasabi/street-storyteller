@@ -1,20 +1,20 @@
 {
   "feature_name": "street-cli-foundation-phase0",
   "created_at": "2025-10-14T12:53:24Z",
-  "updated_at": "2025-10-14T13:00:24Z",
+  "updated_at": "2025-10-14T13:11:09Z",
   "language": "ja",
-  "phase": "design-generated",
+  "phase": "tasks-generated",
   "approvals": {
     "requirements": {
       "generated": true,
-      "approved": true
+      "approved": false
     },
     "design": {
       "generated": true,
       "approved": false
     },
     "tasks": {
-      "generated": false,
+      "generated": true,
       "approved": false
     }
   },

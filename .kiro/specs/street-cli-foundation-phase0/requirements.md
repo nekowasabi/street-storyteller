@@ -45,7 +45,7 @@ Street StorytellerのPhase 0では、将来の機能拡張を支えるCLI基盤�
 **Objective:** As a パワーユーザー, I want グローバルとプロジェクト単位で設定を管理したいので、環境に応じた動作を柔軟に切り替えられる。
 
 #### Acceptance Criteria
-1. WHEN CLIが`~/.storytellerrc`を検出すると THEN Storyteller CLI基盤 SHALL グローバル設定を読み込み、デフォルトのテンプレートや出力先を初期化する。
-2. WHEN CLIがカレントプロジェクトの`.storytellerrc`を検出すると THEN Storyteller CLI基盤 SHALL グローバル設定を上書きする優先度でプロジェクト設定を適用する。
+1. WHEN CLIが`~/storyteller.json`を検出すると THEN Storyteller CLI基盤 SHALL グローバル設定を読み込み、デフォルトのテンプレートや出力先を初期化する。
+2. WHEN CLIがカレントプロジェクトの`storyteller.json`を検出すると THEN Storyteller CLI基盤 SHALL グローバル設定を上書きする優先度でプロジェクト設定を適用する。
 3. IF 関連する環境変数が設定されている場合 THEN Storyteller CLI基盤 SHALL 設定ファイルより高い優先度で値を適用し、実際に使用した値をヘルプまたはログ出力で確認できるようにする。
 4. WHILE CLIが設定値を参照している間 THE Storyteller CLI基盤 SHALL 不正な設定項目を検知した際にデフォルトへフォールバックし、警告メッセージを出力する。

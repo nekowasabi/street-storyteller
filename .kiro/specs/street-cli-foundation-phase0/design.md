@@ -33,8 +33,8 @@ graph TD
     D --> G[ヘルプ/エラーハンドラ]
     D --> H[補完エンジン]
     D --> I[設定リゾルバ]
-    I --> J[グローバル設定(~/.storytellerrc)]
-    I --> K[プロジェクト設定(.storytellerrc)]
+    I --> J[グローバル設定(~/storyteller.json)]
+    I --> K[プロジェクト設定(storyteller.json)]
     I --> L[環境変数]
 ```
 
@@ -213,7 +213,7 @@ interface ResolvedConfig {
 - **Validation**: 不正値時は`ConfigError`を返し、デフォルトにフォールバック。
 
 ## Data Models
-- 設定ファイル(`.storytellerrc`)はJSON構造で保存し、`ResolvedConfig`型で表現する。
+- 設定ファイル(`storyteller.json`)はJSON構造で保存し、`ResolvedConfig`型で表現する。
 - 環境変数は`STORYTELLER_*`プレフィックスで表現し、ConfigResolverが正規化する。
 
 ## Error Handling
