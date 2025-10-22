@@ -6,7 +6,7 @@
     "@std/cli": "jsr:@std/cli@^1.0.0"
   },
   "tasks": {
-    "build": "deno compile --allow-write --allow-read --output storyteller main.ts",
+    "build": "deno compile --allow-write --allow-env --allow-read --output storyteller main.ts",
     "generate": "deno run --allow-write --allow-read main.ts generate",
     "test": "deno test --allow-write --allow-read",
     "test:cli": "deno test --allow-read --allow-write tests/cli_test.ts tests/command_registry_test.ts",
