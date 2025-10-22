@@ -1,8 +1,10 @@
 import type { CommandRegistry } from "../command_registry.ts";
-import { generateCommandHandler } from "./generate.ts";
-import { helpCommandHandler } from "./help.ts";
+import { registerCommandDescriptor } from "../command_registry.ts";
+import { generateCommandDescriptor } from "./generate.ts";
+import { createHelpDescriptor } from "./help.ts";
 
 export function registerCoreModules(registry: CommandRegistry): void {
-  registry.register(generateCommandHandler);
-  registry.register(helpCommandHandler);
+  registerCommandDescriptor(registry, generateCommandDescriptor);
+  const helpDescriptor = createHelpDescriptor(registry);
+  registerCommandDescriptor(registry, helpDescriptor);
 }

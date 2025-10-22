@@ -60,6 +60,73 @@ Deno.test("CLI - help command works", async () => {
     assertEquals(logOutput.includes("Street Storyteller"), true);
     assertEquals(logOutput.includes("USAGE:"), true);
     assertEquals(logOutput.includes("COMMANDS:"), true);
+    assertEquals(logOutput.includes("generate (aliases: g)"), true);
+    assertEquals(logOutput.includes("Generate a new story project scaffold."), true);
+    assertEquals(logOutput.includes("help (aliases: h)"), true);
+  } finally {
+    teardownMocks();
+  }
+});
+
+Deno.test("CLI - help command displays detailed info for specific command", async () => {
+  setupMocks();
+
+  try {
+    mockArgs = ["help", "generate"];
+
+    const originalLog = console.log;
+    let logOutput = "";
+    console.log = (message: string) => {
+      logOutput += message;
+    };
+
+    try {
+      await runCLI();
+    } catch (_error) {
+      assertEquals(mockExitCode, null);
+    }
+
+    console.log = originalLog;
+    assertEquals(logOutput.includes("generate — Generate a new story project scaffold."), true);
+    assertEquals(logOutput.includes("Usage:"), true);
+    assertEquals(logOutput.includes("--name, -n"), true);
+    assertEquals(logOutput.includes("Required"), true);
+    assertEquals(logOutput.includes("Examples:"), true);
+  } finally {
+    teardownMocks();
+  }
+});
+
+Deno.test("CLI - help command suggests alternatives for unknown command", async () => {
+  setupMocks();
+
+  try {
+    mockArgs = ["help", "generte"];
+
+    const originalError = console.error;
+    const originalLog = console.log;
+    let errorOutput = "";
+    let logOutput = "";
+
+    console.error = (message: string) => {
+      errorOutput += message;
+    };
+    console.log = (message: string) => {
+      logOutput += message;
+    };
+
+    try {
+      await runCLI();
+    } catch (_error) {
+      assertEquals(mockExitCode, null);
+    }
+
+    console.error = originalError;
+    console.log = originalLog;
+
+    assertEquals(errorOutput.includes('Unknown command "generte"'), true);
+    assertEquals(logOutput.includes("Did you mean"), true);
+    assertEquals(logOutput.includes("generate"), true);
   } finally {
     teardownMocks();
   }

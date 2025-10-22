@@ -8,10 +8,17 @@ import type {
 
 export abstract class BaseCliCommand implements CommandHandler {
   abstract readonly name: string;
+  readonly path?: readonly string[];
+  readonly aliases?: readonly string[];
   readonly dependencies?: readonly string[];
 
-  constructor(dependencies?: readonly string[]) {
+  constructor(
+    dependencies?: readonly string[],
+    options?: { path?: readonly string[]; aliases?: readonly string[] },
+  ) {
     this.dependencies = dependencies;
+    this.path = options?.path;
+    this.aliases = options?.aliases;
   }
 
   async execute(context: CommandContext): Promise<Result<unknown, CommandExecutionError>> {
