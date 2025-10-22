@@ -1,6 +1,44 @@
 import { assertEquals, assertFalse } from "./asserts.ts";
 import { createCommandRegistry } from "../src/cli/command_registry.ts";
 import { CommandHandler, CommandContext } from "../src/cli/types.ts";
+import type { AppConfig } from "../src/shared/config/schema.ts";
+import type { ConfigurationManagerRef } from "../src/cli/types.ts";
+
+function createStubLogger() {
+  return {
+    scope: "test",
+    log() {},
+    trace() {},
+    debug() {},
+    info() {},
+    warn() {},
+    error() {},
+    fatal() {},
+    withContext() {
+      return this;
+    },
+  };
+}
+
+function createStubConfig(): ConfigurationManagerRef {
+  const config: AppConfig = {
+    runtime: { environment: "test", paths: {} },
+    logging: {
+      level: "info",
+      format: "human",
+      color: false,
+      timestamps: false,
+    },
+    features: {},
+    cache: { defaultTtlSeconds: 900 },
+    external: { providers: [] },
+  };
+  return {
+    async resolve() {
+      return config;
+    },
+  };
+}
 
 const noopContext: CommandContext = {
   presenter: {
@@ -9,7 +47,9 @@ const noopContext: CommandContext = {
     showWarning() {},
     showError() {},
   },
-};
+  config: createStubConfig(),
+  logger: createStubLogger(),
+}; 
 
 function makeHandler(name: string, dependencies: string[] = []): CommandHandler {
   return {

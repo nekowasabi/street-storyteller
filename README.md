@@ -46,6 +46,12 @@ Create a new story project with structured directories and template files.
 - `--name, -n <name>` - Project name (required)
 - `--template, -t <type>` - Template type (default: basic)
 - `--path, -p <path>` - Custom project path (optional)
+- `--log-level <level>` - Override logging level (`trace`-`fatal`)
+- `--log-format <human|json>` - Choose console log format
+- `--environment <env>` - Set runtime environment (`development`, `test`, `production`)
+- `--cache-ttl <seconds>` - Adjust default cache TTL
+- `--provider <id>` - Set default external provider id
+- `--config <path>` - Provide explicit configuration file
 
 #### Other Commands
 
@@ -156,6 +162,9 @@ deno run story.ts
 ```bash
 # Run tests
 deno task test
+
+# Show CLI help with verbose logging
+deno run main.ts --log-level debug help
 
 # Format code
 deno fmt

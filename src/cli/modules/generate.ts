@@ -1,5 +1,6 @@
 import { ok, err } from "../../shared/result.ts";
-import type { CommandExecutionError, CommandHandler, CommandContext } from "../types.ts";
+import type { CommandExecutionError, CommandContext } from "../types.ts";
+import { BaseCliCommand } from "../base_command.ts";
 import { generateStoryProject, type GenerateOptions } from "../../commands/generate.ts";
 
 function parseGenerateOptions(context: CommandContext): GenerateOptions | CommandExecutionError {
@@ -37,7 +38,13 @@ async function executeGenerate(context: CommandContext) {
   }
 
   try {
+    context.logger.info("Generating project", {
+      name: parsed.name,
+      template: parsed.template,
+      path: parsed.path,
+    });
     await generateStoryProject(parsed);
+    context.logger.info("Project generated", { name: parsed.name });
     return ok(undefined);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -48,10 +55,16 @@ async function executeGenerate(context: CommandContext) {
   }
 }
 
-export const generateCommandHandler: CommandHandler = {
-  name: "generate",
-  dependencies: [],
-  async execute(context) {
+class GenerateCommand extends BaseCliCommand {
+  readonly name = "generate" as const;
+
+  constructor() {
+    super([]);
+  }
+
+  protected async handle(context: CommandContext) {
     return executeGenerate(context);
-  },
-};
+  }
+}
+
+export const generateCommandHandler = new GenerateCommand();

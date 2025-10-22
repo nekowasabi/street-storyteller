@@ -1,5 +1,6 @@
 import { ok } from "../../shared/result.ts";
-import type { CommandHandler } from "../types.ts";
+import type { CommandContext } from "../types.ts";
+import { BaseCliCommand } from "../base_command.ts";
 
 const HELP_MESSAGE = `
 🎭 Street Storyteller - Story Writing as Code
@@ -27,10 +28,13 @@ EXAMPLES:
   storyteller g -n "screenplay" -t screenplay -p ~/stories
 `;
 
-export const helpCommandHandler: CommandHandler = {
-  name: "help",
-  async execute({ presenter }) {
+class HelpCommand extends BaseCliCommand {
+  readonly name = "help" as const;
+
+  protected async handle({ presenter }: CommandContext) {
     presenter.showInfo(HELP_MESSAGE);
     return ok(undefined);
-  },
-};
+  }
+}
+
+export const helpCommandHandler = new HelpCommand();

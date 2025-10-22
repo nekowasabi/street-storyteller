@@ -1,5 +1,11 @@
-import { assertEquals } from "./asserts.ts";
+import { assert, assertEquals } from "./asserts.ts";
 import { runCLI } from "../src/cli.ts";
+import { createConsolePresenter } from "../src/cli/output_presenter.ts";
+import type {
+  ConfigurationManagerRef,
+  LoggingServiceRef,
+} from "../src/cli/types.ts";
+import type { AppConfig } from "../src/shared/config/schema.ts";
 
 // Mock Deno.args and Deno.exit for testing
 let mockArgs: string[] = [];
@@ -164,6 +170,81 @@ Deno.test("CLI - short commands work", async () => {
 
     console.log = originalLog;
     assertEquals(logOutput.includes("Street Storyteller"), true);
+  } finally {
+    teardownMocks();
+  }
+});
+
+Deno.test("CLI boot sequence resolves config before logging and command", async () => {
+  setupMocks();
+
+  try {
+    mockArgs = ["help"];
+
+    const operations: string[] = [];
+    const presenter = createConsolePresenter();
+
+    const config: AppConfig = {
+      runtime: { environment: "test", paths: {} },
+      logging: {
+        level: "info",
+        format: "human",
+        color: false,
+        timestamps: false,
+      },
+      features: {},
+      cache: { defaultTtlSeconds: 900 },
+      external: { providers: [] },
+    };
+
+    const configManager: ConfigurationManagerRef = {
+      async resolve() {
+        operations.push("config");
+        return config;
+      },
+    };
+
+    const loggingService: LoggingServiceRef & { initialized: boolean } = {
+      initialized: false,
+      async initialize() {
+        await configManager.resolve();
+        operations.push("logging");
+        this.initialized = true;
+      },
+      getLogger(scope: string) {
+        assert(this.initialized, "Logger requested before initialization");
+        return {
+          scope,
+          log() {},
+          trace() {},
+          debug() {},
+          info() {},
+          warn() {},
+          error() {},
+          fatal() {},
+          withContext() {
+            return this;
+          },
+        };
+      },
+    };
+
+    try {
+      await runCLI({
+        presenter,
+        createConfigurationManager: () => configManager,
+        loggingServiceFactory: () => loggingService,
+      });
+    } catch (_error) {
+      assertEquals(mockExitCode, null);
+    }
+
+    const configIndex = operations.indexOf("config");
+    const loggingIndex = operations.indexOf("logging");
+    assert(configIndex !== -1);
+    assert(loggingIndex !== -1);
+    assert(configIndex < loggingIndex);
+    assertEquals(loggingService.initialized, true);
   } finally {
     teardownMocks();
   }
