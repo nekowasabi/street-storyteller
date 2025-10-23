@@ -109,3 +109,36 @@ export type AppConfigInput = z.input<typeof AppConfigSchema>;
 export function parseAppConfig(input: unknown): AppConfig {
   return AppConfigSchema.parse(input);
 }
+
+/**
+ * プロジェクトメタデータスキーマ（Phase 2: バージョン管理）
+ */
+
+export const ProjectVersionSchema = z.object({
+  version: z.string(),
+  storytellerVersion: z.string(),
+  created: z.coerce.date(),
+  lastUpdated: z.coerce.date(),
+});
+
+export type ProjectVersion = z.infer<typeof ProjectVersionSchema>;
+
+export const CompatibilityModeSchema = z.enum(["strict", "loose"]);
+
+export type CompatibilityMode = z.infer<typeof CompatibilityModeSchema>;
+
+export const ProjectFeaturesSchema = z.record(z.string(), z.boolean()).default({});
+
+export type ProjectFeatures = z.infer<typeof ProjectFeaturesSchema>;
+
+export const ProjectMetadataSchema = z.object({
+  version: ProjectVersionSchema,
+  features: ProjectFeaturesSchema,
+  compatibility: CompatibilityModeSchema.default("strict"),
+});
+
+export type ProjectMetadata = z.infer<typeof ProjectMetadataSchema>;
+
+export function parseProjectMetadata(input: unknown): ProjectMetadata {
+  return ProjectMetadataSchema.parse(input);
+}
