@@ -14,7 +14,7 @@ import type {
   StorytellerPlugin,
 } from "../core/plugin_system.ts";
 import type { Character } from "../type/v2/character.ts";
-import { DetailsPlugin } from "../plugins/features/details/plugin.ts";
+import { DetailsPlugin, type SeparateFilesResult } from "../plugins/features/details/plugin.ts";
 import type { DetailField } from "../plugins/features/details/templates.ts";
 
 export class ElementService {
@@ -61,6 +61,33 @@ export class ElementService {
     // elementTypeに応じて処理を分岐（現在はcharacterのみ）
     if (elementType === "character") {
       return await detailsPlugin.addDetails(element, fields);
+    }
+
+    return err(new Error(`Unsupported element type: ${elementType}`));
+  }
+
+  /**
+   * 要素の詳細情報をファイルに分離する
+   *
+   * @param elementType 要素タイプ（現在は"character"のみ対応）
+   * @param element 対象の要素
+   * @param fields 分離するフィールド（"all"で全フィールド）
+   * @param projectRoot プロジェクトルートパス
+   * @returns ファイル分離結果
+   */
+  async separateFilesForElement(
+    elementType: string,
+    element: Character,
+    fields: DetailField[] | "all",
+    projectRoot: string,
+  ): Promise<Result<SeparateFilesResult, Error>> {
+    const detailsPlugin = this.getDetailsPlugin();
+    if (!detailsPlugin) {
+      return err(new Error("DetailsPlugin not found in registry"));
+    }
+
+    if (elementType === "character") {
+      return await detailsPlugin.separateFiles(element, fields, projectRoot);
     }
 
     return err(new Error(`Unsupported element type: ${elementType}`));

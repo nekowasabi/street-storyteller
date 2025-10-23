@@ -12,6 +12,7 @@ import type {
 } from "../../../core/plugin_system.ts";
 import type { Character, CharacterDetails, CharacterDevelopment } from "../../../type/v2/character.ts";
 import { getTemplate, getAvailableFields, isValidField, type DetailField } from "./templates.ts";
+import { generateMarkdownContent } from "./markdown.ts";
 
 export class DetailsPlugin implements FeaturePlugin {
   readonly meta: PluginMetadata = {
@@ -100,4 +101,124 @@ export class DetailsPlugin implements FeaturePlugin {
   getAvailableFields(): DetailField[] {
     return getAvailableFields();
   }
+
+  /**
+   * インラインの詳細情報をMarkdownファイルに分離する
+   *
+   * @param character 対象のCharacter要素
+   * @param fields 分離するフィールド（"all"で全フィールド）
+   * @param projectRoot プロジェクトルートパス
+   * @returns 更新されたCharacterと生成するファイル情報
+   */
+  async separateFiles(
+    character: Character,
+    fields: DetailField[] | "all",
+    projectRoot: string,
+  ): Promise<Result<SeparateFilesResult, Error>> {
+    try {
+      const currentDetails = character.details ?? {};
+
+      // "all"の場合、インラインの文字列フィールドを全て分離
+      let targetFields: DetailField[];
+      if (fields === "all") {
+        targetFields = Object.entries(currentDetails)
+          .filter(([_, value]) => typeof value === "string")
+          .map(([key, _]) => key as DetailField)
+          .filter((key) => isValidField(key));
+      } else {
+        // 無効なフィールド名をチェック
+        const invalidFields = fields.filter((f) => !isValidField(f));
+        if (invalidFields.length > 0) {
+          return err(new Error(`Invalid field names: ${invalidFields.join(", ")}`));
+        }
+        targetFields = fields;
+      }
+
+      const newDetails: CharacterDetails = { ...currentDetails };
+      const filesToCreate: FileToCreate[] = [];
+
+      for (const field of targetFields) {
+        const currentValue = newDetails[field as keyof CharacterDetails];
+
+        // 既にファイル参照の場合はスキップ
+        if (typeof currentValue === "object" && currentValue !== null && "file" in currentValue) {
+          continue;
+        }
+
+        // フィールドが存在しない場合はエラー
+        if (currentValue === undefined) {
+          return err(new Error(`Field '${field}' does not exist in character details`));
+        }
+
+        // development は CharacterDevelopment 型なので対象外
+        if (field === "development") {
+          continue;
+        }
+
+        // 文字列の場合のみ分離
+        if (typeof currentValue !== "string") {
+          continue;
+        }
+
+        // ファイルパスを生成
+        const relativePath = `characters/${character.id}/${field}.md`;
+
+        // Markdownコンテンツを生成
+        const content = generateMarkdownContent(field, currentValue, {
+          characterId: character.id,
+          characterName: character.name,
+        });
+
+        // ファイル参照に変更
+        if (field === "appearance") {
+          newDetails.appearance = { file: relativePath };
+        } else if (field === "personality") {
+          newDetails.personality = { file: relativePath };
+        } else if (field === "backstory") {
+          newDetails.backstory = { file: relativePath };
+        } else if (field === "relationships_detail") {
+          newDetails.relationships_detail = { file: relativePath };
+        } else if (field === "goals") {
+          newDetails.goals = { file: relativePath };
+        }
+
+        filesToCreate.push({
+          path: relativePath,
+          content,
+        });
+      }
+
+      const updatedCharacter: Character = {
+        ...character,
+        details: newDetails,
+      };
+
+      return ok({
+        character: updatedCharacter,
+        filesToCreate,
+      });
+    } catch (error) {
+      return err(error instanceof Error ? error : new Error(String(error)));
+    }
+  }
 }
+
+/**
+ * ファイル分離の結果
+ */
+export type SeparateFilesResult = {
+  /** 更新されたCharacter */
+  character: Character;
+  /** 生成するファイルの情報 */
+  filesToCreate: FileToCreate[];
+};
+
+/**
+ * 生成するファイルの情報
+ */
+export type FileToCreate = {
+  /** ファイルパス（プロジェクトルートからの相対パス） */
+  path: string;
+  /** ファイルの内容 */
+  content: string;
+};

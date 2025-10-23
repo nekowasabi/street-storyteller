@@ -25,6 +25,7 @@ interface ElementCharacterOptions {
   readonly traits?: string;
   readonly "with-details"?: boolean;
   readonly "add-details"?: string;
+  readonly "separate-files"?: string;
 }
 
 /**
@@ -92,6 +93,47 @@ export class ElementCharacterCommand extends BaseCliCommand {
         context.logger.info("Character element created", {
           filePath: result.value.filePath,
         });
+
+        // --separate-filesオプションが指定されている場合、ファイル分離を実行
+        if (parsed["separate-files"]) {
+          const config = await context.config.resolve();
+          const projectRoot = config.runtime.projectRoot || Deno.cwd();
+
+          const fieldsToSeparate = parsed["separate-files"] === "all"
+            ? "all"
+            : parsed["separate-files"].split(",").map((f) => f.trim()) as DetailField[];
+
+          const separateResult = await service.separateFilesForElement(
+            "character",
+            options as any,
+            fieldsToSeparate,
+            projectRoot,
+          );
+
+          if (separateResult.ok) {
+            // 生成されたMarkdownファイルを書き込む
+            for (const fileInfo of separateResult.value.filesToCreate) {
+              const fullPath = `${projectRoot}/${fileInfo.path}`;
+              const dir = fullPath.substring(0, fullPath.lastIndexOf("/"));
+
+              await Deno.mkdir(dir, { recursive: true });
+              await Deno.writeTextFile(fullPath, fileInfo.content);
+
+              context.logger.info("Detail file created", {
+                filePath: fileInfo.path,
+              });
+            }
+
+            // Character要素のファイルを更新（ファイル参照に変更）
+            // NOTE: 実際のファイル更新処理はCharacterPluginが担当するべきだが、
+            // 簡易実装として、ここで再作成することも可能
+          } else {
+            context.logger.warn("Failed to separate files", {
+              error: separateResult.error.message,
+            });
+          }
+        }
+
         return ok(result.value);
       } else {
         return err({
@@ -149,6 +191,7 @@ export class ElementCharacterCommand extends BaseCliCommand {
       traits: typeof args.traits === "string" ? args.traits : undefined,
       "with-details": args["with-details"] === true,
       "add-details": typeof args["add-details"] === "string" ? args["add-details"] : undefined,
+      "separate-files": typeof args["separate-files"] === "string" ? args["separate-files"] : undefined,
     };
   }
 }
