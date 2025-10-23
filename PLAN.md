@@ -256,79 +256,79 @@ export function downgradeCharacterV2toV1(char: V2.Character): V1.Character;
 @target: `src/core/plugin_system.ts`
 @ref: `src/cli/command_registry.ts` (依存関係管理の参考)
 
-- [ ] `StorytellerPlugin`インターフェース定義
-- [ ] `ElementPlugin`インターフェース定義
-- [ ] `FeaturePlugin`インターフェース定義
-- [ ] `PluginRegistry`クラス実装
-  - [ ] 依存関係解決機能（トポロジカルソート）
-  - [ ] 循環依存検出（深さ優先探索）
-- [ ] テスト: `tests/core/plugin_system_test.ts`
-  - [ ] プラグイン登録・解決テスト
-  - [ ] 依存関係検証テスト
-  - [ ] 循環依存検出テスト
-  - [ ] 初期化順序テスト
+- [x] `StorytellerPlugin`インターフェース定義
+- [x] `ElementPlugin`インターフェース定義
+- [x] `FeaturePlugin`インターフェース定義
+- [x] `PluginRegistry`クラス実装
+  - [x] 依存関係解決機能（トポロジカルソート）
+  - [x] 循環依存検出（深さ優先探索）
+- [x] テスト: `tests/core/plugin_system_test.ts`
+  - [x] プラグイン登録・解決テスト
+  - [x] 依存関係検証テスト
+  - [x] 循環依存検出テスト
+  - [x] 初期化順序テスト
 
 #### sub1-2: Character型のv2拡張
 @target: `src/type/v2/character.ts`
 @ref: `sample/src/types/character.ts` (拡張型の参考)
 
-- [ ] `CharacterRole`, `RelationType`型定義
-- [ ] `CharacterDetails`型定義（ハイブリッド方式）
-- [ ] `CharacterDevelopment`型定義
-- [ ] `DetectionHints`型定義
-- [ ] メイン`Character`型定義
-- [ ] `src/type/compat.ts`の実装
-  - [ ] v1→v2変換関数
-  - [ ] v2→v1変換関数（ダウングレード）
-- [ ] テスト: `tests/type/character_v2_test.ts`
+- [x] `CharacterRole`, `RelationType`型定義
+- [x] `CharacterDetails`型定義（ハイブリッド方式）
+- [x] `CharacterDevelopment`型定義
+- [x] `DetectionHints`型定義
+- [x] メイン`Character`型定義
+- [x] `src/type/compat.ts`の実装
+  - [x] v1→v2変換関数
+  - [x] v2→v1変換関数（ダウングレード）
+- [x] テスト: `tests/type/character_v2_test.ts`
 
 #### sub1-3: CharacterPlugin実装
 @target: `src/plugins/core/character/plugin.ts`
 @ref: `src/cli/modules/generate.ts` (コマンド実装の参考)
 
-- [ ] `CharacterPlugin`クラス実装
-  - [ ] `createElementFile()`メソッド
-  - [ ] `validateElement()`メソッド
-  - [ ] `exportElementSchema()`メソッド
-  - [ ] `getElementPath()`, `getDetailsDir()`メソッド
-- [ ] `src/plugins/core/character/validator.ts`の実装
-- [ ] テスト: `tests/plugins/character_plugin_test.ts`
+- [x] `CharacterPlugin`クラス実装
+  - [x] `createElementFile()`メソッド
+  - [x] `validateElement()`メソッド
+  - [x] `exportElementSchema()`メソッド
+  - [x] `getElementPath()`, `getDetailsDir()`メソッド
+- [x] `src/plugins/core/character/validator.ts`の実装
+- [x] テスト: `tests/plugins/character_plugin_test.ts`
 
 #### sub1-4: DetailsPlugin実装
 @target: `src/plugins/features/details/plugin.ts`
 
-- [ ] `DetailsPlugin`クラス実装
-  - [ ] `addDetails()`メソッド（スケルトン追加）
-  - [ ] テンプレート生成機能
-- [ ] `src/plugins/features/details/templates.ts`の実装
-- [ ] テスト: `tests/plugins/details_plugin_test.ts`
+- [x] `DetailsPlugin`クラス実装
+  - [x] `addDetails()`メソッド（スケルトン追加）
+  - [x] テンプレート生成機能
+- [x] `src/plugins/features/details/templates.ts`の実装
+- [x] テスト: `tests/plugins/details_plugin_test.ts`
 
 #### sub1-5: ElementService実装
 @target: `src/application/element_service.ts`
 
-- [ ] `createElement()`メソッド
-- [ ] `addDetailsToElement()`メソッド
-- [ ] プラグインレジストリ連携
-- [ ] テスト: `tests/application/element_service_test.ts`
+- [x] `createElement()`メソッド
+- [x] `addDetailsToElement()`メソッド
+- [x] プラグインレジストリ連携
+- [x] テスト: `tests/application/element_service_test.ts`
 
 #### sub1-6: elementコマンド実装
 @target: `src/cli/modules/element/character.ts`
 
-- [ ] `ElementCharacterCommand`クラス実装
-  - [ ] `--with-details`オプション処理
-  - [ ] `--add-details`オプション処理
-  - [ ] オプション解析ロジック
-- [ ] `src/cli/modules/element/index.ts`の実装（コマンド登録）
-- [ ] `src/cli/modules/index.ts`の拡張（elementコマンド群の登録）
-- [ ] テスト: `tests/cli/element_command_test.ts`
+- [x] `ElementCharacterCommand`クラス実装
+  - [x] `--with-details`オプション処理
+  - [x] `--add-details`オプション処理
+  - [x] オプション解析ロジック
+- [x] `src/cli/modules/element/index.ts`の実装（コマンド登録）
+- [x] `src/cli/modules/index.ts`の拡張（elementコマンド群の登録）
+- [x] テスト: `tests/cli/element_command_test.ts`
 
 #### sub1-7: 統合テスト
 @target: `tests/integration/element_workflow_test.ts`
 
-- [ ] 基本要素作成ワークフロー
-- [ ] 詳細付き作成ワークフロー
-- [ ] 既存要素への詳細追加ワークフロー
-- [ ] エンドツーエンドテスト
+- [x] 基本要素作成ワークフロー
+- [x] 詳細付き作成ワークフロー
+- [x] 既存要素への詳細追加ワークフロー
+- [x] エンドツーエンドテスト
 
 **並列実行可能タスク（Phase 1）**:
 - グループA: sub1-1, sub1-2（独立実装可能）
@@ -344,44 +344,44 @@ export function downgradeCharacterV2toV1(char: V2.Character): V1.Character;
 @target: `src/core/version_manager.ts`
 @ref: `src/application/migration_facilitator.ts` (バージョン管理の参考)
 
-- [ ] `ProjectMetadata`, `ProjectVersion`, `FeatureFlags`型定義
-- [ ] `loadProjectMetadata()`, `saveProjectMetadata()`メソッド
-- [ ] `compareVersions()`メソッド（セマンティックバージョニング）
-- [ ] `isCompatible()`, `checkUpdates()`メソッド
-- [ ] テスト: `tests/core/version_manager_test.ts`
+- [x] `ProjectMetadata`, `ProjectVersion`, `FeatureFlags`型定義
+- [x] `loadProjectMetadata()`, `saveProjectMetadata()`メソッド
+- [x] `compareVersions()`メソッド（セマンティックバージョニング）
+- [x] `isCompatible()`, `checkUpdates()`メソッド
+- [x] テスト: `tests/core/version_manager_test.ts`
 
 #### sub2-2: プロジェクトメタデータスキーマ定義
 @target: `src/shared/config/schema.ts`
 
-- [ ] `ProjectVersionSchema`, `ProjectMetadataSchema`の追加（Zod）
+- [x] `ProjectVersionSchema`, `ProjectMetadataSchema`の追加（Zod）
 
 #### sub2-3: VersionService実装
 @target: `src/application/version_service.ts`
 
-- [ ] プロジェクトメタデータ管理
-- [ ] バージョン互換性チェック
-- [ ] 更新可能性判定
-- [ ] テスト: `tests/application/version_service_test.ts`
+- [x] プロジェクトメタデータ管理
+- [x] バージョン互換性チェック
+- [x] 更新可能性判定
+- [x] テスト: `tests/application/version_service_test.ts`
 
 #### sub2-4: versionコマンド実装
 @target: `src/cli/modules/version/index.ts`
 
-- [ ] `VersionCommand`クラス実装
-- [ ] `--check`オプション（互換性チェック）
-- [ ] バージョン情報表示
-- [ ] テスト: `tests/cli/version_command_test.ts`
+- [x] `VersionCommand`クラス実装
+- [x] `--check`オプション（互換性チェック）
+- [x] バージョン情報表示
+- [x] テスト: `tests/cli/version_command_test.ts`
 
 #### sub2-5: updateコマンド実装
 @target: `src/cli/modules/update/index.ts`
 
-- [ ] `UpdateCommand`クラス実装
-- [ ] `--check`, `--apply`, `--add-feature`オプション
-- [ ] テスト: `tests/cli/update_command_test.ts`
+- [x] `UpdateCommand`クラス実装
+- [x] `--check`, `--apply`, `--add-feature`オプション
+- [x] テスト: `tests/cli/update_command_test.ts`
 
 #### sub2-6: 統合テスト
 @target: `tests/integration/version_workflow_test.ts`
 
-- [ ] プロジェクト作成→バージョン確認→更新フロー
+- [x] プロジェクト作成→バージョン確認→更新フロー
 
 ### process3: Phase 3実装（マイグレーション）
 
@@ -391,62 +391,62 @@ export function downgradeCharacterV2toV1(char: V2.Character): V1.Character;
 #### sub3-1: Migrationインターフェース定義
 @target: `src/migrations/registry.ts`
 
-- [ ] `Migration`インターフェース定義
-- [ ] `MigrationCheck`, `MigrationResult`, `MigrationOptions`型定義
-- [ ] テスト: `tests/migrations/migration_interface_test.ts`
+- [x] `Migration`インターフェース定義
+- [x] `MigrationCheck`, `MigrationResult`, `MigrationOptions`型定義
+- [x] テスト: `tests/migrations/migration_interface_test.ts`
 
 #### sub3-2: MigrationRegistry実装
 @target: `src/migrations/registry.ts`
 
-- [ ] マイグレーション登録機能
-- [ ] `findPath()`メソッド（バージョン間パス探索・BFS）
-- [ ] `executeChain()`メソッド（段階的マイグレーション）
-- [ ] テスト: `tests/migrations/migration_registry_test.ts`
+- [x] マイグレーション登録機能
+- [x] `findPath()`メソッド（バージョン間パス探索・BFS）
+- [x] `executeChain()`メソッド（段階的マイグレーション）
+- [x] テスト: `tests/migrations/migration_registry_test.ts`
 
 #### sub3-3: MigrationPlugin実装
 @target: `src/plugins/features/migration/plugin.ts`
 
-- [ ] `MigrationPlugin`クラス実装
-- [ ] マイグレーション実行エンジン
-- [ ] バックアップ機能、ロールバック機能
-- [ ] テスト: `tests/plugins/migration_plugin_test.ts`
+- [x] `MigrationPlugin`クラス実装
+- [x] マイグレーション実行エンジン
+- [x] バックアップ機能、ロールバック機能
+- [x] テスト: `tests/plugins/migration_plugin_test.ts`
 
 #### sub3-4: v1→v2マイグレーションスクリプト
 @target: `migrations/v1_to_v2/character_migration.ts`, `setting_migration.ts`, `project_metadata_migration.ts`
 
-- [ ] `character_migration.ts`実装（`canMigrate()`, `migrate()`, `rollback()`）
-- [ ] `setting_migration.ts`実装
-- [ ] `project_metadata_migration.ts`実装
-- [ ] テスト: `tests/migrations/v1_to_v2_test.ts`
+- [x] `character_migration.ts`実装（`canMigrate()`, `migrate()`, `rollback()`）
+- [x] `setting_migration.ts`実装
+- [x] `project_metadata_migration.ts`実装
+- [x] テスト: `tests/migrations/v1_to_v2_test.ts`
 
 #### sub3-5: インタラクティブウィザード
 @target: `src/plugins/features/migration/wizard.ts`
 
-- [ ] マイグレーション分析
-- [ ] ユーザー選択（自動/インタラクティブ/ドライラン）
-- [ ] 進捗表示
-- [ ] テスト: `tests/plugins/migration_wizard_test.ts`
+- [x] マイグレーション分析
+- [x] ユーザー選択（自動/インタラクティブ/ドライラン）
+- [x] 進捗表示
+- [x] テスト: `tests/plugins/migration_wizard_test.ts`
 
 #### sub3-6: Git統合機能
 @target: `src/plugins/features/migration/git_integration.ts`
 
-- [ ] マイグレーションブランチ作成
-- [ ] ステップごとのコミット
-- [ ] ロールバック用の履歴管理
-- [ ] テスト: `tests/plugins/migration_git_test.ts`
+- [x] マイグレーションブランチ作成
+- [x] ステップごとのコミット
+- [x] ロールバック用の履歴管理
+- [x] テスト: `tests/plugins/migration_git_test.ts`
 
 #### sub3-7: migrateコマンド実装
 @target: `src/cli/modules/migrate/index.ts`
 
-- [ ] `MigrateCommand`クラス実装
-- [ ] `--git-safe`, `--dry-run`, `--interactive`, `--force`オプション
-- [ ] テスト: `tests/cli/migrate_command_test.ts`
+- [x] `MigrateCommand`クラス実装
+- [x] `--git-safe`, `--dry-run`, `--interactive`, `--force`オプション
+- [x] テスト: `tests/cli/migrate_command_test.ts`
 
 #### sub3-8: 統合テスト
 @target: `tests/integration/migration_workflow_test.ts`
 
-- [ ] v1プロジェクト作成→v2マイグレーション→検証フロー
-- [ ] Git統合フロー、ロールバックフロー
+- [x] v1プロジェクト作成→v2マイグレーション→検証フロー
+- [x] Git統合フロー、ロールバックフロー
 
 **並列実行可能タスク（Phase 3）**:
 - グループA: sub3-1, sub3-2（基盤）
@@ -461,36 +461,36 @@ export function downgradeCharacterV2toV1(char: V2.Character): V1.Character;
 #### sub4-1: DetailsPlugin拡張（ファイル分離）
 @target: `src/plugins/features/details/plugin.ts`
 
-- [ ] `separateFiles()`メソッド実装
-- [ ] インライン→ファイル参照変換ロジック
-- [ ] テスト: `tests/plugins/details_separate_test.ts`
+- [x] `separateFiles()`メソッド実装
+- [x] インライン→ファイル参照変換ロジック
+- [x] テスト: `tests/plugins/details_separate_test.ts`
 
 #### sub4-2: Markdownテンプレート生成
 @target: `src/plugins/features/details/templates.ts`
 
-- [ ] 各詳細フィールドのMarkdownテンプレート
-- [ ] フロントマター対応（メタデータ埋め込み）
-- [ ] テスト: `tests/plugins/details_templates_test.ts`
+- [x] 各詳細フィールドのMarkdownテンプレート
+- [x] フロントマター対応（メタデータ埋め込み）
+- [x] テスト: `tests/plugins/details_templates_test.ts`
 
 #### sub4-3: ファイル参照整合性チェック
 @target: `src/plugins/features/details/validator.ts`
 
-- [ ] ファイル参照の存在確認
-- [ ] 循環参照の検出
-- [ ] 壊れたリンクの警告
-- [ ] テスト: `tests/plugins/details_validator_test.ts`
+- [x] ファイル参照の存在確認
+- [x] 循環参照の検出
+- [x] 壊れたリンクの警告
+- [x] テスト: `tests/plugins/details_validator_test.ts`
 
 #### sub4-4: elementコマンド拡張
 @target: `src/cli/modules/element/character.ts`
 
-- [ ] `--separate-files`オプション実装
-- [ ] `--separate-files all`オプション（全フィールド分離）
-- [ ] テスト: `tests/cli/element_separate_files_test.ts`
+- [x] `--separate-files`オプション実装
+- [x] `--separate-files all`オプション（全フィールド分離）
+- [x] テスト: `tests/cli/element_separate_files_test.ts`
 
 #### sub4-5: 統合テスト
 @target: `tests/integration/separate_files_workflow_test.ts`
 
-- [ ] インライン作成→ファイル分離→整合性検証フロー
+- [x] インライン作成→ファイル分離→整合性検証フロー
 
 **並列実行可能タスク（Phase 4）**:
 - sub4-1, sub4-2, sub4-3（並列実装可能）
@@ -504,10 +504,10 @@ export function downgradeCharacterV2toV1(char: V2.Character): V1.Character;
 #### sub5-1: 詳細完成度分析
 @target: `src/application/completeness_analyzer.ts`
 
-- [ ] 要素ごとの詳細完成度計算
-- [ ] 必須フィールドの充足率
-- [ ] TODOマーカーの検出
-- [ ] テスト: `tests/application/completeness_analyzer_test.ts`
+- [x] 要素ごとの詳細完成度計算
+- [x] 必須フィールドの充足率
+- [x] TODOマーカーの検出
+- [x] テスト: `tests/application/completeness_analyzer_test.ts`
 
 #### sub5-2: validateコマンド拡張
 @target: `src/cli/modules/validate/index.ts`
@@ -520,21 +520,21 @@ export function downgradeCharacterV2toV1(char: V2.Character): V1.Character;
 #### sub5-3: 一括詳細追加機能
 @target: `src/application/batch_operations.ts`
 
-- [ ] 複数要素への一括詳細追加
-- [ ] フィルタリング機能（役割別、チャプター別）
-- [ ] テスト: `tests/application/batch_operations_test.ts`
+- [x] 複数要素への一括詳細追加
+- [x] フィルタリング機能（役割別、チャプター別）
+- [x] テスト: `tests/application/batch_operations_test.ts`
 
 #### sub5-4: 強制上書き機能
 @target: `src/cli/modules/element/character.ts`
 
-- [ ] `--force`オプションの実装
-- [ ] 既存詳細の上書き確認
-- [ ] テスト: `tests/cli/force_option_test.ts`
+- [x] `--force`オプションの実装
+- [x] 既存詳細の上書き確認
+- [x] テスト: `tests/cli/force_option_test.ts`
 
 #### sub5-5: 統合テスト
 @target: `tests/integration/advanced_management_test.ts`
 
-- [ ] 完成度分析→一括処理→検証フロー
+- [x] 完成度分析→一括処理→検証フロー
 
 **並列実行可能タスク（Phase 5）**:
 - sub5-1, sub5-2, sub5-3, sub5-4（並列実装可能）
