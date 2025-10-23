@@ -29,11 +29,13 @@ export class DetailsPlugin implements FeaturePlugin {
    *
    * @param character 対象のCharacter要素
    * @param fields 追加する詳細フィールドのリスト
+   * @param force 既存の詳細を強制上書きする（デフォルト: false）
    * @returns 詳細情報が追加されたCharacter要素
    */
   async addDetails(
     character: Character,
     fields: DetailField[],
+    force = false,
   ): Promise<Result<Character, Error>> {
     try {
       // 無効なフィールド名をチェック
@@ -49,8 +51,8 @@ export class DetailsPlugin implements FeaturePlugin {
       const newDetails: CharacterDetails = { ...currentDetails };
 
       for (const field of fields) {
-        // 既存のフィールドは上書きしない
-        if (field in newDetails && newDetails[field as keyof CharacterDetails] !== undefined) {
+        // forceがfalseで既存のフィールドがある場合は上書きしない
+        if (!force && field in newDetails && newDetails[field as keyof CharacterDetails] !== undefined) {
           continue;
         }
 

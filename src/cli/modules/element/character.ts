@@ -26,6 +26,7 @@ interface ElementCharacterOptions {
   readonly "with-details"?: boolean;
   readonly "add-details"?: string;
   readonly "separate-files"?: string;
+  readonly force?: boolean;
 }
 
 /**
@@ -69,10 +70,12 @@ export class ElementCharacterCommand extends BaseCliCommand {
       };
 
       // 詳細情報の追加
+      const force = parsed.force ?? false;
+
       if (parsed["with-details"]) {
         // すべての詳細フィールドを追加
         const allFields: DetailField[] = ["appearance", "personality", "backstory", "development"];
-        const detailResult = await service.addDetailsToElement("character", options, allFields);
+        const detailResult = await service.addDetailsToElement("character", options, allFields, force);
 
         if (detailResult.ok) {
           Object.assign(options, { details: detailResult.value.details });
@@ -80,7 +83,7 @@ export class ElementCharacterCommand extends BaseCliCommand {
       } else if (parsed["add-details"]) {
         // 指定された詳細フィールドのみ追加
         const fields = parsed["add-details"].split(",").map((f) => f.trim()) as DetailField[];
-        const detailResult = await service.addDetailsToElement("character", options, fields);
+        const detailResult = await service.addDetailsToElement("character", options, fields, force);
 
         if (detailResult.ok) {
           Object.assign(options, { details: detailResult.value.details });
@@ -192,6 +195,7 @@ export class ElementCharacterCommand extends BaseCliCommand {
       "with-details": args["with-details"] === true,
       "add-details": typeof args["add-details"] === "string" ? args["add-details"] : undefined,
       "separate-files": typeof args["separate-files"] === "string" ? args["separate-files"] : undefined,
+      force: args.force === true,
     };
   }
 }

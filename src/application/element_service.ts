@@ -45,12 +45,14 @@ export class ElementService {
    * @param elementType 要素タイプ（現在は"character"のみ対応）
    * @param element 対象の要素
    * @param fields 追加する詳細フィールドのリスト
+   * @param force 既存の詳細を強制上書きする（デフォルト: false）
    * @returns 詳細情報が追加された要素
    */
   async addDetailsToElement(
     elementType: string,
     element: Character,
     fields: DetailField[],
+    force = false,
   ): Promise<Result<Character, Error>> {
     // DetailsPluginを取得
     const detailsPlugin = this.getDetailsPlugin();
@@ -60,7 +62,7 @@ export class ElementService {
 
     // elementTypeに応じて処理を分岐（現在はcharacterのみ）
     if (elementType === "character") {
-      return await detailsPlugin.addDetails(element, fields);
+      return await detailsPlugin.addDetails(element, fields, force);
     }
 
     return err(new Error(`Unsupported element type: ${elementType}`));

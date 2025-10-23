@@ -36,3 +36,44 @@ export function createStubLogger(): Logger {
   };
   return logger;
 }
+
+/**
+ * テスト用のスタブプレゼンターを作成
+ */
+export function createStubPresenter() {
+  const noop = () => {};
+  return {
+    showInfo: noop,
+    showSuccess: noop,
+    showWarning: noop,
+    showError: noop,
+  };
+}
+
+/**
+ * テスト用のスタブConfigを作成
+ */
+export function createStubConfig() {
+  return {
+    resolve: async () => ({
+      runtime: {
+        environment: "test" as const,
+        paths: {},
+        projectRoot: Deno.cwd(),
+      },
+      logging: {
+        level: "info" as const,
+        format: "human" as const,
+        color: true,
+        timestamps: true,
+      },
+      features: {},
+      cache: {
+        defaultTtlSeconds: 900,
+      },
+      external: {
+        providers: [],
+      },
+    }),
+  };
+}
