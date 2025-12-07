@@ -1,725 +1,493 @@
-# title: Issue #2 TypeScript型による物語要素の表現力向上 - 全Phase実装
+# title: Issue #4 メタデータ自動生成機能の実装（Phase 1〜3）
 
 ## 概要
-- プラグインベースアーキテクチャにより、物語要素（Character, Setting等）の段階的詳細化システムを実装
-- ハイブリッド型管理（メタデータはTypeScript、長文詳細はMarkdown分離可能）
-- v1→v2自動マイグレーション（Git統合、ロールバック対応）
-- 詳細情報の完成度可視化とレポート機能
+- 章メタデータファイル（`.meta.ts`）を半自動的に生成するCLIコマンド `storyteller meta generate` を実装
+- Markdownを解析してキャラクター・設定を自動検出し、TypeScriptファイルを出力
+- ハイブリッド検出方式（Frontmatter + 本文解析の統合）により高精度な参照マッピングを実現
 
 ### goal
-- 最低限から始めて段階的に詳細化できるストーリーテリング環境の実現
-- 大規模プロジェクトでの詳細情報管理の効率化
-- 既存v1プロジェクトを壊さずv2機能を提供
-- チーム開発での詳細情報の分担作業とレビューの容易化
+- CLIコマンドで基本的なメタデータを自動生成できる
+- Markdownを解析して使用キャラクター・設定を自動検出できる
+- 自動生成後も手動でカスタマイズ可能な形式で出力される
+- インタラクティブモードで曖昧な参照を解決できる
 
 ## 必須のルール
 - 必ず `CLAUDE.md` を参照し、ルールを守ること
-- テスト戦略とリスク管理に特に重点を置くこと
-- 既存コードベースの詳細調査を前提とすること（初見想定）
-- 並列実行可能タスクを明示的に示すこと
+- **TDD（テスト駆動開発）を厳守すること**
+  - 各プロセスは必ずテストファーストで開始する（Red → Green → Refactor）
+  - 実装コードを書く前に、失敗するテストを先に作成する
+  - テストが通過するまで修正とテスト実行を繰り返す
+  - プロセス完了の条件：該当するすべてのテストが通過していること
 
 ## 開発のゴール
 
-### Phase 1: 基本詳細追加機能（2-3週間）
-- プラグインシステム基盤（`PluginRegistry`, `ElementPlugin`, `FeaturePlugin`）
-- Character型のv2拡張（`src/type/v2/character.ts`）
-- CharacterPlugin実装（要素作成、検証、スキーマエクスポート）
-- DetailsPlugin実装（詳細スケルトン追加）
-- `storyteller element character`コマンド群
+### Phase 1: 基本的な自動生成（MVP）
+- `storyteller meta generate` コマンドの実装
+- Frontmatterからの基本情報抽出
+- キャラクター・設定の自動検出（完全一致）
+- 基本的な検証ルール生成
+- TypeScriptファイル出力
 
-**主要コマンド**:
-```bash
-storyteller element character --name "hero" --role "protagonist" --summary "概要"
-storyteller element character --name "hero" --with-details
-storyteller element character --name "hero" --add-details "backstory,development"
-```
+### Phase 2: 高度な検出機能
+- displayNames/aliasesを使った検出
+- 文脈を考慮した参照検出
+- 信頼度ベースの参照マッピング
+- プリセット機能（battle-scene, romance-scene等）
 
-### Phase 2: プロジェクト更新機能（1-2週間）
-- VersionManager実装（バージョン比較、互換性チェック）
-- `.storyteller/config.json`の自動管理
-- `storyteller version/update`コマンド
-
-**主要コマンド**:
-```bash
-storyteller version --check
-storyteller update --check
-storyteller update --apply
-```
-
-### Phase 3: マイグレーションシステム（3-4週間）
-- Migrationインターフェース、MigrationRegistry
-- v1→v2マイグレーションスクリプト（Character, Setting, ProjectMetadata）
-- インタラクティブウィザード、Git統合機能
-
-**主要コマンド**:
-```bash
-storyteller migrate
-storyteller migrate --git-safe
-storyteller migrate --dry-run
-```
-
-### Phase 4: ファイル分離機能（2週間）
-- DetailsPlugin拡張（`separateFiles()`メソッド）
-- Markdownテンプレート生成機能
-- ファイル参照整合性チェック
-
-**主要コマンド**:
-```bash
-storyteller element character --separate-files backstory
-storyteller element character --separate-files all
-```
-
-### Phase 5: 高度な管理機能（2週間）
-- 詳細完成度分析エンジン
-- `storyteller validate --completeness-report`コマンド
-- 一括詳細追加機能、強制上書きオプション
-
-**主要コマンド**:
-```bash
-storyteller validate --completeness-report
-storyteller element character --add-details backstory --all
-```
+### Phase 3: インタラクティブモード
+- 曖昧な参照の確認プロンプト
+- 検出結果のプレビュー表示
+- 差分更新機能（既存メタデータの更新）
+- バッチ処理（複数章を一括生成）
 
 ## 実装仕様
 
-### 主要コンポーネント
+### 主要コマンド
+```bash
+# 基本的なメタデータを自動生成
+storyteller meta generate manuscripts/chapter01.md
 
-#### 1. プラグインシステム（`src/core/plugin_system.ts`）
-
-**インターフェース階層**:
-```
-StorytellerPlugin (基底)
-├── ElementPlugin (要素型単位)
-│   ├── CharacterPlugin
-│   ├── SettingPlugin
-│   └── ...
-└── FeaturePlugin (機能レイヤー単位)
-    ├── DetailsPlugin
-    ├── MigrationPlugin
-    └── ...
+# オプション付き生成
+storyteller meta generate manuscripts/chapter01.md \
+  --characters hero,heroine \
+  --settings kingdom \
+  --preset battle-scene \
+  --dry-run \
+  --interactive
 ```
 
-**主要型定義**:
+### 出力形式（ChapterMeta）
 ```typescript
-interface StorytellerPlugin {
-  readonly meta: PluginMetadata;
-  readonly dependencies?: string[];
-  initialize?(context: PluginContext): Promise<void>;
-}
-
-interface ElementPlugin extends StorytellerPlugin {
-  readonly elementType: string;
-  createElementFile(options: CreateElementOptions): Promise<Result<ElementCreationResult, Error>>;
-  validateElement(element: unknown): ValidationResult;
-  exportElementSchema(): TypeSchema;
-}
-
-interface FeaturePlugin extends StorytellerPlugin {
-  readonly featureId: string;
-  extendCommands?(registry: CommandRegistry): void;
-  registerMigrations?(migrationRegistry: MigrationRegistry): void;
-}
-
-class PluginRegistry {
-  register(plugin: StorytellerPlugin): void;
-  validate(): ValidationResult; // 依存関係検証、循環依存検出
-  initializeAll(context: PluginContext): Promise<void>; // トポロジカルソート順
-}
-```
-
-#### 2. バージョン管理（`src/core/version_manager.ts`）
-
-**プロジェクトメタデータ**:
-```typescript
-interface ProjectMetadata {
-  version: {
-    version: string;              // "2.0.0"
-    storytellerVersion: string;   // "0.3.0"
-    created: Date;
-    lastUpdated: Date;
-  };
-  features: {
-    character_details: boolean;
-    migration_support: boolean;
-    lsp_support: boolean;
-  };
-  compatibility: "strict" | "loose";
-}
-```
-
-保存先: `.storyteller/config.json`
-
-#### 3. マイグレーションフレームワーク（`src/plugins/features/migration/`）
-
-**Migrationインターフェース**:
-```typescript
-interface Migration {
-  readonly id: string;           // "character_v1_to_v2"
-  readonly from: string;         // "1.0.0"
-  readonly to: string;           // "2.0.0"
-  readonly breaking: boolean;
-
-  canMigrate(project: ProjectContext): Promise<MigrationCheck>;
-  migrate(project: ProjectContext, options: MigrationOptions): Promise<MigrationResult>;
-  rollback(backup: BackupContext): Promise<void>;
-}
-
-class MigrationRegistry {
-  findPath(from: string, to: string): Migration[]; // グラフ探索（BFS）
-  executeChain(...): Promise<Result<MigrationChainResult, Error>>;
-}
-```
-
-#### 4. 型システム拡張（`src/type/v2/character.ts`）
-
-**Character型（v2）**:
-```typescript
-export type Character = {
-  // 必須メタデータ
-  id: string;
-  name: string;
-  role: CharacterRole; // "protagonist" | "antagonist" | "supporting" | "guest"
-  traits: string[];
-  relationships: Record<string, RelationType>;
-  appearingChapters: string[];
-  summary: string;
-
-  // オプショナル詳細情報（ハイブリッド）
-  details?: {
-    appearance?: string | { file: string };
-    personality?: string | { file: string };
-    backstory?: string | { file: string };
-    development?: CharacterDevelopment;
-  };
-
-  // LSP用検出ヒント
-  detectionHints?: DetectionHints;
+export const chapter01Meta: ChapterMeta = {
+  id: "chapter01",
+  title: "旅の始まり",
+  order: 1,
+  characters: [hero, heroine],
+  settings: [kingdom],
+  validations: [...],
+  references: {
+    "勇者": hero,
+    "エリーゼ": heroine,
+  }
 };
 ```
 
-**互換レイヤー（`src/type/compat.ts`）**:
-```typescript
-export function migrateCharacterV1toV2(char: V1.Character): V2.Character;
-export function downgradeCharacterV2toV1(char: V2.Character): V1.Character;
+### 新規ファイル構成
+```
+src/
+├── application/
+│   └── meta/
+│       ├── meta_generator_service.ts
+│       ├── frontmatter_parser.ts
+│       ├── reference_detector.ts
+│       ├── validation_generator.ts
+│       └── typescript_emitter.ts
+├── cli/
+│   └── modules/
+│       └── meta/
+│           ├── index.ts
+│           └── generate.ts
+└── domain/
+    └── meta/
+        ├── detection_result.ts
+        └── preset_templates.ts
 ```
 
 ## 生成AIの学習用コンテキスト
 
-### 既存アーキテクチャ理解用ファイル
-
-**CLI基盤**:
-- `src/cli/command_registry.ts`
-  - コマンドレジストリ（階層構造、依存関係検証）の参考
+### CLI基盤（コマンド実装パターン）
 - `src/cli/base_command.ts`
-  - 基底コマンドクラスの参考
+  - 全コマンドの基底クラス。`handle()` メソッドを実装するパターン
+- `src/cli/modules/element/character.ts`
+  - ネストされたコマンド (`path: ["element", "character"]`) の実装例
+- `src/cli/command_registry.ts`
+  - コマンド登録、依存関係検証の参考
 - `src/cli/types.ts`
-  - CLIインターフェース定義
-- `src/cli/modules/generate.ts`
-  - 既存コマンド実装例
+  - `CommandHandler`, `CommandDescriptor`, `CommandContext` インターフェース
 
-**設定管理**:
-- `src/shared/config/schema.ts`
-  - Zodスキーマ定義の参考
-- `src/application/config/configuration_manager.ts`
-  - 設定マネージャーの参考
+### サンプルメタデータ構造
+- `sample/manuscripts/chapter01.md`
+  - Frontmatter形式（chapter_id, title, order, characters, settings, summary）
+- `sample/manuscripts/chapter01.meta.ts`
+  - 期待される出力形式（ChapterMeta型）
+- `sample/src/types/chapter.ts`
+  - `ChapterMeta`, `ValidationRule` 型定義
 
-**ロギング**:
-- `src/shared/logging/types.ts`
-  - ロギング型定義
-- `src/application/logging/logging_service.ts`
-  - ロギングサービス
+### キャラクター・設定の型定義
+- `src/type/v2/character.ts`
+  - `detectionHints` (commonPatterns, excludePatterns, confidence)
+  - `displayNames`, `aliases`, `pronouns` フィールド
+- `sample/src/characters/hero.ts`
+  - キャラクター定義例（detectionHints の具体例）
+- `sample/src/settings/kingdom.ts`
+  - 設定定義例
 
-**型定義**:
-- `src/type/character.ts`
-  - 既存Character型（v1・最小限）
-- `sample/src/types/character.ts`
-  - 拡張Character型（参考実装）
-
-**マイグレーション**:
-- `src/application/migration_facilitator.ts`
-  - 既存マイグレーション基盤
-
-**テスト**:
-- `tests/command_registry_test.ts`
-  - コマンドレジストリテスト
-- `tests/asserts.ts`
-  - テストヘルパー（`createStubLogger()`, `createStubConfig()`パターン）
+### 既存サービス層
+- `src/application/element_service.ts`
+  - ElementServiceの実装パターン
+- `src/shared/result.ts`
+  - `Result<T, E>` 型によるエラーハンドリング
 
 ## Process
 
-### process1: Phase 1実装（プラグインシステム基盤）
-
-**期間**: 2-3週間
-**目標**: 基本詳細追加機能の実装
-
-#### sub1-1: プラグインシステム基盤
-@target: `src/core/plugin_system.ts`
-@ref: `src/cli/command_registry.ts` (依存関係管理の参考)
-
-- [x] `StorytellerPlugin`インターフェース定義
-- [x] `ElementPlugin`インターフェース定義
-- [x] `FeaturePlugin`インターフェース定義
-- [x] `PluginRegistry`クラス実装
-  - [x] 依存関係解決機能（トポロジカルソート）
-  - [x] 循環依存検出（深さ優先探索）
-- [x] テスト: `tests/core/plugin_system_test.ts`
-  - [x] プラグイン登録・解決テスト
-  - [x] 依存関係検証テスト
-  - [x] 循環依存検出テスト
-  - [x] 初期化順序テスト
-
-#### sub1-2: Character型のv2拡張
-@target: `src/type/v2/character.ts`
-@ref: `sample/src/types/character.ts` (拡張型の参考)
-
-- [x] `CharacterRole`, `RelationType`型定義
-- [x] `CharacterDetails`型定義（ハイブリッド方式）
-- [x] `CharacterDevelopment`型定義
-- [x] `DetectionHints`型定義
-- [x] メイン`Character`型定義
-- [x] `src/type/compat.ts`の実装
-  - [x] v1→v2変換関数
-  - [x] v2→v1変換関数（ダウングレード）
-- [x] テスト: `tests/type/character_v2_test.ts`
-
-#### sub1-3: CharacterPlugin実装
-@target: `src/plugins/core/character/plugin.ts`
-@ref: `src/cli/modules/generate.ts` (コマンド実装の参考)
-
-- [x] `CharacterPlugin`クラス実装
-  - [x] `createElementFile()`メソッド
-  - [x] `validateElement()`メソッド
-  - [x] `exportElementSchema()`メソッド
-  - [x] `getElementPath()`, `getDetailsDir()`メソッド
-- [x] `src/plugins/core/character/validator.ts`の実装
-- [x] テスト: `tests/plugins/character_plugin_test.ts`
-
-#### sub1-4: DetailsPlugin実装
-@target: `src/plugins/features/details/plugin.ts`
-
-- [x] `DetailsPlugin`クラス実装
-  - [x] `addDetails()`メソッド（スケルトン追加）
-  - [x] テンプレート生成機能
-- [x] `src/plugins/features/details/templates.ts`の実装
-- [x] テスト: `tests/plugins/details_plugin_test.ts`
-
-#### sub1-5: ElementService実装
-@target: `src/application/element_service.ts`
-
-- [x] `createElement()`メソッド
-- [x] `addDetailsToElement()`メソッド
-- [x] プラグインレジストリ連携
-- [x] テスト: `tests/application/element_service_test.ts`
-
-#### sub1-6: elementコマンド実装
-@target: `src/cli/modules/element/character.ts`
-
-- [x] `ElementCharacterCommand`クラス実装
-  - [x] `--with-details`オプション処理
-  - [x] `--add-details`オプション処理
-  - [x] オプション解析ロジック
-- [x] `src/cli/modules/element/index.ts`の実装（コマンド登録）
-- [x] `src/cli/modules/index.ts`の拡張（elementコマンド群の登録）
-- [x] テスト: `tests/cli/element_command_test.ts`
-
-#### sub1-7: 統合テスト
-@target: `tests/integration/element_workflow_test.ts`
-
-- [x] 基本要素作成ワークフロー
-- [x] 詳細付き作成ワークフロー
-- [x] 既存要素への詳細追加ワークフロー
-- [x] エンドツーエンドテスト
-
-**並列実行可能タスク（Phase 1）**:
-- グループA: sub1-1, sub1-2（独立実装可能）
-- グループB: sub1-3, sub1-4（グループA完了後）
-- グループC: sub1-5, sub1-6（グループB完了後）
-
-### process2: Phase 2実装（バージョン管理）
-
-**期間**: 1-2週間
-**目標**: プロジェクトメタデータ管理と更新チェック
-
-#### sub2-1: VersionManager実装
-@target: `src/core/version_manager.ts`
-@ref: `src/application/migration_facilitator.ts` (バージョン管理の参考)
-
-- [x] `ProjectMetadata`, `ProjectVersion`, `FeatureFlags`型定義
-- [x] `loadProjectMetadata()`, `saveProjectMetadata()`メソッド
-- [x] `compareVersions()`メソッド（セマンティックバージョニング）
-- [x] `isCompatible()`, `checkUpdates()`メソッド
-- [x] テスト: `tests/core/version_manager_test.ts`
-
-#### sub2-2: プロジェクトメタデータスキーマ定義
-@target: `src/shared/config/schema.ts`
-
-- [x] `ProjectVersionSchema`, `ProjectMetadataSchema`の追加（Zod）
-
-#### sub2-3: VersionService実装
-@target: `src/application/version_service.ts`
-
-- [x] プロジェクトメタデータ管理
-- [x] バージョン互換性チェック
-- [x] 更新可能性判定
-- [x] テスト: `tests/application/version_service_test.ts`
-
-#### sub2-4: versionコマンド実装
-@target: `src/cli/modules/version/index.ts`
-
-- [x] `VersionCommand`クラス実装
-- [x] `--check`オプション（互換性チェック）
-- [x] バージョン情報表示
-- [x] テスト: `tests/cli/version_command_test.ts`
-
-#### sub2-5: updateコマンド実装
-@target: `src/cli/modules/update/index.ts`
-
-- [x] `UpdateCommand`クラス実装
-- [x] `--check`, `--apply`, `--add-feature`オプション
-- [x] テスト: `tests/cli/update_command_test.ts`
-
-#### sub2-6: 統合テスト
-@target: `tests/integration/version_workflow_test.ts`
-
-- [x] プロジェクト作成→バージョン確認→更新フロー
-
-### process3: Phase 3実装（マイグレーション）
-
-**期間**: 3-4週間
-**目標**: v1→v2の自動マイグレーションとロールバック
-
-#### sub3-1: Migrationインターフェース定義
-@target: `src/migrations/registry.ts`
-
-- [x] `Migration`インターフェース定義
-- [x] `MigrationCheck`, `MigrationResult`, `MigrationOptions`型定義
-- [x] テスト: `tests/migrations/migration_interface_test.ts`
-
-#### sub3-2: MigrationRegistry実装
-@target: `src/migrations/registry.ts`
-
-- [x] マイグレーション登録機能
-- [x] `findPath()`メソッド（バージョン間パス探索・BFS）
-- [x] `executeChain()`メソッド（段階的マイグレーション）
-- [x] テスト: `tests/migrations/migration_registry_test.ts`
-
-#### sub3-3: MigrationPlugin実装
-@target: `src/plugins/features/migration/plugin.ts`
-
-- [x] `MigrationPlugin`クラス実装
-- [x] マイグレーション実行エンジン
-- [x] バックアップ機能、ロールバック機能
-- [x] テスト: `tests/plugins/migration_plugin_test.ts`
-
-#### sub3-4: v1→v2マイグレーションスクリプト
-@target: `migrations/v1_to_v2/character_migration.ts`, `setting_migration.ts`, `project_metadata_migration.ts`
-
-- [x] `character_migration.ts`実装（`canMigrate()`, `migrate()`, `rollback()`）
-- [x] `setting_migration.ts`実装
-- [x] `project_metadata_migration.ts`実装
-- [x] テスト: `tests/migrations/v1_to_v2_test.ts`
-
-#### sub3-5: インタラクティブウィザード
-@target: `src/plugins/features/migration/wizard.ts`
-
-- [x] マイグレーション分析
-- [x] ユーザー選択（自動/インタラクティブ/ドライラン）
-- [x] 進捗表示
-- [x] テスト: `tests/plugins/migration_wizard_test.ts`
-
-#### sub3-6: Git統合機能
-@target: `src/plugins/features/migration/git_integration.ts`
-
-- [x] マイグレーションブランチ作成
-- [x] ステップごとのコミット
-- [x] ロールバック用の履歴管理
-- [x] テスト: `tests/plugins/migration_git_test.ts`
-
-#### sub3-7: migrateコマンド実装
-@target: `src/cli/modules/migrate/index.ts`
-
-- [x] `MigrateCommand`クラス実装
-- [x] `--git-safe`, `--dry-run`, `--interactive`, `--force`オプション
-- [x] テスト: `tests/cli/migrate_command_test.ts`
-
-#### sub3-8: 統合テスト
-@target: `tests/integration/migration_workflow_test.ts`
-
-- [x] v1プロジェクト作成→v2マイグレーション→検証フロー
-- [x] Git統合フロー、ロールバックフロー
-
-**並列実行可能タスク（Phase 3）**:
-- グループA: sub3-1, sub3-2（基盤）
-- グループB: sub3-3, sub3-4（グループA完了後）
-- グループC: sub3-5, sub3-6, sub3-7（グループB完了後）
-
-### process4: Phase 4実装（ファイル分離）
-
-**期間**: 2週間
-**目標**: インライン詳細をMarkdownファイルに分離
-
-#### sub4-1: DetailsPlugin拡張（ファイル分離）
-@target: `src/plugins/features/details/plugin.ts`
-
-- [x] `separateFiles()`メソッド実装
-- [x] インライン→ファイル参照変換ロジック
-- [x] テスト: `tests/plugins/details_separate_test.ts`
-
-#### sub4-2: Markdownテンプレート生成
-@target: `src/plugins/features/details/templates.ts`
-
-- [x] 各詳細フィールドのMarkdownテンプレート
-- [x] フロントマター対応（メタデータ埋め込み）
-- [x] テスト: `tests/plugins/details_templates_test.ts`
-
-#### sub4-3: ファイル参照整合性チェック
-@target: `src/plugins/features/details/validator.ts`
-
-- [x] ファイル参照の存在確認
-- [x] 循環参照の検出
-- [x] 壊れたリンクの警告
-- [x] テスト: `tests/plugins/details_validator_test.ts`
-
-#### sub4-4: elementコマンド拡張
-@target: `src/cli/modules/element/character.ts`
-
-- [x] `--separate-files`オプション実装
-- [x] `--separate-files all`オプション（全フィールド分離）
-- [x] テスト: `tests/cli/element_separate_files_test.ts`
-
-#### sub4-5: 統合テスト
-@target: `tests/integration/separate_files_workflow_test.ts`
-
-- [x] インライン作成→ファイル分離→整合性検証フロー
-
-**並列実行可能タスク（Phase 4）**:
-- sub4-1, sub4-2, sub4-3（並列実装可能）
-- sub4-4（sub4-1完了後）
-
-### process5: Phase 5実装（高度管理）
-
-**期間**: 2週間
-**目標**: 完成度レポート、一括処理、強制上書き
-
-#### sub5-1: 詳細完成度分析
-@target: `src/application/completeness_analyzer.ts`
-
-- [x] 要素ごとの詳細完成度計算
-- [x] 必須フィールドの充足率
-- [x] TODOマーカーの検出
-- [x] テスト: `tests/application/completeness_analyzer_test.ts`
-
-#### sub5-2: validateコマンド拡張
-@target: `src/cli/modules/validate/index.ts`
-
-- [ ] `--completeness-report`オプション実装
-- [ ] レポート形式の出力（テーブル、グラフ）
-- [ ] フィルタリング機能（`--role`, `--chapter`）
-- [ ] テスト: `tests/cli/validate_completeness_test.ts`
-
-#### sub5-3: 一括詳細追加機能
-@target: `src/application/batch_operations.ts`
-
-- [x] 複数要素への一括詳細追加
-- [x] フィルタリング機能（役割別、チャプター別）
-- [x] テスト: `tests/application/batch_operations_test.ts`
-
-#### sub5-4: 強制上書き機能
-@target: `src/cli/modules/element/character.ts`
-
-- [x] `--force`オプションの実装
-- [x] 既存詳細の上書き確認
-- [x] テスト: `tests/cli/force_option_test.ts`
-
-#### sub5-5: 統合テスト
-@target: `tests/integration/advanced_management_test.ts`
-
-- [x] 完成度分析→一括処理→検証フロー
-
-**並列実行可能タスク（Phase 5）**:
-- sub5-1, sub5-2, sub5-3, sub5-4（並列実装可能）
-
-### process10: ユニットテスト戦略
-
-**並行実施**: 各Phaseの実装と同時
-
-- [ ] すべてのユニットテストを実装（上記sub項目に含む）
-- [ ] カバレッジ目標達成
-  - [ ] コアシステム: 90%以上
-  - [ ] プラグイン: 85%以上
-  - [ ] CLIコマンド: 80%以上
-  - [ ] アプリケーション層: 85%以上
-
-**テスト実行コマンド**:
-```bash
-# 全テスト実行
-deno test
-
-# カバレッジ付き
-deno test --coverage=coverage/
-deno coverage coverage/
-
-# Phase別テスト
-deno test --filter "Phase1"
-```
-
-**モック・スタブ戦略**（既存パターンを活用）:
-```typescript
-// tests/asserts.ts または tests/test_helpers.ts に共通化
-function createStubLogger(): Logger { /* ... */ }
-function createStubConfig(): ConfigurationManagerRef { /* ... */ }
-function createStubFileSystem(): FileSystemGateway { /* ... */ }
-```
-
-### process100: リファクタリング計画
-
-**Phase 3完了後に実施**
-
-- [ ] TypeScriptファイル操作のAST化検討
-  - [ ] Deno TypeScript APIの調査
-  - [ ] ts-morphの導入検討
-  - [ ] パフォーマンス測定
-- [ ] プラグインシステムの最適化
-  - [ ] 初期化順序の最適化
-  - [ ] 並列初期化の検討
-- [ ] コードレビュー
-  - [ ] 型定義の一貫性チェック
-  - [ ] エラーハンドリングの統一
-  - [ ] ロギングの適切性確認
+### process1: Frontmatter解析機能
+
+#### sub1-1: FrontmatterParser クラス実装
+@target: `src/application/meta/frontmatter_parser.ts`
+@ref: `sample/manuscripts/chapter01.md` (Frontmatter形式の参考)
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/application/meta/frontmatter_parser_test.ts`
+- [ ] テストケースを作成（この時点で実装がないため失敗する）
+  - 正常なFrontmatter解析テスト
+  - chapter_id, title, order, characters, settings の抽出テスト
+  - 不正なFrontmatterのエラーハンドリングテスト
+  - Frontmatterが存在しない場合のテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `FrontmatterData` インターフェース定義
+  - chapter_id: string
+  - title: string
+  - order: number
+  - characters?: string[]
+  - settings?: string[]
+  - summary?: string
+- [ ] `FrontmatterParser` クラス実装
+  - `parse(markdownContent: string): Result<FrontmatterData, ParseError>`
+  - YAML部分の抽出（`---` で囲まれた部分）
+  - `@std/yaml` を使用してYAML解析
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 必要に応じてリファクタリング
+- [ ] 再度テストを実行し、通過を確認
+  - **テストが失敗した場合**: 修正 → テスト実行を繰り返す
+
+---
+
+### process2: TypeScript出力機能
+
+#### sub2-1: TypeScriptEmitter クラス実装
+@target: `src/application/meta/typescript_emitter.ts`
+@ref: `sample/manuscripts/chapter01.meta.ts` (出力形式の参考)
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/application/meta/typescript_emitter_test.ts`
+- [ ] テストケースを作成
+  - ChapterMetaオブジェクトからTypeScriptコード生成テスト
+  - インポート文の生成テスト
+  - ファイル出力テスト
+  - フォーマット（インデント等）のテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `TypeScriptEmitter` クラス実装
+  - `emit(meta: ChapterMeta, outputPath: string): Promise<Result<void, EmitError>>`
+  - インポート文生成ロジック（キャラクター・設定のパス解決）
+  - ChapterMetaオブジェクトのシリアライズ
+  - ファイル書き込み処理
+- [ ] 生成ヘッダーコメント追加
+  - `// 自動生成: storyteller meta generate`
+  - `// 生成日時: YYYY-MM-DD HH:mm:ss`
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] `deno fmt` でフォーマット確認
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process3: 参照検出エンジン（Phase 1: 完全一致）
+
+#### sub3-1: ReferenceDetector クラス（基本実装）
+@target: `src/application/meta/reference_detector.ts`
+@ref: `sample/src/characters/hero.ts` (detectionHints の参考)
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/application/meta/reference_detector_test.ts`
+- [ ] テストケースを作成
+  - Frontmatterからのキャラクター検出テスト
+  - Frontmatterからの設定検出テスト
+  - 本文からの完全一致検出テスト
+  - 検出結果の統合（ハイブリッド）テスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `DetectionResult`, `DetectedEntity` インターフェース定義
+  - characters: DetectedEntity[]
+  - settings: DetectedEntity[]
+  - confidence: number
+- [ ] `ReferenceDetector` クラス実装
+  - `detect(content, frontmatter, projectPath): Promise<DetectionResult>`
+  - Frontmatterのcharacters/settings配列を優先的に採用
+  - プロジェクト内のキャラクター・設定定義ファイルを読み込み
+  - 本文を走査し、name フィールドで完全一致検出
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 必要に応じてリファクタリング
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process4: 検証ルール生成
+
+#### sub4-1: ValidationGenerator クラス実装
+@target: `src/application/meta/validation_generator.ts`
+@ref: `sample/manuscripts/chapter01.meta.ts` (validations フィールドの参考)
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/application/meta/validation_generator_test.ts`
+- [ ] テストケースを作成
+  - character_presence 検証ルール生成テスト
+  - setting_consistency 検証ルール生成テスト
+  - 空テンプレート（custom）の生成テスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `ValidationGenerator` クラス実装
+  - `generate(detected: DetectionResult): ValidationRule[]`
+  - character_presence: 主要キャラクターの出現確認
+  - setting_consistency: 設定の一貫性チェック
+  - plot_advancement: 空テンプレート（手動編集用）
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 必要に応じてリファクタリング
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process5: MetaGeneratorService 統合
+
+#### sub5-1: MetaGeneratorService クラス実装
+@target: `src/application/meta/meta_generator_service.ts`
+@ref: `src/application/element_service.ts` (サービス層の参考)
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/application/meta/meta_generator_service_test.ts`
+- [ ] テストケースを作成
+  - Markdownファイルからメタデータ生成テスト
+  - 全コンポーネント統合テスト
+  - エラーハンドリングテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `MetaGeneratorService` クラス実装
+  - `generateFromMarkdown(markdownPath, options): Promise<Result<ChapterMeta, Error>>`
+  - FrontmatterParser, ReferenceDetector, ValidationGenerator の統合
+  - TypeScriptEmitter への委譲
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 必要に応じてリファクタリング
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process6: CLIコマンド実装
+
+#### sub6-1: meta generate コマンド実装
+@target: `src/cli/modules/meta/generate.ts`
+@ref: `src/cli/modules/element/character.ts` (ネストコマンドの参考)
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/cli/meta_generate_command_test.ts`
+- [ ] テストケースを作成
+  - 基本的なコマンド実行テスト
+  - --characters, --settings オプションテスト
+  - --output オプションテスト
+  - --dry-run オプションテスト
+  - --force オプションテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `MetaGenerateCommand` クラス実装（BaseCliCommand継承）
+  - path: ["meta", "generate"]
+  - オプション解析（characters, settings, output, dry-run, force）
+  - MetaGeneratorService との連携
+- [ ] `src/cli/modules/meta/index.ts` 作成
+  - meta サブコマンドの登録
+- [ ] `src/cli/modules/index.ts` 拡張
+  - metaコマンド群の登録
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] `storyteller meta generate --help` の動作確認
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process7: Phase 2 - 高度な検出機能
+
+#### sub7-1: displayNames/aliases による検出拡張
+@target: `src/application/meta/reference_detector.ts`
+@ref: `src/type/v2/character.ts` (detectionHints の定義)
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/application/meta/reference_detector_test.ts`
+- [ ] テストケースを追加
+  - displayNames による検出テスト
+  - aliases による検出テスト
+  - pronouns による検出テスト（低信頼度）
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] ReferenceDetector 拡張
+  - detectionHints.commonPatterns でマッチング
+  - excludePatterns で誤検出を除外
+  - 信頼度スコア計算（完全一致: 1.0, displayNames: 0.9, aliases: 0.8, pronouns: 0.6）
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
+
+#### sub7-2: プリセット機能
+@target: `src/domain/meta/preset_templates.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/domain/meta/preset_templates_test.ts`
+- [ ] テストケースを作成
+  - battle-scene プリセット適用テスト
+  - romance-scene プリセット適用テスト
+  - dialogue プリセット適用テスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `PresetType` 型定義 ("battle-scene" | "romance-scene" | "dialogue" | "exposition")
+- [ ] `Preset` インターフェース定義
+- [ ] 各プリセットの検証ルールテンプレート定義
+- [ ] `--preset` オプション対応
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process8: Phase 3 - インタラクティブモード
+
+#### sub8-1: 曖昧な参照の確認プロンプト
+@target: `src/cli/modules/meta/interactive_resolver.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/cli/meta_interactive_resolver_test.ts`
+- [ ] テストケースを作成
+  - 曖昧な参照の検出テスト
+  - ユーザー選択のシミュレーションテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `InteractiveResolver` クラス実装
+  - 低信頼度の参照を抽出
+  - ユーザープロンプト表示
+  - 選択結果の反映
+- [ ] `--interactive` オプション対応
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
+
+#### sub8-2: プレビュー機能
+@target: `src/cli/modules/meta/generate.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/cli/meta_preview_test.ts`
+- [ ] テストケースを作成
+  - --dry-run --preview の出力フォーマットテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] プレビュー表示機能実装
+  - 検出結果のテーブル表示
+  - 信頼度スコアの表示
+  - キャラクター・設定の出現回数表示
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
+
+#### sub8-3: バッチ処理
+@target: `src/cli/modules/meta/generate.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/cli/meta_batch_test.ts`
+- [ ] テストケースを作成
+  - 複数ファイルの一括処理テスト
+  - --batch オプションテスト
+  - --dir オプションテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] バッチ処理機能実装
+  - glob パターン対応 (`manuscripts/*.md`)
+  - ディレクトリ指定対応 (`--dir`)
+  - 進捗表示
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process10: ユニットテスト（追加・統合テスト）
+
+#### sub10-1: 統合テスト
+@target: `tests/integration/meta_generate_workflow_test.ts`
+
+- [ ] 基本ワークフローテスト
+  - Markdownファイル → メタデータ生成 → TypeScript出力
+- [ ] サンプルファイルを使用したE2Eテスト
+  - `sample/manuscripts/chapter01.md` を入力
+  - 生成されたファイルと `sample/manuscripts/chapter01.meta.ts` を比較
+- [ ] エラーケーステスト
+  - 不正なMarkdownファイル
+  - 存在しないキャラクター・設定参照
+
+---
+
+### process50: フォローアップ
+{{実装後に仕様変更などが発生した場合は、ここにProcessを追加する}}
+
+---
+
+### process100: リファクタリング
+
+- [ ] コード品質の確認
+  - 型定義の一貫性チェック
+  - エラーハンドリングの統一
+  - ロギングの適切性確認
+- [ ] パフォーマンス最適化
+  - 大量ファイル処理時のメモリ使用量
+  - 並列処理の検討
+- [ ] `deno fmt` でフォーマット統一
+- [ ] `deno lint` でリンターチェック
+
+---
 
 ### process200: ドキュメンテーション
 
-**Phase 5完了後に実施**
+- [ ] README.md 更新
+  - `storyteller meta generate` コマンドの説明
+  - オプション一覧
+  - 使用例
+- [ ] ARCHITECTURE.md 更新
+  - MetaGeneratorService の設計
+  - 検出アルゴリズムの説明
+- [ ] Issue #4 のクローズ
+  - 実装完了の確認
+  - チェックリストの更新
 
-- [ ] README.md更新
-  - [ ] 新機能の説明
-  - [ ] コマンド一覧
-  - [ ] 使用例
-- [ ] ARCHITECTURE.mdの最終更新
-  - [ ] 実装結果の反映
-  - [ ] 設計決定の記録
-- [ ] チュートリアル作成
-  - [ ] 基本的な使い方
-  - [ ] マイグレーション手順
-  - [ ] トラブルシューティング
-- [ ] APIドキュメント生成
-  - [ ] プラグインインターフェース
-  - [ ] 型定義
+---
 
-## リスク管理
+## 見積もり
 
-### リスク1: 既存プロジェクトとの互換性
-**影響度**: 高 | **発生確率**: 中
-
-**対策**:
-1. v1型定義の保持（`src/type/v1/`）
-2. 互換レイヤー（`src/type/compat.ts`）
-3. バックアップ必須（`.storyteller/backup/`）
-4. ドライランモード（`--dry-run`）
-5. ロールバック機能
-
-**検証**: `tests/integration/migration_workflow_test.ts`で包括的テスト
-
-### リスク2: プラグイン依存関係の複雑化
-**影響度**: 中 | **発生確率**: 中
-
-**対策**:
-1. 依存関係検証（`PluginRegistry.validate()`）
-2. 循環依存検出（DFS）
-3. トポロジカルソートによる初期化順序決定
-4. 最小限の依存設計（コアプラグインは依存なし）
-
-**検証**: `tests/core/plugin_system_test.ts`で循環依存テスト
-
-### リスク3: マイグレーション失敗時のデータ損失
-**影響度**: 高 | **発生確率**: 低
-
-**対策**:
-1. Git統合（`--git-safe`オプション）
-2. ステップごとのバックアップ
-3. トランザクション的実行
-4. インタラクティブ確認
-5. ドライラン検証
-
-**緊急対応**: バックアップディレクトリからの手動復元、Git履歴からの復元
-
-### リスク4: TypeScriptファイルのAST解析・編集の複雑性
-**影響度**: 中 | **発生確率**: 高
-
-**対策**:
-1. 段階的実装（Phase 1-2はテンプレート生成）
-2. Deno標準API活用
-3. ts-morph検討（Phase 3以降）
-4. `deno fmt`でフォーマット保持
-
-**実装方針**:
-```typescript
-// Phase 1-2: シンプルなテンプレート生成
-function generateCharacterFile(character: V2.Character): string {
-  return `import type { Character } from "@storyteller/types/v2";
-
-export const ${character.id}: Character = ${JSON.stringify(character, null, 2)};
-`;
-}
-```
-
-### リスク5: パフォーマンス問題
-**影響度**: 低 | **発生確率**: 中
-
-**対策**:
-1. 並列処理（`Promise.all()`）
-2. キャッシング
-3. 進捗表示
-4. 段階的初期化
-5. ベンチマーク実施
-
-### リスク6: ドキュメント不足によるユーザー混乱
-**影響度**: 中 | **発生確率**: 中
-
-**対策**:
-1. 包括的ドキュメント（README, ARCHITECTURE.md）
-2. チュートリアル（process200）
-3. 充実したエラーメッセージ
-4. ヘルプコマンド
-5. サンプルプロジェクト
-
-## 並列実行可能タスク
-
-### Phase 1並列化（開発者2名）
-- **グループA**: sub1-1（プラグインシステム）, sub1-2（Character型v2）
-- **グループB**: sub1-3（CharacterPlugin）, sub1-4（DetailsPlugin）
-- **グループC**: sub1-5（ElementService）, sub1-6（elementコマンド）
-
-### Phase 2並列化（開発者1-2名）
-- 並列: sub2-1（VersionManager）, sub2-2（スキーマ定義）
-- 順次: sub2-3→sub2-4/sub2-5→sub2-6
-
-### Phase 3並列化（開発者3名）
-- **グループA**: sub3-1, sub3-2（基盤）
-- **グループB**: sub3-3（MigrationPlugin）, sub3-4（マイグレーションスクリプト）
-- **グループC**: sub3-5（ウィザード）, sub3-6（Git統合）, sub3-7（migrateコマンド）
-
-### Phase 4並列化（開発者2-3名）
-- 並列: sub4-1, sub4-2, sub4-3
-- 順次: sub4-4（sub4-1完了後）
-
-### Phase 5並列化（開発者4名）
-- 並列: sub5-1, sub5-2, sub5-3, sub5-4
+| フェーズ | プロセス | 見積もり |
+|---------|---------|---------|
+| Phase 1 | process1-6 (MVP) | 3-4日 |
+| Phase 2 | process7 (高度な検出) | 2-3日 |
+| Phase 3 | process8 (インタラクティブ) | 2-3日 |
+| テスト | process10 (統合テスト) | 1-2日 |
+| **合計** | | **8-12日** |
 
 ## 実装計画メタ情報
 
-**Planning Agent**: Claude Code (Orchestrator)
-**Target**: Phase 1-5 全体実装
-**Estimated Duration**: 10-13週間
-**Planning Date**: 2025-10-23
-**Task ID**: planning-20251023-194000
-
-**詳細調査結果**:
-- 読み込みファイル数: 9ファイル
-- 調査フェーズ: Phase 0-3（planning-expert直接実行）
-- 総実装ステップ数: 117チェックボックス（8プロセス）
+**Issue**: [#4 メタデータ自動生成機能の実装](https://github.com/nekowasabi/street-storyteller/issues/4)
+**Planning Date**: 2025-12-07
+**Estimated Duration**: 8-12日
 
 **次のステップ**:
-1. Phase 1の実装開始（sub1-1: プラグインシステム基盤）
-2. ブランチ作成: `feature/phase-1-plugin-system`
-3. 最初のPR: sub1-1完了後、プラグインシステム基盤のレビュー依頼
+1. process1 (FrontmatterParser) の実装開始
+2. TDDでテストを先に作成
+3. 最初のPR: process1-2 完了後、基盤機能のレビュー依頼
+
