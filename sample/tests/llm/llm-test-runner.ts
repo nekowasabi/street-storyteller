@@ -61,7 +61,7 @@ export interface LLMResponse {
 export class LLMTestRunner {
   constructor(
     private llmProvider: LLMProvider,
-    private verbose: boolean = false
+    private verbose: boolean = false,
   ) {}
 
   /**
@@ -69,21 +69,21 @@ export class LLMTestRunner {
    */
   async runTestSuite(
     testSuiteFile: string,
-    manuscriptFile: string
+    manuscriptFile: string,
   ): Promise<TestResult[]> {
     // テスト定義を読み込み
     const testSuiteYaml = await Deno.readTextFile(testSuiteFile);
     const testSuite = parse(testSuiteYaml) as LLMTestSuite;
-    
+
     // 原稿を読み込み
     const manuscript = await Deno.readTextFile(manuscriptFile);
-    
+
     console.log(`🚀 Running LLM tests for: ${testSuite.metadata.title}`);
     console.log(`📝 Using model: ${testSuite.metadata.llm_model}`);
-    console.log("=" .repeat(50));
-    
+    console.log("=".repeat(50));
+
     const results: TestResult[] = [];
-    
+
     // 各カテゴリーのテストを実行
     const categories = [
       { name: "Character Tests", tests: testSuite.character_tests },
@@ -91,16 +91,19 @@ export class LLMTestRunner {
       { name: "Worldbuilding Tests", tests: testSuite.worldbuilding_tests },
       { name: "Writing Quality Tests", tests: testSuite.writing_quality_tests },
       { name: "Plot Tests", tests: testSuite.plot_tests },
-      { name: "Reader Experience Tests", tests: testSuite.reader_experience_tests },
+      {
+        name: "Reader Experience Tests",
+        tests: testSuite.reader_experience_tests,
+      },
       { name: "Theme Tests", tests: testSuite.theme_tests },
       { name: "Overall Evaluation", tests: testSuite.overall_evaluation },
     ];
-    
+
     for (const category of categories) {
       if (category.tests && category.tests.length > 0) {
         console.log(`\n📋 ${category.name}`);
-        console.log("-" .repeat(40));
-        
+        console.log("-".repeat(40));
+
         for (const test of category.tests) {
           const result = await this.runSingleTest(test, manuscript);
           results.push(result);
@@ -108,10 +111,10 @@ export class LLMTestRunner {
         }
       }
     }
-    
+
     // サマリーを表示
     this.printSummary(results);
-    
+
     return results;
   }
 
@@ -120,17 +123,17 @@ export class LLMTestRunner {
    */
   private async runSingleTest(
     test: LLMTest,
-    manuscript: string
+    manuscript: string,
   ): Promise<TestResult> {
     const prompt = this.buildPrompt(test, manuscript);
-    
+
     if (this.verbose) {
       console.log("\n📝 Prompt:", prompt.substring(0, 200) + "...");
     }
-    
+
     try {
       const response = await this.llmProvider.analyze(prompt);
-      
+
       return {
         testId: test.id,
         testName: test.name,
@@ -158,9 +161,11 @@ export class LLMTestRunner {
    */
   private buildPrompt(test: LLMTest, manuscript: string): string {
     const criteriaSection = test.evaluation_criteria
-      ? `\n評価基準:\n${test.evaluation_criteria.map(c => `- ${c}`).join("\n")}`
+      ? `\n評価基準:\n${
+        test.evaluation_criteria.map((c) => `- ${c}`).join("\n")
+      }`
       : "";
-    
+
     return `
 あなたは物語の品質を評価する専門家です。以下の原稿を読んで、指定された観点で評価してください。
 
@@ -196,16 +201,16 @@ ${criteriaSection}
   private printTestResult(result: TestResult): void {
     const icon = result.passed ? "✅" : "❌";
     const severity = this.getSeverityIcon(result.severity);
-    
+
     console.log(`${icon} ${severity} ${result.testName}`);
-    
+
     if (!result.passed || this.verbose) {
       console.log(`   Confidence: ${(result.confidence * 100).toFixed(1)}%`);
       console.log(`   Reasoning: ${result.reasoning.substring(0, 100)}...`);
-      
+
       if (result.suggestions && result.suggestions.length > 0) {
         console.log(`   💡 Suggestions:`);
-        result.suggestions.forEach(s => {
+        result.suggestions.forEach((s) => {
           console.log(`      - ${s}`);
         });
       }
@@ -217,10 +222,14 @@ ${criteriaSection}
    */
   private getSeverityIcon(severity: string): string {
     switch (severity) {
-      case "error": return "🔴";
-      case "warning": return "🟡";
-      case "info": return "🔵";
-      default: return "⚪";
+      case "error":
+        return "🔴";
+      case "warning":
+        return "🟡";
+      case "info":
+        return "🔵";
+      default:
+        return "⚪";
     }
   }
 
@@ -228,39 +237,47 @@ ${criteriaSection}
    * テスト結果のサマリーを表示
    */
   private printSummary(results: TestResult[]): void {
-    console.log("\n" + "=" .repeat(50));
+    console.log("\n" + "=".repeat(50));
     console.log("📊 Test Summary");
-    console.log("=" .repeat(50));
-    
+    console.log("=".repeat(50));
+
     const total = results.length;
-    const passed = results.filter(r => r.passed).length;
-    const failed = results.filter(r => !r.passed).length;
-    
-    const errors = results.filter(r => !r.passed && r.severity === "error").length;
-    const warnings = results.filter(r => !r.passed && r.severity === "warning").length;
-    const infos = results.filter(r => !r.passed && r.severity === "info").length;
-    
-    const avgConfidence = results.reduce((sum, r) => sum + r.confidence, 0) / total;
-    
+    const passed = results.filter((r) => r.passed).length;
+    const failed = results.filter((r) => !r.passed).length;
+
+    const errors =
+      results.filter((r) => !r.passed && r.severity === "error").length;
+    const warnings =
+      results.filter((r) => !r.passed && r.severity === "warning").length;
+    const infos =
+      results.filter((r) => !r.passed && r.severity === "info").length;
+
+    const avgConfidence = results.reduce((sum, r) => sum + r.confidence, 0) /
+      total;
+
     console.log(`Total Tests: ${total}`);
     console.log(`✅ Passed: ${passed}`);
     console.log(`❌ Failed: ${failed}`);
-    
+
     if (failed > 0) {
       console.log(`   🔴 Errors: ${errors}`);
       console.log(`   🟡 Warnings: ${warnings}`);
       console.log(`   🔵 Info: ${infos}`);
     }
-    
+
     console.log(`📈 Average Confidence: ${(avgConfidence * 100).toFixed(1)}%`);
-    
+
     // 全体の判定
     if (errors > 0) {
-      console.log("\n🚨 Critical issues found. Please fix errors before proceeding.");
+      console.log(
+        "\n🚨 Critical issues found. Please fix errors before proceeding.",
+      );
     } else if (warnings > 0) {
       console.log("\n⚠️  Some improvements recommended. Review warnings.");
     } else if (failed === 0) {
-      console.log("\n🎉 All tests passed! Your manuscript meets quality standards.");
+      console.log(
+        "\n🎉 All tests passed! Your manuscript meets quality standards.",
+      );
     } else {
       console.log("\n💡 Minor suggestions available for improvement.");
     }

@@ -137,7 +137,10 @@ export interface FeaturePlugin extends StorytellerPlugin {
  * プラグイン検証エラー
  */
 export interface PluginValidationError {
-  readonly code: "missing_dependency" | "circular_dependency" | "duplicate_plugin";
+  readonly code:
+    | "missing_dependency"
+    | "circular_dependency"
+    | "duplicate_plugin";
   readonly message: string;
   readonly details: {
     readonly pluginId?: string;
@@ -208,7 +211,8 @@ export function createPluginRegistry(): PluginRegistry {
           if (!plugins.has(dependency)) {
             errors.push({
               code: "missing_dependency",
-              message: `Plugin "${pluginId}" requires missing dependency "${dependency}"`,
+              message:
+                `Plugin "${pluginId}" requires missing dependency "${dependency}"`,
               details: {
                 pluginId,
                 dependency,

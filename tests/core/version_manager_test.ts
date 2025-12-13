@@ -1,12 +1,12 @@
-import { assertEquals, assert } from "../asserts.ts";
+import { assert, assertEquals } from "../asserts.ts";
 import {
-  compareVersions,
-  isCompatible,
   checkUpdates,
-  type ProjectMetadata,
-  type VersionComparisonResult,
+  compareVersions,
   type CompatibilityCheckResult,
+  isCompatible,
+  type ProjectMetadata,
   type UpdateCheckResult,
+  type VersionComparisonResult,
 } from "../../src/core/version_manager.ts";
 
 Deno.test("VersionManager - compareVersions", async (t) => {
@@ -53,22 +53,25 @@ Deno.test("VersionManager - compareVersions", async (t) => {
 });
 
 Deno.test("VersionManager - isCompatible", async (t) => {
-  await t.step("strictモード - メジャーバージョンが一致しない（互換性なし）", () => {
-    const metadata: ProjectMetadata = {
-      version: {
-        version: "1.0.0",
-        storytellerVersion: "0.3.0",
-        created: new Date("2025-01-01"),
-        lastUpdated: new Date("2025-01-01"),
-      },
-      features: {},
-      compatibility: "strict",
-    };
+  await t.step(
+    "strictモード - メジャーバージョンが一致しない（互換性なし）",
+    () => {
+      const metadata: ProjectMetadata = {
+        version: {
+          version: "1.0.0",
+          storytellerVersion: "0.3.0",
+          created: new Date("2025-01-01"),
+          lastUpdated: new Date("2025-01-01"),
+        },
+        features: {},
+        compatibility: "strict",
+      };
 
-    const result = isCompatible(metadata, "2.0.0");
-    assert(!result.compatible);
-    assert(result.reason?.includes("major version"));
-  });
+      const result = isCompatible(metadata, "2.0.0");
+      assert(!result.compatible);
+      assert(result.reason?.includes("major version"));
+    },
+  );
 
   await t.step("strictモード - メジャーバージョンが一致（互換性あり）", () => {
     const metadata: ProjectMetadata = {

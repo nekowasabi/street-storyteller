@@ -208,7 +208,8 @@ export class CliConfigurationProvider implements ConfigurationProvider {
     if (this.#options.environment) {
       value.runtime = {
         ...(value.runtime ?? {}),
-        environment: this.#options.environment as AppConfig["runtime"]["environment"],
+        environment: this.#options
+          .environment as AppConfig["runtime"]["environment"],
       };
     }
 

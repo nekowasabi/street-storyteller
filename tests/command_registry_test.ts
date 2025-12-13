@@ -1,7 +1,7 @@
 import { assertEquals, assertFalse } from "./asserts.ts";
 import { createCommandRegistry } from "../src/cli/command_registry.ts";
 import { registerCoreModules } from "../src/cli/modules/index.ts";
-import { type CommandHandler, type CommandContext } from "../src/cli/types.ts";
+import { type CommandContext, type CommandHandler } from "../src/cli/types.ts";
 import type { AppConfig } from "../src/shared/config/schema.ts";
 import type { ConfigurationManagerRef } from "../src/cli/types.ts";
 
@@ -84,7 +84,9 @@ Deno.test("CommandRegistry resolves registered handler by path tokens", async ()
 
 Deno.test("CommandRegistry resolves nested handler and aliases", async () => {
   const registry = createCommandRegistry();
-  registry.register(makeHandler(["element", "character"], { aliases: ["char"] }));
+  registry.register(
+    makeHandler(["element", "character"], { aliases: ["char"] }),
+  );
 
   const handler = registry.resolve(["element", "char"]);
   assertFalse(handler === undefined);

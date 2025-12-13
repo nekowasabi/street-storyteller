@@ -40,7 +40,10 @@ export function generateMarkdownContent(
  * @param metadata メタデータ
  * @returns フロントマター文字列（---で囲まれた部分）
  */
-function generateFrontMatter(field: DetailField, metadata: MarkdownMetadata): string {
+function generateFrontMatter(
+  field: DetailField,
+  metadata: MarkdownMetadata,
+): string {
   const fieldLabel = getFieldLabel(field);
   const date = new Date().toISOString().split("T")[0];
 

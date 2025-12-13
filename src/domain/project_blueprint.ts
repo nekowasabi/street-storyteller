@@ -24,7 +24,10 @@ export interface TemplateCatalog {
 export class StaticTemplateCatalog implements TemplateCatalog {
   getBlueprint(template: TemplateId): Result<ProjectBlueprint, TemplateError> {
     if (!TEMPLATES.has(template)) {
-      return err({ code: "template_not_found", message: `Unknown template: ${template}` });
+      return err({
+        code: "template_not_found",
+        message: `Unknown template: ${template}`,
+      });
     }
     return ok(TEMPLATES.get(template)!);
   }
@@ -62,11 +65,12 @@ Deno.test("Story has required elements", () => {
   assert(story.funs.length > 0, "At least one fun element expected");
   assert(story.charcters.length > 0, "At least one character expected");
 });
-`
+`,
   },
   {
     path: "tests/test_utils/assert.ts",
-    content: `export function assert(condition: unknown, message: string): asserts condition {
+    content:
+      `export function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
@@ -251,7 +255,12 @@ deno lint
 function buildTemplate(template: TemplateId): ProjectBlueprint {
   return {
     directories: [...BASE_DIRECTORIES],
-    files: [storyTemplate(), configTemplate(template), readmeTemplate(template), ...BASE_FILES],
+    files: [
+      storyTemplate(),
+      configTemplate(template),
+      readmeTemplate(template),
+      ...BASE_FILES,
+    ],
   };
 }
 

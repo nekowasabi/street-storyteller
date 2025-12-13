@@ -2,7 +2,11 @@ import { assertEquals, assertExists } from "jsr:@std/assert";
 import { ElementCharacterCommand } from "../../src/cli/modules/element/character.ts";
 import { createCommandRegistry } from "../../src/cli/command_registry.ts";
 import { createStubLogger } from "../asserts.ts";
-import type { CommandContext, OutputPresenter, ConfigurationManagerRef } from "../../src/cli/types.ts";
+import type {
+  CommandContext,
+  ConfigurationManagerRef,
+  OutputPresenter,
+} from "../../src/cli/types.ts";
 import type { AppConfig } from "../../src/shared/config/schema.ts";
 
 function createStubPresenter(): OutputPresenter {
@@ -17,7 +21,12 @@ function createStubPresenter(): OutputPresenter {
 function createStubConfig(): ConfigurationManagerRef {
   const config: AppConfig = {
     runtime: { environment: "test", paths: {} },
-    logging: { level: "info", format: "human", color: false, timestamps: false },
+    logging: {
+      level: "info",
+      format: "human",
+      color: false,
+      timestamps: false,
+    },
     features: {},
     cache: { defaultTtlSeconds: 900 },
     external: { providers: [] },

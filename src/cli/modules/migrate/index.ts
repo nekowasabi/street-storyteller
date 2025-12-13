@@ -6,7 +6,7 @@
 import { BaseCliCommand } from "../../base_command.ts";
 import type { CommandContext } from "../../types.ts";
 import type { Result } from "../../../shared/result.ts";
-import { ok, err } from "../../../shared/result.ts";
+import { err, ok } from "../../../shared/result.ts";
 import type { CommandExecutionError } from "../../types.ts";
 
 /**
@@ -88,12 +88,16 @@ export class MigrateCommand extends BaseCliCommand {
 
     // Git統合モードの場合
     if (options.gitSafe) {
-      presenter.showInfo("Git-safe mode: Migration will be performed on a new branch");
+      presenter.showInfo(
+        "Git-safe mode: Migration will be performed on a new branch",
+      );
     }
 
     // インタラクティブモードの場合
     if (options.interactive) {
-      presenter.showInfo("Interactive mode: You will be prompted for confirmation");
+      presenter.showInfo(
+        "Interactive mode: You will be prompted for confirmation",
+      );
     }
 
     // 強制実行モードの場合
@@ -105,7 +109,9 @@ export class MigrateCommand extends BaseCliCommand {
     if (options.targetVersion) {
       presenter.showInfo(`Target version: ${options.targetVersion}`);
     } else {
-      presenter.showInfo("No target version specified, will use latest version");
+      presenter.showInfo(
+        "No target version specified, will use latest version",
+      );
     }
 
     // TODO: 実際のマイグレーション実行ロジックを実装

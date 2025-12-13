@@ -1,7 +1,18 @@
 // Character型定義（拡張版）
-export type RelationType = "ally" | "enemy" | "neutral" | "romantic" | "respect" | "competitive" | "mentor";
+export type RelationType =
+  | "ally"
+  | "enemy"
+  | "neutral"
+  | "romantic"
+  | "respect"
+  | "competitive"
+  | "mentor";
 
-export type CharacterRole = "protagonist" | "antagonist" | "supporting" | "guest";
+export type CharacterRole =
+  | "protagonist"
+  | "antagonist"
+  | "supporting"
+  | "guest";
 
 export type CharacterDevelopment = {
   initial: string;
@@ -38,13 +49,13 @@ export type Character = {
   traits: string[];
   relationships: { [characterId: string]: RelationType };
   appearingChapters: string[];
-  
+
   // 必須概要（短文）
   summary: string;
-  
+
   // オプショナルな詳細情報（ハイブリッド）
   details?: CharacterDetails;
-  
+
   // 検出ヒント（LSP用）
   detectionHints?: DetectionHints;
 };

@@ -1,6 +1,14 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { LogManager, type LogManagerOptions } from "../src/shared/logging/log_manager.ts";
-import type { LogEvent, LogWriter, LoggerFactory, LogContext } from "../src/shared/logging/types.ts";
+import {
+  LogManager,
+  type LogManagerOptions,
+} from "../src/shared/logging/log_manager.ts";
+import type {
+  LogContext,
+  LogEvent,
+  LoggerFactory,
+  LogWriter,
+} from "../src/shared/logging/types.ts";
 
 class TestLoggerFactory implements LoggerFactory {
   #records: LogEvent[] = [];

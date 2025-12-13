@@ -52,9 +52,15 @@ Deno.test("Phase 5統合テスト: 完成度分析→一括処理→検証フロ
     assertEquals(analysisResult.totalTodoCount, 1); // villainのsummaryにTODO
 
     // 個別キャラクターの検証
-    const heroResult = analysisResult.characterResults.find((r) => r.character.id === "hero");
-    const villainResult = analysisResult.characterResults.find((r) => r.character.id === "villain");
-    const friendResult = analysisResult.characterResults.find((r) => r.character.id === "friend");
+    const heroResult = analysisResult.characterResults.find((r) =>
+      r.character.id === "hero"
+    );
+    const villainResult = analysisResult.characterResults.find((r) =>
+      r.character.id === "villain"
+    );
+    const friendResult = analysisResult.characterResults.find((r) =>
+      r.character.id === "friend"
+    );
 
     // hero: 必須のみ（50%）
     assertEquals(heroResult?.completenessRate, 50);
@@ -171,12 +177,20 @@ Deno.test("Phase 5統合テスト: 完成度分析→一括処理→検証フロ
     ];
 
     const analyzer = new CompletenessAnalyzer();
-    const analysisResult = analyzer.analyzeMultipleCharacters(updatedCharacters);
+    const analysisResult = analyzer.analyzeMultipleCharacters(
+      updatedCharacters,
+    );
 
     // 検証: 完成度が向上していること
-    const heroResult = analysisResult.characterResults.find((r) => r.character.id === "hero");
-    const villainResult = analysisResult.characterResults.find((r) => r.character.id === "villain");
-    const friendResult = analysisResult.characterResults.find((r) => r.character.id === "friend");
+    const heroResult = analysisResult.characterResults.find((r) =>
+      r.character.id === "hero"
+    );
+    const villainResult = analysisResult.characterResults.find((r) =>
+      r.character.id === "villain"
+    );
+    const friendResult = analysisResult.characterResults.find((r) =>
+      r.character.id === "friend"
+    );
 
     // heroとvillainは詳細が追加されて完成度が上がっている
     assertEquals(heroResult && heroResult.completenessRate > 50, true);
@@ -189,46 +203,49 @@ Deno.test("Phase 5統合テスト: 完成度分析→一括処理→検証フロ
     assertEquals(analysisResult.averageCompleteness > 50, true);
   });
 
-  await t.step("ステップ4: チャプター別フィルタリング + 完成度分析", async () => {
-    const characters: Character[] = [
-      {
-        id: "hero",
-        name: "勇者",
-        role: "protagonist",
-        traits: [],
-        relationships: {},
-        appearingChapters: ["chapter1", "chapter2"],
-        summary: "主人公",
-      },
-      {
-        id: "villain",
-        name: "魔王",
-        role: "antagonist",
-        traits: [],
-        relationships: {},
-        appearingChapters: ["chapter3"],
-        summary: "敵",
-      },
-    ];
+  await t.step(
+    "ステップ4: チャプター別フィルタリング + 完成度分析",
+    async () => {
+      const characters: Character[] = [
+        {
+          id: "hero",
+          name: "勇者",
+          role: "protagonist",
+          traits: [],
+          relationships: {},
+          appearingChapters: ["chapter1", "chapter2"],
+          summary: "主人公",
+        },
+        {
+          id: "villain",
+          name: "魔王",
+          role: "antagonist",
+          traits: [],
+          relationships: {},
+          appearingChapters: ["chapter3"],
+          summary: "敵",
+        },
+      ];
 
-    const analyzer = new CompletenessAnalyzer();
+      const analyzer = new CompletenessAnalyzer();
 
-    // chapter1に登場するキャラクターのみ分析
-    const chapter1Result = analyzer.analyzeMultipleCharacters(characters, {
-      chapterFilter: ["chapter1"],
-    });
+      // chapter1に登場するキャラクターのみ分析
+      const chapter1Result = analyzer.analyzeMultipleCharacters(characters, {
+        chapterFilter: ["chapter1"],
+      });
 
-    assertEquals(chapter1Result.totalCount, 1); // heroのみ
-    assertEquals(chapter1Result.characterResults[0].character.id, "hero");
+      assertEquals(chapter1Result.totalCount, 1); // heroのみ
+      assertEquals(chapter1Result.characterResults[0].character.id, "hero");
 
-    // chapter3に登場するキャラクターのみ分析
-    const chapter3Result = analyzer.analyzeMultipleCharacters(characters, {
-      chapterFilter: ["chapter3"],
-    });
+      // chapter3に登場するキャラクターのみ分析
+      const chapter3Result = analyzer.analyzeMultipleCharacters(characters, {
+        chapterFilter: ["chapter3"],
+      });
 
-    assertEquals(chapter3Result.totalCount, 1); // villainのみ
-    assertEquals(chapter3Result.characterResults[0].character.id, "villain");
-  });
+      assertEquals(chapter3Result.totalCount, 1); // villainのみ
+      assertEquals(chapter3Result.characterResults[0].character.id, "villain");
+    },
+  );
 
   await t.step("ステップ5: 強制上書き機能の統合確認", async () => {
     // 既存詳細を持つキャラクター

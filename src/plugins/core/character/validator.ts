@@ -3,7 +3,10 @@
  */
 
 import type { Character, CharacterRole } from "../../../type/v2/character.ts";
-import type { ValidationError, ValidationResult } from "../../../core/plugin_system.ts";
+import type {
+  ValidationError,
+  ValidationResult,
+} from "../../../core/plugin_system.ts";
 
 /**
  * Characterを検証する
@@ -25,16 +28,27 @@ export function validateCharacter(element: unknown): ValidationResult {
 
   // id検証
   if (!char.id || typeof char.id !== "string" || char.id.trim() === "") {
-    errors.push({ field: "id", message: "id is required and must be a non-empty string" });
+    errors.push({
+      field: "id",
+      message: "id is required and must be a non-empty string",
+    });
   }
 
   // name検証
   if (!char.name || typeof char.name !== "string" || char.name.trim() === "") {
-    errors.push({ field: "name", message: "name is required and must be a non-empty string" });
+    errors.push({
+      field: "name",
+      message: "name is required and must be a non-empty string",
+    });
   }
 
   // role検証
-  const validRoles: CharacterRole[] = ["protagonist", "antagonist", "supporting", "guest"];
+  const validRoles: CharacterRole[] = [
+    "protagonist",
+    "antagonist",
+    "supporting",
+    "guest",
+  ];
   if (!char.role || !validRoles.includes(char.role)) {
     errors.push({
       field: "role",
@@ -49,17 +63,29 @@ export function validateCharacter(element: unknown): ValidationResult {
 
   // relationships検証
   if (typeof char.relationships !== "object" || char.relationships === null) {
-    errors.push({ field: "relationships", message: "relationships must be an object" });
+    errors.push({
+      field: "relationships",
+      message: "relationships must be an object",
+    });
   }
 
   // appearingChapters検証
   if (!Array.isArray(char.appearingChapters)) {
-    errors.push({ field: "appearingChapters", message: "appearingChapters must be an array" });
+    errors.push({
+      field: "appearingChapters",
+      message: "appearingChapters must be an array",
+    });
   }
 
   // summary検証
-  if (!char.summary || typeof char.summary !== "string" || char.summary.trim() === "") {
-    errors.push({ field: "summary", message: "summary is required and must be a non-empty string" });
+  if (
+    !char.summary || typeof char.summary !== "string" ||
+    char.summary.trim() === ""
+  ) {
+    errors.push({
+      field: "summary",
+      message: "summary is required and must be a non-empty string",
+    });
   }
 
   if (errors.length > 0) {

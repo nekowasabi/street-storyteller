@@ -6,12 +6,12 @@ import { assert, assertEquals } from "../asserts.ts";
 import { MigrationPlugin } from "../../src/plugins/features/migration/plugin.ts";
 import { MigrationRegistry } from "../../src/migrations/registry.ts";
 import type {
+  BackupContext,
   Migration,
   MigrationCheck,
-  MigrationResult,
   MigrationOptions,
+  MigrationResult,
   ProjectContext,
-  BackupContext,
 } from "../../src/migrations/types.ts";
 
 // テスト用のカウンター付きマイグレーション

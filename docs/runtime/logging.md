@@ -3,27 +3,30 @@
 Street Storyteller bootstraps logging through the `LoggingService`:
 
 1. Resolve the merged application configuration.
-2. Instantiate a `LogManager` with the selected level, format, and color/timestamp settings.
+2. Instantiate a `LogManager` with the selected level, format, and
+   color/timestamp settings.
 3. Provide scoped loggers to CLI commands and application services.
 
 ## Log Levels
 
-| Level  | Description                                   |
-|--------|-----------------------------------------------|
-| trace  | Extremely verbose diagnostic output           |
-| debug  | Detailed debugging information                |
-| info   | High-level lifecycle events (default minimum) |
-| warn   | Recoverable issues requiring attention         |
-| error  | Failures that caused the current operation to abort |
-| fatal  | Process-threatening or unrecoverable errors   |
+| Level | Description                                         |
+| ----- | --------------------------------------------------- |
+| trace | Extremely verbose diagnostic output                 |
+| debug | Detailed debugging information                      |
+| info  | High-level lifecycle events (default minimum)       |
+| warn  | Recoverable issues requiring attention              |
+| error | Failures that caused the current operation to abort |
+| fatal | Process-threatening or unrecoverable errors         |
 
-The threshold is controlled via configuration (`logging.level`), environment (`STORYTELLER_LOG_LEVEL`), or CLI flag (`--log-level`).
+The threshold is controlled via configuration (`logging.level`), environment
+(`STORYTELLER_LOG_LEVEL`), or CLI flag (`--log-level`).
 
 ## Console Output Modes
 
-- **Human** (`logging.format = "human"`): colorized (when enabled) lines like  
+- **Human** (`logging.format = "human"`): colorized (when enabled) lines like\
   `2025-10-22T10:28:10.213Z [INFO] cli Project generated {"name":"cli-story"} {"environment":"development","command":"generate"}`
-- **JSON** (`logging.format = "json"`): machine-friendly single-line JSON objects.
+- **JSON** (`logging.format = "json"`): machine-friendly single-line JSON
+  objects.
 
 Warnings and errors are written to stderr; lower levels go to stdout.
 
@@ -59,4 +62,3 @@ assertEquals(factory.events[0].metadata?.reason, "boom");
 ```
 
 This is helpful when writing unit tests for commands or services that emit logs.
-

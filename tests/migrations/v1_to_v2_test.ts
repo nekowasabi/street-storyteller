@@ -6,7 +6,10 @@ import { assert, assertEquals } from "../asserts.ts";
 import { CharacterMigration } from "../../src/migrations/v1_to_v2/character_migration.ts";
 import { SettingMigration } from "../../src/migrations/v1_to_v2/setting_migration.ts";
 import { ProjectMetadataMigration } from "../../src/migrations/v1_to_v2/project_metadata_migration.ts";
-import type { ProjectContext, MigrationOptions } from "../../src/migrations/types.ts";
+import type {
+  MigrationOptions,
+  ProjectContext,
+} from "../../src/migrations/types.ts";
 import type { Character as CharacterV1 } from "../../src/type/character.ts";
 import type { Character as CharacterV2 } from "../../src/type/v2/character.ts";
 
@@ -90,7 +93,10 @@ Deno.test("SettingMigration - canMigrate チェック", async () => {
   const check = await migration.canMigrate(projectContext);
 
   assert(check.canMigrate);
-  assertEquals(check.reason, "Setting migration is optional (no v1 Setting type exists yet)");
+  assertEquals(
+    check.reason,
+    "Setting migration is optional (no v1 Setting type exists yet)",
+  );
 });
 
 Deno.test("ProjectMetadataMigration - 基本的なマイグレーション", async () => {

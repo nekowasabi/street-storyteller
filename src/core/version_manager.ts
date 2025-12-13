@@ -64,7 +64,9 @@ export interface UpdateCheckResult {
 /**
  * バージョン文字列を解析
  */
-function parseVersion(version: string): { major: number; minor: number; patch: number } {
+function parseVersion(
+  version: string,
+): { major: number; minor: number; patch: number } {
   const parts = version.split(".").map((part) => parseInt(part, 10));
   return {
     major: parts[0] ?? 0,
@@ -120,7 +122,8 @@ export function isCompatible(
     if (pv.major !== cv.major) {
       return {
         compatible: false,
-        reason: `Project major version ${pv.major} does not match current major version ${cv.major}`,
+        reason:
+          `Project major version ${pv.major} does not match current major version ${cv.major}`,
       };
     }
     return { compatible: true };
@@ -129,7 +132,8 @@ export function isCompatible(
     if (pv.major !== cv.major) {
       return {
         compatible: false,
-        reason: `Project major version ${pv.major} does not match current major version ${cv.major}`,
+        reason:
+          `Project major version ${pv.major} does not match current major version ${cv.major}`,
       };
     }
     return { compatible: true };
@@ -174,7 +178,8 @@ export function checkUpdates(
       updateAvailable: true,
       recommendedAction: "migrate",
       breaking: true,
-      description: `Major version update available (${projectVersion} → ${currentVersion}). Migration required.`,
+      description:
+        `Major version update available (${projectVersion} → ${currentVersion}). Migration required.`,
     };
   }
 

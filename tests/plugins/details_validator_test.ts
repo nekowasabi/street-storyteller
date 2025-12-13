@@ -12,7 +12,10 @@ Deno.test("FileReferenceValidator: ファイル参照が存在する場合", asy
   const tempDir = await Deno.makeTempDir();
   const characterDir = join(tempDir, "characters", "hero");
   await Deno.mkdir(characterDir, { recursive: true });
-  await Deno.writeTextFile(join(characterDir, "backstory.md"), "バックストーリー");
+  await Deno.writeTextFile(
+    join(characterDir, "backstory.md"),
+    "バックストーリー",
+  );
 
   const character: Character = {
     id: "hero",
@@ -74,7 +77,10 @@ Deno.test("FileReferenceValidator: 複数のファイル参照を検証", async 
   const tempDir = await Deno.makeTempDir();
   const characterDir = join(tempDir, "characters", "hero");
   await Deno.mkdir(characterDir, { recursive: true });
-  await Deno.writeTextFile(join(characterDir, "backstory.md"), "バックストーリー");
+  await Deno.writeTextFile(
+    join(characterDir, "backstory.md"),
+    "バックストーリー",
+  );
   // appearanceファイルは作成しない（エラーケース）
 
   const character: Character = {

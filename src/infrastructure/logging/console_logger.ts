@@ -1,10 +1,10 @@
 import {
   type LogContext,
   type LogEvent,
-  type LogLevel,
   type LoggerFactory,
-  type LogWriter,
+  type LogLevel,
   logLevelWeight,
+  type LogWriter,
 } from "../../shared/logging/types.ts";
 
 const encoder = new TextEncoder();
@@ -73,13 +73,12 @@ export class ConsoleLoggerFactory implements LoggerFactory {
       : "";
     const level = event.level.toUpperCase();
     const scope = event.scope;
-    const metadata = event.metadata
-      ? ` ${JSON.stringify(event.metadata)}`
-      : "";
+    const metadata = event.metadata ? ` ${JSON.stringify(event.metadata)}` : "";
     const context = event.context && Object.keys(event.context).length > 0
       ? ` ${JSON.stringify(event.context)}`
       : "";
-    const message = `${timestamp}[${level}] ${scope} ${event.message}${metadata}${context}`;
+    const message =
+      `${timestamp}[${level}] ${scope} ${event.message}${metadata}${context}`;
     return this.#color ? applyColor(event.level, message) : message;
   }
 
@@ -97,7 +96,8 @@ export class ConsoleLoggerFactory implements LoggerFactory {
   }
 
   #selectStream(level: LogLevel): WritableStream {
-    return logLevelWeight(level) >= SEVERITY_THRESHOLD ? this.#stderr
+    return logLevelWeight(level) >= SEVERITY_THRESHOLD
+      ? this.#stderr
       : this.#stdout;
   }
 }
@@ -140,4 +140,3 @@ function applyColor(level: LogLevel, message: string): string {
   }
   return `${color}${message}${RESET}`;
 }
-

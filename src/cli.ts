@@ -4,6 +4,7 @@ import { registerCoreModules } from "./cli/modules/index.ts";
 import type {
   CliDependencies,
   CommandContext,
+  CommandHandler,
   ConfigurationManagerRef,
   OutputPresenter,
 } from "./cli/types.ts";
@@ -11,11 +12,11 @@ import { parseCliArgs, type ParsedArguments } from "./cli/arg_parser.ts";
 import { ConfigurationManager } from "./application/config/configuration_manager.ts";
 import { LoggingService } from "./application/logging/logging_service.ts";
 import {
+  CliConfigurationProvider,
+  type CliConfigurationProviderOptions,
   DefaultConfigurationProvider,
   EnvConfigurationProvider,
   FileConfigurationProvider,
-  CliConfigurationProvider,
-  type CliConfigurationProviderOptions,
 } from "./infrastructure/config/providers.ts";
 import type { Logger } from "./shared/logging/types.ts";
 import { join } from "@std/path/join";
@@ -32,8 +33,9 @@ export async function runCLI(deps: CliDependencies = {}): Promise<void> {
   const configurationManager = deps.createConfigurationManager?.() ??
     createDefaultConfigurationManager(rawArgs);
 
-  const loggingService = deps.loggingServiceFactory?.({ configurationManager }) ??
-    new LoggingService({ configurationManager });
+  const loggingService =
+    deps.loggingServiceFactory?.({ configurationManager }) ??
+      new LoggingService({ configurationManager });
 
   await loggingService.initialize();
   const rootLogger = loggingService.getLogger("cli");
@@ -50,19 +52,23 @@ export async function runCLI(deps: CliDependencies = {}): Promise<void> {
     Deno.exit(1);
   }
 
-  const rawCommand = (rawArgs._[0] as string | undefined) ?? "help";
-  const commandName = aliasMap.get(rawCommand) ?? rawCommand;
-  const handler = registry.resolve(commandName);
+  const positionals = Array.isArray(rawArgs._) ? rawArgs._ : [];
+  const resolution = resolveCommand(registry, positionals, aliasMap);
+  const handler = resolution?.handler;
+  const commandName = resolution?.commandName ?? "help";
+  const consumedArgs = resolution?.consumedArgs ?? 0;
 
   if (!handler) {
-    presenter.showError(`Unknown command: ${rawCommand}`);
-    rootLogger.error("Unknown command", { command: rawCommand });
+    const unknown = positionals.length > 0 ? positionals.join(" ") : "(none)";
+    presenter.showError(`Unknown command: ${unknown}`);
+    rootLogger.error("Unknown command", { command: unknown });
     await registry.resolve("help")?.execute(
       createContext(
         presenter,
         configurationManager,
         rawArgs,
         "help",
+        0,
         rootLogger.withContext({ command: "help" }),
       ),
     );
@@ -75,6 +81,7 @@ export async function runCLI(deps: CliDependencies = {}): Promise<void> {
     configurationManager,
     rawArgs,
     commandName,
+    consumedArgs,
     commandLogger,
   );
 
@@ -92,31 +99,77 @@ function createContext(
   config: ConfigurationManagerRef,
   args: ParsedArguments,
   commandName: string,
+  consumedArgs: number,
   logger: Logger,
 ): CommandContext {
   return {
     presenter,
     config,
     logger,
-    args: normalizeArgs(args, commandName),
+    args: normalizeArgs(args, commandName, consumedArgs),
   };
 }
 
 function normalizeArgs(
   args: ParsedArguments,
   commandName: string,
+  consumedArgs: number,
 ): Record<string, unknown> {
   const positionals = Array.isArray(args._) ? [...args._] : [];
   const rest: Record<string, unknown> = { ...args };
   delete rest._;
   rest.command = commandName;
-  if (positionals.length > 1) {
-    rest.extra = positionals.slice(1);
+  if (positionals.length > consumedArgs) {
+    rest.extra = positionals.slice(consumedArgs);
   }
   return rest;
 }
 
-function createDefaultConfigurationManager(args: ParsedArguments): ConfigurationManager {
+function resolveCommand(
+  registry: ReturnType<typeof createCommandRegistry>,
+  positionals: readonly string[],
+  aliases: Map<string, string>,
+):
+  | { handler: CommandHandler; commandName: string; consumedArgs: number }
+  | undefined {
+  if (positionals.length === 0) {
+    const handler = registry.resolve("help");
+    return handler
+      ? { handler, commandName: "help", consumedArgs: 0 }
+      : undefined;
+  }
+
+  const first = positionals[0];
+  const alias = typeof first === "string" ? aliases.get(first) : undefined;
+  const aliasSegments = alias ? alias.trim().split(/\s+/).filter(Boolean) : [];
+  const effective = aliasSegments.length > 0
+    ? [...aliasSegments, ...positionals.slice(1)]
+    : [...positionals];
+
+  for (let length = effective.length; length >= 1; length -= 1) {
+    const candidate = effective.slice(0, length);
+    const handler = registry.resolve(candidate);
+    if (!handler) {
+      continue;
+    }
+
+    const consumedArgs = aliasSegments.length > 0
+      ? length <= aliasSegments.length ? 1 : 1 + (length - aliasSegments.length)
+      : length;
+
+    return {
+      handler,
+      commandName: candidate.join(" "),
+      consumedArgs,
+    };
+  }
+
+  return undefined;
+}
+
+function createDefaultConfigurationManager(
+  args: ParsedArguments,
+): ConfigurationManager {
   const searchPaths = collectConfigPaths(args);
   const providers = [
     new DefaultConfigurationProvider(),
@@ -138,7 +191,9 @@ function collectConfigPaths(args: ParsedArguments): readonly string[] {
   return Array.from(paths);
 }
 
-function extractCliOverrides(args: ParsedArguments): CliConfigurationProviderOptions {
+function extractCliOverrides(
+  args: ParsedArguments,
+): CliConfigurationProviderOptions {
   let overrides: CliConfigurationProviderOptions = {};
 
   if (typeof args["log-level"] === "string") {

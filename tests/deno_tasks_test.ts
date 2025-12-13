@@ -1,4 +1,4 @@
-import { assertEquals, assert } from "./asserts.ts";
+import { assert, assertEquals } from "./asserts.ts";
 
 Deno.test("deno.json declares CLI build tasks", async () => {
   const text = await Deno.readTextFile("deno.json");

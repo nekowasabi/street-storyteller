@@ -3,17 +3,20 @@
  * プロジェクトメタデータの読み書き、互換性チェック、更新チェックを提供
  */
 
-import type { FileSystemGateway, FileSystemError } from "./file_system_gateway.ts";
+import type {
+  FileSystemError,
+  FileSystemGateway,
+} from "./file_system_gateway.ts";
 import type { Logger } from "../shared/logging/types.ts";
-import { ok, err, type Result } from "../shared/result.ts";
+import { err, ok, type Result } from "../shared/result.ts";
 import {
   parseProjectMetadata,
   type ProjectMetadata,
 } from "../shared/config/schema.ts";
 import {
-  isCompatible,
   checkUpdates,
   type CompatibilityCheckResult,
+  isCompatible,
   type UpdateCheckResult,
 } from "../core/version_manager.ts";
 
@@ -21,12 +24,18 @@ const CONFIG_DIR = ".storyteller";
 const CONFIG_FILE = "config.json";
 
 export interface VersionServiceError {
-  readonly code: "not_found" | "invalid_format" | "write_error" | FileSystemError["code"];
+  readonly code:
+    | "not_found"
+    | "invalid_format"
+    | "write_error"
+    | FileSystemError["code"];
   readonly message: string;
 }
 
 export interface VersionService {
-  loadProjectMetadata(projectPath: string): Promise<Result<ProjectMetadata, VersionServiceError>>;
+  loadProjectMetadata(
+    projectPath: string,
+  ): Promise<Result<ProjectMetadata, VersionServiceError>>;
   saveProjectMetadata(
     projectPath: string,
     metadata: ProjectMetadata,
@@ -94,7 +103,8 @@ export function createVersionService(
       if (!ensureDirResult.ok) {
         return err({
           code: ensureDirResult.error.code,
-          message: `Failed to create config directory: ${ensureDirResult.error.message}`,
+          message:
+            `Failed to create config directory: ${ensureDirResult.error.message}`,
         });
       }
 
@@ -123,7 +133,10 @@ export function createVersionService(
         return err(metadataResult.error);
       }
 
-      const compatibilityResult = isCompatible(metadataResult.value, currentVersion);
+      const compatibilityResult = isCompatible(
+        metadataResult.value,
+        currentVersion,
+      );
       logger.debug("Compatibility check completed", {
         compatible: compatibilityResult.compatible,
         projectVersion: metadataResult.value.version.version,

@@ -4,7 +4,7 @@
  * Character要素の作成、検証、スキーマエクスポートを担当するプラグイン
  */
 
-import { ok, err } from "../../../shared/result.ts";
+import { err, ok } from "../../../shared/result.ts";
 import type { Result } from "../../../shared/result.ts";
 import type {
   CreateElementOptions,
@@ -39,8 +39,13 @@ export class CharacterPlugin implements ElementPlugin {
       const character = options as Partial<Character>;
 
       // 必須フィールドの検証
-      if (!character.id || !character.name || !character.role || !character.summary) {
-        return err(new Error("Missing required fields: id, name, role, summary"));
+      if (
+        !character.id || !character.name || !character.role ||
+        !character.summary
+      ) {
+        return err(
+          new Error("Missing required fields: id, name, role, summary"),
+        );
       }
 
       // デフォルト値の設定
@@ -56,13 +61,16 @@ export class CharacterPlugin implements ElementPlugin {
         ...(character.aliases && { aliases: character.aliases }),
         ...(character.pronouns && { pronouns: character.pronouns }),
         ...(character.details && { details: character.details }),
-        ...(character.detectionHints && { detectionHints: character.detectionHints }),
+        ...(character.detectionHints &&
+          { detectionHints: character.detectionHints }),
       };
 
       // 検証
       const validationResult = validateCharacter(fullCharacter);
       if (!validationResult.valid) {
-        const errorMessages = validationResult.errors?.map((e) => e.message).join(", ") ?? "";
+        const errorMessages = validationResult.errors?.map((e) =>
+          e.message
+        ).join(", ") ?? "";
         return err(new Error(`Validation failed: ${errorMessages}`));
       }
 
@@ -97,19 +105,54 @@ export class CharacterPlugin implements ElementPlugin {
         name: { type: "string", description: "Character name" },
         role: {
           type: "CharacterRole",
-          description: "Character role (protagonist, antagonist, supporting, guest)",
+          description:
+            "Character role (protagonist, antagonist, supporting, guest)",
         },
         traits: { type: "string[]", description: "Character traits" },
-        relationships: { type: "Record<string, RelationType>", description: "Relationships with other characters" },
-        appearingChapters: { type: "string[]", description: "Chapters where character appears" },
+        relationships: {
+          type: "Record<string, RelationType>",
+          description: "Relationships with other characters",
+        },
+        appearingChapters: {
+          type: "string[]",
+          description: "Chapters where character appears",
+        },
         summary: { type: "string", description: "Short summary" },
-        displayNames: { type: "string[]", description: "Display name variations", optional: true },
-        aliases: { type: "string[]", description: "Aliases and nicknames", optional: true },
-        pronouns: { type: "string[]", description: "Pronouns for LSP", optional: true },
-        details: { type: "CharacterDetails", description: "Detailed information", optional: true },
-        detectionHints: { type: "DetectionHints", description: "LSP detection hints", optional: true },
+        displayNames: {
+          type: "string[]",
+          description: "Display name variations",
+          optional: true,
+        },
+        aliases: {
+          type: "string[]",
+          description: "Aliases and nicknames",
+          optional: true,
+        },
+        pronouns: {
+          type: "string[]",
+          description: "Pronouns for LSP",
+          optional: true,
+        },
+        details: {
+          type: "CharacterDetails",
+          description: "Detailed information",
+          optional: true,
+        },
+        detectionHints: {
+          type: "DetectionHints",
+          description: "LSP detection hints",
+          optional: true,
+        },
       },
-      required: ["id", "name", "role", "traits", "relationships", "appearingChapters", "summary"],
+      required: [
+        "id",
+        "name",
+        "role",
+        "traits",
+        "relationships",
+        "appearingChapters",
+        "summary",
+      ],
     };
   }
 

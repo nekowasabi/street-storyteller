@@ -61,7 +61,11 @@ Deno.test("統合テスト - v1→v2マイグレーション完全フロー", as
   );
 
   assert(dryRunResult.success, "Dry-run should succeed");
-  assertEquals(dryRunResult.migrationsExecuted, 0, "Dry-run should not execute migrations");
+  assertEquals(
+    dryRunResult.migrationsExecuted,
+    0,
+    "Dry-run should not execute migrations",
+  );
 
   // 6. MigrationPluginでマイグレーションを実行（実行モード）
   const actualResult = await plugin.executeMigration(
@@ -71,7 +75,10 @@ Deno.test("統合テスト - v1→v2マイグレーション完全フロー", as
   );
 
   assert(actualResult.success, "Migration should succeed");
-  assert(actualResult.migrationsExecuted >= 1, "Should execute at least 1 migration");
+  assert(
+    actualResult.migrationsExecuted >= 1,
+    "Should execute at least 1 migration",
+  );
 });
 
 Deno.test("統合テスト - Git統合フロー", () => {
@@ -80,11 +87,17 @@ Deno.test("統合テスト - Git統合フロー", () => {
 
   // 2. マイグレーションブランチ名の生成
   const branchName = git.generateMigrationBranchName("1.0.0", "2.0.0");
-  assert(branchName.startsWith("migration/"), "Branch name should start with 'migration/'");
+  assert(
+    branchName.startsWith("migration/"),
+    "Branch name should start with 'migration/'",
+  );
 
   // 3. ブランチ作成コマンドの生成
   const branchCommand = git.createBranchCommand(branchName);
-  assert(branchCommand.includes("git checkout -b"), "Should create checkout command");
+  assert(
+    branchCommand.includes("git checkout -b"),
+    "Should create checkout command",
+  );
 
   // 4. コミットメッセージの生成
   const commitMessage = git.generateCommitMessage(
@@ -92,18 +105,28 @@ Deno.test("統合テスト - Git統合フロー", () => {
     ["src/type/character.ts"],
     "Migrated Character from v1 to v2",
   );
-  assert(commitMessage.includes("character_v1_to_v2"), "Commit message should include migration ID");
+  assert(
+    commitMessage.includes("character_v1_to_v2"),
+    "Commit message should include migration ID",
+  );
 
   // 5. コミットコマンドの生成
   const commitCommands = git.createCommitCommands(
     ["src/type/character.ts"],
     "Migration step 1",
   );
-  assertEquals(commitCommands.length, 2, "Should generate add and commit commands");
+  assertEquals(
+    commitCommands.length,
+    2,
+    "Should generate add and commit commands",
+  );
 
   // 6. ロールバックコマンドの生成
   const rollbackCommand = git.createRollbackCommand("main");
-  assert(rollbackCommand.includes("git checkout main"), "Should create rollback command");
+  assert(
+    rollbackCommand.includes("git checkout main"),
+    "Should create rollback command",
+  );
 });
 
 Deno.test("統合テスト - マイグレーションパスが見つからない場合", async () => {
@@ -131,9 +154,16 @@ Deno.test("統合テスト - マイグレーションパスが見つからない
   const wizard = new MigrationWizard(registry);
   const analysis = await wizard.analyzeMigration(projectContext, "5.0.0");
 
-  assertEquals(analysis.success, false, "Analysis should fail for non-existent version");
+  assertEquals(
+    analysis.success,
+    false,
+    "Analysis should fail for non-existent version",
+  );
   assert(analysis.error, "Should have error message");
-  assert(analysis.error.includes("No migration path found"), "Error should mention no path found");
+  assert(
+    analysis.error.includes("No migration path found"),
+    "Error should mention no path found",
+  );
 });
 
 Deno.test("統合テスト - 同じバージョンへのマイグレーション", async () => {
@@ -162,5 +192,9 @@ Deno.test("統合テスト - 同じバージョンへのマイグレーション
   );
 
   assert(result.success, "Should succeed for same version");
-  assertEquals(result.migrationsExecuted, 0, "Should not execute any migrations");
+  assertEquals(
+    result.migrationsExecuted,
+    0,
+    "Should not execute any migrations",
+  );
 });

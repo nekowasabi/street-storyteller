@@ -1,5 +1,8 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { AppConfigSchema, parseAppConfig } from "../src/shared/config/schema.ts";
+import {
+  AppConfigSchema,
+  parseAppConfig,
+} from "../src/shared/config/schema.ts";
 import {
   type ConfigurationLayer,
   mergeConfigurationLayers,

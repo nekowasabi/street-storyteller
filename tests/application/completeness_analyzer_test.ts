@@ -7,7 +7,9 @@ import { CompletenessAnalyzer } from "../../src/application/completeness_analyze
 import type { Character } from "../../src/type/v2/character.ts";
 
 Deno.test("CompletenessAnalyzer", async (t) => {
-  await t.step("analyzeCharacter - 必須フィールドのみのキャラクターは低い完成度を示す", () => {
+  await t.step(
+    "analyzeCharacter - 必須フィールドのみのキャラクターは低い完成度を示す",
+    () => {
       const character: Character = {
         id: "hero",
         name: "勇者",
@@ -27,9 +29,12 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       assertEquals(result.filledRequiredFieldsCount, 7);
       assertEquals(result.optionalFieldsCount > 0, true);
       assertEquals(result.filledOptionalFieldsCount, 0);
-    });
+    },
+  );
 
-  await t.step("analyzeCharacter - detailsフィールドがあるキャラクターは高い完成度を示す", () => {
+  await t.step(
+    "analyzeCharacter - detailsフィールドがあるキャラクターは高い完成度を示す",
+    () => {
       const character: Character = {
         id: "hero",
         name: "勇者",
@@ -51,9 +56,12 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       // detailsフィールドが3つあるので完成度は高め
       assertEquals(result.completenessRate > 40, true);
       assertEquals(result.filledOptionalFieldsCount, 3);
-    });
+    },
+  );
 
-  await t.step("analyzeCharacter - TODOマーカーを含むフィールドを検出する", () => {
+  await t.step(
+    "analyzeCharacter - TODOマーカーを含むフィールドを検出する",
+    () => {
       const character: Character = {
         id: "hero",
         name: "勇者",
@@ -77,9 +85,12 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       assertEquals(result.todoFields.includes("summary"), true);
       assertEquals(result.todoFields.includes("details.appearance"), true);
       assertEquals(result.todoFields.includes("details.backstory"), true);
-    });
+    },
+  );
 
-  await t.step("analyzeCharacter - ファイル参照のdetailsフィールドも検出する", () => {
+  await t.step(
+    "analyzeCharacter - ファイル参照のdetailsフィールドも検出する",
+    () => {
       const character: Character = {
         id: "hero",
         name: "勇者",
@@ -101,11 +112,20 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       // ファイル参照も完成度に含める
       assertEquals(result.filledOptionalFieldsCount, 3);
       assertEquals(result.fileReferences.length, 2);
-      assertEquals(result.fileReferences.includes("characters/hero/appearance.md"), true);
-      assertEquals(result.fileReferences.includes("characters/hero/backstory.md"), true);
-    });
+      assertEquals(
+        result.fileReferences.includes("characters/hero/appearance.md"),
+        true,
+      );
+      assertEquals(
+        result.fileReferences.includes("characters/hero/backstory.md"),
+        true,
+      );
+    },
+  );
 
-  await t.step("analyzeCharacter - development フィールドの完成度を計算する", () => {
+  await t.step(
+    "analyzeCharacter - development フィールドの完成度を計算する",
+    () => {
       const character: Character = {
         id: "hero",
         name: "勇者",
@@ -130,10 +150,16 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       // development フィールドが存在
       assertEquals(result.filledOptionalFieldsCount, 1);
       // TODOマーカーを検出
-      assertEquals(result.todoFields.includes("details.development.resolution"), true);
-    });
+      assertEquals(
+        result.todoFields.includes("details.development.resolution"),
+        true,
+      );
+    },
+  );
 
-  await t.step("analyzeMultipleCharacters - 複数のキャラクターの完成度を集計する", () => {
+  await t.step(
+    "analyzeMultipleCharacters - 複数のキャラクターの完成度を集計する",
+    () => {
       const characters: Character[] = [
         {
           id: "hero",
@@ -167,9 +193,12 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       assertEquals(result.averageCompleteness > 0, true);
       assertEquals(result.characterResults.length, 2);
       assertEquals(result.totalTodoCount, 1);
-    });
+    },
+  );
 
-  await t.step("analyzeMultipleCharacters - 役割別のフィルタリングを行う", () => {
+  await t.step(
+    "analyzeMultipleCharacters - 役割別のフィルタリングを行う",
+    () => {
       const characters: Character[] = [
         {
           id: "hero",
@@ -206,12 +235,19 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       });
 
       assertEquals(result.totalCount, 2);
-      assertEquals(result.characterResults.every((r: any) =>
-        r.character.role === "protagonist" || r.character.role === "antagonist"
-      ), true);
-    });
+      assertEquals(
+        result.characterResults.every((r: any) =>
+          r.character.role === "protagonist" ||
+          r.character.role === "antagonist"
+        ),
+        true,
+      );
+    },
+  );
 
-  await t.step("analyzeMultipleCharacters - チャプター別のフィルタリングを行う", () => {
+  await t.step(
+    "analyzeMultipleCharacters - チャプター別のフィルタリングを行う",
+    () => {
       const characters: Character[] = [
         {
           id: "hero",
@@ -248,12 +284,18 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       });
 
       assertEquals(result.totalCount, 2);
-      assertEquals(result.characterResults.every((r: any) =>
-        r.character.appearingChapters.includes("chapter1")
-      ), true);
-    });
+      assertEquals(
+        result.characterResults.every((r: any) =>
+          r.character.appearingChapters.includes("chapter1")
+        ),
+        true,
+      );
+    },
+  );
 
-  await t.step("generateCompletenessReport - 完成度レポートをテキスト形式で生成する", () => {
+  await t.step(
+    "generateCompletenessReport - 完成度レポートをテキスト形式で生成する",
+    () => {
       const characters: Character[] = [
         {
           id: "hero",
@@ -277,9 +319,12 @@ Deno.test("CompletenessAnalyzer", async (t) => {
       assertExists(report);
       assertEquals(report.includes("Complete"), true);
       assertEquals(report.includes("勇者"), true);
-    });
+    },
+  );
 
-  await t.step("generateCompletenessReport - TODOマーカーを含むレポートを生成する", () => {
+  await t.step(
+    "generateCompletenessReport - TODOマーカーを含むレポートを生成する",
+    () => {
       const characters: Character[] = [
         {
           id: "hero",
@@ -298,5 +343,6 @@ Deno.test("CompletenessAnalyzer", async (t) => {
 
       assertExists(report);
       assertEquals(report.includes("TODO"), true);
-    });
+    },
+  );
 });

@@ -1,4 +1,7 @@
-import type { FileSystemGateway, FileSystemError } from "./file_system_gateway.ts";
+import type {
+  FileSystemError,
+  FileSystemGateway,
+} from "./file_system_gateway.ts";
 import { err, ok, type Result } from "../shared/result.ts";
 
 export interface MigrationPlanAction {
@@ -19,7 +22,9 @@ export interface MigrationReport {
 
 export interface MigrationFacilitator {
   assess(projectPath: string): Promise<MigrationPlan>;
-  ensureManifest(projectPath: string): Promise<Result<void, MigrationActionError>>;
+  ensureManifest(
+    projectPath: string,
+  ): Promise<Result<void, MigrationActionError>>;
   emitReport(plan: MigrationPlan): MigrationReport;
 }
 
@@ -114,7 +119,9 @@ export function createMigrationFacilitator(
       const messages = [
         `Migration status: ${plan.status}`,
         ...plan.actions.map((action) =>
-          `Action: ${action.description}${action.autoRunnable ? " (can auto-run)" : ""}`
+          `Action: ${action.description}${
+            action.autoRunnable ? " (can auto-run)" : ""
+          }`
         ),
         ...plan.warnings.map((warning) => `Warning: ${warning}`),
       ];
@@ -131,7 +138,9 @@ function parseManifest(content: string): Result<Manifest, { message: string }> {
     }
     return ok(manifest);
   } catch (error) {
-    return err({ message: error instanceof Error ? error.message : String(error) });
+    return err({
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 

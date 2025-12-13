@@ -1,7 +1,7 @@
-import { assertEquals, assert } from "../../asserts.ts";
+import { assert, assertEquals } from "../../asserts.ts";
 import {
-  ProjectMetadataSchema,
   parseProjectMetadata,
+  ProjectMetadataSchema,
 } from "../../../src/shared/config/schema.ts";
 import { z } from "npm:zod";
 
@@ -82,7 +82,10 @@ Deno.test("ProjectMetadataSchema - 日付型の強制変換", () => {
 
   assert(result.version.created instanceof Date);
   assert(result.version.lastUpdated instanceof Date);
-  assertEquals(result.version.created.toISOString().substring(0, 10), "2025-01-01");
+  assertEquals(
+    result.version.created.toISOString().substring(0, 10),
+    "2025-01-01",
+  );
 });
 
 Deno.test("ProjectMetadataSchema - 検証エラー", () => {

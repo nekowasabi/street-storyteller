@@ -79,7 +79,9 @@ export const ExternalConfigSchema = z.object({
 
 export type ExternalConfig = z.infer<typeof ExternalConfigSchema>;
 
-export const FeatureFlagsSchema = z.object({}).catchall(z.boolean()).default({});
+export const FeatureFlagsSchema = z.object({}).catchall(z.boolean()).default(
+  {},
+);
 
 export type FeatureFlags = z.infer<typeof FeatureFlagsSchema>;
 
@@ -127,7 +129,9 @@ export const CompatibilityModeSchema = z.enum(["strict", "loose"]);
 
 export type CompatibilityMode = z.infer<typeof CompatibilityModeSchema>;
 
-export const ProjectFeaturesSchema = z.record(z.string(), z.boolean()).default({});
+export const ProjectFeaturesSchema = z.record(z.string(), z.boolean()).default(
+  {},
+);
 
 export type ProjectFeatures = z.infer<typeof ProjectFeaturesSchema>;
 

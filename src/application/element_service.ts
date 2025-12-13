@@ -14,7 +14,10 @@ import type {
   StorytellerPlugin,
 } from "../core/plugin_system.ts";
 import type { Character } from "../type/v2/character.ts";
-import { DetailsPlugin, type SeparateFilesResult } from "../plugins/features/details/plugin.ts";
+import {
+  DetailsPlugin,
+  type SeparateFilesResult,
+} from "../plugins/features/details/plugin.ts";
 import type { DetailField } from "../plugins/features/details/templates.ts";
 
 export class ElementService {
@@ -33,7 +36,9 @@ export class ElementService {
   ): Promise<Result<ElementCreationResult, Error>> {
     const plugin = this.getElementPlugin(elementType);
     if (!plugin) {
-      return err(new Error(`Element plugin for type "${elementType}" not found`));
+      return err(
+        new Error(`Element plugin for type "${elementType}" not found`),
+      );
     }
 
     return await plugin.createElementFile(options);
@@ -155,6 +160,7 @@ export class ElementService {
    * @returns ElementPluginの場合true
    */
   private isElementPlugin(plugin: StorytellerPlugin): plugin is ElementPlugin {
-    return "elementType" in plugin && typeof (plugin as any).createElementFile === "function";
+    return "elementType" in plugin &&
+      typeof (plugin as any).createElementFile === "function";
   }
 }

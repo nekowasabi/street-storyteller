@@ -3,12 +3,12 @@
  */
 
 import type {
+  BackupContext,
   Migration,
   MigrationCheck,
-  MigrationResult,
   MigrationOptions,
+  MigrationResult,
   ProjectContext,
-  BackupContext,
 } from "../types.ts";
 import type { Character as CharacterV1 } from "../../type/character.ts";
 import type { Character as CharacterV2 } from "../../type/v2/character.ts";

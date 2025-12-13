@@ -4,7 +4,12 @@
  * キャラクター要素の詳細完成度を分析するエンジン
  */
 
-import type { Character, CharacterDetails, CharacterDevelopment, CharacterRole } from "../type/v2/character.ts";
+import type {
+  Character,
+  CharacterDetails,
+  CharacterDevelopment,
+  CharacterRole,
+} from "../type/v2/character.ts";
 
 /**
  * 単一キャラクターの完成度分析結果
@@ -140,8 +145,10 @@ export class CompletenessAnalyzer {
     // 完成度の計算
     // 必須フィールド: 50%の重み
     // オプショナルフィールド: 50%の重み
-    const requiredScore = (filledRequiredFieldsCount / requiredFieldsCount) * 50;
-    const optionalScore = (filledOptionalFieldsCount / optionalFieldsCount) * 50;
+    const requiredScore = (filledRequiredFieldsCount / requiredFieldsCount) *
+      50;
+    const optionalScore = (filledOptionalFieldsCount / optionalFieldsCount) *
+      50;
     const completenessRate = Math.round(requiredScore + optionalScore);
 
     return {
@@ -183,16 +190,22 @@ export class CompletenessAnalyzer {
     }
 
     // 各キャラクターを分析
-    const characterResults = filteredCharacters.map((c) => this.analyzeCharacter(c));
+    const characterResults = filteredCharacters.map((c) =>
+      this.analyzeCharacter(c)
+    );
 
     // 集計
     const totalCount = characterResults.length;
     const averageCompleteness = totalCount > 0
       ? Math.round(
-        characterResults.reduce((sum, r) => sum + r.completenessRate, 0) / totalCount,
+        characterResults.reduce((sum, r) => sum + r.completenessRate, 0) /
+          totalCount,
       )
       : 0;
-    const totalTodoCount = characterResults.reduce((sum, r) => sum + r.todoFields.length, 0);
+    const totalTodoCount = characterResults.reduce(
+      (sum, r) => sum + r.todoFields.length,
+      0,
+    );
 
     return {
       totalCount,
@@ -208,7 +221,9 @@ export class CompletenessAnalyzer {
    * @param result 複数キャラクターの完成度分析結果
    * @returns テキスト形式のレポート
    */
-  generateCompletenessReport(result: MultipleCharactersCompletenessResult): string {
+  generateCompletenessReport(
+    result: MultipleCharactersCompletenessResult,
+  ): string {
     const lines: string[] = [];
 
     lines.push("=".repeat(60));
@@ -225,7 +240,9 @@ export class CompletenessAnalyzer {
 
     for (const charResult of result.characterResults) {
       lines.push("");
-      lines.push(`[${charResult.character.id}] ${charResult.character.name} (${charResult.character.role})`);
+      lines.push(
+        `[${charResult.character.id}] ${charResult.character.name} (${charResult.character.role})`,
+      );
       lines.push(`  Completeness: ${charResult.completenessRate}%`);
       lines.push(
         `  Required Fields: ${charResult.filledRequiredFieldsCount}/${charResult.requiredFieldsCount}`,
@@ -271,7 +288,10 @@ export class CompletenessAnalyzer {
    * @param dev CharacterDevelopment
    * @param todoFields TODOフィールドの配列（出力）
    */
-  private checkDevelopmentTodos(dev: CharacterDevelopment, todoFields: string[]): void {
+  private checkDevelopmentTodos(
+    dev: CharacterDevelopment,
+    todoFields: string[],
+  ): void {
     if (this.containsTodoMarker(dev.initial)) {
       todoFields.push("details.development.initial");
     }
@@ -285,7 +305,10 @@ export class CompletenessAnalyzer {
       todoFields.push("details.development.resolution");
     }
     if (dev.arc_notes) {
-      if (typeof dev.arc_notes === "string" && this.containsTodoMarker(dev.arc_notes)) {
+      if (
+        typeof dev.arc_notes === "string" &&
+        this.containsTodoMarker(dev.arc_notes)
+      ) {
         todoFields.push("details.development.arc_notes");
       }
     }

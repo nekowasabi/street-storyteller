@@ -65,4 +65,3 @@ export function logLevelWeight(level: LogLevel): number {
 export function compareLogLevel(a: LogLevel, b: LogLevel): number {
   return logLevelWeight(a) - logLevelWeight(b);
 }
-

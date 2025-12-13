@@ -23,7 +23,10 @@ Deno.test("DetailsPlugin - Character要素に詳細スケルトンを追加で�
     summary: "勇者の概要",
   };
 
-  const result = await plugin.addDetails(baseCharacter, ["appearance", "backstory"]);
+  const result = await plugin.addDetails(baseCharacter, [
+    "appearance",
+    "backstory",
+  ]);
 
   assertEquals(result.ok, true);
   if (result.ok) {
@@ -132,7 +135,9 @@ Deno.test("DetailsPlugin - 無効なフィールド名でエラーを返す", as
     summary: "勇者の概要",
   };
 
-  const result = await plugin.addDetails(baseCharacter, ["invalid_field" as any]);
+  const result = await plugin.addDetails(baseCharacter, [
+    "invalid_field" as any,
+  ]);
 
   assertEquals(result.ok, false);
   if (!result.ok) {

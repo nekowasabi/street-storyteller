@@ -61,10 +61,16 @@ Deno.test("統合テスト: インライン作成 → ファイル分離 → 検
 
   // backstoryとappearanceがファイル参照に変換されていることを確認
   assertEquals(typeof updatedCharacter.details?.backstory, "object");
-  assertEquals((updatedCharacter.details?.backstory as any).file, "characters/hero/backstory.md");
+  assertEquals(
+    (updatedCharacter.details?.backstory as any).file,
+    "characters/hero/backstory.md",
+  );
 
   assertEquals(typeof updatedCharacter.details?.appearance, "object");
-  assertEquals((updatedCharacter.details?.appearance as any).file, "characters/hero/appearance.md");
+  assertEquals(
+    (updatedCharacter.details?.appearance as any).file,
+    "characters/hero/appearance.md",
+  );
 
   // personalityはインラインのまま
   assertEquals(typeof updatedCharacter.details?.personality, "string");
@@ -140,7 +146,11 @@ Deno.test("統合テスト: 'all'指定でのファイル分離と検証", async
   character = addDetailsResult.value;
 
   // 'all'でファイル分離
-  const separateResult = await detailsPlugin.separateFiles(character, "all", tempDir);
+  const separateResult = await detailsPlugin.separateFiles(
+    character,
+    "all",
+    tempDir,
+  );
 
   assertEquals(separateResult.ok, true);
   if (!separateResult.ok) return;
@@ -190,13 +200,17 @@ Deno.test("統合テスト: ファイル不在時の検証エラー検出", asyn
     summary: "概要",
   };
 
-  const addDetailsResult = await detailsPlugin.addDetails(character, ["backstory"]);
+  const addDetailsResult = await detailsPlugin.addDetails(character, [
+    "backstory",
+  ]);
   assertEquals(addDetailsResult.ok, true);
   if (!addDetailsResult.ok) return;
 
   character = addDetailsResult.value;
 
-  const separateResult = await detailsPlugin.separateFiles(character, ["backstory"], tempDir);
+  const separateResult = await detailsPlugin.separateFiles(character, [
+    "backstory",
+  ], tempDir);
   assertEquals(separateResult.ok, true);
   if (!separateResult.ok) return;
 

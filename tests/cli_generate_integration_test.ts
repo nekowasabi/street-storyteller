@@ -68,7 +68,9 @@ Deno.test({
     const parsed = JSON.parse(manifest) as { version: string };
     assertEquals(parsed.version, "1.0.0");
 
-    const hasMigrationGuide = logs.some((line) => line.includes("マイグレーションガイド"));
+    const hasMigrationGuide = logs.some((line) =>
+      line.includes("マイグレーションガイド")
+    );
     const hasTddGuide = logs.some((line) => line.includes("TDDガイド"));
     assert(hasMigrationGuide, "Migration guide should be emitted");
     assert(hasTddGuide, "TDD guide should be emitted");

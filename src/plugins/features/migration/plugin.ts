@@ -5,8 +5,8 @@
 
 import type { MigrationRegistry } from "../../../migrations/registry.ts";
 import type {
-  ProjectContext,
   MigrationOptions,
+  ProjectContext,
 } from "../../../migrations/types.ts";
 
 /**
@@ -52,7 +52,8 @@ export class MigrationPlugin {
       return {
         success: false,
         migrationsExecuted: 0,
-        error: `No migration path found from ${currentVersion} to ${targetVersion}`,
+        error:
+          `No migration path found from ${currentVersion} to ${targetVersion}`,
       };
     }
 

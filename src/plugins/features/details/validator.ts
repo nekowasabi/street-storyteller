@@ -4,9 +4,12 @@
  * Character要素のdetailsフィールドのファイル参照が実際に存在するかチェック
  */
 
-import { ok, err } from "../../../shared/result.ts";
+import { err, ok } from "../../../shared/result.ts";
 import type { Result } from "../../../shared/result.ts";
-import type { Character, CharacterDetails } from "../../../type/v2/character.ts";
+import type {
+  Character,
+  CharacterDetails,
+} from "../../../type/v2/character.ts";
 import { join } from "@std/path";
 
 /**

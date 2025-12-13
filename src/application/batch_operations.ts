@@ -4,7 +4,7 @@
  * 複数キャラクターに対する一括操作を提供
  */
 
-import { ok, err } from "../shared/result.ts";
+import { err, ok } from "../shared/result.ts";
 import type { Result } from "../shared/result.ts";
 import type { Character, CharacterRole } from "../type/v2/character.ts";
 import { DetailsPlugin } from "../plugins/features/details/plugin.ts";
@@ -107,7 +107,11 @@ export class BatchOperations {
    * @param total 総処理数
    * @param characterName 現在処理中のキャラクター名
    */
-  reportProgress(current: number, total: number, characterName: string): string {
+  reportProgress(
+    current: number,
+    total: number,
+    characterName: string,
+  ): string {
     const percentage = Math.round((current / total) * 100);
     return `[${current}/${total}] (${percentage}%) Processing: ${characterName}`;
   }

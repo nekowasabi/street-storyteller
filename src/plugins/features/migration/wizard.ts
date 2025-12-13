@@ -4,7 +4,7 @@
  */
 
 import type { MigrationRegistry } from "../../../migrations/registry.ts";
-import type { ProjectContext, Migration } from "../../../migrations/types.ts";
+import type { Migration, ProjectContext } from "../../../migrations/types.ts";
 
 /**
  * マイグレーション分析結果
@@ -50,7 +50,8 @@ export class MigrationWizard {
         success: false,
         steps: 0,
         estimatedChanges: 0,
-        error: `No migration path found from ${currentVersion} to ${targetVersion}`,
+        error:
+          `No migration path found from ${currentVersion} to ${targetVersion}`,
       };
     }
 
@@ -65,7 +66,8 @@ export class MigrationWizard {
           success: false,
           steps: 0,
           estimatedChanges: 0,
-          error: `Migration ${migration.id} cannot be executed: ${check.reason}`,
+          error:
+            `Migration ${migration.id} cannot be executed: ${check.reason}`,
         };
       }
 

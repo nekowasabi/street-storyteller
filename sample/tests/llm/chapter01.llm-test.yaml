@@ -5,7 +5,7 @@ metadata:
   chapter: chapter01
   title: "旅の始まり"
   test_suite: "narrative_quality"
-  llm_model: "gpt-4"  # 使用するLLMモデル
+  llm_model: "gpt-4" # 使用するLLMモデル
 
 # キャラクター描写のテスト
 character_tests:
@@ -173,8 +173,8 @@ overall_evaluation:
       1. プロとして出版できるレベルの品質か
       2. ターゲット読者（ファンタジー好きの若者）に訴求するか
       3. 続きを読みたくなる魅力があるか
-      
+
       10点満点で評価し、改善点を3つ挙げてください。
     expected: true
     severity: error
-    output_format: detailed  # 詳細なフィードバックを要求
+    output_format: detailed # 詳細なフィードバックを要求

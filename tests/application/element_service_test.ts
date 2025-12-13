@@ -72,7 +72,10 @@ Deno.test("ElementService - Character要素に詳細を追加できる", async (
     summary: "勇者の概要",
   };
 
-  const result = await service.addDetailsToElement("character", baseCharacter, ["appearance", "backstory"]);
+  const result = await service.addDetailsToElement("character", baseCharacter, [
+    "appearance",
+    "backstory",
+  ]);
 
   assertEquals(result.ok, true);
   if (result.ok) {
@@ -99,7 +102,9 @@ Deno.test("ElementService - DetailsPluginが登録されていない場合エラ
     summary: "勇者の概要",
   };
 
-  const result = await service.addDetailsToElement("character", baseCharacter, ["appearance"]);
+  const result = await service.addDetailsToElement("character", baseCharacter, [
+    "appearance",
+  ]);
 
   assertEquals(result.ok, false);
   if (!result.ok) {

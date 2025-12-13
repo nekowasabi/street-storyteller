@@ -46,22 +46,26 @@ sample/
 ## 🔑 主要コンポーネント
 
 ### 1. TypeScript型定義（型安全性）
+
 - **Character型**: キャラクターの構造化データ
   - 必須メタデータ（name, role, traits等）
   - ハイブリッド詳細（インラインまたはファイル参照）
   - LSP用検出ヒント
 
 ### 2. Markdown詳細（自然な執筆）
+
 - 長文の設定情報
 - 構造化された見出し
 - 純粋なMarkdownで記述
 
 ### 3. Binding YAML（連携定義）
+
 - 参照パターンと信頼度
 - 検証ルール
 - スタイルガイド
 
 ### 4. Chapter Meta（章管理）
+
 - 章固有の検証ルール
 - 参照マッピング
 - プロット追跡
@@ -89,7 +93,8 @@ deno run --allow-read --allow-write main.ts generate \
 ```
 
 生成された `.storyteller.json` にはスキーマバージョンが記録され、
-旧構成プロジェクトをアップグレードする際は CLI のマイグレーションガイドに従います。
+旧構成プロジェクトをアップグレードする際は CLI
+のマイグレーションガイドに従います。
 
 ### 期待される出力
 
@@ -120,21 +125,25 @@ deno run --allow-read --allow-write main.ts generate \
 ## 💡 アーキテクチャの利点
 
 ### 完全な型安全性
+
 - TypeScriptファイルは100%純粋なTypeScript
 - 完全なLSP/Linter機能
 - 型チェックとIntelliSense
 
 ### 自然なMarkdown執筆
+
 - Markdownの構造化機能を完全活用
 - 見出し、リスト、リンクなど
 - 既存のMarkdownツールと互換
 
 ### 柔軟な連携
+
 - YAMLによる明示的な連携定義
 - 信頼度ベースの参照解決
 - 段階的な導入が可能
 
 ### 強力な検証
+
 - カスタム検証ルール
 - リアルタイム整合性チェック
 - 双方向ナビゲーション（LSP実装時）
@@ -142,16 +151,18 @@ deno run --allow-read --allow-write main.ts generate \
 ## 📝 Markdown内の参照パターン
 
 ```markdown
-勇者は立ち上がった。        <!-- 暗示的参照（信頼度: 0.9） -->
-@勇者は立ち上がった。        <!-- 明示的参照（信頼度: 1.0） -->
-エリーゼが魔法を唱えた。     <!-- 表示名参照（信頼度: 0.95） -->
-師匠の言葉が響いた。         <!-- 別名参照（信頼度: 0.88） -->
-彼は考えた。                <!-- 代名詞参照（文脈依存、信頼度: 0.5-0.7） -->
+勇者は立ち上がった。 <!-- 暗示的参照（信頼度: 0.9） --> @勇者は立ち上がった。
+
+<!-- 明示的参照（信頼度: 1.0） --> エリーゼが魔法を唱えた。
+<!-- 表示名参照（信頼度: 0.95） --> 師匠の言葉が響いた。
+<!-- 別名参照（信頼度: 0.88） --> 彼は考えた。
+<!-- 代名詞参照（文脈依存、信頼度: 0.5-0.7） -->
 ```
 
 ## 🤖 LLMベース自然言語テスト
 
 ### 概要
+
 従来の文字列マッチングでは検証できない、物語の意味的・感情的整合性をLLMで検証します。
 
 ### テスト実行
@@ -213,4 +224,5 @@ const llmProvider = new OpenAIProvider(apiKey);
 
 - [SOLUTION.md](../SOLUTION.md) - アーキテクチャの詳細説明
 - [MEMO.md](../MEMO.md) - プロジェクト調査結果
-- [GitHub Issues](https://github.com/nekowasabi/street-storyteller/issues) - 機能要望と議論
+- [GitHub Issues](https://github.com/nekowasabi/street-storyteller/issues) -
+  機能要望と議論

@@ -4,7 +4,7 @@
  * storyteller element character コマンドの実装
  */
 
-import { ok, err } from "../../../shared/result.ts";
+import { err, ok } from "../../../shared/result.ts";
 import type { CommandContext, CommandExecutionError } from "../../types.ts";
 import { BaseCliCommand } from "../../base_command.ts";
 import type { CharacterRole } from "../../../type/v2/character.ts";
@@ -64,7 +64,9 @@ export class ElementCharacterCommand extends BaseCliCommand {
         name: parsed.name,
         role: parsed.role,
         summary: parsed.summary ?? `${parsed.name}の概要（要追加）`,
-        traits: parsed.traits ? parsed.traits.split(",").map((t) => t.trim()) : [],
+        traits: parsed.traits
+          ? parsed.traits.split(",").map((t) => t.trim())
+          : [],
         relationships: {},
         appearingChapters: [],
       };
@@ -74,16 +76,33 @@ export class ElementCharacterCommand extends BaseCliCommand {
 
       if (parsed["with-details"]) {
         // すべての詳細フィールドを追加
-        const allFields: DetailField[] = ["appearance", "personality", "backstory", "development"];
-        const detailResult = await service.addDetailsToElement("character", options, allFields, force);
+        const allFields: DetailField[] = [
+          "appearance",
+          "personality",
+          "backstory",
+          "development",
+        ];
+        const detailResult = await service.addDetailsToElement(
+          "character",
+          options,
+          allFields,
+          force,
+        );
 
         if (detailResult.ok) {
           Object.assign(options, { details: detailResult.value.details });
         }
       } else if (parsed["add-details"]) {
         // 指定された詳細フィールドのみ追加
-        const fields = parsed["add-details"].split(",").map((f) => f.trim()) as DetailField[];
-        const detailResult = await service.addDetailsToElement("character", options, fields, force);
+        const fields = parsed["add-details"].split(",").map((f) =>
+          f.trim()
+        ) as DetailField[];
+        const detailResult = await service.addDetailsToElement(
+          "character",
+          options,
+          fields,
+          force,
+        );
 
         if (detailResult.ok) {
           Object.assign(options, { details: detailResult.value.details });
@@ -104,7 +123,9 @@ export class ElementCharacterCommand extends BaseCliCommand {
 
           const fieldsToSeparate = parsed["separate-files"] === "all"
             ? "all"
-            : parsed["separate-files"].split(",").map((f) => f.trim()) as DetailField[];
+            : parsed["separate-files"].split(",").map((f) =>
+              f.trim()
+            ) as DetailField[];
 
           const separateResult = await service.separateFilesForElement(
             "character",
@@ -156,11 +177,15 @@ export class ElementCharacterCommand extends BaseCliCommand {
   /**
    * オプションをパースする
    */
-  private parseOptions(context: CommandContext): ElementCharacterOptions | CommandExecutionError {
+  private parseOptions(
+    context: CommandContext,
+  ): ElementCharacterOptions | CommandExecutionError {
     const args = context.args ?? {};
 
     // 必須パラメータのチェック
-    if (!args.name || typeof args.name !== "string" || args.name.trim() === "") {
+    if (
+      !args.name || typeof args.name !== "string" || args.name.trim() === ""
+    ) {
       return {
         code: "invalid_arguments",
         message: "Character name is required (--name)",
@@ -175,11 +200,18 @@ export class ElementCharacterCommand extends BaseCliCommand {
     }
 
     // roleの検証
-    const validRoles: CharacterRole[] = ["protagonist", "antagonist", "supporting", "guest"];
+    const validRoles: CharacterRole[] = [
+      "protagonist",
+      "antagonist",
+      "supporting",
+      "guest",
+    ];
     if (!validRoles.includes(args.role as CharacterRole)) {
       return {
         code: "invalid_arguments",
-        message: `Invalid role: ${args.role}. Must be one of: ${validRoles.join(", ")}`,
+        message: `Invalid role: ${args.role}. Must be one of: ${
+          validRoles.join(", ")
+        }`,
       };
     }
 
@@ -193,8 +225,12 @@ export class ElementCharacterCommand extends BaseCliCommand {
       summary: typeof args.summary === "string" ? args.summary : undefined,
       traits: typeof args.traits === "string" ? args.traits : undefined,
       "with-details": args["with-details"] === true,
-      "add-details": typeof args["add-details"] === "string" ? args["add-details"] : undefined,
-      "separate-files": typeof args["separate-files"] === "string" ? args["separate-files"] : undefined,
+      "add-details": typeof args["add-details"] === "string"
+        ? args["add-details"]
+        : undefined,
+      "separate-files": typeof args["separate-files"] === "string"
+        ? args["separate-files"]
+        : undefined,
       force: args.force === true,
     };
   }

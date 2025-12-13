@@ -58,7 +58,9 @@ export function createProjectScaffoldingService(
         ? joinPath(options.path, options.name)
         : options.name;
 
-      const blueprintResult = deps.storyDomainService.resolveTemplate(options.template);
+      const blueprintResult = deps.storyDomainService.resolveTemplate(
+        options.template,
+      );
       if (!blueprintResult.ok) {
         return err({
           code: blueprintResult.error.code as ProjectScaffoldingError["code"],
@@ -70,7 +72,9 @@ export function createProjectScaffoldingService(
       const migrationPlan = await deps.migrationFacilitator.assess(projectPath);
 
       if (migrationPlan.status === "fresh") {
-        const manifestResult = await deps.migrationFacilitator.ensureManifest(projectPath);
+        const manifestResult = await deps.migrationFacilitator.ensureManifest(
+          projectPath,
+        );
         if (!manifestResult.ok) {
           return err({
             code: manifestResult.error.code,
@@ -81,7 +85,9 @@ export function createProjectScaffoldingService(
         migrationPlan.status === "upgrade" &&
         migrationPlan.actions.some((action) => action.autoRunnable)
       ) {
-        const manifestResult = await deps.migrationFacilitator.ensureManifest(projectPath);
+        const manifestResult = await deps.migrationFacilitator.ensureManifest(
+          projectPath,
+        );
         if (!manifestResult.ok) {
           return err({
             code: manifestResult.error.code,
@@ -91,7 +97,9 @@ export function createProjectScaffoldingService(
       }
 
       for (const dir of blueprint.directories) {
-        const ensure = await deps.fileSystem.ensureDir(joinPath(projectPath, dir));
+        const ensure = await deps.fileSystem.ensureDir(
+          joinPath(projectPath, dir),
+        );
         if (!ensure.ok) {
           return err({
             code: ensure.error.code,
@@ -114,8 +122,12 @@ export function createProjectScaffoldingService(
       }
 
       const report = deps.migrationFacilitator.emitReport(migrationPlan);
-      const migrationGuide = deps.documentationEmitter.emitMigrationGuide(report);
-      const tddGuide = deps.documentationEmitter.emitTddGuide({ template: options.template });
+      const migrationGuide = deps.documentationEmitter.emitMigrationGuide(
+        report,
+      );
+      const tddGuide = deps.documentationEmitter.emitTddGuide({
+        template: options.template,
+      });
 
       return ok({
         projectPath,

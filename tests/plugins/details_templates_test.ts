@@ -6,7 +6,8 @@ import { assertEquals } from "@std/assert";
 import { generateMarkdownContent } from "../../src/plugins/features/details/markdown.ts";
 
 Deno.test("generateMarkdownContent: backstoryのMarkdown生成", () => {
-  const content = "これは勇者のバックストーリーです。\n彼は小さな村で育ちました。";
+  const content =
+    "これは勇者のバックストーリーです。\n彼は小さな村で育ちました。";
   const metadata = {
     characterId: "hero",
     characterName: "勇者",
@@ -66,7 +67,11 @@ Deno.test("generateMarkdownContent: relationships_detailのMarkdown生成", () =
     characterName: "勇者",
   };
 
-  const result = generateMarkdownContent("relationships_detail", content, metadata);
+  const result = generateMarkdownContent(
+    "relationships_detail",
+    content,
+    metadata,
+  );
 
   assertEquals(result.includes("field: relationships_detail"), true);
   assertEquals(result.includes("title: 人間関係の詳細"), true);

@@ -51,7 +51,9 @@ function extractTargetPath(context: CommandContext): string[] {
   return [];
 }
 
-export function createHelpDescriptor(registry: CommandRegistry): CommandDescriptor {
+export function createHelpDescriptor(
+  registry: CommandRegistry,
+): CommandDescriptor {
   const handler = new HelpCommand(registry);
   return createLegacyCommandDescriptor(handler, {
     summary: "Show help information for storyteller commands.",

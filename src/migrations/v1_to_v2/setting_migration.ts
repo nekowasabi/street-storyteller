@@ -3,12 +3,12 @@
  */
 
 import type {
+  BackupContext,
   Migration,
   MigrationCheck,
-  MigrationResult,
   MigrationOptions,
+  MigrationResult,
   ProjectContext,
-  BackupContext,
 } from "../types.ts";
 
 /**

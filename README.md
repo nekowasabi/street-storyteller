@@ -41,6 +41,46 @@ Create a new story project with structured directories and template files.
 ./storyteller generate --name "screenplay" --template screenplay --path ~/stories
 ```
 
+#### Meta Command
+
+Generate chapter companion metadata files (`.meta.ts`) from Markdown manuscripts
+(see `sample/` for the companion-file workflow).
+
+```bash
+# Generate .meta.ts next to the manuscript
+./storyteller meta generate manuscripts/chapter01.md
+
+# Preview only (no write)
+./storyteller meta generate manuscripts/chapter01.md --dry-run --preview
+
+# Interactive resolution for ambiguous/low-confidence references
+./storyteller meta generate manuscripts/chapter01.md --interactive
+
+# Apply a validation preset
+./storyteller meta generate manuscripts/chapter01.md --preset dialogue
+
+# Batch generation (glob) requires --batch
+./storyteller meta generate manuscripts/*.md --batch
+
+# Batch generation (directory)
+./storyteller meta generate --dir manuscripts --recursive
+```
+
+##### Meta generate options
+
+- `--characters <ids>` - Comma-separated character ids (overrides frontmatter)
+- `--settings <ids>` - Comma-separated setting ids (overrides frontmatter)
+- `--output <path>` - Output file path (single file only)
+- `--dry-run` - Generate without writing the output file
+- `--preview` - Print a generation preview
+- `--interactive` - Prompt to resolve ambiguous/low-confidence references
+- `--preset <type>` - Validation preset (`battle-scene`, `romance-scene`,
+  `dialogue`, `exposition`)
+- `--force` - Overwrite existing output files
+- `--batch` - Treat the markdown input as a glob and process all matches
+- `--dir <dir>` - Process all `.md` files in a directory
+- `--recursive, -r` - Recursive search for `--dir`
+
 #### Options
 
 - `--name, -n <name>` - Project name (required)
@@ -48,7 +88,8 @@ Create a new story project with structured directories and template files.
 - `--path, -p <path>` - Custom project path (optional)
 - `--log-level <level>` - Override logging level (`trace`-`fatal`)
 - `--log-format <human|json>` - Choose console log format
-- `--environment <env>` - Set runtime environment (`development`, `test`, `production`)
+- `--environment <env>` - Set runtime environment (`development`, `test`,
+  `production`)
 - `--cache-ttl <seconds>` - Adjust default cache TTL
 - `--provider <id>` - Set default external provider id
 - `--config <path>` - Provide explicit configuration file
@@ -110,7 +151,8 @@ deno fmt
 deno lint
 ```
 
-The generated `story.ts` file implements the `StoryTeller` interface and includes:
+The generated `story.ts` file implements the `StoryTeller` interface and
+includes:
 
 - **Purpose**: What you want to express in your story
 - **Characters**: Story characters with names

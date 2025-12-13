@@ -1,4 +1,4 @@
-import { assertEquals, assert } from "./asserts.ts";
+import { assert, assertEquals } from "./asserts.ts";
 import { createCompletionFsAdapter } from "../src/infrastructure/cli/completion_fs_adapter.ts";
 import { join } from "@std/path/join";
 

@@ -2,7 +2,10 @@ import { err, ok, type Result } from "../shared/result.ts";
 
 export interface FileSystemGateway {
   ensureDir(path: string): Promise<Result<void, FileSystemError>>;
-  writeFile(path: string, content: string): Promise<Result<void, FileSystemError>>;
+  writeFile(
+    path: string,
+    content: string,
+  ): Promise<Result<void, FileSystemError>>;
   exists(path: string): Promise<Result<boolean, FileSystemError>>;
   readFile(path: string): Promise<Result<string, FileSystemError>>;
 }
@@ -34,7 +37,10 @@ export class DenoFileSystemGateway implements FileSystemGateway {
     }
   }
 
-  async writeFile(path: string, content: string): Promise<Result<void, FileSystemError>> {
+  async writeFile(
+    path: string,
+    content: string,
+  ): Promise<Result<void, FileSystemError>> {
     try {
       const parent = path.slice(0, path.lastIndexOf("/"));
       if (parent) {

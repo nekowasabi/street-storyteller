@@ -4,12 +4,12 @@
 
 import { assert, assertEquals } from "../asserts.ts";
 import type {
+  BackupContext,
   Migration,
   MigrationCheck,
-  MigrationResult,
   MigrationOptions,
+  MigrationResult,
   ProjectContext,
-  BackupContext,
 } from "../../src/migrations/types.ts";
 
 Deno.test("Migration - インターフェースの基本構造", () => {

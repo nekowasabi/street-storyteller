@@ -1,29 +1,27 @@
-import type {
-  CommandOptionDescriptor,
-  CommandTreeNode,
-} from "../types.ts";
+import type { CommandOptionDescriptor, CommandTreeNode } from "../types.ts";
 
 export function generateBashCompletionScript(tree: CommandTreeNode): string {
   const commands = collectExecutableCommands(tree);
-  const commandList = commands.map((command) => formatCommandPath(command.path)).join(" ");
-  const commandCases = commands.map((command) =>
-    renderBashCase(command)
-  ).join("\n");
+  const commandList = commands.map((command) => formatCommandPath(command.path))
+    .join(" ");
+  const commandCases = commands.map((command) => renderBashCase(command)).join(
+    "\n",
+  );
 
   return [
     "#!/usr/bin/env bash",
     "_storyteller_completion() {",
     "  local cur prev",
     "  COMPREPLY=()",
-    "  cur=\"${COMP_WORDS[COMP_CWORD]}\"",
-    "  prev=\"${COMP_WORDS[COMP_CWORD-1]}\"",
+    '  cur="${COMP_WORDS[COMP_CWORD]}"',
+    '  prev="${COMP_WORDS[COMP_CWORD-1]}"',
     "",
     "  if [[ ${COMP_CWORD} -eq 1 ]]; then",
     `    COMPREPLY=( $(compgen -W "${commandList}" -- "$cur") )`,
     "    return 0",
     "  fi",
     "",
-    "  case \"${COMP_WORDS[1]}\" in",
+    '  case "${COMP_WORDS[1]}" in',
     commandCases,
     "  esac",
     "}",
@@ -47,7 +45,7 @@ export function generateZshCompletionScript(tree: CommandTreeNode): string {
     "  local -a commands",
     `  commands=(${commandEntries})`,
     "",
-    "  local curcontext=\"$curcontext\" state",
+    '  local curcontext="$curcontext" state',
     "",
     "  _arguments \\",
     "    '1:command:->command' \\",
@@ -65,7 +63,7 @@ export function generateZshCompletionScript(tree: CommandTreeNode): string {
     "  esac",
     "}",
     "",
-    "_storyteller_completion \"$@\"",
+    '_storyteller_completion "$@"',
   ].join("\n");
 }
 
@@ -94,7 +92,7 @@ function renderBashCase(command: CommandTreeNode): string {
   return [
     `    ${commandName})`,
     `      local opts="${optionWords}"`,
-    "      COMPREPLY=( $(compgen -W \"$opts\" -- \"$cur\") )",
+    '      COMPREPLY=( $(compgen -W "$opts" -- "$cur") )',
     "      ;;",
   ].join("\n");
 }

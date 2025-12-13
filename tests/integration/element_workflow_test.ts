@@ -88,7 +88,10 @@ Deno.test("統合テスト - 詳細付き作成ワークフロー", async () => 
 
   // 5. 詳細付き要素でファイルを作成
   if (withDetailsResult.ok) {
-    const createResult = await service.createElement("character", withDetailsResult.value);
+    const createResult = await service.createElement(
+      "character",
+      withDetailsResult.value,
+    );
 
     assertEquals(createResult.ok, true);
     if (createResult.ok) {
@@ -122,9 +125,13 @@ Deno.test("統合テスト - 既存要素への詳細追加ワークフロー", 
   };
 
   // 3. フェーズ1: 外見を追加
-  const phase1Result = await service.addDetailsToElement("character", existingCharacter, [
-    "appearance",
-  ]);
+  const phase1Result = await service.addDetailsToElement(
+    "character",
+    existingCharacter,
+    [
+      "appearance",
+    ],
+  );
 
   assertEquals(phase1Result.ok, true);
   if (!phase1Result.ok) return;
@@ -134,16 +141,23 @@ Deno.test("統合テスト - 既存要素への詳細追加ワークフロー", 
   assertEquals(phase1Result.value.details.backstory, undefined);
 
   // 4. フェーズ2: 既存の外見を保持しつつbackstoryを追加
-  const phase2Result = await service.addDetailsToElement("character", phase1Result.value, [
-    "backstory",
-  ]);
+  const phase2Result = await service.addDetailsToElement(
+    "character",
+    phase1Result.value,
+    [
+      "backstory",
+    ],
+  );
 
   assertEquals(phase2Result.ok, true);
   if (!phase2Result.ok) return;
 
   assertExists(phase2Result.value.details);
   // 既存のappearanceは保持される
-  assertEquals(phase2Result.value.details.appearance, phase1Result.value.details!.appearance);
+  assertEquals(
+    phase2Result.value.details.appearance,
+    phase1Result.value.details!.appearance,
+  );
   // backstoryが追加される
   assertExists(phase2Result.value.details.backstory);
 });
@@ -195,16 +209,23 @@ Deno.test("統合テスト - エンドツーエンドワークフロー（プラ
   };
 
   // 詳細を追加
-  const withDetailsResult = await service.addDetailsToElement("character", baseCharacter, [
-    "appearance",
-    "personality",
-  ]);
+  const withDetailsResult = await service.addDetailsToElement(
+    "character",
+    baseCharacter,
+    [
+      "appearance",
+      "personality",
+    ],
+  );
 
   assertEquals(withDetailsResult.ok, true);
   if (!withDetailsResult.ok) return;
 
   // ファイル作成
-  const createResult2 = await service.createElement("character", withDetailsResult.value);
+  const createResult2 = await service.createElement(
+    "character",
+    withDetailsResult.value,
+  );
 
   assertEquals(createResult2.ok, true);
   if (createResult2.ok) {

@@ -1,12 +1,19 @@
 import type { Logger } from "../src/shared/logging/types.ts";
 
-export function assert(condition: unknown, message = "Assertion failed"): asserts condition {
+export function assert(
+  condition: unknown,
+  message = "Assertion failed",
+): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
 }
 
-export function assertEquals<T>(actual: T, expected: T, message?: string): void {
+export function assertEquals<T>(
+  actual: T,
+  expected: T,
+  message?: string,
+): void {
   if (actual !== expected) {
     throw new Error(message ?? `Expected ${expected} but received ${actual}`);
   }

@@ -2,9 +2,17 @@
  * MigrateCommandのテスト
  */
 
-import { assert, assertEquals, createStubLogger, createStubPresenter } from "../asserts.ts";
+import {
+  assert,
+  assertEquals,
+  createStubLogger,
+  createStubPresenter,
+} from "../asserts.ts";
 import { MigrateCommand } from "../../src/cli/modules/migrate/index.ts";
-import type { CommandContext, ConfigurationManagerRef } from "../../src/cli/types.ts";
+import type {
+  CommandContext,
+  ConfigurationManagerRef,
+} from "../../src/cli/types.ts";
 import type { AppConfig } from "../../src/shared/config/schema.ts";
 
 // スタブConfig

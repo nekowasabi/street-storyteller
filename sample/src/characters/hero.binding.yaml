@@ -9,27 +9,27 @@ references:
     confidence: 0.9
     context_required: false
     priority: 1
-  
+
   - pattern: "アレクス"
     confidence: 0.95
     context_required: false
     priority: 1
-  
+
   - pattern: "勇者アレクス"
     confidence: 1.0
     context_required: false
     priority: 1
-  
+
   - pattern: "主人公"
     confidence: 0.7
     context_required: true
     priority: 2
-  
+
   - pattern: "勇"
     confidence: 0.6
     context_required: true
     priority: 3
-  
+
   - pattern: "彼"
     confidence: 0.5
     context_required: true
@@ -50,7 +50,7 @@ validations:
   - rule: "appears_in_chapters"
     chapters: ["chapter01", "chapter02", "chapter03"]
     required: true
-  
+
   - rule: "consistent_traits"
     traits:
       - "勇敢"
@@ -59,7 +59,7 @@ validations:
       - "卑怯な行動"
       - "仲間を見捨てる"
     strict: true
-  
+
   - rule: "relationship_consistency"
     relationships:
       heroine: "romantic_progression"
@@ -73,10 +73,10 @@ style_guide:
     - polite: true
     - first_person: "俺"
     - common_phrases:
-      - "絶対に諦めない"
-      - "みんなを守る"
-      - "正義は必ず勝つ"
-  
+        - "絶対に諦めない"
+        - "みんなを守る"
+        - "正義は必ず勝つ"
+
   action_patterns:
     - brave: true
     - impulsive: sometimes

@@ -1,14 +1,18 @@
 # Configuration Overview
 
-Street Storyteller resolves configuration by merging several providers in ascending priority:
+Street Storyteller resolves configuration by merging several providers in
+ascending priority:
 
-1. **Default provider** – built-in baseline values (e.g., `logging.level = "info"`).
-2. **Environment provider** – reads `STORYTELLER_*` variables such as `STORYTELLER_LOG_LEVEL` or `STORYTELLER_CACHE_TTL`.
+1. **Default provider** – built-in baseline values (e.g.,
+   `logging.level = "info"`).
+2. **Environment provider** – reads `STORYTELLER_*` variables such as
+   `STORYTELLER_LOG_LEVEL` or `STORYTELLER_CACHE_TTL`.
 3. **File provider** – loads the first matching file from:
    - `[cwd]/.storyteller/config.json`
    - `[cwd]/storyteller.config.json`
    - custom path via `--config <path>`
-4. **CLI provider** – command-line overrides (e.g., `--log-level`, `--provider`).
+4. **CLI provider** – command-line overrides (e.g., `--log-level`,
+   `--provider`).
 
 After merging, the configuration is validated with Zod to ensure type safety.
 
@@ -54,14 +58,14 @@ interface AppConfig {
 
 ## CLI Overrides
 
-| Flag             | Description                           | Mapping                         |
-|------------------|---------------------------------------|---------------------------------|
-| `--config`       | Custom configuration file path        | File provider search path       |
-| `--log-level`    | Override logging level                | `logging.level`                 |
-| `--log-format`   | `human` or `json` formatting          | `logging.format`                |
-| `--environment`  | Runtime environment                   | `runtime.environment`           |
-| `--cache-ttl`    | Default cache TTL in seconds          | `cache.defaultTtlSeconds`       |
-| `--provider`     | Default external provider id          | `external.defaultProvider`      |
+| Flag            | Description                    | Mapping                    |
+| --------------- | ------------------------------ | -------------------------- |
+| `--config`      | Custom configuration file path | File provider search path  |
+| `--log-level`   | Override logging level         | `logging.level`            |
+| `--log-format`  | `human` or `json` formatting   | `logging.format`           |
+| `--environment` | Runtime environment            | `runtime.environment`      |
+| `--cache-ttl`   | Default cache TTL in seconds   | `cache.defaultTtlSeconds`  |
+| `--provider`    | Default external provider id   | `external.defaultProvider` |
 
 ## Environment Variables
 
@@ -71,5 +75,5 @@ interface AppConfig {
 - `STORYTELLER_CACHE_TTL` – cache TTL in seconds.
 - `STORYTELLER_PROVIDER` – default external provider.
 
-> Environment values are applied before file and CLI overrides, so flags always win.
-
+> Environment values are applied before file and CLI overrides, so flags always
+> win.

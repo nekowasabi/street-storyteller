@@ -18,7 +18,10 @@ export class GitIntegration {
    * @returns ブランチ名
    */
   generateMigrationBranchName(fromVersion: string, toVersion: string): string {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(
+      0,
+      19,
+    );
     return `migration/v${fromVersion}-to-v${toVersion}-${timestamp}`;
   }
 

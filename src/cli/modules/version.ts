@@ -1,5 +1,5 @@
-import { ok, err } from "../../shared/result.ts";
-import type { CommandExecutionError, CommandContext } from "../types.ts";
+import { err, ok } from "../../shared/result.ts";
+import type { CommandContext, CommandExecutionError } from "../types.ts";
 import { BaseCliCommand } from "../base_command.ts";
 import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
 import type { CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
@@ -13,7 +13,9 @@ interface VersionOptions {
   projectPath: string;
 }
 
-function parseVersionOptions(context: CommandContext): VersionOptions | CommandExecutionError {
+function parseVersionOptions(
+  context: CommandContext,
+): VersionOptions | CommandExecutionError {
   const args = context.args ?? {};
   const check = args.check === true;
   const projectPath = typeof args.path === "string" ? args.path : Deno.cwd();
@@ -35,7 +37,9 @@ async function executeVersion(context: CommandContext) {
 
   if (parsed.check) {
     // --check: 互換性チェック
-    context.logger.info("Checking project compatibility", { path: parsed.projectPath });
+    context.logger.info("Checking project compatibility", {
+      path: parsed.projectPath,
+    });
 
     const compatibilityResult = await versionService.checkCompatibility(
       parsed.projectPath,
@@ -50,14 +54,20 @@ async function executeVersion(context: CommandContext) {
     }
 
     if (compatibilityResult.value.compatible) {
-      context.logger.info("✓ Project is compatible with current storyteller version", {
-        storytellerVersion: CURRENT_STORYTELLER_VERSION,
-      });
+      context.logger.info(
+        "✓ Project is compatible with current storyteller version",
+        {
+          storytellerVersion: CURRENT_STORYTELLER_VERSION,
+        },
+      );
     } else {
-      context.logger.warn("✗ Project is NOT compatible with current storyteller version", {
-        storytellerVersion: CURRENT_STORYTELLER_VERSION,
-        reason: compatibilityResult.value.reason,
-      });
+      context.logger.warn(
+        "✗ Project is NOT compatible with current storyteller version",
+        {
+          storytellerVersion: CURRENT_STORYTELLER_VERSION,
+          reason: compatibilityResult.value.reason,
+        },
+      );
     }
 
     // 更新チェックも実行
@@ -90,14 +100,18 @@ async function executeVersion(context: CommandContext) {
   });
 
   // プロジェクトメタデータがあれば表示
-  const metadataResult = await versionService.loadProjectMetadata(parsed.projectPath);
+  const metadataResult = await versionService.loadProjectMetadata(
+    parsed.projectPath,
+  );
   if (metadataResult.ok) {
     const metadata = metadataResult.value;
     context.logger.info("Project metadata", {
       projectVersion: metadata.version.version,
       storytellerVersion: metadata.version.storytellerVersion,
       compatibility: metadata.compatibility,
-      features: Object.keys(metadata.features).filter((key) => metadata.features[key]),
+      features: Object.keys(metadata.features).filter((key) =>
+        metadata.features[key]
+      ),
     });
   }
 
@@ -134,26 +148,27 @@ const VERSION_OPTIONS: readonly CommandOptionDescriptor[] = [
   },
 ] as const;
 
-export const versionCommandDescriptor: CommandDescriptor = createLegacyCommandDescriptor(
-  versionCommandHandler,
-  {
-    summary: "Show version information and check compatibility.",
-    usage: "storyteller version [--check] [--path <path>]",
-    aliases: ["v"],
-    options: VERSION_OPTIONS,
-    examples: [
-      {
-        summary: "Show version information",
-        command: "storyteller version",
-      },
-      {
-        summary: "Check project compatibility",
-        command: "storyteller version --check",
-      },
-      {
-        summary: "Check compatibility for specific project",
-        command: "storyteller v -c -p /path/to/project",
-      },
-    ],
-  },
-);
+export const versionCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(
+    versionCommandHandler,
+    {
+      summary: "Show version information and check compatibility.",
+      usage: "storyteller version [--check] [--path <path>]",
+      aliases: ["v"],
+      options: VERSION_OPTIONS,
+      examples: [
+        {
+          summary: "Show version information",
+          command: "storyteller version",
+        },
+        {
+          summary: "Check project compatibility",
+          command: "storyteller version --check",
+        },
+        {
+          summary: "Check compatibility for specific project",
+          command: "storyteller v -c -p /path/to/project",
+        },
+      ],
+    },
+  );

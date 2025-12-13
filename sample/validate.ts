@@ -37,17 +37,17 @@ async function readMarkdown(path: string): Promise<string> {
 async function validateChapter(chapterMeta: any, markdownPath: string) {
   log(`\n📖 Validating Chapter: ${chapterMeta.title}`, colors.cyan);
   log(`   File: ${markdownPath}`, colors.cyan);
-  
+
   const content = await readMarkdown(markdownPath);
   let hasErrors = false;
-  
+
   // 1. キャラクターの存在確認
   log("\n  🎭 Character Validation:", colors.yellow);
   for (const character of chapterMeta.characters) {
-    const found = character.displayNames?.some((name: string) => 
+    const found = character.displayNames?.some((name: string) =>
       content.includes(name)
     ) || content.includes(character.name);
-    
+
     if (found) {
       log(`    ✅ ${character.name} is present`, colors.green);
     } else {
@@ -55,14 +55,14 @@ async function validateChapter(chapterMeta: any, markdownPath: string) {
       hasErrors = true;
     }
   }
-  
+
   // 2. 設定の存在確認
   log("\n  🏰 Setting Validation:", colors.yellow);
   for (const setting of chapterMeta.settings) {
-    const found = setting.displayNames?.some((name: string) => 
+    const found = setting.displayNames?.some((name: string) =>
       content.includes(name)
     ) || content.includes(setting.name);
-    
+
     if (found) {
       log(`    ✅ ${setting.name} is present`, colors.green);
     } else {
@@ -70,7 +70,7 @@ async function validateChapter(chapterMeta: any, markdownPath: string) {
       hasErrors = true;
     }
   }
-  
+
   // 3. カスタム検証ルールの実行
   if (chapterMeta.validations) {
     log("\n  🔍 Custom Validations:", colors.yellow);
@@ -79,17 +79,20 @@ async function validateChapter(chapterMeta: any, markdownPath: string) {
       if (result) {
         log(`    ✅ ${validation.type} passed`, colors.green);
       } else {
-        log(`    ❌ ${validation.type} failed: ${validation.message}`, colors.red);
+        log(
+          `    ❌ ${validation.type} failed: ${validation.message}`,
+          colors.red,
+        );
         hasErrors = true;
       }
     }
   }
-  
+
   // 4. 参照マッピングの確認
   log("\n  🔗 Reference Mapping:", colors.yellow);
   const referenceCount = Object.keys(chapterMeta.references || {}).length;
   log(`    📊 Total references defined: ${referenceCount}`, colors.blue);
-  
+
   // 参照の実際の使用状況をチェック
   let usedReferences = 0;
   for (const [word, entity] of Object.entries(chapterMeta.references || {})) {
@@ -97,23 +100,34 @@ async function validateChapter(chapterMeta: any, markdownPath: string) {
       usedReferences++;
     }
   }
-  log(`    📊 References used in content: ${usedReferences}/${referenceCount}`, colors.blue);
-  
+  log(
+    `    📊 References used in content: ${usedReferences}/${referenceCount}`,
+    colors.blue,
+  );
+
   return !hasErrors;
 }
 
 // メイン処理
 async function main() {
   log("🚀 Starting Storyteller Validation System", colors.magenta);
-  log("=" .repeat(50), colors.magenta);
-  
+  log("=".repeat(50), colors.magenta);
+
   const validations = [
-    { meta: chapter01Meta, path: "/Users/takets/repos/street-storyteller/sample/manuscripts/chapter01.md" },
-    { meta: chapter02Meta, path: "/Users/takets/repos/street-storyteller/sample/manuscripts/chapter02.md" },
+    {
+      meta: chapter01Meta,
+      path:
+        "/Users/takets/repos/street-storyteller/sample/manuscripts/chapter01.md",
+    },
+    {
+      meta: chapter02Meta,
+      path:
+        "/Users/takets/repos/street-storyteller/sample/manuscripts/chapter02.md",
+    },
   ];
-  
+
   let allPassed = true;
-  
+
   for (const { meta, path } of validations) {
     try {
       const passed = await validateChapter(meta, path);
@@ -125,9 +139,9 @@ async function main() {
       allPassed = false;
     }
   }
-  
+
   // 最終結果
-  log("\n" + "=" .repeat(50), colors.magenta);
+  log("\n" + "=".repeat(50), colors.magenta);
   if (allPassed) {
     log("✅ All validations passed!", colors.green);
     log("\n🎉 Your story structure is consistent!", colors.green);
@@ -141,8 +155,9 @@ async function main() {
 // アーキテクチャの説明を表示
 function showArchitectureInfo() {
   log("\n📚 Architecture Overview:", colors.cyan);
-  log("=" .repeat(50), colors.cyan);
-  log(`
+  log("=".repeat(50), colors.cyan);
+  log(
+    `
 This validation demonstrates the hybrid architecture:
 
 1. TypeScript Files (.ts):
@@ -164,7 +179,9 @@ This validation demonstrates the hybrid architecture:
    - Chapter-specific validations
    - Reference mappings
    - Plot tracking
-  `, colors.blue);
+  `,
+    colors.blue,
+  );
 }
 
 // 実行

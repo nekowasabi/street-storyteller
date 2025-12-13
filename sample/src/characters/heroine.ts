@@ -11,34 +11,41 @@ export const heroine: Character = {
   relationships: {
     "hero": "romantic",
     "mentor": "respect",
-    "rival": "neutral"
+    "rival": "neutral",
   },
   appearingChapters: ["chapter01", "chapter02", "chapter03"],
-  
+
   summary: "王立魔法学院を首席で卒業した天才魔法使い。自由を求めて旅に出る。",
-  
+
   details: {
-    appearance: "銀色の長い髪に、エメラルドグリーンの瞳。華奢な体型だが、魔力は計り知れない。",
+    appearance:
+      "銀色の長い髪に、エメラルドグリーンの瞳。華奢な体型だが、魔力は計り知れない。",
     personality: { $ref: "./heroine.details.md#personality" },
     backstory: { $ref: "./heroine.details.md#backstory" },
     development: {
       initial: "わがままな貴族の令嬢",
       goal: "真の意味での自由と責任を理解する",
       obstacle: "過保護な環境で育った甘さ",
-      resolution: "仲間と共に成長し、他者を思いやる心を育む"
-    }
+      resolution: "仲間と共に成長し、他者を思いやる心を育む",
+    },
   },
-  
+
   detectionHints: {
     commonPatterns: [
-      "エリーゼは", "エリーゼが", "エリーゼの",
-      "魔法使いは", "魔法使いが",
-      "エリーは", "「.*」とエリーゼ"
+      "エリーゼは",
+      "エリーゼが",
+      "エリーゼの",
+      "魔法使いは",
+      "魔法使いが",
+      "エリーは",
+      "「.*」とエリーゼ",
     ],
     excludePatterns: [
-      "他の魔法使い", "魔法使いたち", "宮廷魔法使い"
+      "他の魔法使い",
+      "魔法使いたち",
+      "宮廷魔法使い",
     ],
     requiresContext: false,
-    confidence: 0.85
-  }
+    confidence: 0.85,
+  },
 };

@@ -18,11 +18,16 @@ Deno.test("DetailsPlugin - separateFiles: backstoryをファイル参照に変�
     appearingChapters: [],
     summary: "勇者の物語",
     details: {
-      backstory: "これはインラインのバックストーリーです。\n彼は村で育ちました。",
+      backstory:
+        "これはインラインのバックストーリーです。\n彼は村で育ちました。",
     },
   };
 
-  const result = await plugin.separateFiles(character, ["backstory"], "/tmp/test-project");
+  const result = await plugin.separateFiles(
+    character,
+    ["backstory"],
+    "/tmp/test-project",
+  );
 
   assertEquals(result.ok, true);
   if (!result.ok) return;
@@ -30,12 +35,23 @@ Deno.test("DetailsPlugin - separateFiles: backstoryをファイル参照に変�
   const updated = result.value.character;
   assertExists(updated.details);
   assertEquals(typeof updated.details.backstory, "object");
-  assertEquals((updated.details.backstory as { file: string }).file, "characters/hero/backstory.md");
+  assertEquals(
+    (updated.details.backstory as { file: string }).file,
+    "characters/hero/backstory.md",
+  );
 
   // 生成されるファイルの確認
   assertEquals(result.value.filesToCreate.length, 1);
-  assertEquals(result.value.filesToCreate[0].path, "characters/hero/backstory.md");
-  assertEquals(result.value.filesToCreate[0].content.includes("これはインラインのバックストーリーです"), true);
+  assertEquals(
+    result.value.filesToCreate[0].path,
+    "characters/hero/backstory.md",
+  );
+  assertEquals(
+    result.value.filesToCreate[0].content.includes(
+      "これはインラインのバックストーリーです",
+    ),
+    true,
+  );
 });
 
 Deno.test("DetailsPlugin - separateFiles: 複数フィールドを同時に分離", async () => {
@@ -87,14 +103,20 @@ Deno.test("DetailsPlugin - separateFiles: 既にファイル参照の場合は�
     },
   };
 
-  const result = await plugin.separateFiles(character, ["backstory"], "/tmp/test");
+  const result = await plugin.separateFiles(
+    character,
+    ["backstory"],
+    "/tmp/test",
+  );
 
   assertEquals(result.ok, true);
   if (!result.ok) return;
 
   // ファイル生成はされない
   assertEquals(result.value.filesToCreate.length, 0);
-  assertEquals(result.value.character.details?.backstory, { file: "characters/hero/backstory.md" });
+  assertEquals(result.value.character.details?.backstory, {
+    file: "characters/hero/backstory.md",
+  });
 });
 
 Deno.test("DetailsPlugin - separateFiles: 存在しないフィールドの場合はエラー", async () => {
@@ -110,7 +132,11 @@ Deno.test("DetailsPlugin - separateFiles: 存在しないフィールドの場�
     summary: "概要",
   };
 
-  const result = await plugin.separateFiles(character, ["backstory"], "/tmp/test");
+  const result = await plugin.separateFiles(
+    character,
+    ["backstory"],
+    "/tmp/test",
+  );
 
   assertEquals(result.ok, false);
   if (result.ok) return;
@@ -134,7 +160,11 @@ Deno.test("DetailsPlugin - separateFiles: 無効なフィールド名の場合�
     },
   };
 
-  const result = await plugin.separateFiles(character, ["invalid_field" as any], "/tmp/test");
+  const result = await plugin.separateFiles(
+    character,
+    ["invalid_field" as any],
+    "/tmp/test",
+  );
 
   assertEquals(result.ok, false);
 });

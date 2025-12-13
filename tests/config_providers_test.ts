@@ -4,10 +4,10 @@ import { ensureDir } from "@std/fs/ensure-dir";
 import { parseAppConfig } from "../src/shared/config/schema.ts";
 import type { AppConfig } from "../src/shared/config/schema.ts";
 import {
+  CliConfigurationProvider,
   DefaultConfigurationProvider,
   EnvConfigurationProvider,
   FileConfigurationProvider,
-  CliConfigurationProvider,
 } from "../src/infrastructure/config/providers.ts";
 import { ConfigurationManager } from "../src/application/config/configuration_manager.ts";
 

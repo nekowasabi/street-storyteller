@@ -26,7 +26,9 @@ export interface CommandHandler {
   path?: readonly string[];
   aliases?: readonly string[];
   readonly dependencies?: readonly string[];
-  execute(context: CommandContext): Promise<Result<unknown, CommandExecutionError>>;
+  execute(
+    context: CommandContext,
+  ): Promise<Result<unknown, CommandExecutionError>>;
 }
 
 export interface CommandRegistrationError {

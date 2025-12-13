@@ -1,10 +1,13 @@
 import { assert, assertEquals } from "./asserts.ts";
 import {
-  NoopMigrationFacilitator,
   createMigrationFacilitator,
   CURRENT_VERSION,
+  NoopMigrationFacilitator,
 } from "../src/application/migration_facilitator.ts";
-import type { FileSystemGateway, FileSystemError } from "../src/application/file_system_gateway.ts";
+import type {
+  FileSystemError,
+  FileSystemGateway,
+} from "../src/application/file_system_gateway.ts";
 import { err, ok } from "../src/shared/result.ts";
 
 class FakeFileSystem implements FileSystemGateway {
@@ -45,7 +48,9 @@ Deno.test("MigrationFacilitator detects missing manifest", async () => {
 
   const plan = await facilitator.assess("demo");
   assertEquals(plan.status, "fresh");
-  assert(plan.actions.some((action) => action.description.includes("Add manifest")));
+  assert(
+    plan.actions.some((action) => action.description.includes("Add manifest")),
+  );
 });
 
 Deno.test("MigrationFacilitator reports outdated version", async () => {
@@ -56,7 +61,11 @@ Deno.test("MigrationFacilitator reports outdated version", async () => {
 
   const plan = await facilitator.assess("demo");
   assertEquals(plan.status, "upgrade");
-  assert(plan.actions.some((action) => action.description.includes("Update manifest version")));
+  assert(
+    plan.actions.some((action) =>
+      action.description.includes("Update manifest version")
+    ),
+  );
 });
 
 Deno.test("MigrationFacilitator writes manifest when requested", async () => {

@@ -4,8 +4,8 @@ import { createMigrationFacilitator } from "../application/migration_facilitator
 import { createDocumentationEmitter } from "../application/documentation_emitter.ts";
 import { StaticTemplateCatalog } from "../domain/project_blueprint.ts";
 import {
-  createStoryDomainService,
   createStandardValidationPolicy,
+  createStoryDomainService,
 } from "../domain/story_domain_service.ts";
 
 export interface GenerateOptions {

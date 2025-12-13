@@ -92,7 +92,9 @@ function renderCommandHelp(node: CommandTreeNode): string {
 
   if (node.options.length > 0) {
     lines.push("", "Options:");
-    const optionLabels = node.options.map((option) => formatOptionLabel(option));
+    const optionLabels = node.options.map((option) =>
+      formatOptionLabel(option)
+    );
     const optionWidth = optionLabels.reduce(
       (width, label) => Math.max(width, label.length),
       0,
@@ -170,7 +172,10 @@ function suggestCommands(
   const maxDistance = Math.max(2, Math.floor(normalizedSegment.length / 2));
 
   const scored = candidates.flatMap((node) => {
-    const labels = [normalizeSegment(node.name), ...node.aliases.map(normalizeSegment)];
+    const labels = [
+      normalizeSegment(node.name),
+      ...node.aliases.map(normalizeSegment),
+    ];
     const best = labels.reduce(
       (min, label) => Math.min(min, levenshtein(normalizedSegment, label)),
       Number.POSITIVE_INFINITY,
@@ -180,9 +185,11 @@ function suggestCommands(
       distance: best,
     }];
   }).filter((item) => item.distance <= maxDistance)
-    .sort((a, b) => a.distance === b.distance
-      ? a.command.localeCompare(b.command)
-      : a.distance - b.distance);
+    .sort((a, b) =>
+      a.distance === b.distance
+        ? a.command.localeCompare(b.command)
+        : a.distance - b.distance
+    );
 
   const unique = new Set<string>();
   const suggestions: string[] = [];
@@ -222,7 +229,9 @@ function formatCommandPath(path: readonly string[]): string {
   return path.join(" ").trim();
 }
 
-function formatOptionLabel(option: { name: string; aliases?: readonly string[] }): string {
+function formatOptionLabel(
+  option: { name: string; aliases?: readonly string[] },
+): string {
   const parts = [option.name];
   if (option.aliases && option.aliases.length > 0) {
     parts.push(...option.aliases);
@@ -235,7 +244,10 @@ function normalizeSegment(value: string): string {
 }
 
 function levenshtein(a: string, b: string): number {
-  const matrix = Array.from({ length: a.length + 1 }, () => new Array<number>(b.length + 1));
+  const matrix = Array.from(
+    { length: a.length + 1 },
+    () => new Array<number>(b.length + 1),
+  );
 
   for (let i = 0; i <= a.length; i++) {
     matrix[i][0] = i;

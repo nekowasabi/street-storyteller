@@ -1,11 +1,16 @@
-import { ok, err } from "../../shared/result.ts";
-import type { CommandExecutionError, CommandContext } from "../types.ts";
+import { err, ok } from "../../shared/result.ts";
+import type { CommandContext, CommandExecutionError } from "../types.ts";
 import { BaseCliCommand } from "../base_command.ts";
 import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
 import type { CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
-import { generateStoryProject, type GenerateOptions } from "../../commands/generate.ts";
+import {
+  type GenerateOptions,
+  generateStoryProject,
+} from "../../commands/generate.ts";
 
-function parseGenerateOptions(context: CommandContext): GenerateOptions | CommandExecutionError {
+function parseGenerateOptions(
+  context: CommandContext,
+): GenerateOptions | CommandExecutionError {
   const args = context.args ?? {};
   const name = args.name;
   const template = args.template ?? "basic";
@@ -94,26 +99,29 @@ const GENERATE_OPTIONS: readonly CommandOptionDescriptor[] = [
   },
 ] as const;
 
-export const generateCommandDescriptor: CommandDescriptor = createLegacyCommandDescriptor(
-  generateCommandHandler,
-  {
-    summary: "Generate a new story project scaffold.",
-    usage: "storyteller generate --name <name> [--template <template>] [--path <path>]",
-    aliases: ["g"],
-    options: GENERATE_OPTIONS,
-    examples: [
-      {
-        summary: "Generate a project with the default template",
-        command: `storyteller generate --name "my-story"`,
-      },
-      {
-        summary: "Generate using the novel template",
-        command: `storyteller generate --name "novel-project" --template novel`,
-      },
-      {
-        summary: "Generate into a specific directory",
-        command: `storyteller g -n "screenplay" -t screenplay -p ~/stories`,
-      },
-    ],
-  },
-);
+export const generateCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(
+    generateCommandHandler,
+    {
+      summary: "Generate a new story project scaffold.",
+      usage:
+        "storyteller generate --name <name> [--template <template>] [--path <path>]",
+      aliases: ["g"],
+      options: GENERATE_OPTIONS,
+      examples: [
+        {
+          summary: "Generate a project with the default template",
+          command: `storyteller generate --name "my-story"`,
+        },
+        {
+          summary: "Generate using the novel template",
+          command:
+            `storyteller generate --name "novel-project" --template novel`,
+        },
+        {
+          summary: "Generate into a specific directory",
+          command: `storyteller g -n "screenplay" -t screenplay -p ~/stories`,
+        },
+      ],
+    },
+  );

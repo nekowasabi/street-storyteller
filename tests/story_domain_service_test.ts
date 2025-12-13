@@ -1,12 +1,17 @@
 import { assert, assertEquals } from "./asserts.ts";
 import { createStoryDomainService } from "../src/domain/story_domain_service.ts";
 import { StaticTemplateCatalog } from "../src/domain/project_blueprint.ts";
-import { ok, err } from "../src/shared/result.ts";
+import { err, ok } from "../src/shared/result.ts";
 
 class StubTemplateCatalog extends StaticTemplateCatalog {
-  constructor(private readonly blueprintOverride?: Parameters<StaticTemplateCatalog["getBlueprint"]>[0] extends never
-      ? never
-      : { directories: readonly string[]; files: readonly { path: string; content: string }[] }) {
+  constructor(
+    private readonly blueprintOverride?:
+      Parameters<StaticTemplateCatalog["getBlueprint"]>[0] extends never ? never
+        : {
+          directories: readonly string[];
+          files: readonly { path: string; content: string }[];
+        },
+  ) {
     super();
   }
 
@@ -58,7 +63,10 @@ Deno.test("StoryDomainService validateBlueprint detects missing directories", ()
     validationPolicy: {
       validate(blueprint) {
         if (!blueprint.directories.includes("src/characters")) {
-          return err({ code: "missing_directory", message: "src/characters missing" });
+          return err({
+            code: "missing_directory",
+            message: "src/characters missing",
+          });
         }
         return ok(undefined);
       },

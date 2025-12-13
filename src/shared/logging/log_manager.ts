@@ -1,12 +1,12 @@
 import {
+  compareLogLevel,
   type LogContext,
   type LogEvent,
-  type LogLevel,
-  type LogMetadata,
   type Logger,
   type LoggerFactory,
+  type LogLevel,
+  type LogMetadata,
   type LogWriter,
-  compareLogLevel,
 } from "./types.ts";
 
 export interface LogManagerOptions {

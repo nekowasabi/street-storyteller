@@ -34,10 +34,12 @@ function mergePartialConfig(
 ): Record<string, unknown> {
   const result: Record<string, unknown> = { ...target };
 
-  for (const [key, value] of Object.entries(source) as [
-    keyof AppConfig,
-    unknown,
-  ][]) {
+  for (
+    const [key, value] of Object.entries(source) as [
+      keyof AppConfig,
+      unknown,
+    ][]
+  ) {
     if (value === undefined) {
       continue;
     }

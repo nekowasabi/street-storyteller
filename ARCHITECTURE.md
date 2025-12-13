@@ -1,8 +1,7 @@
 # street-storyteller Architecture Document
 
-**Version**: 2.0.0
-**Date**: 2025-10-23
-**Target**: Issue #2 - TypeScript型による物語要素の表現力向上
+**Version**: 2.0.0 **Date**: 2025-10-23 **Target**: Issue #2 -
+TypeScript型による物語要素の表現力向上
 
 ---
 
@@ -50,7 +49,7 @@ street-storyteller/
 ```typescript
 interface RegistryNode {
   readonly name: string;
-  readonly path: CommandPath;  // ["element", "character"] など
+  readonly path: CommandPath; // ["element", "character"] など
   handler?: CommandHandler;
   readonly children: Map<string, RegistryNode>;
   readonly aliasChildren: Map<string, RegistryNode>;
@@ -60,6 +59,7 @@ interface RegistryNode {
 ```
 
 **主要機能**:
+
 - `registerHandler()`: ハンドラーを登録し、自動的に樹状ノードを構築
 - `registerDescriptor()`: メタデータ付き登録（親パスサポート）
 - `resolve()`: コマンドパスまたは文字列からハンドラーを解決
@@ -73,7 +73,9 @@ interface CommandHandler {
   path?: readonly string[];
   aliases?: readonly string[];
   readonly dependencies?: readonly string[];
-  execute(context: CommandContext): Promise<Result<unknown, CommandExecutionError>>;
+  execute(
+    context: CommandContext,
+  ): Promise<Result<unknown, CommandExecutionError>>;
 }
 
 interface CommandContext {
@@ -103,10 +105,12 @@ abstract class BaseCliCommand implements CommandHandler {
 
 **現在のコマンド構成**:
 
-| コマンド | パス | エイリアス | 機能 |
-|---------|------|-----------|------|
-| generate | `["generate"]` | `["g"]` | プロジェクトスカフォルディング |
-| help | `["help"]` | `["h"]` | ヘルプ表示 |
+| コマンド      | パス                   | エイリアス | 機能                                 |
+| ------------- | ---------------------- | ---------- | ------------------------------------ |
+| generate      | `["generate"]`         | `["g"]`    | プロジェクトスカフォルディング       |
+| meta          | `["meta"]`             | `[]`       | 章メタデータ（`.meta.ts`）生成・管理 |
+| meta generate | `["meta", "generate"]` | `[]`       | Markdownから`.meta.ts`を生成         |
+| help          | `["help"]`             | `["h"]`    | ヘルプ表示                           |
 
 ### 1.3 型定義システムの現状
 
@@ -125,6 +129,7 @@ export type Setting = { description: string };
 ```
 
 **特徴**:
+
 - 関係性やメタデータは未定義
 - 拡張に向けた基盤は整っている
 - サンプルプロジェクト（`sample/`）に拡張版の実装例あり
@@ -132,7 +137,11 @@ export type Setting = { description: string };
 #### サンプルプロジェクトの拡張型（`sample/src/types/character.ts`）
 
 ```typescript
-export type CharacterRole = "protagonist" | "antagonist" | "supporting" | "guest";
+export type CharacterRole =
+  | "protagonist"
+  | "antagonist"
+  | "supporting"
+  | "guest";
 export type RelationType = "ally" | "enemy" | "neutral" | "romantic";
 
 export type Character = {
@@ -168,7 +177,7 @@ export interface StoryTeller {
   themes?: Theme[];
   storyStructures?: StoryStructure[];
   timelines?: TimeLine[];
-  charcters: Character[];  // [注: typo]
+  charcters: Character[]; // [注: typo]
   settings: Setting[];
   chapters: Chapter[];
   plots: Plot[];
@@ -197,6 +206,7 @@ const AppConfigSchema = z.object({
 #### 設定プロバイダーチェーン
 
 優先度順:
+
 1. `DefaultConfigurationProvider` (priority: 0) - デフォルト値
 2. `EnvConfigurationProvider` (priority: 10) - 環境変数（`STORYTELLER_*`）
 3. `FileConfigurationProvider` (priority: 20) - ファイル（`storyteller.json`）
@@ -208,7 +218,7 @@ const AppConfigSchema = z.object({
 // src/cli.ts
 function collectConfigPaths(args: ParsedArguments): readonly string[] {
   return [
-    args.config,  // 明示的指定
+    args.config, // 明示的指定
     join(cwd, ".storyteller", "config.json"),
     join(cwd, "storyteller.config.json"),
   ];
@@ -241,11 +251,12 @@ class LoggingService {
     this.globalContextResolver = options.globalContext;
   }
 
-  getLogger(scope: string, context?: LogContext): Logger
+  getLogger(scope: string, context?: LogContext): Logger;
 }
 ```
 
 **特徴**:
+
 - スコープベースのコンテキスト管理
 - プラグイン可能なロガーファクトリー
 - グローバルコンテキストの自動付与
@@ -254,17 +265,18 @@ class LoggingService {
 
 #### テスト分類（19ファイル）
 
-| カテゴリ | ファイル数 | 主要テスト |
-|---------|----------|-----------|
-| CLI | 3 | `cli_test.ts`, `command_registry_test.ts` |
-| コマンドシステム | 2 | `build_cli_manifest_test.ts` |
-| 設定管理 | 2 | `config_providers_test.ts` |
-| ロギング | 3 | `logging_service_test.ts` |
-| ドメイン | 2 | `story_domain_service_test.ts` |
-| アプリケーション | 3 | `project_scaffolding_service_test.ts` |
-| その他 | 3 | `completion_fs_adapter_test.ts` |
+| カテゴリ         | ファイル数 | 主要テスト                                |
+| ---------------- | ---------- | ----------------------------------------- |
+| CLI              | 3          | `cli_test.ts`, `command_registry_test.ts` |
+| コマンドシステム | 2          | `build_cli_manifest_test.ts`              |
+| 設定管理         | 2          | `config_providers_test.ts`                |
+| ロギング         | 3          | `logging_service_test.ts`                 |
+| ドメイン         | 2          | `story_domain_service_test.ts`            |
+| アプリケーション | 3          | `project_scaffolding_service_test.ts`     |
+| その他           | 3          | `completion_fs_adapter_test.ts`           |
 
 **実行方法**:
+
 ```bash
 deno test                          # 全テスト
 deno test --filter "test name"     # フィルタリング
@@ -316,13 +328,16 @@ class FileLoggerFactory implements LoggerFactory {
 ### 1.10 強みと制約
 
 **強み**:
-1. **層状アーキテクチャ**: CLI → Application → Domain → Infrastructure の明確な分離
+
+1. **層状アーキテクチャ**: CLI → Application → Domain → Infrastructure
+   の明確な分離
 2. **拡張性**: CommandRegistry、ConfigurationProvider のプラグイン可能設計
 3. **テストカバレッジ**: 19ファイル、統合テスト＋ユニットテスト並行実施
 4. **型安全性**: Zodスキーマ、TypeScript型システムの活用
 5. **ロギング基盤**: スコープ・コンテキスト管理、プラグイン可能
 
 **制約**:
+
 1. 型定義が最小限（拡張が必要）
 2. StoryTellerインターフェースの実装なし
 3. プラグインシステムの未整備
@@ -336,14 +351,14 @@ class FileLoggerFactory implements LoggerFactory {
 
 ユーザー要件に基づき、以下の方針を採用：
 
-| 観点 | 決定事項 |
-|------|---------|
-| **実装範囲** | Phase 1-5 全体を対象 |
-| **CLI統合** | 既存コマンドレジストリ基盤を最大限活用 |
-| **プラグイン設計** | ハイブリッド方式（コア機能は要素型単位、拡張機能は機能レイヤー単位） |
-| **バージョン管理** | プロジェクト全体で単一バージョン |
-| **マイグレーション** | 中央管理（`migrations/`ディレクトリで一元管理） |
-| **型定義** | storytellerパッケージ内で提供 |
+| 観点                 | 決定事項                                                             |
+| -------------------- | -------------------------------------------------------------------- |
+| **実装範囲**         | Phase 1-5 全体を対象                                                 |
+| **CLI統合**          | 既存コマンドレジストリ基盤を最大限活用                               |
+| **プラグイン設計**   | ハイブリッド方式（コア機能は要素型単位、拡張機能は機能レイヤー単位） |
+| **バージョン管理**   | プロジェクト全体で単一バージョン                                     |
+| **マイグレーション** | 中央管理（`migrations/`ディレクトリで一元管理）                      |
+| **型定義**           | storytellerパッケージ内で提供                                        |
 
 ### 2.2 プラグインアーキテクチャ（ハイブリッド方式）
 
@@ -358,6 +373,7 @@ class FileLoggerFactory implements LoggerFactory {
 - その他の物語要素...
 
 **責務**:
+
 - 要素型の作成・編集・削除
 - 要素型の検証
 - 要素型スキーマのエクスポート
@@ -372,6 +388,7 @@ class FileLoggerFactory implements LoggerFactory {
 - **ValidationPlugin**: 高度な検証機能（将来）
 
 **責務**:
+
 - 複数の要素型に対する横断的機能
 - コマンドの拡張
 - 型システムの拡張
@@ -388,6 +405,7 @@ class FileLoggerFactory implements LoggerFactory {
 ```
 
 **利点**:
+
 - シンプルな管理
 - マイグレーションパスの明確化
 - ユーザーにとって理解しやすい
@@ -412,6 +430,7 @@ migrations/
 ```
 
 **利点**:
+
 - 全マイグレーションの可視性
 - バージョン間のパスが明確
 - テスト・検証が容易
@@ -428,11 +447,13 @@ import type { Character } from "@storyteller/types/v2";
 ```
 
 **利点**:
+
 - 型定義の一貫性
 - バージョン管理が容易
 - ユーザーは型定義を書かずに利用可能
 
 **互換性レイヤー**:
+
 - `src/type/v1/`: v1型定義（既存プロジェクト向け）
 - `src/type/v2/`: v2型定義（新機能）
 - `src/type/compat.ts`: v1↔v2変換
@@ -449,7 +470,7 @@ import type { Character } from "@storyteller/types/v2";
 // 基本プラグインインターフェース
 interface StorytellerPlugin {
   readonly meta: PluginMetadata;
-  readonly dependencies?: string[];  // 他プラグインへの依存
+  readonly dependencies?: string[]; // 他プラグインへの依存
 
   // ライフサイクルフック
   initialize?(context: PluginContext): Promise<void>;
@@ -458,7 +479,7 @@ interface StorytellerPlugin {
 }
 
 interface PluginMetadata {
-  readonly id: string;              // "core:character", "feature:details"
+  readonly id: string; // "core:character", "feature:details"
   readonly name: string;
   readonly version: string;
   readonly description: string;
@@ -476,10 +497,12 @@ interface PluginContext {
 
 ```typescript
 interface ElementPlugin extends StorytellerPlugin {
-  readonly elementType: string;  // "character", "setting", ...
+  readonly elementType: string; // "character", "setting", ...
 
   // 要素型ごとの機能
-  createElementFile(options: CreateElementOptions): Promise<Result<ElementCreationResult, Error>>;
+  createElementFile(
+    options: CreateElementOptions,
+  ): Promise<Result<ElementCreationResult, Error>>;
   validateElement(element: unknown): ValidationResult;
   exportElementSchema(): TypeSchema;
   getElementPath(name: string): string;
@@ -488,7 +511,7 @@ interface ElementPlugin extends StorytellerPlugin {
 
 interface CreateElementOptions {
   name: string;
-  [key: string]: unknown;  // 各要素型固有のオプション
+  [key: string]: unknown; // 各要素型固有のオプション
 }
 
 interface ElementCreationResult {
@@ -501,7 +524,7 @@ interface ElementCreationResult {
 
 ```typescript
 interface FeaturePlugin extends StorytellerPlugin {
-  readonly featureId: string;  // "details", "migration", "lsp", ...
+  readonly featureId: string; // "details", "migration", "lsp", ...
 
   // 機能ごとのフック
   extendCommands?(registry: CommandRegistry): void;
@@ -538,7 +561,9 @@ class PluginRegistry {
       if (plugin.dependencies) {
         for (const depId of plugin.dependencies) {
           if (!this.plugins.has(depId)) {
-            errors.push(`Plugin ${plugin.meta.id} depends on missing plugin: ${depId}`);
+            errors.push(
+              `Plugin ${plugin.meta.id} depends on missing plugin: ${depId}`,
+            );
           }
         }
       }
@@ -569,17 +594,17 @@ class PluginRegistry {
   // プラグインタイプ別取得
   getElementPlugins(): ElementPlugin[] {
     return Array.from(this.plugins.values())
-      .filter((p): p is ElementPlugin => 'elementType' in p);
+      .filter((p): p is ElementPlugin => "elementType" in p);
   }
 
   getFeaturePlugins(): FeaturePlugin[] {
     return Array.from(this.plugins.values())
-      .filter((p): p is FeaturePlugin => 'featureId' in p);
+      .filter((p): p is FeaturePlugin => "featureId" in p);
   }
 
   // ヘルパーメソッド
   resolveElementPlugin(elementType: string): ElementPlugin | undefined {
-    return this.getElementPlugins().find(p => p.elementType === elementType);
+    return this.getElementPlugins().find((p) => p.elementType === elementType);
   }
 
   private resolveInitializationOrder(): string[] {
@@ -602,8 +627,8 @@ class PluginRegistry {
 
 ```typescript
 interface ProjectVersion {
-  readonly version: string;              // プロジェクトバージョン e.g., "2.0.0"
-  readonly storytellerVersion: string;   // storyteller本体バージョン
+  readonly version: string; // プロジェクトバージョン e.g., "2.0.0"
+  readonly storytellerVersion: string; // storyteller本体バージョン
   readonly created: Date;
   readonly lastUpdated: Date;
 }
@@ -617,7 +642,7 @@ interface FeatureFlags {
 
 interface ProjectMetadata {
   version: ProjectVersion;
-  template: string;                      // "novel", "screenplay", ...
+  template: string; // "novel", "screenplay", ...
   features: FeatureFlags;
   compatibility: "strict" | "loose";
 }
@@ -633,7 +658,9 @@ class VersionManager {
   ) {}
 
   // メタデータの読み込み
-  async loadProjectMetadata(projectRoot: string): Promise<Result<ProjectMetadata, Error>> {
+  async loadProjectMetadata(
+    projectRoot: string,
+  ): Promise<Result<ProjectMetadata, Error>> {
     const configPath = join(projectRoot, ".storyteller", "config.json");
 
     try {
@@ -704,9 +731,9 @@ interface AvailableUpdate {
 
 ```typescript
 interface Migration {
-  readonly id: string;                   // "character_v1_to_v2"
-  readonly from: string;                 // "1.0.0"
-  readonly to: string;                   // "2.0.0"
+  readonly id: string; // "character_v1_to_v2"
+  readonly from: string; // "1.0.0"
+  readonly to: string; // "2.0.0"
   readonly description: string;
   readonly breaking: boolean;
 
@@ -714,7 +741,10 @@ interface Migration {
   canMigrate(project: ProjectContext): Promise<MigrationCheck>;
 
   // マイグレーション実行
-  migrate(project: ProjectContext, options: MigrationOptions): Promise<MigrationResult>;
+  migrate(
+    project: ProjectContext,
+    options: MigrationOptions,
+  ): Promise<MigrationResult>;
 
   // ロールバック
   rollback(backup: BackupContext): Promise<void>;
@@ -808,7 +838,13 @@ class MigrationRegistry {
       // マイグレーション可否チェック
       const check = await migration.canMigrate(project);
       if (!check.canMigrate && !options.force) {
-        return err(new Error(`Migration ${migration.id} cannot be applied: ${check.issues.join(", ")}`));
+        return err(
+          new Error(
+            `Migration ${migration.id} cannot be applied: ${
+              check.issues.join(", ")
+            }`,
+          ),
+        );
       }
 
       // マイグレーション実行
@@ -910,7 +946,10 @@ export const characterMigration: Migration = {
       metadata.version.lastUpdated = new Date();
       metadata.features.character_details = true;
 
-      const versionManager = new VersionManager(project.fileSystem, project.logger);
+      const versionManager = new VersionManager(
+        project.fileSystem,
+        project.logger,
+      );
       await versionManager.saveProjectMetadata(project.root, metadata);
 
       filesChanged.push({
@@ -919,7 +958,6 @@ export const characterMigration: Migration = {
       });
 
       return { success: true, filesChanged, warnings, errors, backup };
-
     } catch (error) {
       errors.push({
         code: "migration_failed",
@@ -940,7 +978,7 @@ function convertToV2Character(v1Char: V1.Character): V2.Character {
   return {
     id: generateId(v1Char.name),
     name: v1Char.name,
-    role: "supporting",  // デフォルト
+    role: "supporting", // デフォルト
     traits: [],
     relationships: {},
     appearingChapters: [],
@@ -957,7 +995,11 @@ function convertToV2Character(v1Char: V1.Character): V2.Character {
 // src/type/v2/character.ts
 
 // 基本型定義
-export type CharacterRole = "protagonist" | "antagonist" | "supporting" | "guest";
+export type CharacterRole =
+  | "protagonist"
+  | "antagonist"
+  | "supporting"
+  | "guest";
 export type RelationType = "ally" | "enemy" | "neutral" | "romantic";
 
 // 詳細情報型（ハイブリッド方式）
@@ -971,19 +1013,19 @@ export type CharacterDetails = {
 };
 
 export type CharacterDevelopment = {
-  initial: string;                       // 初期状態
-  goal: string;                          // 目標
-  obstacle: string;                      // 障害
-  resolution?: string;                   // 解決
+  initial: string; // 初期状態
+  goal: string; // 目標
+  obstacle: string; // 障害
+  resolution?: string; // 解決
   arc_notes?: string | { file: string }; // アーク詳細
 };
 
 // LSP統合用の検出ヒント
 export type DetectionHints = {
-  commonPatterns: string[];              // ["勇者は", "勇者が"]
-  excludePatterns: string[];             // ["勇者ではない"]
-  requiresContext: boolean;              // 文脈が必要かどうか
-  confidence: number;                    // 信頼度 0.0 - 1.0
+  commonPatterns: string[]; // ["勇者は", "勇者が"]
+  excludePatterns: string[]; // ["勇者ではない"]
+  requiresContext: boolean; // 文脈が必要かどうか
+  confidence: number; // 信頼度 0.0 - 1.0
 };
 
 // メインCharacter型（v2）
@@ -991,14 +1033,14 @@ export type Character = {
   // 必須メタデータ（型安全性重視）
   id: string;
   name: string;
-  displayNames?: string[];               // 原稿内での表記バリエーション
-  aliases?: string[];                    // 別名・愛称
-  pronouns?: string[];                   // 代名詞（"彼"、"彼女"など）
+  displayNames?: string[]; // 原稿内での表記バリエーション
+  aliases?: string[]; // 別名・愛称
+  pronouns?: string[]; // 代名詞（"彼"、"彼女"など）
   role: CharacterRole;
-  traits: string[];                      // 特性
+  traits: string[]; // 特性
   relationships: Record<string, RelationType>;
-  appearingChapters: string[];           // 登場チャプター
-  summary: string;                       // 1-2行の概要
+  appearingChapters: string[]; // 登場チャプター
+  summary: string; // 1-2行の概要
 
   // オプショナル詳細情報（ハイブリッド方式）
   details?: CharacterDetails;
@@ -1052,12 +1094,16 @@ class ElementCharacterCommand extends BaseCliCommand {
   readonly path = ["element", "character"];
   readonly aliases = ["char"];
 
-  protected async handle(context: CommandContext): Promise<Result<unknown, CommandExecutionError>> {
+  protected async handle(
+    context: CommandContext,
+  ): Promise<Result<unknown, CommandExecutionError>> {
     const { args, logger } = context;
 
     // プラグインシステムから CharacterPlugin を取得
     const pluginRegistry = context.pluginRegistry as PluginRegistry;
-    const characterPlugin = pluginRegistry.resolveElementPlugin("character") as CharacterPlugin | undefined;
+    const characterPlugin = pluginRegistry.resolveElementPlugin("character") as
+      | CharacterPlugin
+      | undefined;
 
     if (!characterPlugin) {
       return err({
@@ -1108,12 +1154,17 @@ class ElementCharacterCommand extends BaseCliCommand {
     context: CommandContext,
   ): Promise<Result<unknown, CommandExecutionError>> {
     // DetailsPlugin を取得
-    const detailsPlugin = context.pluginRegistry.resolve("feature:details") as DetailsPlugin;
+    const detailsPlugin = context.pluginRegistry.resolve(
+      "feature:details",
+    ) as DetailsPlugin;
 
     // 基本要素を作成
     const createResult = await plugin.createElementFile(options);
     if (!createResult.ok) {
-      return err({ code: "creation_failed", message: createResult.error.message });
+      return err({
+        code: "creation_failed",
+        message: createResult.error.message,
+      });
     }
 
     // 詳細スケルトンを追加
@@ -1124,10 +1175,15 @@ class ElementCharacterCommand extends BaseCliCommand {
     );
 
     if (detailsResult.ok) {
-      context.presenter.success(`Created character with details: ${options.name}`);
+      context.presenter.success(
+        `Created character with details: ${options.name}`,
+      );
       return ok(createResult.value);
     } else {
-      return err({ code: "details_failed", message: detailsResult.error.message });
+      return err({
+        code: "details_failed",
+        message: detailsResult.error.message,
+      });
     }
   }
 
@@ -1136,7 +1192,9 @@ class ElementCharacterCommand extends BaseCliCommand {
     options: CreateCharacterOptions,
     context: CommandContext,
   ): Promise<Result<unknown, CommandExecutionError>> {
-    const detailsPlugin = context.pluginRegistry.resolve("feature:details") as DetailsPlugin;
+    const detailsPlugin = context.pluginRegistry.resolve(
+      "feature:details",
+    ) as DetailsPlugin;
 
     const result = await detailsPlugin.addDetails(
       plugin,
@@ -1157,10 +1215,12 @@ class ElementCharacterCommand extends BaseCliCommand {
     options: CreateCharacterOptions,
     context: CommandContext,
   ): Promise<Result<unknown, CommandExecutionError>> {
-    const detailsPlugin = context.pluginRegistry.resolve("feature:details") as DetailsPlugin;
+    const detailsPlugin = context.pluginRegistry.resolve(
+      "feature:details",
+    ) as DetailsPlugin;
 
     const fieldsToSeparate = options.separateFiles === true
-      ? ["appearance", "personality", "backstory"]  // デフォルト
+      ? ["appearance", "personality", "backstory"] // デフォルト
       : options.separateFiles as string[];
 
     const result = await detailsPlugin.separateFiles(
@@ -1170,10 +1230,15 @@ class ElementCharacterCommand extends BaseCliCommand {
     );
 
     if (result.ok) {
-      context.presenter.success(`Separated files for character: ${options.name}`);
+      context.presenter.success(
+        `Separated files for character: ${options.name}`,
+      );
       return ok(undefined);
     } else {
-      return err({ code: "separate_files_failed", message: result.error.message });
+      return err({
+        code: "separate_files_failed",
+        message: result.error.message,
+      });
     }
   }
 
@@ -1203,21 +1268,25 @@ interface CreateCharacterOptions extends CreateElementOptions {
 
 #### 3.5.2 コマンド一覧（Phase 1-5全体）
 
-| コマンド | パス | 機能 | Phase |
-|---------|------|------|-------|
-| `storyteller element character` | `["element", "character"]` | キャラクター作成 | 1 |
-| `storyteller element character --with-details` | 同上 | 詳細情報付き作成 | 1 |
-| `storyteller element character --add-details backstory` | 同上 | 特定詳細追加 | 4 |
-| `storyteller element character --separate-files backstory` | 同上 | ファイル分離 | 4 |
-| `storyteller element setting` | `["element", "setting"]` | 設定作成 | 1 |
-| `storyteller version` | `["version"]` | バージョン表示 | 2 |
-| `storyteller version --check` | `["version"]` | バージョン確認 | 2 |
-| `storyteller update --check` | `["update"]` | 利用可能更新確認 | 2 |
-| `storyteller update --apply` | `["update"]` | 更新適用 | 2 |
-| `storyteller migrate` | `["migrate"]` | インタラクティブ移行 | 3 |
-| `storyteller migrate --git-safe` | `["migrate"]` | Git統合移行 | 3 |
-| `storyteller migrate --dry-run` | `["migrate"]` | マイグレーションプレビュー | 3 |
-| `storyteller validate --completeness-report` | `["validate"]` | 完成度レポート | 5 |
+| コマンド                                                                 | パス                       | 機能                           | Phase |
+| ------------------------------------------------------------------------ | -------------------------- | ------------------------------ | ----- |
+| `storyteller element character`                                          | `["element", "character"]` | キャラクター作成               | 1     |
+| `storyteller element character --with-details`                           | 同上                       | 詳細情報付き作成               | 1     |
+| `storyteller element character --add-details backstory`                  | 同上                       | 特定詳細追加                   | 4     |
+| `storyteller element character --separate-files backstory`               | 同上                       | ファイル分離                   | 4     |
+| `storyteller element setting`                                            | `["element", "setting"]`   | 設定作成                       | 1     |
+| `storyteller version`                                                    | `["version"]`              | バージョン表示                 | 2     |
+| `storyteller version --check`                                            | `["version"]`              | バージョン確認                 | 2     |
+| `storyteller update --check`                                             | `["update"]`               | 利用可能更新確認               | 2     |
+| `storyteller update --apply`                                             | `["update"]`               | 更新適用                       | 2     |
+| `storyteller migrate`                                                    | `["migrate"]`              | インタラクティブ移行           | 3     |
+| `storyteller migrate --git-safe`                                         | `["migrate"]`              | Git統合移行                    | 3     |
+| `storyteller migrate --dry-run`                                          | `["migrate"]`              | マイグレーションプレビュー     | 3     |
+| `storyteller meta generate manuscripts/chapter01.md`                     | `["meta", "generate"]`     | 章メタデータ生成（`.meta.ts`） | 2     |
+| `storyteller meta generate manuscripts/chapter01.md --dry-run --preview` | 同上                       | 生成プレビュー                 | 2     |
+| `storyteller meta generate manuscripts/*.md --batch`                     | 同上                       | バッチ生成（glob）             | 2     |
+| `storyteller meta generate --dir manuscripts/ --recursive`               | 同上                       | バッチ生成（ディレクトリ）     | 2     |
+| `storyteller validate --completeness-report`                             | `["validate"]`             | 完成度レポート                 | 5     |
 
 ### 3.6 物語要素サービス（`src/application/element_service.ts`）
 
@@ -1252,7 +1321,9 @@ class ElementService {
     detailsToAdd: string[],
   ): Promise<Result<void, Error>> {
     const elementPlugin = this.pluginRegistry.resolveElementPlugin(elementType);
-    const detailsPlugin = this.pluginRegistry.resolve("feature:details") as DetailsPlugin | undefined;
+    const detailsPlugin = this.pluginRegistry.resolve("feature:details") as
+      | DetailsPlugin
+      | undefined;
 
     if (!elementPlugin) {
       return err(new Error(`Element plugin not found: ${elementType}`));
@@ -1262,7 +1333,11 @@ class ElementService {
       return err(new Error("DetailsPlugin not found"));
     }
 
-    return await detailsPlugin.addDetails(elementPlugin, elementName, detailsToAdd);
+    return await detailsPlugin.addDetails(
+      elementPlugin,
+      elementName,
+      detailsToAdd,
+    );
   }
 
   // ファイル分離
@@ -1272,13 +1347,19 @@ class ElementService {
     fieldsToSeparate: string[],
   ): Promise<Result<void, Error>> {
     const elementPlugin = this.pluginRegistry.resolveElementPlugin(elementType);
-    const detailsPlugin = this.pluginRegistry.resolve("feature:details") as DetailsPlugin | undefined;
+    const detailsPlugin = this.pluginRegistry.resolve("feature:details") as
+      | DetailsPlugin
+      | undefined;
 
     if (!elementPlugin || !detailsPlugin) {
       return err(new Error("Required plugins not found"));
     }
 
-    return await detailsPlugin.separateFiles(elementPlugin, elementName, fieldsToSeparate);
+    return await detailsPlugin.separateFiles(
+      elementPlugin,
+      elementName,
+      fieldsToSeparate,
+    );
   }
 
   // 要素検証
@@ -1296,6 +1377,37 @@ class ElementService {
   }
 }
 ```
+
+### 3.6.2 メタデータ生成サービス（`src/application/meta/`）
+
+Issue #4 の「コンパニオンファイル方式」を支援するため、章原稿（Markdown）から
+`.meta.ts` を生成するパイプラインを追加しています。
+
+**エントリポイント**:
+
+- CLI: `src/cli/modules/meta/generate.ts`（`storyteller meta generate`）
+- Application: `src/application/meta/meta_generator_service.ts`
+
+**構成要素**:
+
+- `FrontmatterParser`（`src/application/meta/frontmatter_parser.ts`）
+  - `---` で囲まれたFrontmatterから `chapter_id/title/order` 等を抽出
+- `ReferenceDetector`（`src/application/meta/reference_detector.ts`）
+  - Frontmatterの `characters/settings`
+    を優先しつつ、本文を走査して参照を検出（ハイブリッド）
+  - 信頼度スコア（例: name=1.0, displayNames=0.9, aliases=0.8, pronouns=0.6）
+  - `excludePatterns` で誤検出を抑制
+- `ValidationGenerator`（`src/application/meta/validation_generator.ts`）
+  - `character_presence/setting_consistency` を自動生成
+  - `plot_advancement/custom` は編集用テンプレートとして出力
+- `TypeScriptEmitter`（`src/application/meta/typescript_emitter.ts`）
+  - インポート解決と `export const <chapterId>Meta` の生成、ファイル書き込み
+
+**インタラクティブ解決（Phase 3）**:
+
+- `InteractiveResolver`（`src/cli/modules/meta/interactive_resolver.ts`）
+  - 曖昧（同一ワードに複数候補）または低信頼度の参照をプロンプトで解決し、`references`
+    に反映
 
 ### 3.7 プラグイン実装例
 
@@ -1322,7 +1434,9 @@ export class CharacterPlugin implements ElementPlugin {
     this.logger.info("CharacterPlugin initialized");
   }
 
-  async createElementFile(options: CreateElementOptions): Promise<Result<ElementCreationResult, Error>> {
+  async createElementFile(
+    options: CreateElementOptions,
+  ): Promise<Result<ElementCreationResult, Error>> {
     const charOptions = options as CreateCharacterOptions;
 
     const character: V2.Character = {
@@ -1373,7 +1487,10 @@ export class CharacterPlugin implements ElementPlugin {
       properties: {
         id: { type: "string" },
         name: { type: "string" },
-        role: { type: "CharacterRole", enum: ["protagonist", "antagonist", "supporting", "guest"] },
+        role: {
+          type: "CharacterRole",
+          enum: ["protagonist", "antagonist", "supporting", "guest"],
+        },
         summary: { type: "string" },
         // ... その他のプロパティ
       },
@@ -1444,7 +1561,10 @@ export class DetailsPlugin implements FeaturePlugin {
       const updatedContent = this.generateUpdatedContent(updatedElement);
       await this.context.fileSystem.write(filePath, updatedContent);
 
-      this.logger.info(`Added details to element`, { elementName, detailsToAdd });
+      this.logger.info(`Added details to element`, {
+        elementName,
+        detailsToAdd,
+      });
 
       return ok(undefined);
     } catch (error) {
@@ -1723,9 +1843,12 @@ my-story/
    - エンドツーエンドのワークフローテスト
 
 **成果物**:
-- `storyteller element character --name "hero" --role "protagonist" --summary "概要"` の実装
+
+- `storyteller element character --name "hero" --role "protagonist" --summary "概要"`
+  の実装
 - `storyteller element character --name "hero" --with-details` の実装
-- `storyteller element character --name "hero" --add-details "backstory,development"` の実装
+- `storyteller element character --name "hero" --add-details "backstory,development"`
+  の実装
 
 **推定工数**: 2-3週間
 
@@ -1777,6 +1900,7 @@ my-story/
    - プロジェクト作成 → バージョン確認 → 更新のフロー
 
 **成果物**:
+
 - `.storyteller/config.json` の自動管理
 - `storyteller version --check` の実装
 - `storyteller update --check` の実装
@@ -1842,6 +1966,7 @@ my-story/
    - v1プロジェクト作成 → v2マイグレーション → 検証
 
 **成果物**:
+
 - `storyteller migrate` インタラクティブウィザード
 - `storyteller migrate --git-safe` の実装
 - `storyteller migrate --dry-run` の実装
@@ -1884,6 +2009,7 @@ my-story/
    - インライン作成 → ファイル分離 → 整合性検証
 
 **成果物**:
+
 - `storyteller element character --separate-files backstory` の実装
 - `storyteller element character --separate-files all` の実装
 - 自動Markdownファイル生成
@@ -1925,6 +2051,7 @@ my-story/
    - 完成度分析 → 一括処理 → 検証のフロー
 
 **成果物**:
+
 - `storyteller validate --completeness-report` の実装
 - 詳細情報の完成度可視化
 - 複数要素への一括操作
@@ -1936,14 +2063,14 @@ my-story/
 
 ### 5.6 全Phase合計推定工数
 
-| Phase | 機能 | 工数 |
-|-------|------|------|
-| Phase 1 | 基本詳細追加機能 | 2-3週間 |
-| Phase 2 | プロジェクト更新機能 | 1-2週間 |
-| Phase 3 | マイグレーションシステム | 3-4週間 |
-| Phase 4 | ファイル分離機能 | 2週間 |
-| Phase 5 | 高度な管理機能 | 2週間 |
-| **合計** | | **10-13週間** |
+| Phase    | 機能                     | 工数          |
+| -------- | ------------------------ | ------------- |
+| Phase 1  | 基本詳細追加機能         | 2-3週間       |
+| Phase 2  | プロジェクト更新機能     | 1-2週間       |
+| Phase 3  | マイグレーションシステム | 3-4週間       |
+| Phase 4  | ファイル分離機能         | 2週間         |
+| Phase 5  | 高度な管理機能           | 2週間         |
+| **合計** |                          | **10-13週間** |
 
 ---
 
@@ -1960,7 +2087,12 @@ my-story/
 Deno.test("PluginRegistry - register and resolve", () => {
   const registry = new PluginRegistry();
   const plugin: StorytellerPlugin = {
-    meta: { id: "test:plugin", name: "Test", version: "1.0.0", description: "" },
+    meta: {
+      id: "test:plugin",
+      name: "Test",
+      version: "1.0.0",
+      description: "",
+    },
   };
 
   registry.register(plugin);
@@ -1987,6 +2119,7 @@ Deno.test("PluginRegistry - dependency validation", () => {
 ```
 
 **対象**:
+
 - `src/core/plugin_system.ts`
 - `src/core/version_manager.ts`
 - `src/plugins/core/character/plugin.ts`
@@ -2015,7 +2148,11 @@ Deno.test("Element workflow - create character with details", async () => {
   await pluginRegistry.initializeAll(context);
 
   // ElementService経由で要素作成
-  const elementService = new ElementService(pluginRegistry, context.fileSystem, context.logger);
+  const elementService = new ElementService(
+    pluginRegistry,
+    context.fileSystem,
+    context.logger,
+  );
 
   const createResult = await elementService.createElement("character", {
     name: "hero",
@@ -2047,6 +2184,7 @@ Deno.test("Element workflow - create character with details", async () => {
 ```
 
 **対象**:
+
 - 要素作成ワークフロー
 - マイグレーションワークフロー
 - ファイル分離ワークフロー
@@ -2069,9 +2207,12 @@ Deno.test("E2E - storyteller element character --with-details", async () => {
   const result = await runCLI([
     "element",
     "character",
-    "--name", "hero",
-    "--role", "protagonist",
-    "--summary", "The brave hero",
+    "--name",
+    "hero",
+    "--role",
+    "protagonist",
+    "--summary",
+    "The brave hero",
     "--with-details",
   ], { cwd: projectDir });
 
@@ -2092,19 +2233,20 @@ Deno.test("E2E - storyteller element character --with-details", async () => {
 ```
 
 **対象**:
+
 - `storyteller element character --with-details`
 - `storyteller migrate --git-safe`
 - `storyteller element character --separate-files`
 
 ### 6.2 テストカバレッジ目標
 
-| カテゴリ | 目標カバレッジ |
-|---------|--------------|
-| コアシステム (`src/core/`) | 90%以上 |
-| プラグイン (`src/plugins/`) | 85%以上 |
-| CLIコマンド (`src/cli/modules/`) | 80%以上 |
-| アプリケーション層 (`src/application/`) | 85%以上 |
-| 型定義・ユーティリティ | 75%以上 |
+| カテゴリ                                | 目標カバレッジ |
+| --------------------------------------- | -------------- |
+| コアシステム (`src/core/`)              | 90%以上        |
+| プラグイン (`src/plugins/`)             | 85%以上        |
+| CLIコマンド (`src/cli/modules/`)        | 80%以上        |
+| アプリケーション層 (`src/application/`) | 85%以上        |
+| 型定義・ユーティリティ                  | 75%以上        |
 
 ### 6.3 テスト実行コマンド
 
@@ -2139,17 +2281,22 @@ deno test --filter "CharacterPlugin"
 ### 7.1 リスク1: 既存プロジェクトとの互換性
 
 **リスク内容**:
+
 - v1型定義を使用している既存プロジェクトが動作しなくなる
 - マイグレーション失敗時にデータが壊れる
 
 **対策**:
-1. **v1型定義の保持**: `src/type/v1/` で v1 型定義を維持し、既存プロジェクトが引き続き動作
+
+1. **v1型定義の保持**: `src/type/v1/` で v1
+   型定義を維持し、既存プロジェクトが引き続き動作
 2. **互換レイヤー**: `src/type/compat.ts` で v1↔v2 の自動変換を提供
-3. **バックアップ必須**: マイグレーション実行前に必ず `.storyteller/backup/` にバックアップ
+3. **バックアップ必須**: マイグレーション実行前に必ず `.storyteller/backup/`
+   にバックアップ
 4. **ドライランモード**: `--dry-run` で変更内容をプレビュー可能
 5. **ロールバック機能**: マイグレーション失敗時は自動的にバックアップから復元
 
 **検証方法**:
+
 - 既存のv1プロジェクトでの動作テスト
 - マイグレーション前後の比較テスト
 - ロールバックの動作確認テスト
@@ -2159,10 +2306,12 @@ deno test --filter "CharacterPlugin"
 ### 7.2 リスク2: プラグイン依存関係の複雑化
 
 **リスク内容**:
+
 - プラグイン間の依存関係が複雑になり、初期化順序の問題が発生
 - 循環依存が発生してシステムが起動しない
 
 **対策**:
+
 1. **依存関係検証**: `PluginRegistry.validate()` で登録時に依存関係をチェック
 2. **循環依存検出**: グラフ探索アルゴリズムで循環依存を検出し、エラーを報告
 3. **明確な初期化順序**: トポロジカルソートで依存関係順に初期化
@@ -2170,6 +2319,7 @@ deno test --filter "CharacterPlugin"
 5. **最小限の依存**: コアプラグインは他プラグインに依存しない設計
 
 **検証方法**:
+
 - 依存関係グラフの可視化
 - 循環依存のユニットテスト
 - 初期化順序のログ出力と検証
@@ -2179,17 +2329,21 @@ deno test --filter "CharacterPlugin"
 ### 7.3 リスク3: マイグレーション失敗時のデータ損失
 
 **リスク内容**:
+
 - マイグレーション中のエラーでデータが部分的に壊れる
 - ロールバック失敗でバックアップも復元できない
 
 **対策**:
+
 1. **Git統合**: `--git-safe` オプションでGitブランチ＋コミット単位の管理
-2. **ステップごとのバックアップ**: 各マイグレーションステップ前にバックアップ作成
+2. **ステップごとのバックアップ**:
+   各マイグレーションステップ前にバックアップ作成
 3. **トランザクション的実行**: 失敗時は即座にロールバック
 4. **ユーザー確認**: インタラクティブモードで変更内容を確認してから実行
 5. **テスト環境での事前検証**: ドライランモードで問題を事前検出
 
 **検証方法**:
+
 - マイグレーション失敗シナリオのテスト
 - ロールバック機能の動作確認
 - Git統合のE2Eテスト
@@ -2199,10 +2353,12 @@ deno test --filter "CharacterPlugin"
 ### 7.4 リスク4: TypeScriptファイルのAST解析・編集の複雑性
 
 **リスク内容**:
+
 - TypeScriptファイルの解析・編集が複雑で、バグが発生しやすい
 - 既存のコードフォーマットが壊れる
 
 **対策**:
+
 1. **段階的実装**: 最初は単純なテンプレート生成から開始
 2. **Deno標準API活用**: Deno の TypeScript API を利用
 3. **ts-morph検討**: 必要に応じて `ts-morph` ライブラリの導入を検討
@@ -2210,6 +2366,7 @@ deno test --filter "CharacterPlugin"
 5. **Prettierとの統合**: 編集後に Prettier でフォーマット
 
 **検証方法**:
+
 - 様々なTypeScript構文でのパーステスト
 - フォーマット前後の比較テスト
 - 既存ファイル編集の回帰テスト
@@ -2219,10 +2376,12 @@ deno test --filter "CharacterPlugin"
 ### 7.5 リスク5: パフォーマンス問題
 
 **リスク内容**:
+
 - 大規模プロジェクトでマイグレーションが遅い
 - 多数のプラグイン初期化に時間がかかる
 
 **対策**:
+
 1. **並列処理**: 独立したファイルの処理を並列化
 2. **キャッシング**: 解析結果をキャッシュして再利用
 3. **進捗表示**: 長時間かかる処理では進捗バーを表示
@@ -2230,6 +2389,7 @@ deno test --filter "CharacterPlugin"
 5. **ベンチマーク**: 定期的にパフォーマンステストを実施
 
 **検証方法**:
+
 - 大規模プロジェクトでのベンチマークテスト
 - プラグイン初期化時間の測定
 - メモリ使用量のモニタリング
@@ -2239,10 +2399,12 @@ deno test --filter "CharacterPlugin"
 ### 7.6 リスク6: ドキュメント不足によるユーザー混乱
 
 **リスク内容**:
+
 - 新機能の使い方がわからない
 - マイグレーション手順が不明確
 
 **対策**:
+
 1. **包括的なドキュメント**: README、ARCHITECTURE.md、各プラグインのドキュメント
 2. **チュートリアル**: ステップバイステップのチュートリアル作成
 3. **エラーメッセージの充実**: エラー時に具体的な解決策を提示
@@ -2250,6 +2412,7 @@ deno test --filter "CharacterPlugin"
 5. **サンプルプロジェクト**: 各機能を使ったサンプルを提供
 
 **検証方法**:
+
 - ユーザビリティテスト
 - ドキュメントのレビュー
 - サンプルプロジェクトの動作確認
@@ -2258,14 +2421,19 @@ deno test --filter "CharacterPlugin"
 
 ## まとめ
 
-このアーキテクチャ設計書は、Issue #2「TypeScript型による物語要素の表現力向上」を実現するための包括的な実装計画を提供します。
+このアーキテクチャ設計書は、Issue
+#2「TypeScript型による物語要素の表現力向上」を実現するための包括的な実装計画を提供します。
 
 ### 主要な特徴
 
-1. **既存基盤の最大活用**: CommandRegistry、ConfigurationProvider、LoggingServiceなどの既存システムを継承・拡張
-2. **プラグインベース設計**: コア機能（要素型単位）と拡張機能（機能レイヤー単位）を明確に分離
-3. **バージョン管理とマイグレーション**: プロジェクト全体のバージョン管理と安全な移行機構
-4. **ハイブリッド型システム**: TypeScriptでメタデータ管理、詳細情報はインライン/ファイル分離選択可能
+1. **既存基盤の最大活用**:
+   CommandRegistry、ConfigurationProvider、LoggingServiceなどの既存システムを継承・拡張
+2. **プラグインベース設計**:
+   コア機能（要素型単位）と拡張機能（機能レイヤー単位）を明確に分離
+3. **バージョン管理とマイグレーション**:
+   プロジェクト全体のバージョン管理と安全な移行機構
+4. **ハイブリッド型システム**:
+   TypeScriptでメタデータ管理、詳細情報はインライン/ファイル分離選択可能
 5. **段階的実装**: Phase 1-5の明確なマイルストーンで、各段階で実用的な機能を提供
 
 ### 期待される効果
@@ -2288,6 +2456,5 @@ deno test --filter "CharacterPlugin"
 
 ---
 
-**Document Version**: 1.0.0
-**Last Updated**: 2025-10-23
-**Author**: Claude Code (Planning Agent)
+**Document Version**: 1.0.0 **Last Updated**: 2025-10-23 **Author**: Claude Code
+(Planning Agent)

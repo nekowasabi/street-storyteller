@@ -47,4 +47,3 @@ Deno.test("LoggingService initializes LogManager using configuration", async () 
   assertEquals(events[0].level, "error");
   assertEquals(events[0].scope, "cli.generate");
 });
-

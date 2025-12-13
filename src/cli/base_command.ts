@@ -21,7 +21,9 @@ export abstract class BaseCliCommand implements CommandHandler {
     this.aliases = options?.aliases;
   }
 
-  async execute(context: CommandContext): Promise<Result<unknown, CommandExecutionError>> {
+  async execute(
+    context: CommandContext,
+  ): Promise<Result<unknown, CommandExecutionError>> {
     const scopedLogger = context.logger.withContext({ command: this.name });
     const scopedContext: CommandContext = {
       ...context,

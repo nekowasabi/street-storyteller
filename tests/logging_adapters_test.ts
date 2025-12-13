@@ -94,4 +94,3 @@ Deno.test("MemoryLoggerFactory captures structured events", () => {
   assertEquals(event.context?.requestId, "abc");
   assertEquals(event.metadata?.reason, "boom");
 });
-

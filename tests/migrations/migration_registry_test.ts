@@ -5,12 +5,12 @@
 import { assert, assertEquals } from "../asserts.ts";
 import { MigrationRegistry } from "../../src/migrations/registry.ts";
 import type {
+  BackupContext,
   Migration,
   MigrationCheck,
-  MigrationResult,
   MigrationOptions,
+  MigrationResult,
   ProjectContext,
-  BackupContext,
 } from "../../src/migrations/types.ts";
 
 // テスト用のダミーマイグレーション

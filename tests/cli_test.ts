@@ -61,7 +61,10 @@ Deno.test("CLI - help command works", async () => {
     assertEquals(logOutput.includes("USAGE:"), true);
     assertEquals(logOutput.includes("COMMANDS:"), true);
     assertEquals(logOutput.includes("generate (aliases: g)"), true);
-    assertEquals(logOutput.includes("Generate a new story project scaffold."), true);
+    assertEquals(
+      logOutput.includes("Generate a new story project scaffold."),
+      true,
+    );
     assertEquals(logOutput.includes("help (aliases: h)"), true);
   } finally {
     teardownMocks();
@@ -87,7 +90,10 @@ Deno.test("CLI - help command displays detailed info for specific command", asyn
     }
 
     console.log = originalLog;
-    assertEquals(logOutput.includes("generate — Generate a new story project scaffold."), true);
+    assertEquals(
+      logOutput.includes("generate — Generate a new story project scaffold."),
+      true,
+    );
     assertEquals(logOutput.includes("Usage:"), true);
     assertEquals(logOutput.includes("--name, -n"), true);
     assertEquals(logOutput.includes("Required"), true);

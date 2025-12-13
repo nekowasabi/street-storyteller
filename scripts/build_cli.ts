@@ -34,7 +34,9 @@ const artifactPaths = Array.isArray(artifactsArg)
   : [];
 
 if (artifactPaths.length === 0) {
-  console.error("No artifacts provided. Use --artifacts <path> for each binary.");
+  console.error(
+    "No artifacts provided. Use --artifacts <path> for each binary.",
+  );
   Deno.exit(1);
 }
 
@@ -54,6 +56,9 @@ const manifest = createBuildManifest(version, artifacts);
 
 await Deno.mkdir(outDir, { recursive: true });
 const manifestPath = join(outDir, "storyteller-manifest.json");
-await Deno.writeTextFile(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
+await Deno.writeTextFile(
+  manifestPath,
+  JSON.stringify(manifest, null, 2) + "\n",
+);
 
 console.log(`Manifest written to ${manifestPath}`);

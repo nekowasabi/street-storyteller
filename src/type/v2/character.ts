@@ -7,7 +7,11 @@
 /**
  * キャラクターの役割
  */
-export type CharacterRole = "protagonist" | "antagonist" | "supporting" | "guest";
+export type CharacterRole =
+  | "protagonist"
+  | "antagonist"
+  | "supporting"
+  | "guest";
 
 /**
  * キャラクター間の関係性の種類

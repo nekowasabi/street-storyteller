@@ -178,7 +178,8 @@ export function createCommandRegistry(): CommandRegistry {
           if (!nodesById.has(dependencyId)) {
             issues.push({
               code: "missing_dependency",
-              message: `Command "${id}" requires missing dependency "${dependencyId}"`,
+              message:
+                `Command "${id}" requires missing dependency "${dependencyId}"`,
               details: { dependency: dependencyId, command: id },
             });
           }

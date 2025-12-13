@@ -1,5 +1,5 @@
-import { ok, err } from "../../shared/result.ts";
-import type { CommandExecutionError, CommandContext } from "../types.ts";
+import { err, ok } from "../../shared/result.ts";
+import type { CommandContext, CommandExecutionError } from "../types.ts";
 import { BaseCliCommand } from "../base_command.ts";
 import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
 import type { CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
@@ -16,11 +16,15 @@ interface UpdateOptions {
   projectPath: string;
 }
 
-function parseUpdateOptions(context: CommandContext): UpdateOptions | CommandExecutionError {
+function parseUpdateOptions(
+  context: CommandContext,
+): UpdateOptions | CommandExecutionError {
   const args = context.args ?? {};
   const check = args.check === true;
   const apply = args.apply === true;
-  const addFeature = typeof args["add-feature"] === "string" ? args["add-feature"] : undefined;
+  const addFeature = typeof args["add-feature"] === "string"
+    ? args["add-feature"]
+    : undefined;
   const projectPath = typeof args.path === "string" ? args.path : Deno.cwd();
 
   return {
@@ -44,7 +48,9 @@ async function executeUpdate(context: CommandContext) {
   if (parsed.addFeature) {
     context.logger.info("Adding feature flag", { feature: parsed.addFeature });
 
-    const metadataResult = await versionService.loadProjectMetadata(parsed.projectPath);
+    const metadataResult = await versionService.loadProjectMetadata(
+      parsed.projectPath,
+    );
     if (!metadataResult.ok) {
       return err({
         code: "metadata_load_failed",
@@ -115,9 +121,13 @@ async function executeUpdate(context: CommandContext) {
 
   // --apply: プロジェクトメタデータの更新適用
   if (parsed.apply) {
-    context.logger.info("Applying project update", { path: parsed.projectPath });
+    context.logger.info("Applying project update", {
+      path: parsed.projectPath,
+    });
 
-    const metadataResult = await versionService.loadProjectMetadata(parsed.projectPath);
+    const metadataResult = await versionService.loadProjectMetadata(
+      parsed.projectPath,
+    );
     if (!metadataResult.ok) {
       return err({
         code: "metadata_load_failed",
@@ -239,30 +249,32 @@ const UPDATE_OPTIONS: readonly CommandOptionDescriptor[] = [
   },
 ] as const;
 
-export const updateCommandDescriptor: CommandDescriptor = createLegacyCommandDescriptor(
-  updateCommandHandler,
-  {
-    summary: "Update project metadata and feature flags.",
-    usage: "storyteller update [--check] [--apply] [--add-feature <name>] [--path <path>]",
-    aliases: ["u"],
-    options: UPDATE_OPTIONS,
-    examples: [
-      {
-        summary: "Check for available updates",
-        command: "storyteller update --check",
-      },
-      {
-        summary: "Apply project update",
-        command: "storyteller update --apply",
-      },
-      {
-        summary: "Add a feature flag",
-        command: 'storyteller update --add-feature "character_details"',
-      },
-      {
-        summary: "Update specific project",
-        command: "storyteller u -a -p /path/to/project",
-      },
-    ],
-  },
-);
+export const updateCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(
+    updateCommandHandler,
+    {
+      summary: "Update project metadata and feature flags.",
+      usage:
+        "storyteller update [--check] [--apply] [--add-feature <name>] [--path <path>]",
+      aliases: ["u"],
+      options: UPDATE_OPTIONS,
+      examples: [
+        {
+          summary: "Check for available updates",
+          command: "storyteller update --check",
+        },
+        {
+          summary: "Apply project update",
+          command: "storyteller update --apply",
+        },
+        {
+          summary: "Add a feature flag",
+          command: 'storyteller update --add-feature "character_details"',
+        },
+        {
+          summary: "Update specific project",
+          command: "storyteller u -a -p /path/to/project",
+        },
+      ],
+    },
+  );

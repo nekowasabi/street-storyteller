@@ -1,6 +1,9 @@
 import { assert, assertEquals } from "./asserts.ts";
 import { createProjectScaffoldingService } from "../src/application/project_scaffolding_service.ts";
-import type { FileSystemGateway, FileSystemError } from "../src/application/file_system_gateway.ts";
+import type {
+  FileSystemError,
+  FileSystemGateway,
+} from "../src/application/file_system_gateway.ts";
 import type {
   MigrationFacilitator,
   MigrationPlan,
@@ -78,7 +81,9 @@ class StubDocumentationEmitter implements DocumentationEmitter {
 
 class StubDomainService implements StoryDomainService {
   constructor(
-    private readonly blueprintResult: ReturnType<StoryDomainService["resolveTemplate"]>,
+    private readonly blueprintResult: ReturnType<
+      StoryDomainService["resolveTemplate"]
+    >,
     private readonly validationResult = ok(undefined),
   ) {}
 

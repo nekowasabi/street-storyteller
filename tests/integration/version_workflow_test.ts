@@ -1,11 +1,13 @@
-import { assertEquals, assert } from "../asserts.ts";
+import { assert, assertEquals } from "../asserts.ts";
 import { createVersionService } from "../../src/application/version_service.ts";
 import type { FileSystemGateway } from "../../src/application/file_system_gateway.ts";
-import { ok, err } from "../../src/shared/result.ts";
+import { err, ok } from "../../src/shared/result.ts";
 import type { ProjectMetadata } from "../../src/shared/config/schema.ts";
 import { createStubLogger } from "../asserts.ts";
 
-function createMockFileSystem(files: Record<string, string>): FileSystemGateway {
+function createMockFileSystem(
+  files: Record<string, string>,
+): FileSystemGateway {
   return {
     async readFile(path: string) {
       if (files[path]) {
@@ -45,7 +47,10 @@ Deno.test("統合テスト: プロジェクト作成→バージョン確認→�
       compatibility: "strict",
     };
 
-    const saveResult = await versionService.saveProjectMetadata(projectPath, initialMetadata);
+    const saveResult = await versionService.saveProjectMetadata(
+      projectPath,
+      initialMetadata,
+    );
     assert(saveResult.ok);
 
     // メタデータが保存されたことを確認
@@ -62,13 +67,19 @@ Deno.test("統合テスト: プロジェクト作成→バージョン確認→�
   });
 
   await t.step("3. 互換性チェック（v2.0.0との互換性なし）", async () => {
-    const compatibilityResult = await versionService.checkCompatibility(projectPath, "2.0.0");
+    const compatibilityResult = await versionService.checkCompatibility(
+      projectPath,
+      "2.0.0",
+    );
     assert(compatibilityResult.ok);
     assert(!compatibilityResult.value.compatible);
   });
 
   await t.step("4. 更新チェック（メジャーアップデート必要）", async () => {
-    const updateResult = await versionService.checkForUpdates(projectPath, "2.0.0");
+    const updateResult = await versionService.checkForUpdates(
+      projectPath,
+      "2.0.0",
+    );
     assert(updateResult.ok);
     assert(updateResult.value.updateAvailable);
     assertEquals(updateResult.value.recommendedAction, "migrate");
@@ -89,7 +100,10 @@ Deno.test("統合テスト: プロジェクト作成→バージョン確認→�
       },
     };
 
-    const saveResult = await versionService.saveProjectMetadata(projectPath, updatedMetadata);
+    const saveResult = await versionService.saveProjectMetadata(
+      projectPath,
+      updatedMetadata,
+    );
     assert(saveResult.ok);
 
     // 更新後の確認
@@ -99,13 +113,19 @@ Deno.test("統合テスト: プロジェクト作成→バージョン確認→�
   });
 
   await t.step("6. 互換性チェック（v1.9.0との互換性あり）", async () => {
-    const compatibilityResult = await versionService.checkCompatibility(projectPath, "1.9.0");
+    const compatibilityResult = await versionService.checkCompatibility(
+      projectPath,
+      "1.9.0",
+    );
     assert(compatibilityResult.ok);
     assert(compatibilityResult.value.compatible);
   });
 
   await t.step("7. 更新チェック（マイナーアップデート可能）", async () => {
-    const updateResult = await versionService.checkForUpdates(projectPath, "1.9.0");
+    const updateResult = await versionService.checkForUpdates(
+      projectPath,
+      "1.9.0",
+    );
     assert(updateResult.ok);
     assert(updateResult.value.updateAvailable);
     assertEquals(updateResult.value.recommendedAction, "update");
@@ -129,7 +149,10 @@ Deno.test("統合テスト: プロジェクト作成→バージョン確認→�
       },
     };
 
-    const saveResult = await versionService.saveProjectMetadata(projectPath, updatedMetadata);
+    const saveResult = await versionService.saveProjectMetadata(
+      projectPath,
+      updatedMetadata,
+    );
     assert(saveResult.ok);
 
     // 機能フラグの確認
@@ -172,12 +195,18 @@ Deno.test("統合テスト: looseモードでの互換性チェック", async ()
   await versionService.saveProjectMetadata(projectPath, metadata);
 
   // looseモードでもメジャーバージョンが違えば互換性なし
-  const compatResult1 = await versionService.checkCompatibility(projectPath, "2.0.0");
+  const compatResult1 = await versionService.checkCompatibility(
+    projectPath,
+    "2.0.0",
+  );
   assert(compatResult1.ok);
   assert(!compatResult1.value.compatible);
 
   // looseモードではマイナー/パッチの違いは許容
-  const compatResult2 = await versionService.checkCompatibility(projectPath, "1.9.5");
+  const compatResult2 = await versionService.checkCompatibility(
+    projectPath,
+    "1.9.5",
+  );
   assert(compatResult2.ok);
   assert(compatResult2.value.compatible);
 });

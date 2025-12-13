@@ -1,10 +1,12 @@
-import { assertEquals, assert, createStubLogger } from "../asserts.ts";
+import { assert, assertEquals, createStubLogger } from "../asserts.ts";
 import { createVersionService } from "../../src/application/version_service.ts";
 import type { FileSystemGateway } from "../../src/application/file_system_gateway.ts";
-import { ok, err } from "../../src/shared/result.ts";
+import { err, ok } from "../../src/shared/result.ts";
 import type { ProjectMetadata } from "../../src/shared/config/schema.ts";
 
-function createMockFileSystem(files: Record<string, string>): FileSystemGateway {
+function createMockFileSystem(
+  files: Record<string, string>,
+): FileSystemGateway {
   return {
     async readFile(path: string) {
       if (files[path]) {
@@ -41,12 +43,15 @@ Deno.test("VersionService - loadProjectMetadata", async (t) => {
     };
 
     const files = {
-      "/project/.storyteller/config.json": JSON.stringify(metadata, (key, value) => {
-        if (value instanceof Date) {
-          return value.toISOString();
-        }
-        return value;
-      }),
+      "/project/.storyteller/config.json": JSON.stringify(
+        metadata,
+        (key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          return value;
+        },
+      ),
     };
 
     const fs = createMockFileSystem(files);
@@ -123,19 +128,25 @@ Deno.test("VersionService - checkCompatibility", async (t) => {
     };
 
     const files = {
-      "/project/.storyteller/config.json": JSON.stringify(metadata, (key, value) => {
-        if (value instanceof Date) {
-          return value.toISOString();
-        }
-        return value;
-      }),
+      "/project/.storyteller/config.json": JSON.stringify(
+        metadata,
+        (key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          return value;
+        },
+      ),
     };
 
     const fs = createMockFileSystem(files);
     const logger = createStubLogger();
     const service = createVersionService(fs, logger);
 
-    const result = await service.checkCompatibility("/project", CURRENT_VERSION);
+    const result = await service.checkCompatibility(
+      "/project",
+      CURRENT_VERSION,
+    );
     assert(result.ok);
     assert(result.value.compatible);
   });
@@ -153,19 +164,25 @@ Deno.test("VersionService - checkCompatibility", async (t) => {
     };
 
     const files = {
-      "/project/.storyteller/config.json": JSON.stringify(metadata, (key, value) => {
-        if (value instanceof Date) {
-          return value.toISOString();
-        }
-        return value;
-      }),
+      "/project/.storyteller/config.json": JSON.stringify(
+        metadata,
+        (key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          return value;
+        },
+      ),
     };
 
     const fs = createMockFileSystem(files);
     const logger = createStubLogger();
     const service = createVersionService(fs, logger);
 
-    const result = await service.checkCompatibility("/project", CURRENT_VERSION);
+    const result = await service.checkCompatibility(
+      "/project",
+      CURRENT_VERSION,
+    );
     assert(result.ok);
     assert(!result.value.compatible);
   });
@@ -185,12 +202,15 @@ Deno.test("VersionService - checkForUpdates", async (t) => {
     };
 
     const files = {
-      "/project/.storyteller/config.json": JSON.stringify(metadata, (key, value) => {
-        if (value instanceof Date) {
-          return value.toISOString();
-        }
-        return value;
-      }),
+      "/project/.storyteller/config.json": JSON.stringify(
+        metadata,
+        (key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          return value;
+        },
+      ),
     };
 
     const fs = createMockFileSystem(files);
@@ -215,12 +235,15 @@ Deno.test("VersionService - checkForUpdates", async (t) => {
     };
 
     const files = {
-      "/project/.storyteller/config.json": JSON.stringify(metadata, (key, value) => {
-        if (value instanceof Date) {
-          return value.toISOString();
-        }
-        return value;
-      }),
+      "/project/.storyteller/config.json": JSON.stringify(
+        metadata,
+        (key, value) => {
+          if (value instanceof Date) {
+            return value.toISOString();
+          }
+          return value;
+        },
+      ),
     };
 
     const fs = createMockFileSystem(files);

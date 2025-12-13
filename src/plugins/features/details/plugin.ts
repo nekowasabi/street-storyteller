@@ -4,14 +4,23 @@
  * 既存の要素に詳細情報（details）を段階的に追加する機能プラグイン
  */
 
-import { ok, err } from "../../../shared/result.ts";
+import { err, ok } from "../../../shared/result.ts";
 import type { Result } from "../../../shared/result.ts";
 import type {
   FeaturePlugin,
   PluginMetadata,
 } from "../../../core/plugin_system.ts";
-import type { Character, CharacterDetails, CharacterDevelopment } from "../../../type/v2/character.ts";
-import { getTemplate, getAvailableFields, isValidField, type DetailField } from "./templates.ts";
+import type {
+  Character,
+  CharacterDetails,
+  CharacterDevelopment,
+} from "../../../type/v2/character.ts";
+import {
+  type DetailField,
+  getAvailableFields,
+  getTemplate,
+  isValidField,
+} from "./templates.ts";
 import { generateMarkdownContent } from "./markdown.ts";
 
 export class DetailsPlugin implements FeaturePlugin {
@@ -41,7 +50,9 @@ export class DetailsPlugin implements FeaturePlugin {
       // 無効なフィールド名をチェック
       const invalidFields = fields.filter((f) => !isValidField(f));
       if (invalidFields.length > 0) {
-        return err(new Error(`Invalid field names: ${invalidFields.join(", ")}`));
+        return err(
+          new Error(`Invalid field names: ${invalidFields.join(", ")}`),
+        );
       }
 
       // 既存のdetailsを取得（なければ空オブジェクト）
@@ -52,7 +63,10 @@ export class DetailsPlugin implements FeaturePlugin {
 
       for (const field of fields) {
         // forceがfalseで既存のフィールドがある場合は上書きしない
-        if (!force && field in newDetails && newDetails[field as keyof CharacterDetails] !== undefined) {
+        if (
+          !force && field in newDetails &&
+          newDetails[field as keyof CharacterDetails] !== undefined
+        ) {
           continue;
         }
 
@@ -131,7 +145,9 @@ export class DetailsPlugin implements FeaturePlugin {
         // 無効なフィールド名をチェック
         const invalidFields = fields.filter((f) => !isValidField(f));
         if (invalidFields.length > 0) {
-          return err(new Error(`Invalid field names: ${invalidFields.join(", ")}`));
+          return err(
+            new Error(`Invalid field names: ${invalidFields.join(", ")}`),
+          );
         }
         targetFields = fields;
       }
@@ -143,13 +159,18 @@ export class DetailsPlugin implements FeaturePlugin {
         const currentValue = newDetails[field as keyof CharacterDetails];
 
         // 既にファイル参照の場合はスキップ
-        if (typeof currentValue === "object" && currentValue !== null && "file" in currentValue) {
+        if (
+          typeof currentValue === "object" && currentValue !== null &&
+          "file" in currentValue
+        ) {
           continue;
         }
 
         // フィールドが存在しない場合はエラー
         if (currentValue === undefined) {
-          return err(new Error(`Field '${field}' does not exist in character details`));
+          return err(
+            new Error(`Field '${field}' does not exist in character details`),
+          );
         }
 
         // development は CharacterDevelopment 型なので対象外

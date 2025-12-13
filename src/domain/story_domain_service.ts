@@ -18,7 +18,9 @@ export interface ValidationPolicy {
 }
 
 export interface StoryDomainService {
-  resolveTemplate(template: TemplateId): Result<ProjectBlueprint, TemplateError | ValidationError>;
+  resolveTemplate(
+    template: TemplateId,
+  ): Result<ProjectBlueprint, TemplateError | ValidationError>;
   validateBlueprint(blueprint: ProjectBlueprint): Result<void, ValidationError>;
 }
 

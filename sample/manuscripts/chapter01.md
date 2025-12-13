@@ -63,7 +63,7 @@ storyteller:
 
 <!-- 検証コメント
 @validate: hero.appearingChapters.includes('chapter01')
-@validate: heroine.appearingChapters.includes('chapter01') 
+@validate: heroine.appearingChapters.includes('chapter01')
 @validate: kingdom.appearingChapters.includes('chapter01')
 -->
 
@@ -84,12 +84,11 @@ storyteller:
 
 「じゃあ、私たち、似た者同士ね」
 
-夕日が地平線に沈もうとしている。
-第一日目の旅は、順調に進んでいた。
+夕日が地平線に沈もうとしている。 第一日目の旅は、順調に進んでいた。
 
 明日、彼らは魔法の森へと足を踏み入れることになる。
 そこで待ち受ける試練のことは、まだ二人は知らない。
 
 ---
 
-*続く...*
+_続く..._

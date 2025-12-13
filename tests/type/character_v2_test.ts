@@ -8,8 +8,8 @@ import type {
   RelationType,
 } from "../../src/type/v2/character.ts";
 import {
-  migrateCharacterV1toV2,
   downgradeCharacterV2toV1,
+  migrateCharacterV1toV2,
 } from "../../src/type/compat.ts";
 import type { Character as CharacterV1 } from "../../src/type/character.ts";
 

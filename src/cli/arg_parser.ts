@@ -43,7 +43,7 @@ export function parseCliArgs(args: readonly string[]): ParsedArguments {
   }
 
   return {
-    _ : positionals,
+    _: positionals,
     ...options,
   };
 }

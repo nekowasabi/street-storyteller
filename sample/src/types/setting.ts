@@ -18,16 +18,16 @@ export type Setting = {
   displayNames?: string[];
   type: SettingType;
   appearingChapters: string[];
-  
+
   // 必須概要
   summary: string;
-  
+
   // オプショナル詳細
   details?: SettingDetails;
-  
+
   // 関連設定
   relatedSettings?: string[];
-  
+
   // 検出ヒント（LSP用）
   detectionHints?: {
     commonPatterns: string[];
