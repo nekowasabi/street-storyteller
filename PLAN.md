@@ -78,20 +78,20 @@ JSON-RPC 2.0プロトコルのパース機能を実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/json_rpc_parser_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
+- [x] テストケースを作成（この時点で実装がないため失敗する）
   - `JsonRpcRequest`, `JsonRpcResponse`, `JsonRpcError` 型が存在すること
   - `parseJsonRpc()` 関数が存在すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/lsp/protocol/types.ts` に型定義を作成
+- [x] `src/lsp/protocol/types.ts` に型定義を作成
   - JsonRpcRequest: { jsonrpc: "2.0", id?: number | string, method: string, params?: unknown }
   - JsonRpcResponse: { jsonrpc: "2.0", id: number | string | null, result?: unknown, error?: JsonRpcError }
   - JsonRpcError: { code: number, message: string, data?: unknown }
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 必要に応じてリファクタリング
+- [x] 再度テストを実行し、通過を確認
 
 #### sub2 JSON-RPCパーサー関数
 @target: `src/lsp/protocol/json_rpc.ts`
@@ -99,7 +99,7 @@ JSON-RPC 2.0プロトコルのパース機能を実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/json_rpc_parser_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - 有効なリクエストをパースできること
   - 無効なJSONでエラーを返すこと（code: -32700）
   - 無効なjsonrpcバージョンでエラーを返すこと（code: -32600）
@@ -107,14 +107,14 @@ JSON-RPC 2.0プロトコルのパース機能を実装する
   - バッチリクエストを処理できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `parseJsonRpc(input: string): Result<JsonRpcMessage, JsonRpcError>` 実装
-- [ ] `parseJsonRpcBatch(input: string): JsonRpcMessage[]` 実装
-- [ ] JSON.parse例外のキャッチとエラーコード変換
+- [x] `parseJsonRpc(input: string): Result<JsonRpcMessage, JsonRpcError>` 実装
+- [x] `parseJsonRpcBatch(input: string): JsonRpcMessage[]` 実装
+- [x] JSON.parse例外のキャッチとエラーコード変換
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] エラーコード定数の抽出（JSON_RPC_PARSE_ERROR = -32700 等）
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] エラーコード定数の抽出（JSON_RPC_PARSE_ERROR = -32700 等）
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -127,16 +127,16 @@ Content-Lengthベースのメッセージ境界処理を実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/transport_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `createMockReader()`, `createMockWriter()` が存在すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `tests/lsp/helpers.ts` にモック関数を実装
+- [x] `tests/lsp/helpers.ts` にモック関数を実装
   - createMockReader(data: string): Deno.Reader
   - createMockWriter(): { data: string, write(): Promise<number> }
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
+- [x] テストを実行し、通過することを確認
 
 #### sub2 LspTransportクラス
 @target: `src/lsp/protocol/transport.ts`
@@ -144,24 +144,24 @@ Content-Lengthベースのメッセージ境界処理を実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/transport_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - Content-Lengthヘッダーを正しく読み取れること
   - メッセージ本文を正しくパースすること
   - レスポンス書き込み時にContent-Lengthヘッダーを付与すること
   - 不完全なメッセージでエラーを返すこと
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `LspTransport` クラス実装
+- [x] `LspTransport` クラス実装
   - constructor(reader: Deno.Reader, writer: Deno.Writer)
   - read(): Promise<JsonRpcMessage>
   - write(message: JsonRpcMessage): Promise<void>
-- [ ] ヘッダーパース（Content-Length: N\r\n\r\n）
-- [ ] UTF-8エンコーディング処理
+- [x] ヘッダーパース（Content-Length: N\r\n\r\n）
+- [x] UTF-8エンコーディング処理
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] バッファ管理のリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] バッファ管理のリファクタリング
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -174,19 +174,19 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/server_initialization_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - ServerCapabilities型が存在すること
   - getServerCapabilities() が正しい値を返すこと
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] ServerCapabilities型定義
-- [ ] getServerCapabilities()関数実装
+- [x] ServerCapabilities型定義
+- [x] getServerCapabilities()関数実装
   - textDocumentSync: 1 (Full)
   - definitionProvider: true
   - hoverProvider: true
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
+- [x] テストを実行し、通過することを確認
 
 #### sub2 LspServerクラス基盤
 @target: `src/lsp/server/server.ts`
@@ -194,13 +194,13 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/server_initialization_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - initializeリクエストに正しいレスポンスを返すこと
   - initializedノーティフィケーションを処理できること
   - 初期化前のリクエストを拒否すること（code: -32002）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `LspServer` クラス実装
+- [x] `LspServer` クラス実装
   - constructor(transport: LspTransport, projectRoot: string)
   - start(): Promise<void> - メッセージループ開始
   - handleMessage(message: JsonRpcMessage): Promise<void>
@@ -209,9 +209,9 @@ initialize/initialized ハンドシェイクを実装する
   - isInitialized(): boolean
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] メッセージルーティングのリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] メッセージルーティングのリファクタリング
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -223,7 +223,7 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/document_manager_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - open()でドキュメントを保存できること
   - get()でドキュメントを取得できること
   - close()でドキュメントを削除できること
@@ -232,19 +232,19 @@ initialize/initialized ハンドシェイクを実装する
   - バージョン管理が正しく動作すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `TextDocument` 型定義
+- [x] `TextDocument` 型定義
   - uri: string, content: string, version: number, languageId: string
-- [ ] `DocumentManager` クラス実装
+- [x] `DocumentManager` クラス実装
   - open(uri, text, version, languageId): void
   - get(uri): TextDocument | undefined
   - close(uri): void
   - change(uri, changes, version): void
-- [ ] 増分更新アルゴリズム（Range → 文字列置換）
+- [x] 増分更新アルゴリズム（Range → 文字列置換）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] マルチバイト文字の位置計算を検証
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] マルチバイト文字の位置計算を検証
+- [x] 再度テストを実行し、通過を確認
 
 #### sub2 テキストドキュメント同期ハンドラ
 @target: `src/lsp/handlers/text_document_sync.ts`
@@ -252,21 +252,21 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/text_document_sync_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - didOpenでドキュメントが開かれること
   - didChangeでドキュメントが更新されること
   - didCloseでドキュメントが閉じられること
   - 変更時に診断がトリガーされること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] handleDidOpen(params): void
-- [ ] handleDidChange(params): void
-- [ ] handleDidClose(params): void
-- [ ] LspServerへの統合
+- [x] handleDidOpen(params): void
+- [x] handleDidChange(params): void
+- [x] handleDidClose(params): void
+- [x] LspServerへの統合
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -279,47 +279,47 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/positioned_detector_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - 検出結果に位置情報（line, character, length）が含まれること
   - マルチバイト文字の位置が正しく計算されること（バイト位置ではなく文字位置）
   - 複数出現を全て追跡できること
   - 既存のReferenceDetectorと同じ検出精度を維持すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `Position` 型定義: { line: number, character: number }
-- [ ] `PositionedMatch` 型定義: { id: string, positions: Position[], confidence: number }
-- [ ] `PositionedDetector` クラス実装
+- [x] `Position` 型定義: { line: number, character: number }
+- [x] `PositionedMatch` 型定義: { id: string, positions: Position[], confidence: number }
+- [x] `PositionedDetector` クラス実装
   - constructor(referenceDetector: ReferenceDetector)
   - detectWithPositions(content: string, projectPath: string): Promise<PositionedDetectionResult>
-- [ ] 行・列位置の計算ロジック（改行でリセット、UTF-16コードユニット単位）
+- [x] 行・列位置の計算ロジック（改行でリセット、UTF-16コードユニット単位）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 位置計算のエッジケーステスト追加
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 位置計算のエッジケーステスト追加
+- [x] 再度テストを実行し、通過を確認
 
 #### sub2 日本語パターンマッチャー
 @target: `src/lsp/detection/japanese_pattern_matcher.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/japanese_pattern_matcher_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - 基本助詞（は/が/を/に/の/と/で/へ）付きパターンを生成できること
   - 文脈に基づく信頼度を計算できること（主語位置は高信頼度）
   - 除外パターンを正しく適用できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `BASIC_PARTICLES` 定数: ["は", "が", "を", "に", "の", "と", "で", "へ"]
-- [ ] `JapanesePatternMatcher` クラス実装
+- [x] `BASIC_PARTICLES` 定数: ["は", "が", "を", "に", "の", "と", "で", "へ"]
+- [x] `JapanesePatternMatcher` クラス実装
   - expandWithParticles(word: string): string[]
   - findMatches(content: string, word: string): Match[]
   - calculateConfidence(content: string, word: string, position: number): number
   - addExcludePattern(pattern: string): void
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 信頼度計算ロジックの調整
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 信頼度計算ロジックの調整
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -332,25 +332,25 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/diagnostics_generator_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - 未定義のキャラクター参照をWarningとして報告すること
   - 低信頼度マッチをHintとして報告すること
   - 正確な位置情報（range）を含むこと
   - 関連情報（候補の提示）を含むこと
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `Diagnostic` 型定義（LSP準拠）
+- [x] `Diagnostic` 型定義（LSP準拠）
   - range: Range, message: string, severity: DiagnosticSeverity, source: "storyteller"
-- [ ] `DiagnosticsGenerator` クラス実装
+- [x] `DiagnosticsGenerator` クラス実装
   - constructor(detector: PositionedDetector)
   - generate(uri: string, content: string, projectPath: string): Promise<Diagnostic[]>
-- [ ] 未定義参照の検出ロジック
-- [ ] 信頼度閾値による診断レベル判定
+- [x] 未定義参照の検出ロジック
+- [x] 信頼度閾値による診断レベル判定
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] メッセージの日本語化
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] メッセージの日本語化
+- [x] 再度テストを実行し、通過を確認
 
 #### sub2 DiagnosticsPublisherクラス
 @target: `src/lsp/diagnostics/diagnostics_publisher.ts`
@@ -358,20 +358,20 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/diagnostics_publisher_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - publishDiagnostics通知を送信できること
   - 空の診断配列で診断をクリアできること
   - デバウンス処理が動作すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `DiagnosticsPublisher` クラス実装
+- [x] `DiagnosticsPublisher` クラス実装
   - constructor(server: LspServer, options?: { debounceMs: number })
   - publish(uri: string, diagnostics: Diagnostic[]): void
-- [ ] デバウンス機能の実装
+- [x] デバウンス機能の実装
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -384,22 +384,22 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/definition_provider_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - キャラクター名からキャラクター定義ファイルのLocationを返すこと
   - 設定名から設定定義ファイルのLocationを返すこと
   - 非エンティティ位置ではnullを返すこと
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `Location` 型定義: { uri: string, range: Range }
-- [ ] `DefinitionProvider` クラス実装
+- [x] `Location` 型定義: { uri: string, range: Range }
+- [x] `DefinitionProvider` クラス実装
   - constructor(detector: PositionedDetector)
   - getDefinition(uri: string, content: string, position: Position, projectPath: string): Promise<Location | null>
-- [ ] 位置からエンティティを特定するロジック
-- [ ] エンティティからファイルパスを解決するロジック
+- [x] 位置からエンティティを特定するロジック
+- [x] エンティティからファイルパスを解決するロジック
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -412,23 +412,23 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/hover_provider_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - キャラクター情報（名前、役割、概要）を含むMarkdownを返すこと
   - 信頼度を表示すること
   - 関係性情報を表示すること
   - 非エンティティ位置ではnullを返すこと
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `Hover` 型定義: { contents: MarkupContent, range?: Range }
-- [ ] `HoverProvider` クラス実装
+- [x] `Hover` 型定義: { contents: MarkupContent, range?: Range }
+- [x] `HoverProvider` クラス実装
   - constructor(detector: PositionedDetector)
   - getHover(uri: string, content: string, position: Position, projectPath: string): Promise<Hover | null>
-- [ ] キャラクター情報のMarkdownフォーマット生成
+- [x] キャラクター情報のMarkdownフォーマット生成
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] ホバー表示内容の日本語化
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] ホバー表示内容の日本語化
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -441,19 +441,19 @@ initialize/initialized ハンドシェイクを実装する
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/lsp/server_integration_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - textDocument/definition リクエストを処理できること
   - textDocument/hover リクエストを処理できること
   - ドキュメント変更時に診断が発行されること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] handleDefinition(params): Promise<Location | null>
-- [ ] handleHover(params): Promise<Hover | null>
-- [ ] テキスト同期 → 診断発行のパイプライン構築
+- [x] handleDefinition(params): Promise<Location | null>
+- [x] handleHover(params): Promise<Hover | null>
+- [x] テキスト同期 → 診断発行のパイプライン構築
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -461,15 +461,15 @@ initialize/initialized ハンドシェイクを実装する
 
 #### sub1 エッジケーステスト追加
 @test: `tests/lsp/*.ts`
-- [ ] 空のドキュメントの処理
-- [ ] 非常に長い行の処理
-- [ ] 特殊文字（絵文字等）を含むドキュメント
-- [ ] 大量のキャラクター参照を含むドキュメント
+- [x] 空のドキュメントの処理
+- [x] 非常に長い行の処理
+- [x] 特殊文字（絵文字等）を含むドキュメント
+- [x] 大量のキャラクター参照を含むドキュメント
 
 #### sub2 統合テスト
 @test: `tests/integration/lsp_server_integration_test.ts`
-- [ ] 完全な編集セッションのシミュレーション
-- [ ] 複数ドキュメントの同時編集
+- [x] 完全な編集セッションのシミュレーション
+- [x] 複数ドキュメントの同時編集
 
 ---
 
