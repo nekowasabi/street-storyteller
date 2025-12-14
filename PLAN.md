@@ -1,262 +1,202 @@
-# title: Issue #4 メタデータ自動生成機能の実装（Phase 1〜3）
+# title: Issue #4 残タスク実装計画（binding / 差分更新 / watch / hooks / CI）
 
-## 概要
+Issue #4 のうち **未完了のチェックボックス（6件）** を実装するための計画。
+実装は既存アーキテクチャ（`src/application/meta/*` と
+`src/cli/modules/meta/*`）に沿って行う。
 
-- 章メタデータファイル（`.meta.ts`）を半自動的に生成するCLIコマンド
-  `storyteller meta generate` を実装
-- Markdownを解析してキャラクター・設定を自動検出し、TypeScriptファイルを出力
-- ハイブリッド検出方式（Frontmatter +
-  本文解析の統合）により高精度な参照マッピングを実現
+## 対象（Issue #4 の未完了）
 
-### goal
+- Phase 2
+  - [ ] binding.yamlファイルとの連携
+- Phase 3
+  - [ ] 差分更新機能（既存メタデータの更新）
+- Phase 4
+  - [ ] ファイル監視モード
+  - [ ] Markdown変更時の自動更新
+  - [ ] Git pre-commitフックとの統合
+  - [ ] CI/CDでの自動検証
 
-- CLIコマンドで基本的なメタデータを自動生成できる
-- Markdownを解析して使用キャラクター・設定を自動検出できる
-- 自動生成後も手動でカスタマイズ可能な形式で出力される
-- インタラクティブモードで曖昧な参照を解決できる
+## 基本方針（前提）
 
-## 必須のルール
-
-- 必ず `CLAUDE.md` を参照し、ルールを守ること
-- **TDD（テスト駆動開発）を厳守すること**
-  - 各プロセスは必ずテストファーストで開始する（Red → Green → Refactor）
-  - 実装コードを書く前に、失敗するテストを先に作成する
-  - テストが通過するまで修正とテスト実行を繰り返す
-  - プロセス完了の条件：該当するすべてのテストが通過していること
-
-## 開発のゴール
-
-### Phase 1: 基本的な自動生成（MVP）
-
-- `storyteller meta generate` コマンドの実装
-- Frontmatterからの基本情報抽出
-- キャラクター・設定の自動検出（完全一致）
-- 基本的な検証ルール生成
-- TypeScriptファイル出力
-
-### Phase 2: 高度な検出機能
-
-- displayNames/aliasesを使った検出
-- 文脈を考慮した参照検出
-- 信頼度ベースの参照マッピング
-- プリセット機能（battle-scene, romance-scene等）
-
-### Phase 3: インタラクティブモード
-
-- 曖昧な参照の確認プロンプト
-- 検出結果のプレビュー表示
-- 差分更新機能（既存メタデータの更新）
-- バッチ処理（複数章を一括生成）
-
-## 実装仕様
-
-### 主要コマンド
-
-```bash
-# 基本的なメタデータを自動生成
-storyteller meta generate manuscripts/chapter01.md
-
-# オプション付き生成
-storyteller meta generate manuscripts/chapter01.md \
-  --characters hero,heroine \
-  --settings kingdom \
-  --preset battle-scene \
-  --dry-run \
-  --interactive
-```
-
-### 出力形式（ChapterMeta）
-
-```typescript
-export const chapter01Meta: ChapterMeta = {
-  id: "chapter01",
-  title: "旅の始まり",
-  order: 1,
-  characters: [hero, heroine],
-  settings: [kingdom],
-  validations: [...],
-  references: {
-    "勇者": hero,
-    "エリーゼ": heroine,
-  }
-};
-```
-
-### 新規ファイル構成
-
-```
-src/
-├── application/
-│   └── meta/
-│       ├── meta_generator_service.ts
-│       ├── frontmatter_parser.ts
-│       ├── reference_detector.ts
-│       ├── validation_generator.ts
-│       └── typescript_emitter.ts
-├── cli/
-│   └── modules/
-│       └── meta/
-│           ├── index.ts
-│           └── generate.ts
-└── domain/
-    └── meta/
-        ├── detection_result.ts
-        └── preset_templates.ts
-```
-
-## 生成AIの学習用コンテキスト
-
-### CLI基盤（コマンド実装パターン）
-
-- `src/cli/base_command.ts`
-  - 全コマンドの基底クラス。`handle()` メソッドを実装するパターン
-- `src/cli/modules/element/character.ts`
-  - ネストされたコマンド (`path: ["element", "character"]`) の実装例
-- `src/cli/command_registry.ts`
-  - コマンド登録、依存関係検証の参考
-- `src/cli/types.ts`
-  - `CommandHandler`, `CommandDescriptor`, `CommandContext` インターフェース
-
-### サンプルメタデータ構造
-
-- `sample/manuscripts/chapter01.md`
-  - Frontmatter形式（chapter_id, title, order, characters, settings, summary）
-- `sample/manuscripts/chapter01.meta.ts`
-  - 期待される出力形式（ChapterMeta型）
-- `sample/src/types/chapter.ts`
-  - `ChapterMeta`, `ValidationRule` 型定義
-
-### キャラクター・設定の型定義
-
-- `src/type/v2/character.ts`
-  - `detectionHints` (commonPatterns, excludePatterns, confidence)
-  - `displayNames`, `aliases`, `pronouns` フィールド
-- `sample/src/characters/hero.ts`
-  - キャラクター定義例（detectionHints の具体例）
-- `sample/src/settings/kingdom.ts`
-  - 設定定義例
-
-### 既存サービス層
-
-- `src/application/element_service.ts`
-  - ElementServiceの実装パターン
-- `src/shared/result.ts`
-  - `Result<T, E>` 型によるエラーハンドリング
-
-## Process
-
-### process1: Frontmatter解析機能
-
-#### sub1-1: FrontmatterParser クラス実装
-
-@target: `src/application/meta/frontmatter_parser.ts` @ref:
-`sample/manuscripts/chapter01.md` (Frontmatter形式の参考)
-
-##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/application/meta/frontmatter_parser_test.ts`
-
-- [x] テストケースを作成（この時点で実装がないため失敗する）
-  - 正常なFrontmatter解析テスト
-  - chapter_id, title, order, characters, settings の抽出テスト
-  - 不正なFrontmatterのエラーハンドリングテスト
-  - Frontmatterが存在しない場合のテスト
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `FrontmatterData` インターフェース定義
-  - chapter_id: string
-  - title: string
-  - order: number
-  - characters?: string[]
-  - settings?: string[]
-  - summary?: string
-- [x] `FrontmatterParser` クラス実装
-  - `parse(markdownContent: string): Result<FrontmatterData, ParseError>`
-  - YAML部分の抽出（`---` で囲まれた部分）
-  - `@std/yaml` を使用してYAML解析
-
-##### TDD Step 3: Refactor & Verify
-
-- [x] テストを実行し、通過することを確認
-- [x] 必要に応じてリファクタリング
-- [x] 再度テストを実行し、通過を確認
-  - **テストが失敗した場合**: 修正 → テスト実行を繰り返す
+- **TDD**: 追加機能は unit/integration テストを先に追加（Red → Green →
+  Refactor）。
+- **安全側の挙動**:
+  - 既存 `.meta.ts` の手動編集領域を壊さない。
+  - 更新が安全にできない場合は「拒否＋ガイド」を優先する（`--force`
+    上書きは明示）。
+- **互換性**:
+  - 既存の `storyteller meta generate` の UX
+    を壊さない（新オプション/新サブコマンドで拡張）。
 
 ---
 
-### process2: TypeScript出力機能
+## フェーズ設計（実装順）
 
-#### sub2-1: TypeScriptEmitter クラス実装
+### Phase A: `binding.yaml` 連携（検出精度の底上げ）
 
-@target: `src/application/meta/typescript_emitter.ts` @ref:
-`sample/manuscripts/chapter01.meta.ts` (出力形式の参考)
+#### 目的
 
-##### TDD Step 1: Red（失敗するテストを作成）
+- 人間が確定した同義語・パターンを YAML で管理し、検出/マッピング精度を上げる。
+- 既存の `displayNames/aliases/pronouns/detectionHints`
+  を補完する（置換ではない）。
 
-@test: `tests/application/meta/typescript_emitter_test.ts`
+#### 仕様案（MVP）
 
-- [x] テストケースを作成
-  - ChapterMetaオブジェクトからTypeScriptコード生成テスト
-  - インポート文の生成テスト
-  - ファイル出力テスト
-  - フォーマット（インデント等）のテスト
+- ファイル配置（既存サンプルに合わせる）:
+  - `src/characters/<id>.binding.yaml`
+  - `src/settings/<id>.binding.yaml`
+- 例（案）:
 
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
+```yaml
+version: 1
+patterns:
+  - text: "勇者"
+    confidence: 0.95
+  - text: "アレクス"
+    confidence: 0.95
+excludePatterns:
+  - "勇者という存在"
+```
 
-- [x] `TypeScriptEmitter` クラス実装
-  - `emit(meta: ChapterMeta, outputPath: string): Promise<Result<void, EmitError>>`
-  - インポート文生成ロジック（キャラクター・設定のパス解決）
-  - ChapterMetaオブジェクトのシリアライズ
-  - ファイル書き込み処理
-- [x] 生成ヘッダーコメント追加
-  - `// 自動生成: storyteller meta generate`
-  - `// 生成日時: YYYY-MM-DD HH:mm:ss`
+- `patterns[].text` は substring 検出（現行の検出方式に合わせる）。
+- `confidence` は 0.0〜1.0 に clamp（未指定は 0.95）。
 
-##### TDD Step 3: Refactor & Verify
+#### 実装タスク
 
-- [x] テストを実行し、通過することを確認
-- [x] `deno fmt` でフォーマット確認
-- [x] 再度テストを実行し、通過を確認
+- [ ] `src/application/meta/binding_loader.ts` を追加（YAML
+      読み込み＋スキーマ検証）
+- [ ] `ReferenceDetector.loadEntities()` に binding 読み込みを統合
+  - 対象: `src/characters/*.ts` / `src/settings/*.ts`
+  - ルール: TS 由来の候補（name/displayNames/aliases/pronouns/detectionHints）＋
+    binding を候補として統合
+- [ ] unit テスト追加
+  - binding のロード成功/失敗（存在しない、壊れた YAML、スキーマ不正）
+  - 候補統合と `patternMatches` の信頼度優先順位
+- [ ] `docs/meta-generate.md` を更新（binding の仕様/配置/優先度）
+
+---
+
+### Phase B: `.meta.ts` の差分更新（手動編集の保護）
+
+#### 目的
+
+- `--force` の全上書きを避け、**「自動更新して良い部分だけ」**
+  を更新できるようにする。
+
+#### 仕様案（MVP）
+
+- CLI オプション追加:
+  - `storyteller meta generate ... --update`（既存ファイルがある場合、差分更新を試みる）
+- 更新対象（最初は安全な範囲に限定）:
+  - import 群（必要な entity import の追加/削除）
+  - `characters` / `settings`（検出結果に同期）
+  - `references`（自動検出 or `--interactive` の解決結果に同期）
+- **手動編集保護**:
+  - `summary` / `plotPoints` / `validations` 等は保持（更新しない）。
+
+#### 実装方式（段階的）
+
+1. **マーカーブロック方式（推奨 / 安全）**
+   - 新規生成ファイルは以下のブロックを持つ:
+     - `// storyteller:auto:imports:start`〜`end`
+     - `// storyteller:auto:references:start`〜`end`
+     - `// storyteller:auto:entities:start`〜`end`（characters/settings）
+   - `--update` はブロックがある場合のみ安全に置換できる。
+
+2. **レガシー（マーカー無し）への対応（慎重）**
+   - 最初は「拒否」し、`--migrate-markers`（一回限り）でマーカーを挿入する方向に寄せる。
+   - どうしても必要なら後続で AST/構文解析による更新を検討（Issue #2/#3 の AST
+     編集基盤と合流させる）。
+
+#### 実装タスク
+
+- [ ] `src/application/meta/typescript_emitter.ts` に更新 API を追加
+  - `emit()` は現状維持
+  - `updateOrEmit()`（仮）で `--update`
+    を扱う（マーカーがあれば置換、なければ拒否）
+- [ ] `src/cli/modules/meta/generate.ts` に `--update` を追加
+  - `--force` と競合する場合のルール定義（例: `--force` 優先、または排他）
+- [ ] unit/integration テスト追加
+  - 手動 validations/summary が保持されること
+  - import/references のみ更新されること
+  - マーカー無しファイルでの安全な失敗
+- [ ] `docs/meta-generate.md` を更新（更新ポリシーとマーカー仕様）
 
 ---
 
-### process3: 参照検出エンジン（Phase 1: 完全一致）
+### Phase C: Watch モード（Markdown 変更→自動生成）
 
-#### sub3-1: ReferenceDetector クラス（基本実装）
+#### 目的
 
-@target: `src/application/meta/reference_detector.ts` @ref:
-`sample/src/characters/hero.ts` (detectionHints の参考)
+- Markdown 原稿の変更に追随して `.meta.ts` を更新し、手動更新コストを下げる。
 
-##### TDD Step 1: Red（失敗するテストを作成）
+#### 仕様案（MVP）
 
-@test: `tests/application/meta/reference_detector_test.ts`
+- 新サブコマンド（わかりやすさ優先）:
+  - `storyteller meta watch --dir manuscripts --recursive [--preset ...] [--update]`
+- 監視対象:
+  - `.md` の `create/modify` のみ（`.meta.ts` を除外し、無限ループを防止）
+- 実行特性:
+  - デバウンス（例: 200〜500ms）で連続変更をまとめる
+  - 失敗したファイルはエラーを出しつつ監視継続（全体停止しない）
 
-- [x] テストケースを作成
-  - Frontmatterからのキャラクター検出テスト
-  - Frontmatterからの設定検出テスト
-  - 本文からの完全一致検出テスト
-  - 検出結果の統合（ハイブリッド）テスト
+#### 実装タスク
 
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `DetectionResult`, `DetectedEntity` インターフェース定義
-  - characters: DetectedEntity[]
-  - settings: DetectedEntity[]
-  - confidence: number
-- [x] `ReferenceDetector` クラス実装
-  - `detect(content, frontmatter, projectPath): Promise<DetectionResult>`
-  - Frontmatterのcharacters/settings配列を優先的に採用
-  - プロジェクト内のキャラクター・設定定義ファイルを読み込み
-  - 本文を走査し、name フィールドで完全一致検出
-
-##### TDD Step 3: Refactor & Verify
-
-- [x] テストを実行し、通過することを確認
-- [x] 必要に応じてリファクタリング
-- [x] 再度テストを実行し、通過を確認
+- [ ] `src/cli/modules/meta/watch.ts` を追加（`Deno.watchFs` + debounce）
+- [ ] `src/cli/modules/meta/index.ts` に `watch` を登録
+- [ ] `--update` と組み合わせて「安全に」更新
+- [ ] integration テストは最小限（watch の E2E は不安定になりやすい）
+  - 代替: watcher のコアロジック（イベント→対象ファイル解決）を関数分離して unit
+    テスト
+- [ ] README / docs を更新（watch の使い方）
 
 ---
+
+### Phase D: pre-commit / CI（自動検証の導入）
+
+#### 目的
+
+- ローカル/CI で「メタデータが生成可能・整合している」ことを自動で担保する。
+
+#### 仕様案（MVP）
+
+- `storyteller meta check`（新規）
+  - `--dir/--recursive/--batch` を受け取り、各 `.md` に対して
+    - 生成が成功すること（frontmatter などの基本整合）
+    - （任意）`.meta.ts` が存在すること
+    - （マーカー方式が普及した後）auto ブロックが最新であること
+- `scripts/install-precommit.sh`（既存 `scripts/install.sh` と並ぶ）で hook
+  を設置
+- GitHub Actions:
+  - `deno task test`
+  - `deno task meta:check`（例: `sample/manuscripts` を対象）
+
+#### 実装タスク
+
+- [ ] `src/cli/modules/meta/check.ts` を追加
+- [ ] `deno.json` にタスク追加
+  - `meta:check`（対象ディレクトリは引数で渡せる形）
+- [ ] `scripts/install-precommit.sh` を追加（hook に `deno task meta:check`
+      を設定）
+- [ ] `.github/workflows/ci.yml`（または既存 CI があればそこ）へ `meta:check`
+      を追加
+- [ ] docs 更新（導入手順、失敗時の対応）
+
+---
+
+## 受け入れ条件（Done の定義）
+
+- `binding.yaml`
+  が存在する場合、検出候補として反映され、`--preview/--interactive` にも現れる。
+- `--update` がマーカーブロックを持つ `.meta.ts` に対して安全に差分更新できる。
+- `meta watch` が `.md` の変更に追従して `.meta.ts`
+  を更新できる（ループしない）。
+- `meta check` がローカル/CI で実行可能で、異常系で非 0 終了になる。
+
+## 参考（実装メモ）
+
+- 実装現状メモ: `docs/meta-generate.md`
+- 既存テスト: `tests/integration/meta_generate_workflow_test.ts`
 
 ### process4: 検証ルール生成
 
