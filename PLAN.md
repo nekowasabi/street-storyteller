@@ -1,507 +1,491 @@
-# title: Issue #4 残タスク実装計画（binding / 差分更新 / watch / hooks / CI）
+# title: LSP統合による原稿チェック機能の実装（Issue #3）
 
-Issue #4 のうち **未完了のチェックボックス（6件）** を実装するための計画。
-実装は既存アーキテクチャ（`src/application/meta/*` と
-`src/cli/modules/meta/*`）に沿って行う。
+## 概要
+- 原稿（Markdown）内のキャラクター・設定参照をリアルタイムで検出し、LSPを通じてエディタに診断情報・ナビゲーション機能を提供する
+- @なしの自然な日本語執筆スタイルでキャラクター参照を検出可能にする
 
-## 対象（Issue #4 の未完了）
+### goal
+- neovimでMarkdownファイルを開くと、未定義のキャラクター参照に警告が表示される
+- キャラクター名の上で`gd`を押すと、キャラクター定義ファイル（TypeScript）にジャンプできる
+- キャラクター名の上で`K`を押すと、キャラクター情報（名前、役割、概要、信頼度）がホバー表示される
 
-- Phase 2
-  - [ ] binding.yamlファイルとの連携
-- Phase 3
-  - [ ] 差分更新機能（既存メタデータの更新）
-- Phase 4
-  - [ ] ファイル監視モード
-  - [ ] Markdown変更時の自動更新
-  - [ ] Git pre-commitフックとの統合
-  - [ ] CI/CDでの自動検証
+## 必須のルール
+- 必ず `CLAUDE.md` を参照し、ルールを守ること
+- **TDD（テスト駆動開発）を厳守すること**
+  - 各プロセスは必ずテストファーストで開始する（Red → Green → Refactor）
+  - 実装コードを書く前に、失敗するテストを先に作成する
+  - テストが通過するまで修正とテスト実行を繰り返す
+  - プロセス完了の条件：該当するすべてのテストが通過していること
 
-## 基本方針（前提）
+## 開発のゴール
+- Phase 1-5（MVP）: LSPプロトコル基盤 → テキスト同期 → 検出エンジン → 診断機能 → ナビゲーション
+- スクラッチでJSON-RPC 2.0を実装（外部依存なし）
+- 日本語対応は基本助詞8種類（は/が/を/に/の/と/で/へ）
 
-- **TDD**: 追加機能は unit/integration テストを先に追加（Red → Green →
-  Refactor）。
-- **安全側の挙動**:
-  - 既存 `.meta.ts` の手動編集領域を壊さない。
-  - 更新が安全にできない場合は「拒否＋ガイド」を優先する（`--force`
-    上書きは明示）。
-- **互換性**:
-  - 既存の `storyteller meta generate` の UX
-    を壊さない（新オプション/新サブコマンドで拡張）。
+## 実装仕様
 
----
+### 決定事項
+| 項目 | 決定 | 理由 |
+|-----|------|------|
+| LSP実装方針 | スクラッチ実装 | 依存関係なし、学習効果、完全な制御 |
+| MVP範囲 | Phase 1-5 | 診断 + 定義ジャンプ + ホバーまで |
+| 日本語対応 | 基本助詞のみ | は/が/を/に/の/と/で/へ の8種類 |
 
-## フェーズ設計（実装順）
+### LSPキャパビリティ（MVP）
+- `textDocumentSync`: Full (1)
+- `diagnosticProvider`: true
+- `definitionProvider`: true
+- `hoverProvider`: true
 
-### Phase A: `binding.yaml` 連携（検出精度の底上げ）
+## 生成AIの学習用コンテキスト
 
-#### 目的
+### 既存の型定義（再利用）
+- `src/type/v2/character.ts`
+  - Character型: displayNames, aliases, pronouns, detectionHints が定義済み
+  - DetectionHints型: commonPatterns, excludePatterns, confidence
+- `src/shared/result.ts`
+  - Result<T, E>型: エラーハンドリングパターン
 
-- 人間が確定した同義語・パターンを YAML で管理し、検出/マッピング精度を上げる。
-- 既存の `displayNames/aliases/pronouns/detectionHints`
-  を補完する（置換ではない）。
+### 既存の検出ロジック（拡張対象）
+- `src/application/meta/reference_detector.ts`
+  - ReferenceDetector: キャラクター・設定の参照検出
+  - 信頼度計算ロジック（name: 1.0, displayNames: 0.9, aliases: 0.8）
+  - 参照: `tests/application/meta/reference_detector_test.ts`
 
-#### 仕様案（MVP）
+### 既存のCLI基盤（パターン参照）
+- `src/cli/command_registry.ts`
+  - CommandRegistry: コマンド登録・解決システム
+- `src/cli/base_command.ts`
+  - BaseCliCommand: コマンド基底クラス
+- `src/cli/modules/meta/generate.ts`
+  - 参考実装: コマンドの実装パターン
 
-- ファイル配置（既存サンプルに合わせる）:
-  - `src/characters/<id>.binding.yaml`
-  - `src/settings/<id>.binding.yaml`
-- 例（案）:
-
-```yaml
-version: 1
-patterns:
-  - text: "勇者"
-    confidence: 0.95
-  - text: "アレクス"
-    confidence: 0.95
-excludePatterns:
-  - "勇者という存在"
-```
-
-- `patterns[].text` は substring 検出（現行の検出方式に合わせる）。
-- `confidence` は 0.0〜1.0 に clamp（未指定は 0.95）。
-
-#### 実装タスク
-
-- [ ] `src/application/meta/binding_loader.ts` を追加（YAML
-      読み込み＋スキーマ検証）
-- [ ] `ReferenceDetector.loadEntities()` に binding 読み込みを統合
-  - 対象: `src/characters/*.ts` / `src/settings/*.ts`
-  - ルール: TS 由来の候補（name/displayNames/aliases/pronouns/detectionHints）＋
-    binding を候補として統合
-- [ ] unit テスト追加
-  - binding のロード成功/失敗（存在しない、壊れた YAML、スキーマ不正）
-  - 候補統合と `patternMatches` の信頼度優先順位
-- [ ] `docs/meta-generate.md` を更新（binding の仕様/配置/優先度）
+### テスト基盤
+- `tests/asserts.ts`
+  - createStubLogger(), createStubPresenter(), createStubConfig()
+  - withTestDir() パターン
 
 ---
 
-### Phase B: `.meta.ts` の差分更新（手動編集の保護）
+## Process
 
-#### 目的
+### process1 JSON-RPCパーサー実装
+JSON-RPC 2.0プロトコルのパース機能を実装する
 
-- `--force` の全上書きを避け、**「自動更新して良い部分だけ」**
-  を更新できるようにする。
-
-#### 仕様案（MVP）
-
-- CLI オプション追加:
-  - `storyteller meta generate ... --update`（既存ファイルがある場合、差分更新を試みる）
-- 更新対象（最初は安全な範囲に限定）:
-  - import 群（必要な entity import の追加/削除）
-  - `characters` / `settings`（検出結果に同期）
-  - `references`（自動検出 or `--interactive` の解決結果に同期）
-- **手動編集保護**:
-  - `summary` / `plotPoints` / `validations` 等は保持（更新しない）。
-
-#### 実装方式（段階的）
-
-1. **マーカーブロック方式（推奨 / 安全）**
-   - 新規生成ファイルは以下のブロックを持つ:
-     - `// storyteller:auto:imports:start`〜`end`
-     - `// storyteller:auto:references:start`〜`end`
-     - `// storyteller:auto:entities:start`〜`end`（characters/settings）
-   - `--update` はブロックがある場合のみ安全に置換できる。
-
-2. **レガシー（マーカー無し）への対応（慎重）**
-   - 最初は「拒否」し、`--migrate-markers`（一回限り）でマーカーを挿入する方向に寄せる。
-   - どうしても必要なら後続で AST/構文解析による更新を検討（Issue #2/#3 の AST
-     編集基盤と合流させる）。
-
-#### 実装タスク
-
-- [ ] `src/application/meta/typescript_emitter.ts` に更新 API を追加
-  - `emit()` は現状維持
-  - `updateOrEmit()`（仮）で `--update`
-    を扱う（マーカーがあれば置換、なければ拒否）
-- [ ] `src/cli/modules/meta/generate.ts` に `--update` を追加
-  - `--force` と競合する場合のルール定義（例: `--force` 優先、または排他）
-- [ ] unit/integration テスト追加
-  - 手動 validations/summary が保持されること
-  - import/references のみ更新されること
-  - マーカー無しファイルでの安全な失敗
-- [ ] `docs/meta-generate.md` を更新（更新ポリシーとマーカー仕様）
-
----
-
-### Phase C: Watch モード（Markdown 変更→自動生成）
-
-#### 目的
-
-- Markdown 原稿の変更に追随して `.meta.ts` を更新し、手動更新コストを下げる。
-
-#### 仕様案（MVP）
-
-- 新サブコマンド（わかりやすさ優先）:
-  - `storyteller meta watch --dir manuscripts --recursive [--preset ...] [--update]`
-- 監視対象:
-  - `.md` の `create/modify` のみ（`.meta.ts` を除外し、無限ループを防止）
-- 実行特性:
-  - デバウンス（例: 200〜500ms）で連続変更をまとめる
-  - 失敗したファイルはエラーを出しつつ監視継続（全体停止しない）
-
-#### 実装タスク
-
-- [ ] `src/cli/modules/meta/watch.ts` を追加（`Deno.watchFs` + debounce）
-- [ ] `src/cli/modules/meta/index.ts` に `watch` を登録
-- [ ] `--update` と組み合わせて「安全に」更新
-- [ ] integration テストは最小限（watch の E2E は不安定になりやすい）
-  - 代替: watcher のコアロジック（イベント→対象ファイル解決）を関数分離して unit
-    テスト
-- [ ] README / docs を更新（watch の使い方）
-
----
-
-### Phase D: pre-commit / CI（自動検証の導入）
-
-#### 目的
-
-- ローカル/CI で「メタデータが生成可能・整合している」ことを自動で担保する。
-
-#### 仕様案（MVP）
-
-- `storyteller meta check`（新規）
-  - `--dir/--recursive/--batch` を受け取り、各 `.md` に対して
-    - 生成が成功すること（frontmatter などの基本整合）
-    - （任意）`.meta.ts` が存在すること
-    - （マーカー方式が普及した後）auto ブロックが最新であること
-- `scripts/install-precommit.sh`（既存 `scripts/install.sh` と並ぶ）で hook
-  を設置
-- GitHub Actions:
-  - `deno task test`
-  - `deno task meta:check`（例: `sample/manuscripts` を対象）
-
-#### 実装タスク
-
-- [ ] `src/cli/modules/meta/check.ts` を追加
-- [ ] `deno.json` にタスク追加
-  - `meta:check`（対象ディレクトリは引数で渡せる形）
-- [ ] `scripts/install-precommit.sh` を追加（hook に `deno task meta:check`
-      を設定）
-- [ ] `.github/workflows/ci.yml`（または既存 CI があればそこ）へ `meta:check`
-      を追加
-- [ ] docs 更新（導入手順、失敗時の対応）
-
----
-
-## 受け入れ条件（Done の定義）
-
-- `binding.yaml`
-  が存在する場合、検出候補として反映され、`--preview/--interactive` にも現れる。
-- `--update` がマーカーブロックを持つ `.meta.ts` に対して安全に差分更新できる。
-- `meta watch` が `.md` の変更に追従して `.meta.ts`
-  を更新できる（ループしない）。
-- `meta check` がローカル/CI で実行可能で、異常系で非 0 終了になる。
-
-## 参考（実装メモ）
-
-- 実装現状メモ: `docs/meta-generate.md`
-- 既存テスト: `tests/integration/meta_generate_workflow_test.ts`
-
-### process4: 検証ルール生成
-
-#### sub4-1: ValidationGenerator クラス実装
-
-@target: `src/application/meta/validation_generator.ts` @ref:
-`sample/manuscripts/chapter01.meta.ts` (validations フィールドの参考)
+#### sub1 JSON-RPCメッセージ型定義
+@target: `src/lsp/protocol/types.ts`
+@ref: LSP仕様書（https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/application/meta/validation_generator_test.ts`
-
-- [x] テストケースを作成
-  - character_presence 検証ルール生成テスト
-  - setting_consistency 検証ルール生成テスト
-  - 空テンプレート（custom）の生成テスト
+@test: `tests/lsp/json_rpc_parser_test.ts`
+- [ ] テストケースを作成（この時点で実装がないため失敗する）
+  - `JsonRpcRequest`, `JsonRpcResponse`, `JsonRpcError` 型が存在すること
+  - `parseJsonRpc()` 関数が存在すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `ValidationGenerator` クラス実装
-  - `generate(detected: DetectionResult): ValidationRule[]`
-  - character_presence: 主要キャラクターの出現確認
-  - setting_consistency: 設定の一貫性チェック
-  - plot_advancement: 空テンプレート（手動編集用）
+- [ ] `src/lsp/protocol/types.ts` に型定義を作成
+  - JsonRpcRequest: { jsonrpc: "2.0", id?: number | string, method: string, params?: unknown }
+  - JsonRpcResponse: { jsonrpc: "2.0", id: number | string | null, result?: unknown, error?: JsonRpcError }
+  - JsonRpcError: { code: number, message: string, data?: unknown }
 
 ##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 必要に応じてリファクタリング
+- [ ] 再度テストを実行し、通過を確認
 
-- [x] テストを実行し、通過することを確認
-- [x] 必要に応じてリファクタリング
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process5: MetaGeneratorService 統合
-
-#### sub5-1: MetaGeneratorService クラス実装
-
-@target: `src/application/meta/meta_generator_service.ts` @ref:
-`src/application/element_service.ts` (サービス層の参考)
+#### sub2 JSON-RPCパーサー関数
+@target: `src/lsp/protocol/json_rpc.ts`
+@ref: `src/shared/result.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/application/meta/meta_generator_service_test.ts`
-
-- [x] テストケースを作成
-  - Markdownファイルからメタデータ生成テスト
-  - 全コンポーネント統合テスト
-  - エラーハンドリングテスト
+@test: `tests/lsp/json_rpc_parser_test.ts`
+- [ ] テストケースを作成
+  - 有効なリクエストをパースできること
+  - 無効なJSONでエラーを返すこと（code: -32700）
+  - 無効なjsonrpcバージョンでエラーを返すこと（code: -32600）
+  - 通知（idなし）を正しく処理すること
+  - バッチリクエストを処理できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `MetaGeneratorService` クラス実装
-  - `generateFromMarkdown(markdownPath, options): Promise<Result<ChapterMeta, Error>>`
-  - FrontmatterParser, ReferenceDetector, ValidationGenerator の統合
-  - TypeScriptEmitter への委譲
+- [ ] `parseJsonRpc(input: string): Result<JsonRpcMessage, JsonRpcError>` 実装
+- [ ] `parseJsonRpcBatch(input: string): JsonRpcMessage[]` 実装
+- [ ] JSON.parse例外のキャッチとエラーコード変換
 
 ##### TDD Step 3: Refactor & Verify
-
-- [x] テストを実行し、通過することを確認
-- [x] 必要に応じてリファクタリング
-- [x] 再度テストを実行し、通過を確認
+- [ ] テストを実行し、通過することを確認
+- [ ] エラーコード定数の抽出（JSON_RPC_PARSE_ERROR = -32700 等）
+- [ ] 再度テストを実行し、通過を確認
 
 ---
 
-### process6: CLIコマンド実装
+### process2 LSPトランスポート実装
+Content-Lengthベースのメッセージ境界処理を実装する
 
-#### sub6-1: meta generate コマンド実装
-
-@target: `src/cli/modules/meta/generate.ts` @ref:
-`src/cli/modules/element/character.ts` (ネストコマンドの参考)
+#### sub1 モックReader/Writer作成
+@target: `tests/lsp/helpers.ts`
+@ref: `tests/asserts.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/cli/meta_generate_command_test.ts`
-
-- [x] テストケースを作成
-  - 基本的なコマンド実行テスト
-  - --characters, --settings オプションテスト
-  - --output オプションテスト
-  - --dry-run オプションテスト
-  - --force オプションテスト
+@test: `tests/lsp/transport_test.ts`
+- [ ] テストケースを作成
+  - `createMockReader()`, `createMockWriter()` が存在すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `MetaGenerateCommand` クラス実装（BaseCliCommand継承）
-  - path: ["meta", "generate"]
-  - オプション解析（characters, settings, output, dry-run, force）
-  - MetaGeneratorService との連携
-- [x] `src/cli/modules/meta/index.ts` 作成
-  - meta サブコマンドの登録
-- [x] `src/cli/modules/index.ts` 拡張
-  - metaコマンド群の登録
+- [ ] `tests/lsp/helpers.ts` にモック関数を実装
+  - createMockReader(data: string): Deno.Reader
+  - createMockWriter(): { data: string, write(): Promise<number> }
 
 ##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
 
-- [x] テストを実行し、通過することを確認
-- [x] `storyteller meta generate --help` の動作確認
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process7: Phase 2 - 高度な検出機能
-
-#### sub7-1: displayNames/aliases による検出拡張
-
-@target: `src/application/meta/reference_detector.ts` @ref:
-`src/type/v2/character.ts` (detectionHints の定義)
+#### sub2 LspTransportクラス
+@target: `src/lsp/protocol/transport.ts`
+@ref: `src/lsp/protocol/json_rpc.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/application/meta/reference_detector_test.ts`
-
-- [x] テストケースを追加
-  - displayNames による検出テスト
-  - aliases による検出テスト
-  - pronouns による検出テスト（低信頼度）
+@test: `tests/lsp/transport_test.ts`
+- [ ] テストケースを作成
+  - Content-Lengthヘッダーを正しく読み取れること
+  - メッセージ本文を正しくパースすること
+  - レスポンス書き込み時にContent-Lengthヘッダーを付与すること
+  - 不完全なメッセージでエラーを返すこと
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] ReferenceDetector 拡張
-  - detectionHints.commonPatterns でマッチング
-  - excludePatterns で誤検出を除外
-  - 信頼度スコア計算（完全一致: 1.0, displayNames: 0.9, aliases: 0.8, pronouns:
-    0.6）
+- [ ] `LspTransport` クラス実装
+  - constructor(reader: Deno.Reader, writer: Deno.Writer)
+  - read(): Promise<JsonRpcMessage>
+  - write(message: JsonRpcMessage): Promise<void>
+- [ ] ヘッダーパース（Content-Length: N\r\n\r\n）
+- [ ] UTF-8エンコーディング処理
 
 ##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] バッファ管理のリファクタリング
+- [ ] 再度テストを実行し、通過を確認
 
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
+---
 
-#### sub7-2: プリセット機能
+### process3 LSPサーバー初期化
+initialize/initialized ハンドシェイクを実装する
 
-@target: `src/domain/meta/preset_templates.ts`
+#### sub1 サーバーキャパビリティ定義
+@target: `src/lsp/server/capabilities.ts`
+@ref: LSP仕様書
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/domain/meta/preset_templates_test.ts`
-
-- [x] テストケースを作成
-  - battle-scene プリセット適用テスト
-  - romance-scene プリセット適用テスト
-  - dialogue プリセット適用テスト
+@test: `tests/lsp/server_initialization_test.ts`
+- [ ] テストケースを作成
+  - ServerCapabilities型が存在すること
+  - getServerCapabilities() が正しい値を返すこと
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `PresetType` 型定義 ("battle-scene" | "romance-scene" | "dialogue" |
-      "exposition")
-- [x] `Preset` インターフェース定義
-- [x] 各プリセットの検証ルールテンプレート定義
-- [x] `--preset` オプション対応
+- [ ] ServerCapabilities型定義
+- [ ] getServerCapabilities()関数実装
+  - textDocumentSync: 1 (Full)
+  - definitionProvider: true
+  - hoverProvider: true
 
 ##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
 
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process8: Phase 3 - インタラクティブモード
-
-#### sub8-1: 曖昧な参照の確認プロンプト
-
-@target: `src/cli/modules/meta/interactive_resolver.ts`
+#### sub2 LspServerクラス基盤
+@target: `src/lsp/server/server.ts`
+@ref: `src/lsp/protocol/transport.ts`, `src/lsp/server/capabilities.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/cli/meta_interactive_resolver_test.ts`
-
-- [x] テストケースを作成
-  - 曖昧な参照の検出テスト
-  - ユーザー選択のシミュレーションテスト
+@test: `tests/lsp/server_initialization_test.ts`
+- [ ] テストケースを作成
+  - initializeリクエストに正しいレスポンスを返すこと
+  - initializedノーティフィケーションを処理できること
+  - 初期化前のリクエストを拒否すること（code: -32002）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `InteractiveResolver` クラス実装
-  - 低信頼度の参照を抽出
-  - ユーザープロンプト表示
-  - 選択結果の反映
-- [x] `--interactive` オプション対応
+- [ ] `LspServer` クラス実装
+  - constructor(transport: LspTransport, projectRoot: string)
+  - start(): Promise<void> - メッセージループ開始
+  - handleMessage(message: JsonRpcMessage): Promise<void>
+  - handleInitialize(params: InitializeParams): InitializeResult
+  - handleInitialized(): void
+  - isInitialized(): boolean
 
 ##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] メッセージルーティングのリファクタリング
+- [ ] 再度テストを実行し、通過を確認
 
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
+---
 
-#### sub8-2: プレビュー機能
+### process4 ドキュメント管理
+テキストドキュメントの同期と管理を実装する
 
-@target: `src/cli/modules/meta/generate.ts`
+#### sub1 DocumentManagerクラス
+@target: `src/lsp/document/document_manager.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/cli/meta_preview_test.ts`
-
-- [x] テストケースを作成
-  - --dry-run --preview の出力フォーマットテスト
+@test: `tests/lsp/document_manager_test.ts`
+- [ ] テストケースを作成
+  - open()でドキュメントを保存できること
+  - get()でドキュメントを取得できること
+  - close()でドキュメントを削除できること
+  - change()で増分更新を適用できること
+  - change()で全文更新を適用できること
+  - バージョン管理が正しく動作すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] プレビュー表示機能実装
-  - 検出結果のテーブル表示
-  - 信頼度スコアの表示
-  - キャラクター・設定の出現回数表示
+- [ ] `TextDocument` 型定義
+  - uri: string, content: string, version: number, languageId: string
+- [ ] `DocumentManager` クラス実装
+  - open(uri, text, version, languageId): void
+  - get(uri): TextDocument | undefined
+  - close(uri): void
+  - change(uri, changes, version): void
+- [ ] 増分更新アルゴリズム（Range → 文字列置換）
 
 ##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] マルチバイト文字の位置計算を検証
+- [ ] 再度テストを実行し、通過を確認
 
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
-
-#### sub8-3: バッチ処理
-
-@target: `src/cli/modules/meta/generate.ts`
+#### sub2 テキストドキュメント同期ハンドラ
+@target: `src/lsp/handlers/text_document_sync.ts`
+@ref: `src/lsp/document/document_manager.ts`, `src/lsp/server/server.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/cli/meta_batch_test.ts`
-
-- [x] テストケースを作成
-  - 複数ファイルの一括処理テスト
-  - --batch オプションテスト
-  - --dir オプションテスト
+@test: `tests/lsp/text_document_sync_test.ts`
+- [ ] テストケースを作成
+  - didOpenでドキュメントが開かれること
+  - didChangeでドキュメントが更新されること
+  - didCloseでドキュメントが閉じられること
+  - 変更時に診断がトリガーされること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] バッチ処理機能実装
-  - glob パターン対応 (`manuscripts/*.md`)
-  - ディレクトリ指定対応 (`--dir`)
-  - 進捗表示
+- [ ] handleDidOpen(params): void
+- [ ] handleDidChange(params): void
+- [ ] handleDidClose(params): void
+- [ ] LspServerへの統合
 
 ##### TDD Step 3: Refactor & Verify
-
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process10: ユニットテスト（追加・統合テスト）
-
-#### sub10-1: 統合テスト
-
-@target: `tests/integration/meta_generate_workflow_test.ts`
-
-- [x] 基本ワークフローテスト
-  - Markdownファイル → メタデータ生成 → TypeScript出力
-- [x] サンプルファイルを使用したE2Eテスト
-  - `sample/manuscripts/chapter01.md` を入力
-  - 生成されたファイルと `sample/manuscripts/chapter01.meta.ts` を比較
-- [x] エラーケーステスト
-  - 不正なMarkdownファイル
-  - 存在しないキャラクター・設定参照
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
 
 ---
 
-### process50: フォローアップ
+### process5 位置追跡付き検出エンジン
+既存ReferenceDetectorを拡張し、位置情報を追跡する
 
-{{実装後に仕様変更などが発生した場合は、ここにProcessを追加する}}
+#### sub1 PositionedDetectorクラス
+@target: `src/lsp/detection/positioned_detector.ts`
+@ref: `src/application/meta/reference_detector.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/positioned_detector_test.ts`
+- [ ] テストケースを作成
+  - 検出結果に位置情報（line, character, length）が含まれること
+  - マルチバイト文字の位置が正しく計算されること（バイト位置ではなく文字位置）
+  - 複数出現を全て追跡できること
+  - 既存のReferenceDetectorと同じ検出精度を維持すること
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `Position` 型定義: { line: number, character: number }
+- [ ] `PositionedMatch` 型定義: { id: string, positions: Position[], confidence: number }
+- [ ] `PositionedDetector` クラス実装
+  - constructor(referenceDetector: ReferenceDetector)
+  - detectWithPositions(content: string, projectPath: string): Promise<PositionedDetectionResult>
+- [ ] 行・列位置の計算ロジック（改行でリセット、UTF-16コードユニット単位）
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 位置計算のエッジケーステスト追加
+- [ ] 再度テストを実行し、通過を確認
+
+#### sub2 日本語パターンマッチャー
+@target: `src/lsp/detection/japanese_pattern_matcher.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/japanese_pattern_matcher_test.ts`
+- [ ] テストケースを作成
+  - 基本助詞（は/が/を/に/の/と/で/へ）付きパターンを生成できること
+  - 文脈に基づく信頼度を計算できること（主語位置は高信頼度）
+  - 除外パターンを正しく適用できること
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `BASIC_PARTICLES` 定数: ["は", "が", "を", "に", "の", "と", "で", "へ"]
+- [ ] `JapanesePatternMatcher` クラス実装
+  - expandWithParticles(word: string): string[]
+  - findMatches(content: string, word: string): Match[]
+  - calculateConfidence(content: string, word: string, position: number): number
+  - addExcludePattern(pattern: string): void
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 信頼度計算ロジックの調整
+- [ ] 再度テストを実行し、通過を確認
 
 ---
 
-### process100: リファクタリング
+### process6 診断機能
+未定義参照や低信頼度マッチを警告として報告する
 
-- [ ] コード品質の確認
-  - 型定義の一貫性チェック
-  - エラーハンドリングの統一
-  - ロギングの適切性確認
-- [ ] パフォーマンス最適化
-  - 大量ファイル処理時のメモリ使用量
-  - 並列処理の検討
-- [x] `deno fmt` でフォーマット統一
-- [ ] `deno lint` でリンターチェック
+#### sub1 DiagnosticsGeneratorクラス
+@target: `src/lsp/diagnostics/diagnostics_generator.ts`
+@ref: `src/lsp/detection/positioned_detector.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/diagnostics_generator_test.ts`
+- [ ] テストケースを作成
+  - 未定義のキャラクター参照をWarningとして報告すること
+  - 低信頼度マッチをHintとして報告すること
+  - 正確な位置情報（range）を含むこと
+  - 関連情報（候補の提示）を含むこと
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `Diagnostic` 型定義（LSP準拠）
+  - range: Range, message: string, severity: DiagnosticSeverity, source: "storyteller"
+- [ ] `DiagnosticsGenerator` クラス実装
+  - constructor(detector: PositionedDetector)
+  - generate(uri: string, content: string, projectPath: string): Promise<Diagnostic[]>
+- [ ] 未定義参照の検出ロジック
+- [ ] 信頼度閾値による診断レベル判定
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] メッセージの日本語化
+- [ ] 再度テストを実行し、通過を確認
+
+#### sub2 DiagnosticsPublisherクラス
+@target: `src/lsp/diagnostics/diagnostics_publisher.ts`
+@ref: `src/lsp/server/server.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/diagnostics_publisher_test.ts`
+- [ ] テストケースを作成
+  - publishDiagnostics通知を送信できること
+  - 空の診断配列で診断をクリアできること
+  - デバウンス処理が動作すること
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `DiagnosticsPublisher` クラス実装
+  - constructor(server: LspServer, options?: { debounceMs: number })
+  - publish(uri: string, diagnostics: Diagnostic[]): void
+- [ ] デバウンス機能の実装
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
 
 ---
 
-### process200: ドキュメンテーション
+### process7 定義ジャンプ機能
+キャラクター・設定の定義ファイルへのジャンプを実装する
 
-- [x] README.md 更新
-  - `storyteller meta generate` コマンドの説明
-  - オプション一覧
-  - 使用例
-- [x] ARCHITECTURE.md 更新
-  - MetaGeneratorService の設計
-  - 検出アルゴリズムの説明
-- [ ] Issue #4 のクローズ
-  - 実装完了の確認
-  - チェックリストの更新
+#### sub1 DefinitionProviderクラス
+@target: `src/lsp/providers/definition_provider.ts`
+@ref: `src/lsp/detection/positioned_detector.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/definition_provider_test.ts`
+- [ ] テストケースを作成
+  - キャラクター名からキャラクター定義ファイルのLocationを返すこと
+  - 設定名から設定定義ファイルのLocationを返すこと
+  - 非エンティティ位置ではnullを返すこと
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `Location` 型定義: { uri: string, range: Range }
+- [ ] `DefinitionProvider` クラス実装
+  - constructor(detector: PositionedDetector)
+  - getDefinition(uri: string, content: string, position: Position, projectPath: string): Promise<Location | null>
+- [ ] 位置からエンティティを特定するロジック
+- [ ] エンティティからファイルパスを解決するロジック
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
 
 ---
 
-## 見積もり
+### process8 ホバー情報機能
+キャラクター・設定のホバー情報を表示する
 
-| フェーズ | プロセス                    | 見積もり   |
-| -------- | --------------------------- | ---------- |
-| Phase 1  | process1-6 (MVP)            | 3-4日      |
-| Phase 2  | process7 (高度な検出)       | 2-3日      |
-| Phase 3  | process8 (インタラクティブ) | 2-3日      |
-| テスト   | process10 (統合テスト)      | 1-2日      |
-| **合計** |                             | **8-12日** |
+#### sub1 HoverProviderクラス
+@target: `src/lsp/providers/hover_provider.ts`
+@ref: `src/lsp/detection/positioned_detector.ts`
 
-## 実装計画メタ情報
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/hover_provider_test.ts`
+- [ ] テストケースを作成
+  - キャラクター情報（名前、役割、概要）を含むMarkdownを返すこと
+  - 信頼度を表示すること
+  - 関係性情報を表示すること
+  - 非エンティティ位置ではnullを返すこと
 
-**Issue**:
-[#4 メタデータ自動生成機能の実装](https://github.com/nekowasabi/street-storyteller/issues/4)
-**Planning Date**: 2025-12-07 **Estimated Duration**: 8-12日
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] `Hover` 型定義: { contents: MarkupContent, range?: Range }
+- [ ] `HoverProvider` クラス実装
+  - constructor(detector: PositionedDetector)
+  - getHover(uri: string, content: string, position: Position, projectPath: string): Promise<Hover | null>
+- [ ] キャラクター情報のMarkdownフォーマット生成
 
-**次のステップ**:
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] ホバー表示内容の日本語化
+- [ ] 再度テストを実行し、通過を確認
 
-1. process1 (FrontmatterParser) の実装開始
-2. TDDでテストを先に作成
-3. 最初のPR: process1-2 完了後、基盤機能のレビュー依頼
+---
+
+### process9 LSPサーバー統合
+各コンポーネントをLspServerに統合する
+
+#### sub1 メッセージハンドラ統合
+@target: `src/lsp/server/server.ts`
+@ref: 全ての実装ファイル
+
+##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/server_integration_test.ts`
+- [ ] テストケースを作成
+  - textDocument/definition リクエストを処理できること
+  - textDocument/hover リクエストを処理できること
+  - ドキュメント変更時に診断が発行されること
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+- [ ] handleDefinition(params): Promise<Location | null>
+- [ ] handleHover(params): Promise<Hover | null>
+- [ ] テキスト同期 → 診断発行のパイプライン構築
+
+##### TDD Step 3: Refactor & Verify
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process10 ユニットテスト（追加・統合テスト）
+
+#### sub1 エッジケーステスト追加
+@test: `tests/lsp/*.ts`
+- [ ] 空のドキュメントの処理
+- [ ] 非常に長い行の処理
+- [ ] 特殊文字（絵文字等）を含むドキュメント
+- [ ] 大量のキャラクター参照を含むドキュメント
+
+#### sub2 統合テスト
+@test: `tests/integration/lsp_server_integration_test.ts`
+- [ ] 完全な編集セッションのシミュレーション
+- [ ] 複数ドキュメントの同時編集
+
+---
+
+### process50 フォローアップ
+実装後に仕様変更などが発生した場合は、ここにProcessを追加する
+
+---
+
+### process100 リファクタリング
+- [ ] 共通コードの抽出
+- [ ] エラーハンドリングの統一
+- [ ] パフォーマンス最適化（キャッシュ導入等）
+
+---
+
+### process200 ドキュメンテーション
+- [ ] CLAUDE.md にLSP関連の記述を追加
+- [ ] README.md にLSP機能の使い方を追加
+- [ ] neovim設定例のドキュメント作成
