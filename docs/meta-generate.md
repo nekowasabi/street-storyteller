@@ -23,6 +23,9 @@ storyteller meta generate manuscripts/chapter01.md
 # 書き込み無しで生成結果をプレビュー
 storyteller meta generate manuscripts/chapter01.md --dry-run --preview
 
+# 既存ファイルがある場合、手動編集を保持しつつ auto ブロックだけ更新（推奨）
+storyteller meta generate manuscripts/chapter01.md --update
+
 # 曖昧/低信頼度の参照を対話的に解決（references を上書き）
 storyteller meta generate manuscripts/chapter01.md --interactive
 
@@ -34,6 +37,12 @@ storyteller meta generate manuscripts/*.md --batch
 
 # バッチ（dir, 再帰）
 storyteller meta generate --dir manuscripts --recursive
+
+# 監視（Markdown 変更→自動更新）
+storyteller meta watch --dir manuscripts --recursive
+
+# CI / pre-commit 用のチェック（生成できることを検証）
+storyteller meta check --dir manuscripts --recursive
 ```
 
 主なオプション:
@@ -47,8 +56,38 @@ storyteller meta generate --dir manuscripts --recursive
 - `--interactive`: 参照マッピングを対話的に解決
 - `--preset <type>`: `battle-scene | romance-scene | dialogue | exposition`
 - `--force`: 既存の出力ファイルを上書き
+- `--update`: 既存の `.meta.ts` がある場合、マーカー付き auto
+  ブロックのみ差分更新する
 - `--batch`: 入力を glob として展開
 - `--dir <dir>` / `--recursive, -r`: ディレクトリ一括
+
+---
+
+## `binding.yaml`（人間が確定した同義語を YAML で補完）
+
+`ReferenceDetector` の検出候補を、TS 定義に加えて YAML で補完できる。
+
+- 配置:
+  - `src/characters/<id>.binding.yaml`
+  - `src/settings/<id>.binding.yaml`
+- 例:
+
+```yaml
+version: 1
+patterns:
+  - text: "勇者"
+    confidence: 0.95
+  - text: "アレクス"
+    confidence: 0.95
+excludePatterns:
+  - "勇者という存在"
+```
+
+仕様:
+
+- `patterns[].text` は substring 検出
+- `confidence` は 0.0〜1.0 に clamp（未指定は 0.95）
+- `excludePatterns` は `detectionHints.excludePatterns` と同様に減算される
 
 ---
 
@@ -124,11 +163,13 @@ storyteller meta generate --dir manuscripts --recursive
 - `pronouns[]`: `0.6`
 - `detectionHints.commonPatterns[]`: `detectionHints.confidence`（未指定時は
   `0.9`、0〜1に clamp）
+- `<id>.binding.yaml patterns[]`: 指定された `confidence`（未指定時は `0.95`）
 
 除外:
 
 - `detectionHints.excludePatterns[]` があり、かつ `excludePattern` が対象
   pattern を含む場合、 `excludePattern` の出現回数分を減算する（誤検出の抑制）。
+- `<id>.binding.yaml excludePatterns[]` も同様に減算する。
 
 ### Frontmatter 統合（ハイブリッド）
 
@@ -206,14 +247,17 @@ Issue #3/#4 の設計案では `commonPatterns`
   のように区別できるスキーマにする
 - 正規表現を許可する場合は ReDoS/暴走対策（タイムアウト/安全な限定）を用意する
 
-### 3) 既存 `.meta.ts` の差分更新（Phase 3 の未完項目）
+### 3) 既存 `.meta.ts` の差分更新（`--update` / マーカーブロック方式）
 
-現状は「生成 →（必要なら `--force`
-で）上書き」で、既存ファイルの部分更新は行わない。 今後必要になる機能:
+`--force` の全上書きを避け、**auto ブロックのみ**を安全に更新できる。
 
-- 既存 `.meta.ts` をパースし、`references`/`validations` のみ更新する
-- 手動編集部分を保持する（コメント/カスタム validations 等）
-- 「今回検出で消えた要素」をどう扱うか（削除/警告/保持）
+- 新規生成される `.meta.ts` は以下のマーカーを持つ:
+  - `// storyteller:auto:imports:start`〜`end`
+  - `// storyteller:auto:core:start`〜`end`（title/order）
+  - `// storyteller:auto:entities:start`〜`end`（characters/settings）
+  - `// storyteller:auto:references:start`〜`end`
+- `--update` はマーカーがある場合のみ差分更新する
+- マーカーが無い既存ファイルは安全のため拒否する（`--force` で再生成して移行）
 
 ### 4) プロジェクト構造の多様化への対応
 
@@ -229,11 +273,8 @@ Issue #3/#4 の設計案では `commonPatterns`
 
 ### 5) 参照マッピングの永続化（binding 連携）
 
-インタラクティブで解決した結果は現在 `.meta.ts` の `references`
-に反映されるのみ。 今後、次回以降の検出精度を上げるために:
-
-- `hero.binding.yaml` のようなファイルに「人間が確定した同義語」を保存する
-- 保存された binding を検出エンジンが優先利用する
+`*.binding.yaml` により、人間が確定した同義語・除外パターンを
+次回以降の検出候補に反映できる。
 
 ---
 

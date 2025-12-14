@@ -53,6 +53,9 @@ Generate chapter companion metadata files (`.meta.ts`) from Markdown manuscripts
 # Preview only (no write)
 ./storyteller meta generate manuscripts/chapter01.md --dry-run --preview
 
+# Update only the auto blocks (preserve manual edits)
+./storyteller meta generate manuscripts/chapter01.md --update
+
 # Interactive resolution for ambiguous/low-confidence references
 ./storyteller meta generate manuscripts/chapter01.md --interactive
 
@@ -64,6 +67,12 @@ Generate chapter companion metadata files (`.meta.ts`) from Markdown manuscripts
 
 # Batch generation (directory)
 ./storyteller meta generate --dir manuscripts --recursive
+
+# Watch for changes and keep .meta.ts up to date
+./storyteller meta watch --dir manuscripts --recursive
+
+# CI/pre-commit friendly check (no writes)
+./storyteller meta check --dir manuscripts --recursive
 ```
 
 ##### Meta generate options
@@ -76,10 +85,25 @@ Generate chapter companion metadata files (`.meta.ts`) from Markdown manuscripts
 - `--interactive` - Prompt to resolve ambiguous/low-confidence references
 - `--preset <type>` - Validation preset (`battle-scene`, `romance-scene`,
   `dialogue`, `exposition`)
+- `--update` - Update only the auto-generated blocks when output exists
 - `--force` - Overwrite existing output files
 - `--batch` - Treat the markdown input as a glob and process all matches
 - `--dir <dir>` - Process all `.md` files in a directory
 - `--recursive, -r` - Recursive search for `--dir`
+
+##### Meta check task
+
+For automation (CI / git hooks):
+
+```bash
+deno task meta:check -- --dir manuscripts --recursive
+```
+
+To install a local git pre-commit hook:
+
+```bash
+./scripts/install-precommit.sh --dir manuscripts
+```
 
 #### Options
 
