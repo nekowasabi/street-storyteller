@@ -9,6 +9,7 @@
   "tasks": {
     "build": "deno compile --allow-write --allow-env --allow-read --output storyteller main.ts",
     "generate": "deno run --allow-write --allow-read main.ts generate",
+    "meta:check": "deno run --allow-read main.ts meta check",
     "test": "deno test --allow-write --allow-read",
     "test:cli": "deno test --allow-read --allow-write tests/cli_test.ts tests/command_registry_test.ts",
     "test:domain": "deno test --allow-read --allow-write tests/story_domain_service_test.ts tests/template_catalog_test.ts",

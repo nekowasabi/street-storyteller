@@ -4,7 +4,9 @@ import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
 import { renderHelp } from "../../help/renderer.ts";
 import type { CommandRegistry } from "../../command_registry.ts";
 import type { CommandContext, CommandDescriptor } from "../../types.ts";
+import { metaCheckCommandDescriptor } from "./check.ts";
 import { metaGenerateCommandDescriptor } from "./generate.ts";
+import { metaWatchCommandDescriptor } from "./watch.ts";
 
 class MetaCommand extends BaseCliCommand {
   override readonly name = "meta" as const;
@@ -34,7 +36,11 @@ export function createMetaDescriptor(
   return createLegacyCommandDescriptor(handler, {
     summary: "Generate and manage chapter metadata (.meta.ts).",
     usage: "storyteller meta <subcommand> [options]",
-    children: [metaGenerateCommandDescriptor],
+    children: [
+      metaGenerateCommandDescriptor,
+      metaWatchCommandDescriptor,
+      metaCheckCommandDescriptor,
+    ],
     examples: [
       {
         summary: "Generate chapter metadata from a Markdown manuscript",

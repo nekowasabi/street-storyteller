@@ -26,6 +26,7 @@ interface MetaGenerateOptions {
   readonly "dry-run"?: boolean;
   readonly preview?: boolean;
   readonly interactive?: boolean;
+  readonly update?: boolean;
   readonly force?: boolean;
 }
 
@@ -111,15 +112,20 @@ export class MetaGenerateCommand extends BaseCliCommand {
 
       if (!parsed["dry-run"]) {
         const exists = await pathExists(outputPath);
-        if (exists && !parsed.force) {
+        const shouldForce = parsed.force === true;
+        const shouldUpdate = parsed.update === true && !shouldForce;
+
+        if (exists && !shouldForce && !shouldUpdate) {
           return err({
             code: "meta_generation_failed",
             message:
-              `Output already exists: ${outputPath} (use --force to overwrite)`,
+              `Output already exists: ${outputPath} (use --force to overwrite, or --update for safe diff update)`,
           });
         }
 
-        const emitted = await this.emitter.emit(meta, outputPath);
+        const emitted = shouldUpdate
+          ? await this.emitter.updateOrEmit(meta, outputPath)
+          : await this.emitter.emit(meta, outputPath);
         if (!emitted.ok) {
           return err({
             code: "meta_generation_failed",
@@ -181,6 +187,7 @@ function parseOptions(
     "dry-run": args["dry-run"] === true,
     preview: args.preview === true,
     interactive: args.interactive === true,
+    update: args.update === true,
     force: args.force === true,
   };
 }
@@ -348,6 +355,12 @@ const META_GENERATE_OPTIONS: readonly CommandOptionDescriptor[] = [
     type: "boolean",
   },
   {
+    name: "--update",
+    summary:
+      "Update only the auto-generated blocks when the output file already exists (requires markers).",
+    type: "boolean",
+  },
+  {
     name: "--force",
     summary: "Overwrite output file if it already exists.",
     type: "boolean",
@@ -385,6 +398,7 @@ function renderMetaGenerateHelp(): string {
   lines.push(
     "  storyteller meta generate manuscripts/chapter01.md --dry-run --preview",
   );
+  lines.push("  storyteller meta generate manuscripts/chapter01.md --update");
   lines.push("  storyteller meta generate manuscripts/*.md --batch");
   lines.push("  storyteller meta generate --dir manuscripts --recursive");
 
@@ -407,6 +421,11 @@ export const metaGenerateCommandDescriptor: CommandDescriptor =
           summary: "Generate without writing output",
           command:
             "storyteller meta generate manuscripts/chapter01.md --dry-run",
+        },
+        {
+          summary: "Update only auto blocks (preserve manual edits)",
+          command:
+            "storyteller meta generate manuscripts/chapter01.md --update",
         },
         {
           summary: "Override detected characters/settings",
