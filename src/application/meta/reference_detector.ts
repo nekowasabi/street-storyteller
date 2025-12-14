@@ -1,4 +1,6 @@
 import { join, relative, toFileUrl } from "@std/path";
+import type { BindingDefinition } from "./binding_loader.ts";
+import { loadBindingFile } from "./binding_loader.ts";
 
 type FrontmatterLike = {
   readonly characters?: readonly string[];
@@ -39,6 +41,7 @@ type LoadedEntity = {
     readonly excludePatterns?: readonly string[];
     readonly confidence?: number;
   };
+  readonly binding?: BindingDefinition;
 };
 
 export class ReferenceDetector {
@@ -287,7 +290,14 @@ function detectEntityMatches(
     });
   }
 
-  const excludePatterns = entity.detectionHints?.excludePatterns ?? [];
+  for (const pattern of entity.binding?.patterns ?? []) {
+    candidates.push({ pattern: pattern.text, confidence: pattern.confidence });
+  }
+
+  const excludePatterns = [
+    ...(entity.detectionHints?.excludePatterns ?? []),
+    ...(entity.binding?.excludePatterns ?? []),
+  ];
 
   const candidateConfidence = new Map<string, number>();
   for (const candidate of candidates) {
@@ -357,6 +367,10 @@ function defaultPatternsForEntity(entity: LoadedEntity): string[] {
     patterns.push(...entity.aliases);
   }
 
+  for (const pattern of entity.binding?.patterns ?? []) {
+    patterns.push(pattern.text);
+  }
+
   return Array.from(new Set(patterns)).filter((pattern) => pattern.length > 0);
 }
 
@@ -381,6 +395,13 @@ function patternsToMatches(
     confidenceByPattern.set(
       alias,
       Math.max(confidenceByPattern.get(alias) ?? 0, 0.8),
+    );
+  }
+
+  for (const pattern of entity.binding?.patterns ?? []) {
+    confidenceByPattern.set(
+      pattern.text,
+      Math.max(confidenceByPattern.get(pattern.text) ?? 0, pattern.confidence),
     );
   }
 
@@ -440,6 +461,8 @@ async function loadEntities(
         if (!parsed) {
           continue;
         }
+        const bindingPath = join(dirPath, `${parsed.id}.binding.yaml`);
+        const binding = await loadBindingFile(bindingPath);
         entities.push({
           kind,
           id: parsed.id,
@@ -450,11 +473,15 @@ async function loadEntities(
           aliases: parsed.aliases,
           pronouns: parsed.pronouns,
           detectionHints: parsed.detectionHints,
+          binding: binding ?? undefined,
         });
       }
     }
-  } catch {
-    return [];
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return [];
+    }
+    throw error;
   }
 
   return entities;

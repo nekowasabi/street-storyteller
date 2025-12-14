@@ -18,6 +18,7 @@ export interface MetaGenerateOptions {
   readonly outputPath?: string;
   readonly dryRun?: boolean;
   readonly force?: boolean;
+  readonly update?: boolean;
   readonly characters?: readonly string[];
   readonly settings?: readonly string[];
   readonly preset?: string;
@@ -113,15 +114,20 @@ export class MetaGeneratorService {
 
     if (!options.dryRun) {
       const exists = await pathExists(outputPath);
-      if (exists && !options.force) {
+      const shouldForce = options.force === true;
+      const shouldUpdate = options.update === true && !shouldForce;
+
+      if (exists && !shouldForce && !shouldUpdate) {
         return err(
           new Error(
-            `Output already exists: ${outputPath} (use --force to overwrite)`,
+            `Output already exists: ${outputPath} (use --force to overwrite, or --update for safe diff update)`,
           ),
         );
       }
 
-      const emitted = await this.emitter.emit(meta, outputPath);
+      const emitted = shouldUpdate
+        ? await this.emitter.updateOrEmit(meta, outputPath)
+        : await this.emitter.emit(meta, outputPath);
       if (!emitted.ok) {
         return err(new Error(emitted.error.message));
       }
