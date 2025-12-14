@@ -87,26 +87,26 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/protocol/types_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
+- [x] テストケースを作成（この時点で実装がないため失敗する）
   - McpToolの型が正しく定義されているか
   - McpResourceの型が正しく定義されているか
   - InitializeParams/InitializeResultの型が正しいか
   - Type Guards（isMcpRequest等）が機能するか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/protocol/types.ts` を作成
+- [x] `src/mcp/protocol/types.ts` を作成
   - MCP InitializeParams/InitializeResult型
   - McpTool型（name, description, inputSchema）
   - McpResource型（uri, name, mimeType）
   - McpPrompt型（name, description, arguments）
   - MCP固有エラーコード定数
   - Type Guards（isMcpRequest, isMcpNotification）
-- [ ] LSPの`types.ts`から共通部分をコピー・拡張
+- [x] LSPの`types.ts`から共通部分をコピー・拡張
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 必要に応じてリファクタリング
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -117,21 +117,21 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/protocol/transport_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - readMessage()がJSON-RPCメッセージを正しく読み取るか
   - writeMessage()がContent-Length形式で正しく書き込むか
   - 不正なJSONでエラーを返すか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/protocol/transport.ts` を作成
+- [x] `src/mcp/protocol/transport.ts` を作成
   - LspTransportをベースにMcpTransportを実装
   - TransportReader/Writerインターフェースを再利用
   - Content-Length形式のメッセージ処理
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] LspTransportとの共通部分を抽出してリファクタリング検討
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] LspTransportとの共通部分を抽出してリファクタリング検討
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -142,18 +142,18 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/server/capabilities_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - getServerCapabilities()がtools, resources, promptsを含むか
   - 能力オブジェクトがMCP仕様に準拠しているか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/server/capabilities.ts` を作成
+- [x] `src/mcp/server/capabilities.ts` を作成
   - ServerCapabilities型定義
   - getServerCapabilities()関数（tools: {}, resources: {}, prompts: {}を返す）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -164,14 +164,14 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/server/server_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - initializeリクエストに正しく応答するか
   - 初期化前のリクエストを拒否するか
   - initializedで状態がinitializedに遷移するか
   - 未知のメソッドにエラーを返すか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/server/server.ts` を作成
+- [x] `src/mcp/server/server.ts` を作成
   - McpServerクラス（LspServerパターンを参考）
   - 状態管理（uninitialized → initializing → initialized）
   - start()メソッド（メッセージループ）
@@ -180,9 +180,9 @@
   - handleNotification()メソッド（initialized等）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 必要に応じてリファクタリング
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -193,14 +193,14 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/tools/tool_registry_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - register()でツールを登録できるか
   - get()で登録済みツールを取得できるか
   - listTools()で全ツール一覧を取得できるか
   - 未登録ツールでundefinedを返すか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/tool_registry.ts` を作成
+- [x] `src/mcp/tools/tool_registry.ts` を作成
   - McpToolDefinition型
   - ToolRegistry クラス
     - register(tool: McpToolDefinition): void
@@ -208,8 +208,8 @@
     - listTools(): McpToolDefinition[]
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -220,14 +220,14 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/tools/cli_adapter_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - createMockContext()がCommandContextを正しく生成するか
   - executeCommand()がCommandHandlerを正しく実行するか
   - Result成功をMCP応答に変換できるか
   - Resultエラーをエラー応答に変換できるか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/cli_adapter.ts` を作成
+- [x] `src/mcp/tools/cli_adapter.ts` を作成
   - createMockContext(args): CommandContext
     - モックのOutputPresenter（出力をキャプチャ）
     - モックのConfigurationManagerRef
@@ -237,8 +237,8 @@
     - Result型をMCP応答に変換
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -249,14 +249,14 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/tools/definitions/meta_check_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - ツール定義がMCP仕様に準拠しているか
   - inputSchemaが正しく定義されているか
   - execute()がmeta checkコマンドを正しく呼び出すか
   - 成功時に適切なMCP応答を返すか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/definitions/meta_check.ts` を作成
+- [x] `src/mcp/tools/definitions/meta_check.ts` を作成
   ```typescript
   export const metaCheckTool: McpToolDefinition = {
     name: "meta_check",
@@ -276,8 +276,8 @@
   ```
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -288,14 +288,14 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/tools/definitions/meta_generate_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - ツール定義がMCP仕様に準拠しているか
   - inputSchemaが正しく定義されているか
   - execute()がmeta generateコマンドを正しく呼び出すか
   - preview/dryRunオプションが正しく動作するか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/definitions/meta_generate.ts` を作成
+- [x] `src/mcp/tools/definitions/meta_generate.ts` を作成
   ```typescript
   export const metaGenerateTool: McpToolDefinition = {
     name: "meta_generate",
@@ -316,8 +316,8 @@
   ```
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -328,21 +328,21 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/server/handlers/tools_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - handleToolsList()が登録済みツール一覧を返すか
   - handleToolsCall()が指定ツールを実行するか
   - 存在しないツール名でエラーを返すか
   - 不正な引数でエラーを返すか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/server/handlers/tools.ts` を作成
+- [x] `src/mcp/server/handlers/tools.ts` を作成
   - handleToolsList(registry): JsonRpcResponse
   - handleToolsCall(registry, params): Promise<JsonRpcResponse>
-- [ ] McpServerにハンドラーを統合
+- [x] McpServerにハンドラーを統合
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -353,14 +353,14 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/cli/modules/mcp/start_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - --stdio オプションが必須か
   - --path オプションでプロジェクトルートを指定できるか
   - --dry-run でサーバーを起動せずに検証できるか
   - --help でヘルプが表示されるか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/cli/modules/mcp/start.ts` を作成
+- [x] `src/cli/modules/mcp/start.ts` を作成
   - McpStartCommand クラス（BaseCliCommand継承）
   - handle()メソッド
     - stdin/stdoutアダプタ作成
@@ -369,8 +369,8 @@
   - コマンドディスクリプタ
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -381,20 +381,20 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/cli/modules/mcp/index_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - createMcpDescriptor()がコマンドグループを返すか
   - 子コマンド（start）が含まれているか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/cli/modules/mcp/index.ts` を作成
+- [x] `src/cli/modules/mcp/index.ts` を作成
   - McpCommand クラス（グループ親コマンド）
   - createMcpDescriptor(registry): CommandDescriptor
-- [ ] `src/cli/modules/index.ts` を修正
+- [x] `src/cli/modules/index.ts` を修正
   - mcpコマンドグループを登録
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -403,10 +403,10 @@
 @target: `deno.json`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-- [ ] MCP SDKのインポートが解決できることを確認するテスト
+- [x] MCP SDKのインポートが解決できることを確認するテスト
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `deno.json` に追加
+- [x] `deno.json` に追加
   ```json
   {
     "imports": {
@@ -416,8 +416,8 @@
   ```
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] `deno check` でインポートが解決されることを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] `deno check` でインポートが解決されることを確認
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -428,20 +428,20 @@
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/mcp/integration/mcp_server_integration_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - initialize → initialized フローが成功するか
   - tools/list で meta_check, meta_generate が返るか
   - tools/call で meta_check が正常実行されるか
   - tools/call で meta_generate が正常実行されるか
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] モックトランスポートを使用した統合テストを作成
-- [ ] E2Eフローの検証
+- [x] モックトランスポートを使用した統合テストを作成
+- [x] E2Eフローの検証
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 全体のテストスイートを実行
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 全体のテストスイートを実行
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
