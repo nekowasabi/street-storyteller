@@ -1,478 +1,3 @@
-# title: LSP統合による原稿チェック機能の実装（Issue #3）
-
-## 概要
-- 原稿（Markdown）内のキャラクター・設定参照をリアルタイムで検出し、LSPを通じてエディタに診断情報・ナビゲーション機能を提供する
-- @なしの自然な日本語執筆スタイルでキャラクター参照を検出可能にする
-
-### goal
-- neovimでMarkdownファイルを開くと、未定義のキャラクター参照に警告が表示される
-- キャラクター名の上で`gd`を押すと、キャラクター定義ファイル（TypeScript）にジャンプできる
-- キャラクター名の上で`K`を押すと、キャラクター情報（名前、役割、概要、信頼度）がホバー表示される
-
-## 必須のルール
-- 必ず `CLAUDE.md` を参照し、ルールを守ること
-- **TDD（テスト駆動開発）を厳守すること**
-  - 各プロセスは必ずテストファーストで開始する（Red → Green → Refactor）
-  - 実装コードを書く前に、失敗するテストを先に作成する
-  - テストが通過するまで修正とテスト実行を繰り返す
-  - プロセス完了の条件：該当するすべてのテストが通過していること
-
-## 開発のゴール
-- Phase 1-5（MVP）: LSPプロトコル基盤 → テキスト同期 → 検出エンジン → 診断機能 → ナビゲーション
-- スクラッチでJSON-RPC 2.0を実装（外部依存なし）
-- 日本語対応は基本助詞8種類（は/が/を/に/の/と/で/へ）
-
-## 実装仕様
-
-### 決定事項
-| 項目 | 決定 | 理由 |
-|-----|------|------|
-| LSP実装方針 | スクラッチ実装 | 依存関係なし、学習効果、完全な制御 |
-| MVP範囲 | Phase 1-5 | 診断 + 定義ジャンプ + ホバーまで |
-| 日本語対応 | 基本助詞のみ | は/が/を/に/の/と/で/へ の8種類 |
-
-### LSPキャパビリティ（MVP）
-- `textDocumentSync`: Full (1)
-- `diagnosticProvider`: true
-- `definitionProvider`: true
-- `hoverProvider`: true
-
-## 生成AIの学習用コンテキスト
-
-### 既存の型定義（再利用）
-- `src/type/v2/character.ts`
-  - Character型: displayNames, aliases, pronouns, detectionHints が定義済み
-  - DetectionHints型: commonPatterns, excludePatterns, confidence
-- `src/shared/result.ts`
-  - Result<T, E>型: エラーハンドリングパターン
-
-### 既存の検出ロジック（拡張対象）
-- `src/application/meta/reference_detector.ts`
-  - ReferenceDetector: キャラクター・設定の参照検出
-  - 信頼度計算ロジック（name: 1.0, displayNames: 0.9, aliases: 0.8）
-  - 参照: `tests/application/meta/reference_detector_test.ts`
-
-### 既存のCLI基盤（パターン参照）
-- `src/cli/command_registry.ts`
-  - CommandRegistry: コマンド登録・解決システム
-- `src/cli/base_command.ts`
-  - BaseCliCommand: コマンド基底クラス
-- `src/cli/modules/meta/generate.ts`
-  - 参考実装: コマンドの実装パターン
-
-### テスト基盤
-- `tests/asserts.ts`
-  - createStubLogger(), createStubPresenter(), createStubConfig()
-  - withTestDir() パターン
-
----
-
-## Process
-
-### process1 JSON-RPCパーサー実装
-JSON-RPC 2.0プロトコルのパース機能を実装する
-
-#### sub1 JSON-RPCメッセージ型定義
-@target: `src/lsp/protocol/types.ts`
-@ref: LSP仕様書（https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/）
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/json_rpc_parser_test.ts`
-- [x] テストケースを作成（この時点で実装がないため失敗する）
-  - `JsonRpcRequest`, `JsonRpcResponse`, `JsonRpcError` 型が存在すること
-  - `parseJsonRpc()` 関数が存在すること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `src/lsp/protocol/types.ts` に型定義を作成
-  - JsonRpcRequest: { jsonrpc: "2.0", id?: number | string, method: string, params?: unknown }
-  - JsonRpcResponse: { jsonrpc: "2.0", id: number | string | null, result?: unknown, error?: JsonRpcError }
-  - JsonRpcError: { code: number, message: string, data?: unknown }
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] 必要に応じてリファクタリング
-- [x] 再度テストを実行し、通過を確認
-
-#### sub2 JSON-RPCパーサー関数
-@target: `src/lsp/protocol/json_rpc.ts`
-@ref: `src/shared/result.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/json_rpc_parser_test.ts`
-- [x] テストケースを作成
-  - 有効なリクエストをパースできること
-  - 無効なJSONでエラーを返すこと（code: -32700）
-  - 無効なjsonrpcバージョンでエラーを返すこと（code: -32600）
-  - 通知（idなし）を正しく処理すること
-  - バッチリクエストを処理できること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `parseJsonRpc(input: string): Result<JsonRpcMessage, JsonRpcError>` 実装
-- [x] `parseJsonRpcBatch(input: string): JsonRpcMessage[]` 実装
-- [x] JSON.parse例外のキャッチとエラーコード変換
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] エラーコード定数の抽出（JSON_RPC_PARSE_ERROR = -32700 等）
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process2 LSPトランスポート実装
-Content-Lengthベースのメッセージ境界処理を実装する
-
-#### sub1 モックReader/Writer作成
-@target: `tests/lsp/helpers.ts`
-@ref: `tests/asserts.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/transport_test.ts`
-- [x] テストケースを作成
-  - `createMockReader()`, `createMockWriter()` が存在すること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `tests/lsp/helpers.ts` にモック関数を実装
-  - createMockReader(data: string): Deno.Reader
-  - createMockWriter(): { data: string, write(): Promise<number> }
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-
-#### sub2 LspTransportクラス
-@target: `src/lsp/protocol/transport.ts`
-@ref: `src/lsp/protocol/json_rpc.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/transport_test.ts`
-- [x] テストケースを作成
-  - Content-Lengthヘッダーを正しく読み取れること
-  - メッセージ本文を正しくパースすること
-  - レスポンス書き込み時にContent-Lengthヘッダーを付与すること
-  - 不完全なメッセージでエラーを返すこと
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `LspTransport` クラス実装
-  - constructor(reader: Deno.Reader, writer: Deno.Writer)
-  - read(): Promise<JsonRpcMessage>
-  - write(message: JsonRpcMessage): Promise<void>
-- [x] ヘッダーパース（Content-Length: N\r\n\r\n）
-- [x] UTF-8エンコーディング処理
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] バッファ管理のリファクタリング
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process3 LSPサーバー初期化
-initialize/initialized ハンドシェイクを実装する
-
-#### sub1 サーバーキャパビリティ定義
-@target: `src/lsp/server/capabilities.ts`
-@ref: LSP仕様書
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/server_initialization_test.ts`
-- [x] テストケースを作成
-  - ServerCapabilities型が存在すること
-  - getServerCapabilities() が正しい値を返すこと
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] ServerCapabilities型定義
-- [x] getServerCapabilities()関数実装
-  - textDocumentSync: 1 (Full)
-  - definitionProvider: true
-  - hoverProvider: true
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-
-#### sub2 LspServerクラス基盤
-@target: `src/lsp/server/server.ts`
-@ref: `src/lsp/protocol/transport.ts`, `src/lsp/server/capabilities.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/server_initialization_test.ts`
-- [x] テストケースを作成
-  - initializeリクエストに正しいレスポンスを返すこと
-  - initializedノーティフィケーションを処理できること
-  - 初期化前のリクエストを拒否すること（code: -32002）
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `LspServer` クラス実装
-  - constructor(transport: LspTransport, projectRoot: string)
-  - start(): Promise<void> - メッセージループ開始
-  - handleMessage(message: JsonRpcMessage): Promise<void>
-  - handleInitialize(params: InitializeParams): InitializeResult
-  - handleInitialized(): void
-  - isInitialized(): boolean
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] メッセージルーティングのリファクタリング
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process4 ドキュメント管理
-テキストドキュメントの同期と管理を実装する
-
-#### sub1 DocumentManagerクラス
-@target: `src/lsp/document/document_manager.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/document_manager_test.ts`
-- [x] テストケースを作成
-  - open()でドキュメントを保存できること
-  - get()でドキュメントを取得できること
-  - close()でドキュメントを削除できること
-  - change()で増分更新を適用できること
-  - change()で全文更新を適用できること
-  - バージョン管理が正しく動作すること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `TextDocument` 型定義
-  - uri: string, content: string, version: number, languageId: string
-- [x] `DocumentManager` クラス実装
-  - open(uri, text, version, languageId): void
-  - get(uri): TextDocument | undefined
-  - close(uri): void
-  - change(uri, changes, version): void
-- [x] 増分更新アルゴリズム（Range → 文字列置換）
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] マルチバイト文字の位置計算を検証
-- [x] 再度テストを実行し、通過を確認
-
-#### sub2 テキストドキュメント同期ハンドラ
-@target: `src/lsp/handlers/text_document_sync.ts`
-@ref: `src/lsp/document/document_manager.ts`, `src/lsp/server/server.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/text_document_sync_test.ts`
-- [x] テストケースを作成
-  - didOpenでドキュメントが開かれること
-  - didChangeでドキュメントが更新されること
-  - didCloseでドキュメントが閉じられること
-  - 変更時に診断がトリガーされること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] handleDidOpen(params): void
-- [x] handleDidChange(params): void
-- [x] handleDidClose(params): void
-- [x] LspServerへの統合
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process5 位置追跡付き検出エンジン
-既存ReferenceDetectorを拡張し、位置情報を追跡する
-
-#### sub1 PositionedDetectorクラス
-@target: `src/lsp/detection/positioned_detector.ts`
-@ref: `src/application/meta/reference_detector.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/positioned_detector_test.ts`
-- [x] テストケースを作成
-  - 検出結果に位置情報（line, character, length）が含まれること
-  - マルチバイト文字の位置が正しく計算されること（バイト位置ではなく文字位置）
-  - 複数出現を全て追跡できること
-  - 既存のReferenceDetectorと同じ検出精度を維持すること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `Position` 型定義: { line: number, character: number }
-- [x] `PositionedMatch` 型定義: { id: string, positions: Position[], confidence: number }
-- [x] `PositionedDetector` クラス実装
-  - constructor(referenceDetector: ReferenceDetector)
-  - detectWithPositions(content: string, projectPath: string): Promise<PositionedDetectionResult>
-- [x] 行・列位置の計算ロジック（改行でリセット、UTF-16コードユニット単位）
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] 位置計算のエッジケーステスト追加
-- [x] 再度テストを実行し、通過を確認
-
-#### sub2 日本語パターンマッチャー
-@target: `src/lsp/detection/japanese_pattern_matcher.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/japanese_pattern_matcher_test.ts`
-- [x] テストケースを作成
-  - 基本助詞（は/が/を/に/の/と/で/へ）付きパターンを生成できること
-  - 文脈に基づく信頼度を計算できること（主語位置は高信頼度）
-  - 除外パターンを正しく適用できること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `BASIC_PARTICLES` 定数: ["は", "が", "を", "に", "の", "と", "で", "へ"]
-- [x] `JapanesePatternMatcher` クラス実装
-  - expandWithParticles(word: string): string[]
-  - findMatches(content: string, word: string): Match[]
-  - calculateConfidence(content: string, word: string, position: number): number
-  - addExcludePattern(pattern: string): void
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] 信頼度計算ロジックの調整
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process6 診断機能
-未定義参照や低信頼度マッチを警告として報告する
-
-#### sub1 DiagnosticsGeneratorクラス
-@target: `src/lsp/diagnostics/diagnostics_generator.ts`
-@ref: `src/lsp/detection/positioned_detector.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/diagnostics_generator_test.ts`
-- [x] テストケースを作成
-  - 未定義のキャラクター参照をWarningとして報告すること
-  - 低信頼度マッチをHintとして報告すること
-  - 正確な位置情報（range）を含むこと
-  - 関連情報（候補の提示）を含むこと
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `Diagnostic` 型定義（LSP準拠）
-  - range: Range, message: string, severity: DiagnosticSeverity, source: "storyteller"
-- [x] `DiagnosticsGenerator` クラス実装
-  - constructor(detector: PositionedDetector)
-  - generate(uri: string, content: string, projectPath: string): Promise<Diagnostic[]>
-- [x] 未定義参照の検出ロジック
-- [x] 信頼度閾値による診断レベル判定
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] メッセージの日本語化
-- [x] 再度テストを実行し、通過を確認
-
-#### sub2 DiagnosticsPublisherクラス
-@target: `src/lsp/diagnostics/diagnostics_publisher.ts`
-@ref: `src/lsp/server/server.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/diagnostics_publisher_test.ts`
-- [x] テストケースを作成
-  - publishDiagnostics通知を送信できること
-  - 空の診断配列で診断をクリアできること
-  - デバウンス処理が動作すること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `DiagnosticsPublisher` クラス実装
-  - constructor(server: LspServer, options?: { debounceMs: number })
-  - publish(uri: string, diagnostics: Diagnostic[]): void
-- [x] デバウンス機能の実装
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process7 定義ジャンプ機能
-キャラクター・設定の定義ファイルへのジャンプを実装する
-
-#### sub1 DefinitionProviderクラス
-@target: `src/lsp/providers/definition_provider.ts`
-@ref: `src/lsp/detection/positioned_detector.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/definition_provider_test.ts`
-- [x] テストケースを作成
-  - キャラクター名からキャラクター定義ファイルのLocationを返すこと
-  - 設定名から設定定義ファイルのLocationを返すこと
-  - 非エンティティ位置ではnullを返すこと
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `Location` 型定義: { uri: string, range: Range }
-- [x] `DefinitionProvider` クラス実装
-  - constructor(detector: PositionedDetector)
-  - getDefinition(uri: string, content: string, position: Position, projectPath: string): Promise<Location | null>
-- [x] 位置からエンティティを特定するロジック
-- [x] エンティティからファイルパスを解決するロジック
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process8 ホバー情報機能
-キャラクター・設定のホバー情報を表示する
-
-#### sub1 HoverProviderクラス
-@target: `src/lsp/providers/hover_provider.ts`
-@ref: `src/lsp/detection/positioned_detector.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/hover_provider_test.ts`
-- [x] テストケースを作成
-  - キャラクター情報（名前、役割、概要）を含むMarkdownを返すこと
-  - 信頼度を表示すること
-  - 関係性情報を表示すること
-  - 非エンティティ位置ではnullを返すこと
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] `Hover` 型定義: { contents: MarkupContent, range?: Range }
-- [x] `HoverProvider` クラス実装
-  - constructor(detector: PositionedDetector)
-  - getHover(uri: string, content: string, position: Position, projectPath: string): Promise<Hover | null>
-- [x] キャラクター情報のMarkdownフォーマット生成
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] ホバー表示内容の日本語化
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process9 LSPサーバー統合
-各コンポーネントをLspServerに統合する
-
-#### sub1 メッセージハンドラ統合
-@target: `src/lsp/server/server.ts`
-@ref: 全ての実装ファイル
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/server_integration_test.ts`
-- [x] テストケースを作成
-  - textDocument/definition リクエストを処理できること
-  - textDocument/hover リクエストを処理できること
-  - ドキュメント変更時に診断が発行されること
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [x] handleDefinition(params): Promise<Location | null>
-- [x] handleHover(params): Promise<Hover | null>
-- [x] テキスト同期 → 診断発行のパイプライン構築
-
-##### TDD Step 3: Refactor & Verify
-- [x] テストを実行し、通過することを確認
-- [x] 再度テストを実行し、通過を確認
-
----
-
-### process10 ユニットテスト（追加・統合テスト）
-
-#### sub1 エッジケーステスト追加
-@test: `tests/lsp/*.ts`
-- [x] 空のドキュメントの処理
-- [x] 非常に長い行の処理
-- [x] 特殊文字（絵文字等）を含むドキュメント
-- [x] 大量のキャラクター参照を含むドキュメント
-
-#### sub2 統合テスト
-@test: `tests/integration/lsp_server_integration_test.ts`
-- [x] 完全な編集セッションのシミュレーション
-- [x] 複数ドキュメントの同時編集
-
----
-
 ### process11 LSP CLIコマンド実装
 LSPサーバーをCLIから起動できるようにする（Issue #9）
 
@@ -482,24 +7,24 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/cli/lsp_start_command_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
+- [x] テストケースを作成（この時点で実装がないため失敗する）
   - `LspStartCommand`クラスがBaseCliCommandを継承していること
   - `--stdio`オプションを受け付けること
   - LspServerインスタンスを生成し、stdin/stdoutでトランスポートを初期化すること
   - プロジェクトルートを正しく検出すること（Deno.cwd()または--path指定）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/cli/modules/lsp/start.ts` に `LspStartCommand` クラス作成
+- [x] `src/cli/modules/lsp/start.ts` に `LspStartCommand` クラス作成
   - name = "start", path = ["lsp", "start"]
-- [ ] オプション解析: `--stdio`, `--path`, `--help`
-- [ ] エンティティロード（ReferenceDetectorの`loadEntities`パターンを参考）
-- [ ] `LspTransport(Deno.stdin.readable, Deno.stdout.writable)` 生成
-- [ ] `LspServer(transport, projectRoot, { entities }).start()` 呼び出し
+- [x] オプション解析: `--stdio`, `--path`, `--help`
+- [x] エンティティロード（ReferenceDetectorの`loadEntities`パターンを参考）
+- [x] `LspTransport(Deno.stdin.readable, Deno.stdout.writable)` 生成
+- [x] `LspServer(transport, projectRoot, { entities }).start()` 呼び出し
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] エラーハンドリング（プロジェクトルートが見つからない場合）
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] エラーハンドリング（プロジェクトルートが見つからない場合）
+- [x] 再度テストを実行し、通過を確認
 
 #### sub2 `storyteller lsp install nvim` コマンド
 @target: `src/cli/modules/lsp/install.ts`
@@ -507,22 +32,22 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/cli/lsp_install_command_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `LspInstallCommand`クラスが存在すること
   - `nvim`引数を受け付けること
   - neovim用Lua設定テンプレートを生成すること
   - `--output`オプションで出力先を指定できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `LspInstallCommand` クラス作成
+- [x] `LspInstallCommand` クラス作成
   - name = "install", path = ["lsp", "install"]
-- [ ] neovim用Luaテンプレート定義（nvim-lspconfig形式）
-- [ ] ファイル書き込み（`Deno.writeTextFile`）
-- [ ] --dry-runオプション対応
+- [x] neovim用Luaテンプレート定義（nvim-lspconfig形式）
+- [x] ファイル書き込み（`Deno.writeTextFile`）
+- [x] --dry-runオプション対応
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 #### sub3 LSPコマンドグループ登録
 @target: `src/cli/modules/lsp/index.ts`, `src/cli/modules/index.ts`
@@ -530,21 +55,21 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/cli/lsp_command_group_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `lsp`コマンドグループが登録されていること
   - `storyteller lsp` でヘルプが表示されること
   - `storyteller lsp start --stdio` が解決されること
   - `storyteller lsp install nvim` が解決されること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/cli/modules/lsp/index.ts` に `createLspDescriptor()` 関数を作成
-- [ ] `LspCommand` クラス（グループルート）を作成
-- [ ] `src/cli/modules/index.ts` に LSP モジュールを登録
+- [x] `src/cli/modules/lsp/index.ts` に `createLspDescriptor()` 関数を作成
+- [x] `LspCommand` クラス（グループルート）を作成
+- [x] `src/cli/modules/index.ts` に LSP モジュールを登録
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] コマンドヘルプの日本語化
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] コマンドヘルプの日本語化
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -557,7 +82,7 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/application/view/project_analyzer_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `ProjectAnalyzer`クラスが存在すること
   - `analyzeProject(projectPath)` がキャラクター一覧を返すこと
   - `analyzeProject(projectPath)` が設定一覧を返すこと
@@ -565,24 +90,24 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
   - 各原稿に含まれるエンティティ参照を解析できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `ProjectAnalysis` 型定義を作成
+- [x] `ProjectAnalysis` 型定義を作成
   - characters: CharacterSummary[], settings: SettingSummary[]
   - manuscripts: ManuscriptSummary[], relationships: RelationshipGraph
-- [ ] `ProjectAnalyzer` クラス作成
+- [x] `ProjectAnalyzer` クラス作成
   - analyzeProject(projectPath: string): Promise<Result<ProjectAnalysis, AnalysisError>>
-- [ ] `loadEntities`パターンを再利用してエンティティをロード
-- [ ] 原稿ファイルの解析（ReferenceDetector活用）
+- [x] `loadEntities`パターンを再利用してエンティティをロード
+- [x] 原稿ファイルの解析（ReferenceDetector活用）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 #### sub2 HTML生成サービス
 @target: `src/application/view/html_generator.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/application/view/html_generator_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `HtmlGenerator`クラスが存在すること
   - `generate(analysis)` がスタンドアロンHTMLを返すこと
   - CSSが埋め込まれていること（外部依存なし）
@@ -591,17 +116,17 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
   - 原稿との関連表示が含まれること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `HtmlGenerator` クラス作成
+- [x] `HtmlGenerator` クラス作成
   - generate(analysis: ProjectAnalysis): string
-- [ ] HTMLテンプレート定義（Deno標準ライブラリのみ使用）
-- [ ] CSS定数（インライン埋め込み用）
-- [ ] 各セクションのレンダリング関数
+- [x] HTMLテンプレート定義（Deno標準ライブラリのみ使用）
+- [x] CSS定数（インライン埋め込み用）
+- [x] 各セクションのレンダリング関数
   - renderCharacters(), renderSettings(), renderManuscripts()
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] スタイルの調整（見やすさ向上）
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] スタイルの調整（見やすさ向上）
+- [x] 再度テストを実行し、通過を確認
 
 #### sub3 `storyteller view` CLIコマンド
 @target: `src/cli/modules/view.ts`
@@ -609,23 +134,23 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/cli/view_command_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `ViewCommand`クラスが存在すること
   - デフォルトで`--output index.html`にHTML出力すること
   - `--output`オプションで出力先を指定できること
   - `--path`オプションでプロジェクトパスを指定できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `ViewCommand` クラス作成
+- [x] `ViewCommand` クラス作成
   - name = "view", path = ["view"]
-- [ ] オプション解析: `--output`, `--path`
-- [ ] `ProjectAnalyzer` + `HtmlGenerator` の連携
-- [ ] HTMLファイル書き込み
+- [x] オプション解析: `--output`, `--path`
+- [x] `ProjectAnalyzer` + `HtmlGenerator` の連携
+- [x] HTMLファイル書き込み
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] コマンドを `registerCoreModules` に登録
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] コマンドを `registerCoreModules` に登録
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
@@ -638,7 +163,7 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/application/view/local_server_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `LocalViewServer`クラスが存在すること
   - `start(port)` でHTTPサーバーを起動できること
   - `/` にアクセスするとHTMLが返ること
@@ -646,16 +171,16 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
   - WebSocketエンドポイント `/ws` が存在すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `LocalViewServer` クラス作成（`Deno.serve`使用）
+- [x] `LocalViewServer` クラス作成（`Deno.serve`使用）
   - setContent(html: string): void
   - start(port: number): Promise<void>
   - stop(): Promise<void>
-- [ ] リクエストハンドラー実装
+- [x] リクエストハンドラー実装
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] MIMEタイプ処理の追加
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] MIMEタイプ処理の追加
+- [x] 再度テストを実行し、通過を確認
 
 #### sub2 ファイル監視とライブリロード
 @target: `src/application/view/file_watcher.ts`
@@ -663,7 +188,7 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/application/view/file_watcher_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `FileWatcher`クラスが存在すること
   - 指定ディレクトリの変更を検出できること
   - 変更時にコールバックを呼び出すこと
@@ -671,57 +196,57 @@ LSPサーバーをCLIから起動できるようにする（Issue #9）
   - `stop()` で監視を停止できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `FileWatcher` クラス作成（`Deno.watchFs`使用）
+- [x] `FileWatcher` クラス作成（`Deno.watchFs`使用）
   - constructor(watchPath, options: { onChange, debounceMs })
   - start(): Promise<void>
   - stop(): void
-- [ ] デバウンスロジック（meta/watch.tsパターン参照）
+- [x] デバウンスロジック（meta/watch.tsパターン参照）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 #### sub3 WebSocket通知統合
 @target: `src/application/view/websocket_notifier.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/application/view/websocket_notifier_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - WebSocket接続を受け付けること
   - `notify(message)` で全クライアントにメッセージ送信できること
   - クライアント切断を処理できること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `WebSocketNotifier` クラス作成
+- [x] `WebSocketNotifier` クラス作成
   - handleConnection(socket: WebSocket): void
   - notify(message: string): void
-- [ ] HTMLにWebSocketクライアントコードを埋め込み
+- [x] HTMLにWebSocketクライアントコードを埋め込み
   - 接続確立、reloadメッセージ受信時にlocation.reload()
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] 再度テストを実行し、通過を確認
 
 #### sub4 `storyteller view --serve` コマンド拡張
 @target: `src/cli/modules/view.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 @test: `tests/cli/view_command_serve_test.ts`
-- [ ] テストケースを作成
+- [x] テストケースを作成
   - `--serve` オプションでローカルサーバーを起動すること
   - `--port` オプションでポート指定できること（デフォルト: 8080）
   - `--watch` オプションでファイル監視とライブリロードを有効化すること
   - Ctrl+Cでサーバー停止すること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `ViewCommand` にサーバーモードを追加
-- [ ] `LocalViewServer` + `FileWatcher` + `WebSocketNotifier` の統合
-- [ ] シグナルハンドリング（SIGINT）
+- [x] `ViewCommand` にサーバーモードを追加
+- [x] `LocalViewServer` + `FileWatcher` + `WebSocketNotifier` の統合
+- [x] シグナルハンドリング（SIGINT）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] ログ出力の追加（起動URL表示）
-- [ ] 再度テストを実行し、通過を確認
+- [x] テストを実行し、通過することを確認
+- [x] ログ出力の追加（起動URL表示）
+- [x] 再度テストを実行し、通過を確認
 
 ---
 
