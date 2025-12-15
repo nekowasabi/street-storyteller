@@ -6,11 +6,12 @@
 import type { McpToolDefinition } from "../tool_registry.ts";
 import { executeCliCommand } from "../cli_adapter.ts";
 import { ElementCharacterCommand } from "../../../cli/modules/element/character.ts";
+import { ElementSettingCommand } from "../../../cli/modules/element/setting.ts";
 
 export const elementCreateTool: McpToolDefinition = {
   name: "element_create",
   description:
-    "物語要素（キャラクター、設定等）を作成します。現在はキャラクター作成をサポートします。",
+    "物語要素（キャラクター、設定等）を作成します。キャラクターと設定の作成をサポートします。",
   inputSchema: {
     type: "object",
     properties: {
@@ -58,6 +59,22 @@ export const elementCreateTool: McpToolDefinition = {
         type: "boolean",
         description: "既存の詳細を上書きする",
       },
+      settingType: {
+        type: "string",
+        enum: ["location", "world", "culture", "organization"],
+        description:
+          "設定の種類（type='setting'の場合に必須）: location/world/culture/organization",
+      },
+      displayNames: {
+        type: "array",
+        items: { type: "string" },
+        description: "表示名のバリエーション（設定用）",
+      },
+      relatedSettings: {
+        type: "array",
+        items: { type: "string" },
+        description: "関連する設定のID（設定用）",
+      },
     },
     required: ["type", "name"],
   },
@@ -101,20 +118,67 @@ export const elementCreateTool: McpToolDefinition = {
       };
     }
 
-    // setting は未実装（将来拡張用）
+    const id = (args.id as string | undefined) ?? name;
+
+    // 設定（Setting）の作成
     if (type === "setting") {
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text:
-              "Error: 'setting' is not supported yet. Use type='character' for now.",
-          },
-        ],
-        isError: true,
+      const settingType = args.settingType as string | undefined;
+      if (!settingType || typeof settingType !== "string") {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text:
+                "Error: 'settingType' parameter is required for type='setting' (location|world|culture|organization).",
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      const settingArgs: Record<string, unknown> = {
+        name,
+        id,
+        type: settingType,
       };
+
+      if (typeof args.summary === "string") {
+        settingArgs.summary = args.summary;
+      }
+
+      if (typeof args.displayNames === "string") {
+        settingArgs.displayNames = args.displayNames;
+      } else if (Array.isArray(args.displayNames)) {
+        const displayNames = (args.displayNames as unknown[])
+          .filter((n) => typeof n === "string")
+          .map((n) => (n as string).trim())
+          .filter((n) => n.length > 0);
+        if (displayNames.length > 0) {
+          settingArgs.displayNames = displayNames.join(",");
+        }
+      }
+
+      if (typeof args.relatedSettings === "string") {
+        settingArgs.relatedSettings = args.relatedSettings;
+      } else if (Array.isArray(args.relatedSettings)) {
+        const relatedSettings = (args.relatedSettings as unknown[])
+          .filter((s) => typeof s === "string")
+          .map((s) => (s as string).trim())
+          .filter((s) => s.length > 0);
+        if (relatedSettings.length > 0) {
+          settingArgs.relatedSettings = relatedSettings.join(",");
+        }
+      }
+
+      if (args.force === true) {
+        settingArgs.force = true;
+      }
+
+      const handler = new ElementSettingCommand();
+      return await executeCliCommand(handler, settingArgs);
     }
 
+    // キャラクターの作成
     const role = args.role as string | undefined;
     if (!role || typeof role !== "string") {
       return {
@@ -127,8 +191,6 @@ export const elementCreateTool: McpToolDefinition = {
         isError: true,
       };
     }
-
-    const id = (args.id as string | undefined) ?? name;
 
     // CommandContext用の引数を構築（CLIのオプション名に合わせる）
     const commandArgs: Record<string, unknown> = {

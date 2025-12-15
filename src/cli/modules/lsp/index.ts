@@ -10,6 +10,7 @@ import type { CommandRegistry } from "../../command_registry.ts";
 import type { CommandContext, CommandDescriptor } from "../../types.ts";
 import { lspStartCommandDescriptor } from "./start.ts";
 import { lspInstallCommandDescriptor } from "./install.ts";
+import { lspValidateCommandDescriptor } from "./validate.ts";
 
 /**
  * LspCommand クラス
@@ -49,6 +50,7 @@ export function createLspDescriptor(
     children: [
       lspStartCommandDescriptor,
       lspInstallCommandDescriptor,
+      lspValidateCommandDescriptor,
     ],
     examples: [
       {

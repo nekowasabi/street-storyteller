@@ -61,13 +61,44 @@ Deno.test("elementCreateTool: 未対応typeはエラー", async () => {
   assertEquals(result.isError, true);
 });
 
-Deno.test("elementCreateTool: setting typeは未実装としてエラー", async () => {
+Deno.test("elementCreateTool: setting typeはsettingType必須", async () => {
   const result = await elementCreateTool.execute({
     type: "setting",
     name: "city",
   });
   assertExists(result);
   assertEquals(result.isError, true);
+});
+
+Deno.test("elementCreateTool: setting typeで正常実行できる", async () => {
+  const result = await elementCreateTool.execute({
+    type: "setting",
+    name: "royal_capital",
+    settingType: "location",
+    summary: "王国の中心地",
+  });
+  assertExists(result);
+  assertEquals(result.isError, false);
+  assertEquals(result.content.length > 0, true);
+});
+
+Deno.test("elementCreateTool: setting typeでdisplayNamesを配列で渡せる", async () => {
+  const result = await elementCreateTool.execute({
+    type: "setting",
+    name: "royal_capital",
+    settingType: "location",
+    summary: "王国の中心地",
+    displayNames: ["王都", "首都"],
+  });
+  assertEquals(result.isError, false);
+
+  const json = extractToolResultJson(result);
+  assertEquals(json.filePath, "src/settings/royal_capital.ts");
+  const content = json.content;
+  assertEquals(typeof content, "string");
+  if (typeof content === "string") {
+    assertEquals(content.includes('"displayNames"'), true);
+  }
 });
 
 Deno.test("elementCreateTool: character typeはrole必須", async () => {

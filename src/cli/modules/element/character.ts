@@ -113,6 +113,18 @@ export class ElementCharacterCommand extends BaseCliCommand {
       const result = await service.createElement("character", character);
 
       if (result.ok) {
+        // プロジェクトルートを取得
+        const config = await context.config.resolve();
+        const projectRoot = (context.args?.projectRoot as string) ||
+          config.runtime.projectRoot || Deno.cwd();
+
+        // ファイルを実際に作成
+        const fullPath = `${projectRoot}/${result.value.filePath}`;
+        const dir = fullPath.substring(0, fullPath.lastIndexOf("/"));
+
+        await Deno.mkdir(dir, { recursive: true });
+        await Deno.writeTextFile(fullPath, result.value.content);
+
         context.logger.info("Character element created", {
           filePath: result.value.filePath,
         });
