@@ -46,6 +46,7 @@ const BASE_DIRECTORIES = [
   "drafts",
   "output",
   "tests",
+  ".claude/commands",
 ] as const;
 
 const BASE_FILES: readonly ProjectFileSpec[] = [
@@ -103,7 +104,7 @@ The story begins...
 
 ## Initial Concept
 
-- Main idea: 
+- Main idea:
 - Inspiration:
 - Theme:
 
@@ -121,6 +122,185 @@ The story begins...
 3. Development
 4. Climax
 5. Resolution
+`,
+  },
+  // Claude Code slash commands
+  {
+    path: ".claude/commands/story-director.md",
+    content: `# Story Director
+
+物語のディレクターとして、プロジェクト全体を把握し、創作的な観点から応答します。
+
+## あなたの役割
+
+あなたはstreet-storytellerプロジェクトの「物語ディレクター」です。
+SaC（StoryWriting as Code）コンセプトに基づき、物語の構造を把握し、創作をサポートします。
+
+### 3つの支援軸
+
+1. **全体像把握**: キャラクター構成、設定の整合性、プロット進行を俯瞰
+2. **創作的アドバイス**: 伏線配置、キャラクターアーク、テーマ展開の提案
+3. **技術的支援**: storyteller CLIの使い方、型定義の活用方法
+
+## コンテキスト収集
+
+以下のCLIコマンドでプロジェクト情報を取得してください：
+
+\`\`\`bash
+# プロジェクト全体の情報
+storyteller meta check --json
+
+# LSP検証（整合性チェック）
+storyteller lsp validate --dir manuscripts --recursive
+\`\`\`
+
+また、以下のディレクトリ構造を確認してください：
+
+- \`src/characters/\` - キャラクター定義ファイル
+- \`src/settings/\` - 世界観・設定ファイル
+- \`manuscripts/\` - 原稿ファイル
+
+## 質問
+
+$ARGUMENTS
+`,
+  },
+  {
+    path: ".claude/commands/story-check.md",
+    content: `# Story Check
+
+原稿の整合性チェックを実行し、結果を分析します。
+
+## 実行コマンド
+
+以下のコマンドを実行して結果を取得してください：
+
+\`\`\`bash
+# manuscripts ディレクトリ全体を検証
+storyteller lsp validate --dir manuscripts --recursive
+
+# 特定のファイルを検証
+storyteller lsp validate --path $ARGUMENTS
+
+# JSON形式で詳細を取得
+storyteller lsp validate --dir manuscripts --recursive --json
+\`\`\`
+
+## 結果の分析
+
+検証結果を以下の観点で分析してください：
+
+### エラー分類
+
+1. **参照エラー**: 未定義のキャラクターや設定への参照
+2. **整合性警告**: 低信頼度の暗黙的参照
+3. **情報**: 改善提案
+
+### 修正優先度
+
+| 優先度 | 種類 | アクション |
+|--------|------|-----------|
+| 高 | error | 即座に修正が必要 |
+| 中 | warning | 確認して対応を検討 |
+| 低 | info | 時間があれば改善 |
+
+## 対象
+
+$ARGUMENTS
+`,
+  },
+  {
+    path: ".claude/commands/story-char.md",
+    content: `# Story Character
+
+キャラクターの作成・管理を行います。
+
+## キャラクター作成
+
+引数からキャラクター情報を解析し、適切なコマンドを実行してください。
+
+### 基本作成
+
+\`\`\`bash
+# 基本的なキャラクター作成
+storyteller element character --name "キャラ名" --role protagonist --summary "概要"
+
+# 詳細情報付きで作成
+storyteller element character --name "キャラ名" --role supporting --summary "概要" --with-details
+
+# トレイト付きで作成
+storyteller element character --name "キャラ名" --role antagonist --summary "概要" --traits "勇敢,正義感"
+\`\`\`
+
+### 役割オプション
+
+| 役割 | 説明 |
+|------|------|
+| \`protagonist\` | 主人公 |
+| \`antagonist\` | 敵対者 |
+| \`supporting\` | 脇役・サポート |
+| \`guest\` | ゲスト・一時的登場 |
+
+## 引数の解析
+
+ユーザーの入力（$ARGUMENTS）を解析して、以下を特定してください：
+
+1. **名前**: 「〜という名前」「〜を作成」などから抽出
+2. **役割**: 「主人公」→protagonist、「悪役」→antagonist など
+3. **概要**: 説明文があれば抽出
+4. **特徴**: 「特徴は〜」「〜な性格」などから抽出
+
+## 入力
+
+$ARGUMENTS
+`,
+  },
+  {
+    path: ".claude/commands/story-view.md",
+    content: `# Story View
+
+プロジェクトをHTML形式で可視化します。
+
+## 実行コマンド
+
+\`\`\`bash
+# ローカルサーバーを起動してブラウザで表示
+storyteller view --serve
+
+# カスタムポートで起動
+storyteller view --serve --port 3000
+
+# ファイル監視モード（変更を自動反映）
+storyteller view --serve --watch
+
+# HTMLファイルとして出力
+storyteller view --output ./output/
+
+# プレビューのみ（実際には出力しない）
+storyteller view --dry-run
+\`\`\`
+
+## オプション一覧
+
+| オプション | 説明 | デフォルト |
+|-----------|------|-----------|
+| \`--serve\` | ローカルサーバーを起動 | - |
+| \`--port\` | サーバーのポート番号 | 8080 |
+| \`--watch\` | ファイル変更を監視 | false |
+| \`--output\` | 出力先ディレクトリ | - |
+| \`--path\` | プロジェクトパス | カレント |
+| \`--dry-run\` | プレビューのみ | false |
+| \`--timeout\` | タイムアウト（秒） | 30 |
+
+## 使用シーン
+
+1. **執筆中の確認**: \`--serve --watch\` で常時表示
+2. **共有用出力**: \`--output\` でHTML生成
+3. **構造確認**: サーバー起動してブラウザで俯瞰
+
+## 入力
+
+$ARGUMENTS
 `,
   },
 ];
