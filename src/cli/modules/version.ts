@@ -5,8 +5,7 @@ import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
 import type { CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
 import { createVersionService } from "../../application/version_service.ts";
 import { DenoFileSystemGateway } from "../../application/file_system_gateway.ts";
-
-const CURRENT_STORYTELLER_VERSION = "0.3.0";
+import { STORYTELLER_VERSION } from "../../core/version.ts";
 
 interface VersionOptions {
   check?: boolean;
@@ -43,7 +42,7 @@ async function executeVersion(context: CommandContext) {
 
     const compatibilityResult = await versionService.checkCompatibility(
       parsed.projectPath,
-      CURRENT_STORYTELLER_VERSION,
+      STORYTELLER_VERSION,
     );
 
     if (!compatibilityResult.ok) {
@@ -57,14 +56,14 @@ async function executeVersion(context: CommandContext) {
       context.logger.info(
         "✓ Project is compatible with current storyteller version",
         {
-          storytellerVersion: CURRENT_STORYTELLER_VERSION,
+          storytellerVersion: STORYTELLER_VERSION,
         },
       );
     } else {
       context.logger.warn(
         "✗ Project is NOT compatible with current storyteller version",
         {
-          storytellerVersion: CURRENT_STORYTELLER_VERSION,
+          storytellerVersion: STORYTELLER_VERSION,
           reason: compatibilityResult.value.reason,
         },
       );
@@ -73,7 +72,7 @@ async function executeVersion(context: CommandContext) {
     // 更新チェックも実行
     const updateResult = await versionService.checkForUpdates(
       parsed.projectPath,
-      CURRENT_STORYTELLER_VERSION,
+      STORYTELLER_VERSION,
     );
 
     if (!updateResult.ok) {
@@ -96,7 +95,7 @@ async function executeVersion(context: CommandContext) {
 
   // デフォルト: バージョン情報表示
   context.logger.info("Storyteller version information", {
-    storytellerVersion: CURRENT_STORYTELLER_VERSION,
+    storytellerVersion: STORYTELLER_VERSION,
   });
 
   // プロジェクトメタデータがあれば表示

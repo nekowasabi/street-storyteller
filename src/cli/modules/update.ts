@@ -6,8 +6,7 @@ import type { CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
 import { createVersionService } from "../../application/version_service.ts";
 import { DenoFileSystemGateway } from "../../application/file_system_gateway.ts";
 import type { ProjectMetadata } from "../../shared/config/schema.ts";
-
-const CURRENT_STORYTELLER_VERSION = "0.3.0";
+import { STORYTELLER_VERSION } from "../../core/version.ts";
 
 interface UpdateOptions {
   check: boolean;
@@ -96,7 +95,7 @@ async function executeUpdate(context: CommandContext) {
 
     const updateResult = await versionService.checkForUpdates(
       parsed.projectPath,
-      CURRENT_STORYTELLER_VERSION,
+      STORYTELLER_VERSION,
     );
 
     if (!updateResult.ok) {
@@ -138,7 +137,7 @@ async function executeUpdate(context: CommandContext) {
     // 更新チェック
     const updateResult = await versionService.checkForUpdates(
       parsed.projectPath,
-      CURRENT_STORYTELLER_VERSION,
+      STORYTELLER_VERSION,
     );
 
     if (!updateResult.ok) {
@@ -170,8 +169,8 @@ async function executeUpdate(context: CommandContext) {
       ...metadata,
       version: {
         ...metadata.version,
-        version: CURRENT_STORYTELLER_VERSION,
-        storytellerVersion: CURRENT_STORYTELLER_VERSION,
+        version: STORYTELLER_VERSION,
+        storytellerVersion: STORYTELLER_VERSION,
         lastUpdated: new Date(),
       },
     };
@@ -190,7 +189,7 @@ async function executeUpdate(context: CommandContext) {
 
     context.logger.info("✓ Project updated successfully", {
       from: metadata.version.version,
-      to: CURRENT_STORYTELLER_VERSION,
+      to: STORYTELLER_VERSION,
     });
 
     return ok(undefined);

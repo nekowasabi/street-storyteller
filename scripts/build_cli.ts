@@ -1,12 +1,13 @@
 #!/usr/bin/env -S deno run --allow-read --allow-write
 
-import { parse } from "@std/cli/parse";
+import { parseArgs } from "@std/cli/parse-args";
 import { basename } from "@std/path/basename";
 import { join } from "@std/path/join";
 import {
   computeSha256Hex,
   createBuildManifest,
 } from "../src/infrastructure/cli/build_manifest.ts";
+import { STORYTELLER_VERSION } from "../src/core/version.ts";
 
 interface CliArgs {
   version?: string;
@@ -14,7 +15,7 @@ interface CliArgs {
   artifacts?: string | string[];
 }
 
-const args = parse(Deno.args, {
+const args = parseArgs(Deno.args, {
   string: ["version", "out", "artifacts"],
   alias: {
     v: "version",
@@ -23,7 +24,7 @@ const args = parse(Deno.args, {
   },
 }) as CliArgs;
 
-const version = args.version ?? "0.0.0-dev";
+const version = args.version ?? STORYTELLER_VERSION;
 const outDir = args.out ?? "dist";
 const artifactsArg = args.artifacts;
 

@@ -3,6 +3,7 @@ import type {
   FileSystemGateway,
 } from "./file_system_gateway.ts";
 import { err, ok, type Result } from "../shared/result.ts";
+import { PROJECT_SCHEMA_VERSION } from "../core/version.ts";
 
 export interface MigrationPlanAction {
   readonly description: string;
@@ -51,7 +52,6 @@ interface Manifest {
   version: string;
 }
 
-export const CURRENT_VERSION = "1.0.0";
 const MANIFEST_FILE = ".storyteller.json";
 
 export function createMigrationFacilitator(
@@ -81,7 +81,7 @@ export function createMigrationFacilitator(
         };
       }
 
-      if (manifestParse.value.version === CURRENT_VERSION) {
+      if (manifestParse.value.version === PROJECT_SCHEMA_VERSION) {
         return { status: "fresh", actions: [], warnings: [] };
       }
 
@@ -106,7 +106,7 @@ export function createMigrationFacilitator(
 
       const write = await fileSystem.writeFile(
         manifestPath,
-        JSON.stringify({ version: CURRENT_VERSION }, null, 2) + "\n",
+        JSON.stringify({ version: PROJECT_SCHEMA_VERSION }, null, 2) + "\n",
       );
       if (!write.ok) {
         return err({ code: write.error.code, message: write.error.message });
