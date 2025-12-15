@@ -1,5 +1,9 @@
 # street-storyteller
 
+![CI](https://github.com/nekowasabi/street-storyteller/actions/workflows/ci.yml/badge.svg)
+
+**Version**: 0.3.0 (CLI) / 1.0.0 (Project Schema)
+
 ## Description
 
 SaC(StoryWriting as Code).
@@ -13,8 +17,16 @@ Support for writing a story.
 git clone https://github.com/nekowasabi/street-storyteller.git
 cd street-storyteller
 
-# Build the executable
+# Build the executable (local ./storyteller)
 deno task build
+```
+
+Install to your PATH (builds via `deno compile`):
+
+```bash
+./scripts/install.sh
+# or
+./scripts/install.sh --prefix "$HOME/.local" --force
 ```
 
 ## Usage
@@ -22,6 +34,44 @@ deno task build
 `storyteller` is a command line tool for writing stories in a structured way.
 
 ### Commands
+
+#### MCP Server (Claude Desktop)
+
+Start an MCP (Model Context Protocol) server over stdio so Claude Desktop (and
+other MCP clients) can call storyteller tools/resources/prompts.
+
+```bash
+# Start with current directory as project root
+./storyteller mcp start --stdio
+
+# Start with an explicit project root
+./storyteller mcp start --stdio --path /path/to/story-project
+```
+
+Claude Desktop configuration example (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "storyteller": {
+      "command": "storyteller",
+      "args": ["mcp", "start", "--stdio"]
+    }
+  }
+}
+```
+
+The server exposes:
+
+- **Tools**: `meta_check`, `meta_generate`, `element_create`, `view_browser`,
+  `lsp_validate`, `lsp_find_references`
+- **Resources**: `storyteller://project`, `storyteller://characters`,
+  `storyteller://character/<id>`, `storyteller://settings`,
+  `storyteller://setting/<id>`
+- **Prompts**: `character_brainstorm`, `plot_suggestion`, `scene_improvement`,
+  `project_setup_wizard`, `chapter_review`, `consistency_fix`
+
+See `docs/mcp.md` for the API details (arguments, schemas, and examples).
 
 #### Generate Command
 
@@ -124,7 +174,40 @@ To install a local git pre-commit hook:
 # Show help
 ./storyteller help
 ./storyteller h
+
+# Show tool version
+./storyteller version
+
+# Check/apply project metadata updates
+./storyteller update --check
+./storyteller update --apply
+
+# Start the LSP server (stdio)
+./storyteller lsp start --stdio
 ```
+
+### Development
+
+```bash
+# Full quality gate (fmt/lint/test/coverage>=80%/meta:check)
+deno task check
+
+# Individual tasks
+deno task fmt:check    # Format check
+deno task lint         # Lint check
+deno task test         # Run tests
+deno task coverage     # Coverage check (threshold: 80%)
+deno task bench        # Run benchmarks
+
+# Build distributable artifacts (dist/)
+deno task cli:package
+```
+
+### Quality Gates
+
+- **Test Coverage**: Minimum 80% required (enforced by CI)
+- **Format/Lint**: `deno fmt --check` and `deno lint`
+- **Meta Check**: `storyteller meta check` for manuscripts
 
 ### Templates
 
@@ -225,18 +308,11 @@ deno run story.ts
 
 ## Development
 
-```bash
-# Run tests
-deno task test
+See [Development](#development) section above for available tasks.
 
+```bash
 # Show CLI help with verbose logging
 deno run main.ts --log-level debug help
-
-# Format code
-deno fmt
-
-# Lint code
-deno lint
 ```
 
 ## Misc
