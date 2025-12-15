@@ -142,9 +142,11 @@ storyteller:
 ---
 ```
 
-### LSPコメント形式
+### エンティティ参照
+storyteller LSPが自動検出するため、HTMLコメントは不要。
+
 ```markdown
-シンデレラ<!-- @cinderella:implicit confidence:0.95 -->にとって...
+シンデレラにとって...  ← LSPが自動的に「シンデレラ」を検出
 ```
 
 ### ステータス
@@ -152,7 +154,7 @@ storyteller:
 
 ### 備考
 - 4章すべてfrontmatter付きで作成
-- 各章にキャラクター・設定への参照とLSPコメントを含む
+- 各章にキャラクター・設定への参照を含む（LSPが自動検出）
 
 ---
 

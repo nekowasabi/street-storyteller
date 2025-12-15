@@ -1,4 +1,4 @@
-import type { Character } from "@storyteller/types/v2/character.ts";
+import type { Character } from "../../../../src/type/v2/character.ts";
 
 export const mainCharacter: Character = {
   id: "main_character",

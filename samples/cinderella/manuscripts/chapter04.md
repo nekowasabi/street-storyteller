@@ -18,13 +18,13 @@ storyteller:
 
 ## Scene 1
 
-王子<!-- @prince:implicit confidence:0.95 -->は、階段に残されたガラスの靴<!-- @glass_slipper:implicit confidence:0.90 -->を大切に持ち帰った。
+王子は、階段に残されたガラスの靴を大切に持ち帰った。
 
 「この靴の持ち主を必ず見つけ出す」
 
-国王<!-- @king:implicit confidence:0.90 -->も息子の決意を見て頷いた。
+国王も息子の決意を見て頷いた。
 
-「王国<!-- @kingdom:implicit confidence:0.85 -->中を探すがよい。その娘が見つかったら、すぐに城<!-- @castle:implicit confidence:0.85 -->へ連れてくるのだ」
+「王国中を探すがよい。その娘が見つかったら、すぐに城へ連れてくるのだ」
 
 ## Scene 2
 
@@ -36,7 +36,7 @@ storyteller:
 
 ## Scene 3
 
-継母<!-- @stepmother:implicit confidence:0.90 -->は娘たちに靴を試させた。
+継母は娘たちに靴を試させた。
 
 ドリゼラもアナスタシアも、必死に足を押し込もうとしたが、どうしても合わなかった。
 
@@ -44,7 +44,7 @@ storyteller:
 
 「いいえ、おりません」継母は即座に答えた。
 
-しかしその時、シンデレラ<!-- @cinderella:implicit confidence:0.95 -->が台所から現れた。
+しかしその時、シンデレラが台所から現れた。
 
 ## Scene 4
 
