@@ -61,73 +61,78 @@ src/lsp/
 
 ## 実装済み機能
 
+### 0. CLI統合
+
+| 機能             | コマンド                        | 状態    |
+| ---------------- | ------------------------------- | ------- |
+| LSPサーバー起動  | `storyteller lsp start --stdio` | ✅ 完了 |
+| エディタ設定生成 | `storyteller lsp install nvim   | vscode` |
+
 ### 1. LSPプロトコル基盤
 
-| 機能 | ファイル | 状態 |
-|------|----------|------|
-| JSON-RPC 2.0パース | `json_rpc.ts` | ✅ 完了 |
-| JSON-RPC 2.0シリアライズ | `json_rpc.ts` | ✅ 完了 |
-| バッチリクエスト | `json_rpc.ts` | ✅ 完了 |
+| 機能                     | ファイル       | 状態    |
+| ------------------------ | -------------- | ------- |
+| JSON-RPC 2.0パース       | `json_rpc.ts`  | ✅ 完了 |
+| JSON-RPC 2.0シリアライズ | `json_rpc.ts`  | ✅ 完了 |
+| バッチリクエスト         | `json_rpc.ts`  | ✅ 完了 |
 | Content-Lengthヘッダ処理 | `transport.ts` | ✅ 完了 |
-| UTF-8エンコーディング | `transport.ts` | ✅ 完了 |
+| UTF-8エンコーディング    | `transport.ts` | ✅ 完了 |
 
 ### 2. サーバー機能
 
-| 機能 | メソッド | 状態 |
-|------|----------|------|
-| initialize | `handleInitialize()` | ✅ 完了 |
-| initialized | 通知処理 | ✅ 完了 |
-| shutdown | `handleShutdown()` | ✅ 完了 |
-| textDocument/didOpen | `handleDidOpen()` | ✅ 完了 |
-| textDocument/didChange | `handleDidChange()` | ✅ 完了 |
-| textDocument/didClose | `handleDidClose()` | ✅ 完了 |
+| 機能                    | メソッド             | 状態    |
+| ----------------------- | -------------------- | ------- |
+| initialize              | `handleInitialize()` | ✅ 完了 |
+| initialized             | 通知処理             | ✅ 完了 |
+| shutdown                | `handleShutdown()`   | ✅ 完了 |
+| textDocument/didOpen    | `handleDidOpen()`    | ✅ 完了 |
+| textDocument/didChange  | `handleDidChange()`  | ✅ 完了 |
+| textDocument/didClose   | `handleDidClose()`   | ✅ 完了 |
 | textDocument/definition | `handleDefinition()` | ✅ 完了 |
-| textDocument/hover | `handleHover()` | ✅ 完了 |
+| textDocument/hover      | `handleHover()`      | ✅ 完了 |
 
 ### 3. 検出機能
 
-| 機能 | 説明 | 状態 |
-|------|------|------|
-| 名前検出（name） | 内部ID名での検出（信頼度: 1.0） | ✅ 完了 |
+| 機能                       | 説明                                | 状態    |
+| -------------------------- | ----------------------------------- | ------- |
+| 名前検出（name）           | 内部ID名での検出（信頼度: 1.0）     | ✅ 完了 |
 | 表示名検出（displayNames） | 原稿で使用される名前（信頼度: 0.9） | ✅ 完了 |
-| 別名検出（aliases） | 別名・愛称（信頼度: 0.8） | ✅ 完了 |
-| 助詞パターン | は/が/を/に/の/と/で/へ の8種類 | ✅ 完了 |
-| 除外パターン | 概念的使用の除外 | ✅ 完了 |
-| 位置追跡 | 行・列位置の計算（UTF-16単位） | ✅ 完了 |
+| 別名検出（aliases）        | 別名・愛称（信頼度: 0.8）           | ✅ 完了 |
+| 助詞パターン               | は/が/を/に/の/と/で/へ の8種類     | ✅ 完了 |
+| 除外パターン               | 概念的使用の除外                    | ✅ 完了 |
+| 位置追跡                   | 行・列位置の計算（UTF-16単位）      | ✅ 完了 |
 
 ### 4. 診断機能
 
-| 機能 | 説明 | 状態 |
-|------|------|------|
-| 未定義参照警告 | 定義されていないエンティティの警告 | ✅ 完了 |
+| 機能           | 説明                                  | 状態    |
+| -------------- | ------------------------------------- | ------- |
+| 未定義参照警告 | 定義されていないエンティティの警告    | ✅ 完了 |
 | 低信頼度ヒント | 信頼度0.7未満でWarning、0.9未満でHint | ✅ 完了 |
-| デバウンス | 連続編集時の発行間引き | ✅ 完了 |
+| デバウンス     | 連続編集時の発行間引き                | ✅ 完了 |
 
 ## 未実装機能
 
 ### 高優先度（MVP拡張）
 
-| 機能 | 説明 | 関連Issue |
-|------|------|-----------|
-| CLIコマンド | `storyteller lsp start --stdio` | #3 |
-| neovim設定生成 | `storyteller lsp install nvim` | #3 |
-| Code Action | 暗示的→明示的参照変換 | #3 |
+| 機能        | 説明                  | 関連Issue |
+| ----------- | --------------------- | --------- |
+| Code Action | 暗示的→明示的参照変換 | #3        |
 
 ### 中優先度
 
-| 機能 | 説明 | 関連Issue |
-|------|------|-----------|
-| 代名詞解決 | 「彼」「彼女」等の代名詞検出 | #3 |
-| References Provider | 参照箇所検索 | #3 |
-| 補完機能 | textDocument/completion | #3 |
-| ファイル監視 | storyteller lsp watch | #3 |
+| 機能                | 説明                         | 関連Issue |
+| ------------------- | ---------------------------- | --------- |
+| 代名詞解決          | 「彼」「彼女」等の代名詞検出 | #3        |
+| References Provider | 参照箇所検索                 | #3        |
+| 補完機能            | textDocument/completion      | #3        |
+| ファイル監視        | storyteller lsp watch        | #3        |
 
 ### 低優先度
 
-| 機能 | 説明 | 関連Issue |
-|------|------|-----------|
-| VSCode拡張 | VSCode Language Server Extension | #3 |
-| AI文脈解析 | LLMによる高度な文脈解析 | #3 |
+| 機能       | 説明                             | 関連Issue |
+| ---------- | -------------------------------- | --------- |
+| VSCode拡張 | VSCode Language Server Extension | #3        |
+| AI文脈解析 | LLMによる高度な文脈解析          | #3        |
 
 ## 信頼度システム
 
@@ -136,9 +141,9 @@ src/lsp/
 ```typescript
 // 検出方法による基本信頼度
 const BASE_CONFIDENCE = {
-  name: 1.0,         // 内部ID名での完全一致
+  name: 1.0, // 内部ID名での完全一致
   displayNames: 0.9, // 表示名での一致
-  aliases: 0.8,      // 別名での一致
+  aliases: 0.8, // 別名での一致
 };
 
 // 文脈による補正
@@ -150,8 +155,8 @@ const BASE_CONFIDENCE = {
 
 ```typescript
 const CONFIDENCE_THRESHOLD = {
-  WARNING: 0.7,  // これ未満でWarning
-  HINT: 0.9,     // これ未満でHint（WARNING以上）
+  WARNING: 0.7, // これ未満でWarning
+  HINT: 0.9, // これ未満でHint（WARNING以上）
 };
 ```
 
@@ -171,15 +176,15 @@ Hint: 「英雄」は「hero」として検出されました (85%)。
 
 ```typescript
 interface DetectableEntity {
-  kind: "character" | "setting";      // エンティティ種別
-  id: string;                          // 内部ID
-  filePath: string;                    // 定義ファイルパス
-  patterns: PatternDefinition[];       // 検出パターン
+  kind: "character" | "setting"; // エンティティ種別
+  id: string; // 内部ID
+  filePath: string; // 定義ファイルパス
+  patterns: PatternDefinition[]; // 検出パターン
 }
 
 interface PatternDefinition {
-  pattern: string;                     // 正規表現パターン
-  confidence: number;                  // 基本信頼度
+  pattern: string; // 正規表現パターン
+  confidence: number; // 基本信頼度
 }
 ```
 
@@ -190,13 +195,13 @@ interface PositionedMatch {
   kind: "character" | "setting";
   id: string;
   filePath: string;
-  matchedPattern: string;              // マッチしたパターン
-  positions: Position[];               // 出現位置リスト
-  confidence: number;                  // 信頼度
+  matchedPattern: string; // マッチしたパターン
+  positions: Position[]; // 出現位置リスト
+  confidence: number; // 信頼度
 }
 
 interface Position {
-  line: number;      // 0-indexed
+  line: number; // 0-indexed
   character: number; // UTF-16コードユニット
 }
 ```
@@ -208,7 +213,7 @@ interface EntityInfo {
   id: string;
   name: string;
   kind: "character" | "setting";
-  role?: string;                       // protagonist, antagonist等
+  role?: string; // protagonist, antagonist等
   summary?: string;
   traits?: string[];
   relationships?: Record<string, string>;
@@ -306,19 +311,22 @@ private createNewDiagnostic(match: PositionedMatch): Diagnostic {
 // src/type/v2/character.ts の Character型を参照
 // LSPで使用する場合は DetectableEntity に変換
 
-function characterToEntity(char: Character, filePath: string): DetectableEntity {
+function characterToEntity(
+  char: Character,
+  filePath: string,
+): DetectableEntity {
   const patterns: PatternDefinition[] = [];
 
   // name（信頼度1.0）
   patterns.push({ pattern: char.name, confidence: 1.0 });
 
   // displayNames（信頼度0.9）
-  char.displayNames?.forEach(name => {
+  char.displayNames?.forEach((name) => {
     patterns.push({ pattern: name, confidence: 0.9 });
   });
 
   // aliases（信頼度0.8）
-  char.aliases?.forEach(alias => {
+  char.aliases?.forEach((alias) => {
     patterns.push({ pattern: alias, confidence: 0.8 });
   });
 
@@ -357,8 +365,7 @@ function calculateColumn(line: string, byteOffset: number): number {
 
 ### 2. デバウンス処理
 
-診断発行はデバウンスされています。
-連続編集時にパフォーマンスを維持するため、
+診断発行はデバウンスされています。 連続編集時にパフォーマンスを維持するため、
 `DiagnosticsPublisher.publishDebounced()` を使用してください。
 
 ### 3. テストデータの準備
@@ -385,11 +392,13 @@ const server = new LspServer(transport, projectRoot, { entities });
 ## 関連ドキュメント
 
 - [PLAN.md](../PLAN.md) - 実装計画（process1-10）
-- [Issue #3](https://github.com/nekowasabi/street-storyteller/issues/3) - GitHub Issue
+- [Issue #3](https://github.com/nekowasabi/street-storyteller/issues/3) - GitHub
+  Issue
 - [meta-generate.md](./meta-generate.md) - メタデータ生成機能
 
 ## 変更履歴
 
-| 日付 | 内容 |
-|------|------|
+| 日付       | 内容                        |
+| ---------- | --------------------------- |
 | 2024-12-14 | 初版作成（MVP実装完了時点） |
+| 2025-12-15 | Phase 5 完了時点の更新      |
