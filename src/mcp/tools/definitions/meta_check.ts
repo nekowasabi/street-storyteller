@@ -12,13 +12,15 @@ import { MetaCheckCommand } from "../../../cli/modules/meta/check.ts";
  */
 export const metaCheckTool: McpToolDefinition = {
   name: "meta_check",
-  description: "原稿ファイルのメタデータ整合性を検証します。指定されたMarkdownファイルまたはディレクトリ内のファイルに対してメタデータ生成が可能かを確認します。",
+  description:
+    "原稿ファイルのメタデータ整合性を検証します。指定されたMarkdownファイルまたはディレクトリ内のファイルに対してメタデータ生成が可能かを確認します。",
   inputSchema: {
     type: "object",
     properties: {
       path: {
         type: "string",
-        description: "検証するMarkdownファイルのパス（例: manuscripts/chapter01.md）",
+        description:
+          "検証するMarkdownファイルのパス（例: manuscripts/chapter01.md）",
       },
       dir: {
         type: "string",
@@ -26,19 +28,23 @@ export const metaCheckTool: McpToolDefinition = {
       },
       recursive: {
         type: "boolean",
-        description: "--dirと組み合わせて使用。サブディレクトリを再帰的に検索する場合はtrue",
+        description:
+          "--dirと組み合わせて使用。サブディレクトリを再帰的に検索する場合はtrue",
       },
       characters: {
         type: "string",
-        description: "検証に含めるキャラクターIDのカンマ区切りリスト（例: hero,heroine）",
+        description:
+          "検証に含めるキャラクターIDのカンマ区切りリスト（例: hero,heroine）",
       },
       settings: {
         type: "string",
-        description: "検証に含める設定IDのカンマ区切りリスト（例: kingdom,forest）",
+        description:
+          "検証に含める設定IDのカンマ区切りリスト（例: kingdom,forest）",
       },
       preset: {
         type: "string",
-        description: "検証プリセット（battle-scene, romance-scene, dialogue, exposition）",
+        description:
+          "検証プリセット（battle-scene, romance-scene, dialogue, exposition）",
       },
     },
   },
@@ -52,7 +58,8 @@ export const metaCheckTool: McpToolDefinition = {
         content: [
           {
             type: "text" as const,
-            text: "Error: Either 'path' or 'dir' parameter is required. Use 'path' for a single file or 'dir' for a directory.",
+            text:
+              "Error: Either 'path' or 'dir' parameter is required. Use 'path' for a single file or 'dir' for a directory.",
           },
         ],
         isError: true,

@@ -4,9 +4,9 @@
  */
 
 import type {
-  McpTool,
-  McpInputSchema,
   McpCallToolResult,
+  McpInputSchema,
+  McpTool,
   McpToolResultContent,
 } from "../protocol/types.ts";
 
@@ -94,7 +94,9 @@ export class ToolRegistry {
         content: [
           {
             type: "text",
-            text: `Error executing tool ${name}: ${error instanceof Error ? error.message : String(error)}`,
+            text: `Error executing tool ${name}: ${
+              error instanceof Error ? error.message : String(error)
+            }`,
           } as McpToolResultContent,
         ],
         isError: true,

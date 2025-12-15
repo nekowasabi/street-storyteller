@@ -12,29 +12,35 @@ import { MetaGenerateCommand } from "../../../cli/modules/meta/generate.ts";
  */
 export const metaGenerateTool: McpToolDefinition = {
   name: "meta_generate",
-  description: "原稿（Markdownファイル）からメタデータファイル（.meta.ts）を生成します。キャラクターや設定の参照を自動検出し、チャプターのメタデータを作成します。",
+  description:
+    "原稿（Markdownファイル）からメタデータファイル（.meta.ts）を生成します。キャラクターや設定の参照を自動検出し、チャプターのメタデータを作成します。",
   inputSchema: {
     type: "object",
     properties: {
       path: {
         type: "string",
-        description: "対象のMarkdownファイルパス（例: manuscripts/chapter01.md）",
+        description:
+          "対象のMarkdownファイルパス（例: manuscripts/chapter01.md）",
       },
       dir: {
         type: "string",
-        description: "対象のディレクトリパス。ディレクトリ内のすべての.mdファイルを処理（例: manuscripts）",
+        description:
+          "対象のディレクトリパス。ディレクトリ内のすべての.mdファイルを処理（例: manuscripts）",
       },
       recursive: {
         type: "boolean",
-        description: "--dirと組み合わせて使用。サブディレクトリを再帰的に検索する場合はtrue",
+        description:
+          "--dirと組み合わせて使用。サブディレクトリを再帰的に検索する場合はtrue",
       },
       preview: {
         type: "boolean",
-        description: "検出されたエンティティとメタデータのプレビューを表示。ファイルは書き込まない",
+        description:
+          "検出されたエンティティとメタデータのプレビューを表示。ファイルは書き込まない",
       },
       dryRun: {
         type: "boolean",
-        description: "メタデータを生成するが、出力ファイルは書き込まない（プレビュー確認用）",
+        description:
+          "メタデータを生成するが、出力ファイルは書き込まない（プレビュー確認用）",
       },
       force: {
         type: "boolean",
@@ -42,7 +48,8 @@ export const metaGenerateTool: McpToolDefinition = {
       },
       update: {
         type: "boolean",
-        description: "既存ファイルの自動生成ブロックのみを更新（手動編集部分を保持）",
+        description:
+          "既存ファイルの自動生成ブロックのみを更新（手動編集部分を保持）",
       },
       output: {
         type: "string",
@@ -50,15 +57,18 @@ export const metaGenerateTool: McpToolDefinition = {
       },
       characters: {
         type: "string",
-        description: "検出に含めるキャラクターIDのカンマ区切りリスト（frontmatterを上書き）",
+        description:
+          "検出に含めるキャラクターIDのカンマ区切りリスト（frontmatterを上書き）",
       },
       settings: {
         type: "string",
-        description: "検出に含める設定IDのカンマ区切りリスト（frontmatterを上書き）",
+        description:
+          "検出に含める設定IDのカンマ区切りリスト（frontmatterを上書き）",
       },
       preset: {
         type: "string",
-        description: "検証プリセット（battle-scene, romance-scene, dialogue, exposition）",
+        description:
+          "検証プリセット（battle-scene, romance-scene, dialogue, exposition）",
       },
     },
   },
@@ -72,7 +82,8 @@ export const metaGenerateTool: McpToolDefinition = {
         content: [
           {
             type: "text" as const,
-            text: "Error: Either 'path' or 'dir' parameter is required. Use 'path' for a single file or 'dir' for a directory.",
+            text:
+              "Error: Either 'path' or 'dir' parameter is required. Use 'path' for a single file or 'dir' for a directory.",
           },
         ],
         isError: true,

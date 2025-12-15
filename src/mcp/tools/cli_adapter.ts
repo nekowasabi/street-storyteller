@@ -6,12 +6,20 @@
 import type {
   CommandContext,
   CommandHandler,
-  OutputPresenter,
   ConfigurationManagerRef,
+  OutputPresenter,
 } from "../../cli/types.ts";
-import type { Logger, LogLevel, LogMetadata, LogContext } from "../../shared/logging/types.ts";
+import type {
+  LogContext,
+  Logger,
+  LogLevel,
+  LogMetadata,
+} from "../../shared/logging/types.ts";
 import type { AppConfig } from "../../shared/config/schema.ts";
-import type { McpCallToolResult, McpToolResultContent } from "../protocol/types.ts";
+import type {
+  McpCallToolResult,
+  McpToolResultContent,
+} from "../protocol/types.ts";
 
 /**
  * 出力をキャプチャするモックPresenter
@@ -70,7 +78,11 @@ const mockConfigManager: ConfigurationManagerRef = {
  */
 const mockLogger: Logger = {
   scope: "mcp",
-  log: (_level: LogLevel, _message: string, _metadata?: LogMetadata): void => {},
+  log: (
+    _level: LogLevel,
+    _message: string,
+    _metadata?: LogMetadata,
+  ): void => {},
   trace: (_message: string, _metadata?: LogMetadata): void => {},
   debug: (_message: string, _metadata?: LogMetadata): void => {},
   info: (_message: string, _metadata?: LogMetadata): void => {},
