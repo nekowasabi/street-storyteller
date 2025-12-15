@@ -16,7 +16,8 @@ Issue #3で実装されたLanguage Server Protocol (LSP) 統合機能のドキ�
 ├─────────────────────────────────────────────────────────┤
 │  Providers              │  Diagnostics                  │
 │  ├─ DefinitionProvider  │  ├─ DiagnosticsGenerator     │
-│  └─ HoverProvider       │  └─ DiagnosticsPublisher     │
+│  ├─ HoverProvider       │  └─ DiagnosticsPublisher     │
+│  └─ CodeActionProvider  │                              │
 ├─────────────────────────────────────────────────────────┤
 │  Detection              │  Handlers                     │
 │  ├─ PositionedDetector  │  └─ TextDocumentSyncHandler  │
@@ -56,7 +57,8 @@ src/lsp/
 │   └── diagnostics_publisher.ts  # 診断発行（デバウンス付き）
 └── providers/          # LSPプロバイダー
     ├── definition_provider.ts  # textDocument/definition
-    └── hover_provider.ts       # textDocument/hover
+    ├── hover_provider.ts       # textDocument/hover
+    └── code_action_provider.ts # textDocument/codeAction (v1.0新規)
 ```
 
 ## 実装済み機能
@@ -90,6 +92,7 @@ src/lsp/
 | textDocument/didClose   | `handleDidClose()`   | ✅ 完了 |
 | textDocument/definition | `handleDefinition()` | ✅ 完了 |
 | textDocument/hover      | `handleHover()`      | ✅ 完了 |
+| textDocument/codeAction | `handleCodeAction()` | ✅ 完了 (v1.0) |
 
 ### 3. 検出機能
 
@@ -111,12 +114,6 @@ src/lsp/
 | デバウンス     | 連続編集時の発行間引き                | ✅ 完了 |
 
 ## 未実装機能
-
-### 高優先度（MVP拡張）
-
-| 機能        | 説明                  | 関連Issue |
-| ----------- | --------------------- | --------- |
-| Code Action | 暗示的→明示的参照変換 | #3        |
 
 ### 中優先度
 
