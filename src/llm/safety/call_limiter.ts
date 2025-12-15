@@ -4,7 +4,7 @@
  * API呼び出し回数を制限し、過剰な実行を防止する
  */
 
-import { ok, err } from "../../shared/result.ts";
+import { err, ok } from "../../shared/result.ts";
 import type { Result } from "../../shared/result.ts";
 
 /**
@@ -87,7 +87,8 @@ export class CallLimiter {
     if (this.callCount >= this.config.maxCalls) {
       return err({
         code: "call_limit_exceeded",
-        message: `API call limit exceeded: ${this.callCount}/${this.config.maxCalls} calls`,
+        message:
+          `API call limit exceeded: ${this.callCount}/${this.config.maxCalls} calls`,
         currentCount: this.callCount,
         maxCalls: this.config.maxCalls,
       });

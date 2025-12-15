@@ -22,7 +22,14 @@ export const chapter04Meta: ChapterMeta = {
   order: 4,
   // storyteller:auto:core:end
   // storyteller:auto:entities:start
-  characters: [cinderella, prince, stepmother, king, stepsister_younger, stepsister_elder],
+  characters: [
+    cinderella,
+    prince,
+    stepmother,
+    king,
+    stepsister_younger,
+    stepsister_elder,
+  ],
   settings: [kingdom, castle, glass_slipper, mansion],
   // storyteller:auto:entities:end
 
@@ -59,17 +66,22 @@ export const chapter04Meta: ChapterMeta = {
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("王国") || content.includes("フェアリーテイル") || content.includes("王都"),
+      validate: (content: string) =>
+        content.includes("王国") || content.includes("フェアリーテイル") ||
+        content.includes("王都"),
       message: "設定（kingdom）が章内に登場していません",
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("城") || content.includes("王城") || content.includes("お城"),
+      validate: (content: string) =>
+        content.includes("城") || content.includes("王城") ||
+        content.includes("お城"),
       message: "設定（castle）が章内に登場していません",
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("ガラスの靴") || content.includes("靴"),
+      validate: (content: string) =>
+        content.includes("ガラスの靴") || content.includes("靴"),
       message: "設定（glass_slipper）が章内に登場していません",
     },
     {

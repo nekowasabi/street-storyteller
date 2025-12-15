@@ -7,8 +7,8 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { ProjectAnalyzer } from "../../../src/application/view/project_analyzer.ts";
 import type {
-  TimelineSummary,
   EventSummary,
+  TimelineSummary,
 } from "../../../src/application/view/project_analyzer.ts";
 
 Deno.test("ProjectAnalyzer Timeline機能", async (t) => {
@@ -21,7 +21,8 @@ Deno.test("ProjectAnalyzer Timeline機能", async (t) => {
       const timelinesDir = `${tempDir}/src/timelines`;
       await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timelineContent = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timelineContent =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const main_story: Timeline = {
   "id": "main_story",
@@ -53,7 +54,10 @@ export const main_story: Timeline = {
   ]
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/main_story.ts`, timelineContent);
+      await Deno.writeTextFile(
+        `${timelinesDir}/main_story.ts`,
+        timelineContent,
+      );
 
       // プロジェクトを解析
       const result = await analyzer.analyzeProject(tempDir);
@@ -83,7 +87,8 @@ export const main_story: Timeline = {
       const timelinesDir = `${tempDir}/src/timelines`;
       await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timelineContent = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timelineContent =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const test_timeline: Timeline = {
   "id": "test_timeline",
@@ -106,7 +111,10 @@ export const test_timeline: Timeline = {
   ]
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/test_timeline.ts`, timelineContent);
+      await Deno.writeTextFile(
+        `${timelinesDir}/test_timeline.ts`,
+        timelineContent,
+      );
 
       const result = await analyzer.analyzeProject(tempDir);
 
@@ -171,24 +179,27 @@ export const test_timeline: Timeline = {
     }
   });
 
-  await t.step("タイムラインディレクトリが存在しない場合は空配列を返すこと", async () => {
-    const analyzer = new ProjectAnalyzer();
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "タイムラインディレクトリが存在しない場合は空配列を返すこと",
+    async () => {
+      const analyzer = new ProjectAnalyzer();
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      // timelinesディレクトリを作成しない
+      try {
+        // timelinesディレクトリを作成しない
 
-      const result = await analyzer.analyzeProject(tempDir);
+        const result = await analyzer.analyzeProject(tempDir);
 
-      assertEquals(result.ok, true);
-      if (result.ok) {
-        assertExists(result.value.timelines);
-        assertEquals(result.value.timelines.length, 0);
+        assertEquals(result.ok, true);
+        if (result.ok) {
+          assertExists(result.value.timelines);
+          assertEquals(result.value.timelines.length, 0);
+        }
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
       }
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+    },
+  );
 
   await t.step("親子タイムライン関係が読み込めること", async () => {
     const analyzer = new ProjectAnalyzer();
@@ -208,7 +219,10 @@ export const test_timeline: Timeline = {
   "relatedCharacter": "hero"
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/hero_journey.ts`, timelineContent);
+      await Deno.writeTextFile(
+        `${timelinesDir}/hero_journey.ts`,
+        timelineContent,
+      );
 
       const result = await analyzer.analyzeProject(tempDir);
 

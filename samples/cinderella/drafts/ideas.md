@@ -2,13 +2,14 @@
 
 ## Initial Concept
 
-- Main idea: 
+- Main idea:
 - Inspiration:
 - Theme:
 
 ## Character Notes
 
 ### Main Character
+
 - Name:
 - Background:
 - Motivation:

@@ -7,7 +7,8 @@ import type { McpPromptDefinition } from "../prompt_registry.ts";
 
 export const timelineConsistencyCheckPrompt: McpPromptDefinition = {
   name: "timeline_consistency_check",
-  description: "タイムラインの整合性（時系列順序、因果関係、キャラクター配置など）をチェックします。",
+  description:
+    "タイムラインの整合性（時系列順序、因果関係、キャラクター配置など）をチェックします。",
   arguments: [
     {
       name: "timeline",
@@ -49,7 +50,8 @@ export const timelineConsistencyCheckPrompt: McpPromptDefinition = {
     return [
       {
         role: "system" as const,
-        content: `あなたは物語の整合性チェックの専門家です。タイムラインを詳細に分析し、問題点と改善案を提示してください。
+        content:
+          `あなたは物語の整合性チェックの専門家です。タイムラインを詳細に分析し、問題点と改善案を提示してください。
 チェック観点：
 - 時系列の論理性
 - 因果関係の整合性

@@ -8,27 +8,27 @@ import { Setting } from "../src/type/setting.ts";
 
 export class MyStory implements StoryTeller {
   purpose: Purpose = {
-    description: "Your story's main purpose here"
+    description: "Your story's main purpose here",
   };
 
   funs: Fun[] = [
-    { description: "Main entertainment element" }
+    { description: "Main entertainment element" },
   ];
 
   charcters: Character[] = [
-    { name: "Main character" }
+    { name: "Main character" },
   ];
 
   settings: Setting[] = [
-    { description: "Main setting" }
+    { description: "Main setting" },
   ];
 
   chapters: Chapter[] = [
-    { description: "Chapter 1" }
+    { description: "Chapter 1" },
   ];
 
   plots: Plot[] = [
-    { description: "Main plot" }
+    { description: "Main plot" },
   ];
 
   validate(): boolean {

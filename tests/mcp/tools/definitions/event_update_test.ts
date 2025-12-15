@@ -14,50 +14,62 @@ Deno.test("event_update MCPツール", async (t) => {
     assertExists(eventUpdateTool.description);
   });
 
-  await t.step("inputSchemaがtimelineId, eventIdをrequiredとしていること", () => {
-    const required = eventUpdateTool.inputSchema.required;
-    assertExists(required);
-    assertEquals(required.includes("timelineId"), true);
-    assertEquals(required.includes("eventId"), true);
-  });
+  await t.step(
+    "inputSchemaがtimelineId, eventIdをrequiredとしていること",
+    () => {
+      const required = eventUpdateTool.inputSchema.required;
+      assertExists(required);
+      assertEquals(required.includes("timelineId"), true);
+      assertEquals(required.includes("eventId"), true);
+    },
+  );
 
-  await t.step("execute()が必須パラメータ欠落時にエラーを返すこと", async () => {
-    // timelineIdがない
-    const result = await eventUpdateTool.execute(
-      { eventId: "event_1" },
-      { projectRoot: "/tmp" }
-    );
-    assertEquals(result.isError, true);
-  });
-
-  await t.step("タイムラインファイルが存在しない場合にエラーを返すこと", async () => {
-    const tempDir = await Deno.makeTempDir();
-
-    try {
+  await t.step(
+    "execute()が必須パラメータ欠落時にエラーを返すこと",
+    async () => {
+      // timelineIdがない
       const result = await eventUpdateTool.execute(
-        {
-          timelineId: "nonexistent_timeline",
-          eventId: "event_1",
-          title: "更新後タイトル",
-        },
-        { projectRoot: tempDir }
+        { eventId: "event_1" },
+        { projectRoot: "/tmp" },
       );
-
       assertEquals(result.isError, true);
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+    },
+  );
 
-  await t.step("存在しないイベントを更新しようとするとエラーを返すこと", async () => {
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "タイムラインファイルが存在しない場合にエラーを返すこと",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      // タイムラインファイルを作成
-      const timelinesDir = `${tempDir}/src/timelines`;
-      await Deno.mkdir(timelinesDir, { recursive: true });
+      try {
+        const result = await eventUpdateTool.execute(
+          {
+            timelineId: "nonexistent_timeline",
+            eventId: "event_1",
+            title: "更新後タイトル",
+          },
+          { projectRoot: tempDir },
+        );
 
-      const timelineContent = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+        assertEquals(result.isError, true);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
+
+  await t.step(
+    "存在しないイベントを更新しようとするとエラーを返すこと",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
+
+      try {
+        // タイムラインファイルを作成
+        const timelinesDir = `${tempDir}/src/timelines`;
+        await Deno.mkdir(timelinesDir, { recursive: true });
+
+        const timelineContent =
+          `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const test_timeline: Timeline = {
   "id": "test_timeline",
@@ -67,22 +79,26 @@ export const test_timeline: Timeline = {
   "events": []
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/test_timeline.ts`, timelineContent);
+        await Deno.writeTextFile(
+          `${timelinesDir}/test_timeline.ts`,
+          timelineContent,
+        );
 
-      const result = await eventUpdateTool.execute(
-        {
-          timelineId: "test_timeline",
-          eventId: "nonexistent_event",
-          title: "更新後タイトル",
-        },
-        { projectRoot: tempDir }
-      );
+        const result = await eventUpdateTool.execute(
+          {
+            timelineId: "test_timeline",
+            eventId: "nonexistent_event",
+            title: "更新後タイトル",
+          },
+          { projectRoot: tempDir },
+        );
 
-      assertEquals(result.isError, true);
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+        assertEquals(result.isError, true);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
 
   await t.step("既存のイベントを更新できること", async () => {
     const tempDir = await Deno.makeTempDir();
@@ -92,7 +108,8 @@ export const test_timeline: Timeline = {
       const timelinesDir = `${tempDir}/src/timelines`;
       await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timelineContent = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timelineContent =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const test_timeline: Timeline = {
   "id": "test_timeline",
@@ -113,7 +130,10 @@ export const test_timeline: Timeline = {
   ]
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/test_timeline.ts`, timelineContent);
+      await Deno.writeTextFile(
+        `${timelinesDir}/test_timeline.ts`,
+        timelineContent,
+      );
 
       const result = await eventUpdateTool.execute(
         {
@@ -122,7 +142,7 @@ export const test_timeline: Timeline = {
           title: "更新後タイトル",
           summary: "更新後の概要",
         },
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       if (result.isError && result.content[0]?.type === "text") {
@@ -132,7 +152,9 @@ export const test_timeline: Timeline = {
       assertEquals(result.isError, false);
 
       // ファイルが更新されたことを確認
-      const updatedContent = await Deno.readTextFile(`${timelinesDir}/test_timeline.ts`);
+      const updatedContent = await Deno.readTextFile(
+        `${timelinesDir}/test_timeline.ts`,
+      );
       assertEquals(updatedContent.includes("更新後タイトル"), true);
       assertEquals(updatedContent.includes("更新後の概要"), true);
     } finally {

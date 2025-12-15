@@ -72,7 +72,8 @@ export class LspValidateCommand extends BaseCliCommand {
     if (!filePath || typeof filePath !== "string" || filePath.trim() === "") {
       return err({
         code: "invalid_arguments",
-        message: "A file path is required. Usage: storyteller lsp validate --file <path>",
+        message:
+          "A file path is required. Usage: storyteller lsp validate --file <path>",
       });
     }
 
@@ -219,21 +220,29 @@ export class LspValidateCommand extends BaseCliCommand {
  */
 function renderLspValidateHelp(): string {
   const lines: string[] = [];
-  lines.push("lsp validate — Validate a manuscript file for entity references.");
+  lines.push(
+    "lsp validate — Validate a manuscript file for entity references.",
+  );
   lines.push("");
   lines.push("Usage:");
   lines.push("  storyteller lsp validate --file <path> [options]");
   lines.push("");
   lines.push("Options:");
-  lines.push("  --file <path>  Path to the manuscript file to validate (required)");
-  lines.push("  --path <dir>   Project root directory (default: current directory)");
+  lines.push(
+    "  --file <path>  Path to the manuscript file to validate (required)",
+  );
+  lines.push(
+    "  --path <dir>   Project root directory (default: current directory)",
+  );
   lines.push("  --json         Output results as JSON");
   lines.push("  --help, -h     Show this help message");
   lines.push("");
   lines.push("Examples:");
   lines.push("  storyteller lsp validate --file manuscripts/chapter01.md");
   lines.push("  storyteller lsp validate --file chapter.md --json");
-  lines.push("  storyteller lsp validate --file chapter.md --path /path/to/project");
+  lines.push(
+    "  storyteller lsp validate --file chapter.md --path /path/to/project",
+  );
   return lines.join("\n");
 }
 

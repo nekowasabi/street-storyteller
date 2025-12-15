@@ -158,9 +158,7 @@ Deno.test("element command: コマンドグループが登録される", () => {
   registerCoreModules(registry);
 
   const snapshot = registry.snapshot();
-  const elementCommand = snapshot.children.find((c) =>
-    c.name === "element"
-  );
+  const elementCommand = snapshot.children.find((c) => c.name === "element");
   assertExists(elementCommand, "element command should be registered");
 });
 
@@ -286,8 +284,16 @@ Deno.test("ElementCharacterCommand - ファイルが実際に作成される", a
 
       // ファイル内容にキャラクター情報が含まれる
       const content = await Deno.readTextFile(fullPath);
-      assertEquals(content.includes("test_hero"), true, "Content should include character id");
-      assertEquals(content.includes("protagonist"), true, "Content should include role");
+      assertEquals(
+        content.includes("test_hero"),
+        true,
+        "Content should include character id",
+      );
+      assertEquals(
+        content.includes("protagonist"),
+        true,
+        "Content should include role",
+      );
     }
   } finally {
     await Deno.remove(testDir, { recursive: true });
@@ -324,8 +330,16 @@ Deno.test("ElementSettingCommand - ファイルが実際に作成される", asy
 
       // ファイル内容にSetting情報が含まれる
       const content = await Deno.readTextFile(fullPath);
-      assertEquals(content.includes("test_kingdom"), true, "Content should include setting id");
-      assertEquals(content.includes("location"), true, "Content should include type");
+      assertEquals(
+        content.includes("test_kingdom"),
+        true,
+        "Content should include setting id",
+      );
+      assertEquals(
+        content.includes("location"),
+        true,
+        "Content should include type",
+      );
     }
   } finally {
     await Deno.remove(testDir, { recursive: true });

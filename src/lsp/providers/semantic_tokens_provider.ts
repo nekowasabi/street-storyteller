@@ -10,8 +10,8 @@ import {
 } from "../detection/positioned_detector.ts";
 import type { Range, SemanticTokens } from "./lsp_types.ts";
 import {
-  SEMANTIC_TOKEN_TYPES,
   SEMANTIC_TOKEN_MODIFIERS,
+  SEMANTIC_TOKEN_TYPES,
 } from "../server/capabilities.ts";
 
 /**

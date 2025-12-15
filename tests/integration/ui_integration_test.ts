@@ -19,8 +19,14 @@ Deno.test("UI Integration - System Prompts Documentation", async (t) => {
     assertEquals(existsSync(path), true, `${path} should exist`);
 
     const content = await Deno.readTextFile(path);
-    assertExists(content.match(/SaC.*StoryWriting as Code/i), "Should mention SaC concept");
-    assertExists(content.match(/参照システム/), "Should describe reference system");
+    assertExists(
+      content.match(/SaC.*StoryWriting as Code/i),
+      "Should mention SaC concept",
+    );
+    assertExists(
+      content.match(/参照システム/),
+      "Should describe reference system",
+    );
   });
 
   await t.step("director.md exists and has required sections", async () => {
@@ -28,8 +34,14 @@ Deno.test("UI Integration - System Prompts Documentation", async (t) => {
     assertEquals(existsSync(path), true, `${path} should exist`);
 
     const content = await Deno.readTextFile(path);
-    assertExists(content.match(/ディレクター/), "Should describe director role");
-    assertExists(content.match(/回答フォーマット|応答フォーマット/), "Should have response format");
+    assertExists(
+      content.match(/ディレクター/),
+      "Should describe director role",
+    );
+    assertExists(
+      content.match(/回答フォーマット|応答フォーマット/),
+      "Should have response format",
+    );
   });
 
   await t.step("claude-desktop.md exists", async () => {
@@ -47,7 +59,10 @@ Deno.test("UI Integration - System Prompts Documentation", async (t) => {
 
     const content = await Deno.readTextFile(path);
     assertExists(content.match(/CLI/), "Should mention CLI");
-    assertExists(content.match(/storyteller/), "Should mention storyteller command");
+    assertExists(
+      content.match(/storyteller/),
+      "Should mention storyteller command",
+    );
   });
 
   await t.step("neovim.md exists", async () => {
@@ -56,7 +71,10 @@ Deno.test("UI Integration - System Prompts Documentation", async (t) => {
 
     const content = await Deno.readTextFile(path);
     assertExists(content.match(/Denops/i), "Should mention Denops");
-    assertExists(content.match(/StoryDirector/), "Should describe StoryDirector command");
+    assertExists(
+      content.match(/StoryDirector/),
+      "Should describe StoryDirector command",
+    );
   });
 });
 
@@ -97,7 +115,10 @@ Deno.test("UI Integration - Claude Code Slash Commands", async (t) => {
     assertEquals(existsSync(path), true, `${path} should exist`);
 
     const content = await Deno.readTextFile(path);
-    assertExists(content.match(/ディレクター/), "Should describe director role");
+    assertExists(
+      content.match(/ディレクター/),
+      "Should describe director role",
+    );
   });
 
   await t.step("story-check.md exists", async () => {
@@ -105,7 +126,10 @@ Deno.test("UI Integration - Claude Code Slash Commands", async (t) => {
     assertEquals(existsSync(path), true, `${path} should exist`);
 
     const content = await Deno.readTextFile(path);
-    assertExists(content.match(/lsp.*validate/i), "Should mention lsp validate");
+    assertExists(
+      content.match(/lsp.*validate/i),
+      "Should mention lsp validate",
+    );
   });
 
   await t.step("story-char.md exists", async () => {
@@ -130,7 +154,9 @@ Deno.test("UI Integration - Claude Code Slash Commands", async (t) => {
 // =============================================================================
 
 Deno.test("UI Integration - Denops Plugin Structure", async (t) => {
-  const pluginDir = `${Deno.env.get("HOME")}/.config/nvim/plugged/street-storyteller.vim`;
+  const pluginDir = `${
+    Deno.env.get("HOME")
+  }/.config/nvim/plugged/street-storyteller.vim`;
 
   await t.step("plugin directory exists", () => {
     assertEquals(existsSync(pluginDir), true, `${pluginDir} should exist`);
@@ -188,22 +214,25 @@ Deno.test("UI Integration - Denops Plugin Structure", async (t) => {
 // =============================================================================
 
 Deno.test("UI Integration - Consistent Concepts Across UIs", async (t) => {
-  await t.step("Director concept is consistent across all prompts", async () => {
-    const files = [
-      "docs/prompts/director.md",
-      "docs/prompts/claude-desktop.md",
-      "docs/prompts/neovim.md",
-    ];
+  await t.step(
+    "Director concept is consistent across all prompts",
+    async () => {
+      const files = [
+        "docs/prompts/director.md",
+        "docs/prompts/claude-desktop.md",
+        "docs/prompts/neovim.md",
+      ];
 
-    for (const file of files) {
-      const content = await Deno.readTextFile(file);
-      // ディレクターの概念が各ファイルで言及されている
-      assertExists(
-        content.match(/ディレクター|Director/i),
-        `${file} should mention Director concept`,
-      );
-    }
-  });
+      for (const file of files) {
+        const content = await Deno.readTextFile(file);
+        // ディレクターの概念が各ファイルで言及されている
+        assertExists(
+          content.match(/ディレクター|Director/i),
+          `${file} should mention Director concept`,
+        );
+      }
+    },
+  );
 
   await t.step("SaC concept is mentioned in core documentation", async () => {
     const coreContent = await Deno.readTextFile("docs/prompts/core.md");

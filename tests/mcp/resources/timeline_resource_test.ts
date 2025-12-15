@@ -26,7 +26,8 @@ Deno.test("ProjectResourceProvider: timelines一覧リソースを含む", async
     const timelinesDir = `${tempDir}/src/timelines`;
     await Deno.mkdir(timelinesDir, { recursive: true });
 
-    const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+    const timeline =
+      `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const main_story: Timeline = {
   "id": "main_story",
@@ -42,11 +43,15 @@ export const main_story: Timeline = {
     const resources = await provider.listResources();
 
     // timelines一覧リソースが含まれること
-    const timelinesResource = resources.find(r => r.uri === "storyteller://timelines");
+    const timelinesResource = resources.find((r) =>
+      r.uri === "storyteller://timelines"
+    );
     assertExists(timelinesResource, "timelines resource should exist");
 
     // 個別timelineリソースが含まれること
-    const timelineResource = resources.find(r => r.uri === "storyteller://timeline/main_story");
+    const timelineResource = resources.find((r) =>
+      r.uri === "storyteller://timeline/main_story"
+    );
     assertExists(timelineResource, "individual timeline resource should exist");
   } finally {
     await Deno.remove(tempDir, { recursive: true });
@@ -60,7 +65,8 @@ Deno.test("ProjectResourceProvider: timelines一覧を読み取れる", async ()
     const timelinesDir = `${tempDir}/src/timelines`;
     await Deno.mkdir(timelinesDir, { recursive: true });
 
-    const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+    const timeline =
+      `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const test_timeline: Timeline = {
   "id": "test_timeline",
@@ -91,7 +97,8 @@ Deno.test("ProjectResourceProvider: 個別timelineを読み取れる", async () 
     const timelinesDir = `${tempDir}/src/timelines`;
     await Deno.mkdir(timelinesDir, { recursive: true });
 
-    const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+    const timeline =
+      `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const main_story: Timeline = {
   "id": "main_story",
@@ -115,7 +122,9 @@ export const main_story: Timeline = {
     await Deno.writeTextFile(`${timelinesDir}/main_story.ts`, timeline);
 
     const provider = new ProjectResourceProvider(tempDir);
-    const content = await provider.readResource("storyteller://timeline/main_story");
+    const content = await provider.readResource(
+      "storyteller://timeline/main_story",
+    );
     const timeline_obj = JSON.parse(content);
 
     assertEquals(timeline_obj.id, "main_story");

@@ -21,7 +21,14 @@ export const chapter02Meta: ChapterMeta = {
   order: 2,
   // storyteller:auto:core:end
   // storyteller:auto:entities:start
-  characters: [cinderella, stepmother, stepsister_elder, stepsister_younger, fairy_godmother, prince],
+  characters: [
+    cinderella,
+    stepmother,
+    stepsister_elder,
+    stepsister_younger,
+    fairy_godmother,
+    prince,
+  ],
   settings: [mansion, magic_system, kingdom],
   // storyteller:auto:entities:end
 
@@ -58,12 +65,15 @@ export const chapter02Meta: ChapterMeta = {
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("屋敷") || content.includes("邸宅") || content.includes("お屋敷"),
+      validate: (content: string) =>
+        content.includes("屋敷") || content.includes("邸宅") ||
+        content.includes("お屋敷"),
       message: "設定（mansion）が章内に登場していません",
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("魔法") || content.includes("妖精魔法"),
+      validate: (content: string) =>
+        content.includes("魔法") || content.includes("妖精魔法"),
       message: "設定（magic_system）が章内に登場していません",
     },
     {

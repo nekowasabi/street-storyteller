@@ -3,7 +3,10 @@
  * 物語要素（キャラクター、設定等）を作成するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import { executeCliCommand } from "../cli_adapter.ts";
 import { ElementCharacterCommand } from "../../../cli/modules/element/character.ts";
 import { ElementSettingCommand } from "../../../cli/modules/element/setting.ts";
@@ -78,7 +81,10 @@ export const elementCreateTool: McpToolDefinition = {
     },
     required: ["type", "name"],
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     const type = args.type as string | undefined;
     const name = args.name as string | undefined;
     const projectRoot = context?.projectRoot;

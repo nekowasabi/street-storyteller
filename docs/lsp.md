@@ -36,18 +36,18 @@ storyteller lsp validate --dir manuscripts/ --recursive
 
 ### 1. テキストドキュメント同期
 
-| メソッド | 説明 |
-|---------|------|
-| `textDocument/didOpen` | ドキュメントを開いた時 |
+| メソッド                 | 説明                       |
+| ------------------------ | -------------------------- |
+| `textDocument/didOpen`   | ドキュメントを開いた時     |
 | `textDocument/didChange` | ドキュメントが変更された時 |
-| `textDocument/didClose` | ドキュメントを閉じた時 |
+| `textDocument/didClose`  | ドキュメントを閉じた時     |
 
 ### 2. 定義ジャンプ（Definition）
 
 原稿内のエンティティ参照から、定義ファイルへジャンプできます。
 
 ```markdown
-勇者は剣を抜いた。  ← カーソルを置いてGo to Definition
+勇者は剣を抜いた。 ← カーソルを置いてGo to Definition
 ```
 
 ↓ ジャンプ先
@@ -76,11 +76,11 @@ export const hero: Character = {
 
 リアルタイムで参照の整合性をチェックします。
 
-| レベル | 条件 | 説明 |
-|--------|------|------|
-| Warning | 信頼度 < 70% | 曖昧な参照 |
-| Hint | 信頼度 < 90% | 明示的参照の推奨 |
-| Information | - | 検出された参照 |
+| レベル      | 条件         | 説明             |
+| ----------- | ------------ | ---------------- |
+| Warning     | 信頼度 < 70% | 曖昧な参照       |
+| Hint        | 信頼度 < 90% | 明示的参照の推奨 |
+| Information | -            | 検出された参照   |
 
 ### 5. Code Action（v1.0新機能）
 
@@ -94,11 +94,11 @@ export const hero: Character = {
 
 #### 対象となる参照
 
-| 検出方法 | 信頼度 | Code Action |
-|----------|--------|-------------|
-| name（内部ID） | 1.0 | 対象外 |
-| displayNames | 0.9 | 対象外 |
-| aliases | 0.8 | 対象（Quick Fix提案） |
+| 検出方法       | 信頼度 | Code Action           |
+| -------------- | ------ | --------------------- |
+| name（内部ID） | 1.0    | 対象外                |
+| displayNames   | 0.9    | 対象外                |
+| aliases        | 0.8    | 対象（Quick Fix提案） |
 
 #### 使用例
 
@@ -109,9 +109,11 @@ export const hero: Character = {
 
 ```markdown
 <!-- 変換前 -->
+
 勇者は剣を抜いた。
 
 <!-- 変換後 -->
+
 @heroは剣を抜いた。
 ```
 
@@ -127,25 +129,25 @@ export const hero: Character = {
 
 #### トークンタイプ
 
-| トークンタイプ | 対象 | 例 |
-|--------------|------|-----|
-| `character` | キャラクター名（name, displayNames, aliases） | 勇者、姫、主人公 |
-| `setting` | 設定名（name, displayNames） | 城、王都、魔法の森 |
+| トークンタイプ | 対象                                          | 例                 |
+| -------------- | --------------------------------------------- | ------------------ |
+| `character`    | キャラクター名（name, displayNames, aliases） | 勇者、姫、主人公   |
+| `setting`      | 設定名（name, displayNames）                  | 城、王都、魔法の森 |
 
 #### 信頼度モディファイア
 
-| モディファイア | 条件 | 推奨スタイル |
-|---------------|------|-------------|
-| `highConfidence` | 信頼度 >= 90% | 通常色 |
-| `mediumConfidence` | 70% <= 信頼度 < 90% | 薄め |
-| `lowConfidence` | 信頼度 < 70% | 点線下線 |
+| モディファイア     | 条件                | 推奨スタイル |
+| ------------------ | ------------------- | ------------ |
+| `highConfidence`   | 信頼度 >= 90%       | 通常色       |
+| `mediumConfidence` | 70% <= 信頼度 < 90% | 薄め         |
+| `lowConfidence`    | 信頼度 < 70%        | 点線下線     |
 
 #### サポートするメソッド
 
-| メソッド | 説明 |
-|---------|------|
-| `textDocument/semanticTokens/full` | ドキュメント全体のトークン取得 |
-| `textDocument/semanticTokens/range` | 指定範囲のトークン取得 |
+| メソッド                            | 説明                           |
+| ----------------------------------- | ------------------------------ |
+| `textDocument/semanticTokens/full`  | ドキュメント全体のトークン取得 |
+| `textDocument/semanticTokens/range` | 指定範囲のトークン取得         |
 
 #### neovim設定例
 
@@ -184,9 +186,9 @@ vim.api.nvim_set_hl(0, "@lsp.mod.lowConfidence", { underdotted = true })
 
 ```typescript
 const BASE_CONFIDENCE = {
-  name: 1.0,        // 内部ID名での完全一致
+  name: 1.0, // 内部ID名での完全一致
   displayNames: 0.9, // 表示名での一致
-  aliases: 0.8,      // 別名での一致
+  aliases: 0.8, // 別名での一致
 };
 ```
 
@@ -198,8 +200,8 @@ const BASE_CONFIDENCE = {
 
 ```typescript
 const CONFIDENCE_THRESHOLD = {
-  WARNING: 0.7,    // これ未満でWarning
-  HINT: 0.9,       // これ未満でHint
+  WARNING: 0.7, // これ未満でWarning
+  HINT: 0.9, // これ未満でHint
   CODE_ACTION: 0.85, // これ以下でCode Action提案
 };
 ```

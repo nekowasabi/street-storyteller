@@ -10,9 +10,9 @@ export const king: Character = {
   "role": "guest",
   "traits": [
     "威厳がある",
-    "息子思い"
+    "息子思い",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "王子の父、威厳ある国王"
+  "summary": "王子の父、威厳ある国王",
 };

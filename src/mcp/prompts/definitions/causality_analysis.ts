@@ -31,7 +31,8 @@ export const causalityAnalysisPrompt: McpPromptDefinition = {
     return [
       {
         role: "system" as const,
-        content: `あなたは物語構造の専門家です。イベント間の因果関係を分析し、物語の整合性と説得力を高める提案を行ってください。
+        content:
+          `あなたは物語構造の専門家です。イベント間の因果関係を分析し、物語の整合性と説得力を高める提案を行ってください。
 以下の観点で分析してください：
 - 論理的な因果の連鎖
 - 不足している因果関係

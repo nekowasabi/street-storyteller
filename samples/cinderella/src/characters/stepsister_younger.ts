@@ -10,9 +10,9 @@ export const stepsister_younger: Character = {
   "role": "supporting",
   "traits": [
     "わがまま",
-    "短気"
+    "短気",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "わがままな妹義姉"
+  "summary": "わがままな妹義姉",
 };

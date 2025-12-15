@@ -14,23 +14,29 @@ Deno.test("event_create MCPツール", async (t) => {
     assertExists(eventCreateTool.description);
   });
 
-  await t.step("inputSchemaがtimelineId, title, category, orderをrequiredとしていること", () => {
-    const required = eventCreateTool.inputSchema.required;
-    assertExists(required);
-    assertEquals(required.includes("timelineId"), true);
-    assertEquals(required.includes("title"), true);
-    assertEquals(required.includes("category"), true);
-    assertEquals(required.includes("order"), true);
-  });
+  await t.step(
+    "inputSchemaがtimelineId, title, category, orderをrequiredとしていること",
+    () => {
+      const required = eventCreateTool.inputSchema.required;
+      assertExists(required);
+      assertEquals(required.includes("timelineId"), true);
+      assertEquals(required.includes("title"), true);
+      assertEquals(required.includes("category"), true);
+      assertEquals(required.includes("order"), true);
+    },
+  );
 
-  await t.step("execute()が必須パラメータ欠落時にエラーを返すこと", async () => {
-    // timelineIdがない
-    const result = await eventCreateTool.execute(
-      { title: "テスト", category: "plot_point", order: 1 },
-      { projectRoot: "/tmp" }
-    );
-    assertEquals(result.isError, true);
-  });
+  await t.step(
+    "execute()が必須パラメータ欠落時にエラーを返すこと",
+    async () => {
+      // timelineIdがない
+      const result = await eventCreateTool.execute(
+        { title: "テスト", category: "plot_point", order: 1 },
+        { projectRoot: "/tmp" },
+      );
+      assertEquals(result.isError, true);
+    },
+  );
 
   await t.step("無効なcategoryでエラーを返すこと", async () => {
     const result = await eventCreateTool.execute(
@@ -38,34 +44,37 @@ Deno.test("event_create MCPツール", async (t) => {
         timelineId: "test_timeline",
         title: "テスト",
         category: "invalid_category",
-        order: 1
+        order: 1,
       },
-      { projectRoot: "/tmp" }
+      { projectRoot: "/tmp" },
     );
     assertEquals(result.isError, true);
   });
 
-  await t.step("タイムラインファイルが存在しない場合にエラーを返すこと", async () => {
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "タイムラインファイルが存在しない場合にエラーを返すこと",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      const result = await eventCreateTool.execute(
-        {
-          timelineId: "nonexistent_timeline",
-          title: "テストイベント",
-          category: "plot_point",
-          order: 1,
-          summary: "テスト用イベント",
-        },
-        { projectRoot: tempDir }
-      );
+      try {
+        const result = await eventCreateTool.execute(
+          {
+            timelineId: "nonexistent_timeline",
+            title: "テストイベント",
+            category: "plot_point",
+            order: 1,
+            summary: "テスト用イベント",
+          },
+          { projectRoot: tempDir },
+        );
 
-      // タイムラインファイルが存在しないのでエラー
-      assertEquals(result.isError, true);
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+        // タイムラインファイルが存在しないのでエラー
+        assertEquals(result.isError, true);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
 
   await t.step("存在するタイムラインにイベントを追加できること", async () => {
     const tempDir = await Deno.makeTempDir();
@@ -76,7 +85,8 @@ Deno.test("event_create MCPツール", async (t) => {
       await Deno.mkdir(timelinesDir, { recursive: true });
 
       // JSON形式で解析可能な形式にする
-      const timelineContent = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timelineContent =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 /**
  * テストタイムライン
@@ -90,7 +100,10 @@ export const test_timeline: Timeline = {
   "events": []
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/test_timeline.ts`, timelineContent);
+      await Deno.writeTextFile(
+        `${timelinesDir}/test_timeline.ts`,
+        timelineContent,
+      );
 
       const result = await eventCreateTool.execute(
         {
@@ -102,7 +115,7 @@ export const test_timeline: Timeline = {
           characters: ["hero"],
           settings: ["village"],
         },
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       // デバッグ用
@@ -113,7 +126,9 @@ export const test_timeline: Timeline = {
       assertEquals(result.isError, false);
 
       // ファイルが更新されたことを確認
-      const updatedContent = await Deno.readTextFile(`${timelinesDir}/test_timeline.ts`);
+      const updatedContent = await Deno.readTextFile(
+        `${timelinesDir}/test_timeline.ts`,
+      );
       assertEquals(updatedContent.includes("新しいイベント"), true);
     } finally {
       await Deno.remove(tempDir, { recursive: true });

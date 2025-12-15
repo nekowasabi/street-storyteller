@@ -13,6 +13,6 @@ export const castle: Setting = {
   "displayNames": [
     "城",
     "王城",
-    "お城"
-  ]
+    "お城",
+  ],
 };

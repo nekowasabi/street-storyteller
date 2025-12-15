@@ -65,31 +65,31 @@ LSPスタイルの診断を実行します。
 
 `storyteller://`スキームでリソースを提供します。
 
-| URI | 説明 |
-|-----|------|
-| `storyteller://project` | プロジェクト分析JSON |
-| `storyteller://characters` | キャラクター一覧JSON |
+| URI                            | 説明                 |
+| ------------------------------ | -------------------- |
+| `storyteller://project`        | プロジェクト分析JSON |
+| `storyteller://characters`     | キャラクター一覧JSON |
 | `storyteller://character/<id>` | 単一キャラクターJSON |
-| `storyteller://settings` | 設定一覧JSON |
-| `storyteller://setting/<id>` | 単一設定JSON |
+| `storyteller://settings`       | 設定一覧JSON         |
+| `storyteller://setting/<id>`   | 単一設定JSON         |
 
 ## Prompts
 
 ### Creative（創作支援）
 
-| プロンプト | 必須引数 | オプション引数 |
-|-----------|---------|---------------|
-| `character_brainstorm` | `role` | `genre` |
-| `plot_suggestion` | `genre` | `logline` |
-| `scene_improvement` | `scene` | `goal` |
+| プロンプト             | 必須引数 | オプション引数 |
+| ---------------------- | -------- | -------------- |
+| `character_brainstorm` | `role`   | `genre`        |
+| `plot_suggestion`      | `genre`  | `logline`      |
+| `scene_improvement`    | `scene`  | `goal`         |
 
 ### Workflow（ワークフロー支援）
 
-| プロンプト | 必須引数 | オプション引数 |
-|-----------|---------|---------------|
-| `project_setup_wizard` | `name` | `template` |
-| `chapter_review` | `chapter` | `text` |
-| `consistency_fix` | `issue` | `context` |
+| プロンプト             | 必須引数  | オプション引数 |
+| ---------------------- | --------- | -------------- |
+| `project_setup_wizard` | `name`    | `template`     |
+| `chapter_review`       | `chapter` | `text`         |
+| `consistency_fix`      | `issue`   | `context`      |
 
 ## 自然言語インテント解析（v1.0拡張）
 
@@ -100,58 +100,58 @@ v1.0で対応パターンが3個から21個に拡張されました。
 
 #### ビュー/表示（4パターン）
 
-| 入力例 | 解析結果 | 信頼度 |
-|--------|---------|--------|
-| 「一覧を表示して」 | `view_browser` | 90% |
-| 「プロジェクトを表示」 | `view_browser` | 88% |
-| 「ビューを開いて」 | `view_browser` | 85% |
-| 「可視化して」 | `view_browser` | 85% |
+| 入力例                 | 解析結果       | 信頼度 |
+| ---------------------- | -------------- | ------ |
+| 「一覧を表示して」     | `view_browser` | 90%    |
+| 「プロジェクトを表示」 | `view_browser` | 88%    |
+| 「ビューを開いて」     | `view_browser` | 85%    |
+| 「可視化して」         | `view_browser` | 85%    |
 
 #### キャラクター作成（4パターン）
 
-| 入力例 | 解析結果 | 信頼度 |
-|--------|---------|--------|
-| 「キャラクターを作成」 | `element_create` | 90% |
-| 「主人公を追加」 | `element_create` | 88% |
-| 「キャラを作って」 | `element_create` | 85% |
-| 「新しいキャラクター」 | `element_create` | 85% |
+| 入力例                 | 解析結果         | 信頼度 |
+| ---------------------- | ---------------- | ------ |
+| 「キャラクターを作成」 | `element_create` | 90%    |
+| 「主人公を追加」       | `element_create` | 88%    |
+| 「キャラを作って」     | `element_create` | 85%    |
+| 「新しいキャラクター」 | `element_create` | 85%    |
 
 #### 設定作成（1パターン）
 
-| 入力例 | 解析結果 | 信頼度 |
-|--------|---------|--------|
-| 「世界観を作成」 | `element_create` (type: setting) | 88% |
+| 入力例           | 解析結果                         | 信頼度 |
+| ---------------- | -------------------------------- | ------ |
+| 「世界観を作成」 | `element_create` (type: setting) | 88%    |
 
 #### メタデータ（3パターン）
 
-| 入力例 | 解析結果 | 信頼度 |
-|--------|---------|--------|
-| 「メタデータをチェック」 | `meta_check` | 90% |
-| 「章情報を確認」 | `meta_check` | 85% |
-| 「設定を確認」 | `meta_check` | 85% |
+| 入力例                   | 解析結果     | 信頼度 |
+| ------------------------ | ------------ | ------ |
+| 「メタデータをチェック」 | `meta_check` | 90%    |
+| 「章情報を確認」         | `meta_check` | 85%    |
+| 「設定を確認」           | `meta_check` | 85%    |
 
 #### LSP/検証（3パターン）
 
-| 入力例 | 解析結果 | 信頼度 |
-|--------|---------|--------|
-| 「原稿の整合性をチェック」 | `lsp_validate` | 88% |
-| 「検証を実行」 | `lsp_validate` | 85% |
-| 「整合性を確認」 | `lsp_validate` | 85% |
+| 入力例                     | 解析結果       | 信頼度 |
+| -------------------------- | -------------- | ------ |
+| 「原稿の整合性をチェック」 | `lsp_validate` | 88%    |
+| 「検証を実行」             | `lsp_validate` | 85%    |
+| 「整合性を確認」           | `lsp_validate` | 85%    |
 
 #### 参照検索（2パターン）
 
-| 入力例 | 解析結果 | 信頼度 |
-|--------|---------|--------|
-| 「参照を検索」 | `lsp_find_references` | 88% |
-| 「どこで使われている？」 | `lsp_find_references` | 85% |
+| 入力例                   | 解析結果              | 信頼度 |
+| ------------------------ | --------------------- | ------ |
+| 「参照を検索」           | `lsp_find_references` | 88%    |
+| 「どこで使われている？」 | `lsp_find_references` | 85%    |
 
 #### プロジェクト管理（3パターン）
 
-| 入力例 | 解析結果 | 信頼度 |
-|--------|---------|--------|
-| 「プロジェクトを初期化」 | `meta_generate` | 90% |
-| 「初期化して」 | `meta_generate` | 85% |
-| 「設定ファイルを生成」 | `meta_generate` | 85% |
+| 入力例                   | 解析結果        | 信頼度 |
+| ------------------------ | --------------- | ------ |
+| 「プロジェクトを初期化」 | `meta_generate` | 90%    |
+| 「初期化して」           | `meta_generate` | 85%    |
+| 「設定ファイルを生成」   | `meta_generate` | 85%    |
 
 ### Claude Desktopでの使用例
 

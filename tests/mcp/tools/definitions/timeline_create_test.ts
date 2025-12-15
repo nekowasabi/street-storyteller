@@ -14,12 +14,15 @@ Deno.test("timeline_create MCPツール", async (t) => {
     assertExists(timelineCreateTool.description);
   });
 
-  await t.step("inputSchemaがname, scope, summaryをrequiredとしていること", () => {
-    const required = timelineCreateTool.inputSchema.required;
-    assertExists(required);
-    assertEquals(required.includes("name"), true);
-    assertEquals(required.includes("scope"), true);
-  });
+  await t.step(
+    "inputSchemaがname, scope, summaryをrequiredとしていること",
+    () => {
+      const required = timelineCreateTool.inputSchema.required;
+      assertExists(required);
+      assertEquals(required.includes("name"), true);
+      assertEquals(required.includes("scope"), true);
+    },
+  );
 
   await t.step("execute()がElementTimelineCommandを呼び出すこと", async () => {
     const tempDir = await Deno.makeTempDir();
@@ -31,7 +34,7 @@ Deno.test("timeline_create MCPツール", async (t) => {
           scope: "story",
           summary: "テスト用タイムライン",
         },
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       assertEquals(result.isError, false);
@@ -51,7 +54,7 @@ Deno.test("timeline_create MCPツール", async (t) => {
     // nameがない
     const result = await timelineCreateTool.execute(
       { scope: "story", summary: "概要" },
-      { projectRoot: "/tmp" }
+      { projectRoot: "/tmp" },
     );
     assertEquals(result.isError, true);
   });
@@ -59,7 +62,7 @@ Deno.test("timeline_create MCPツール", async (t) => {
   await t.step("無効なscopeでエラーを返すこと", async () => {
     const result = await timelineCreateTool.execute(
       { name: "test", scope: "invalid_scope", summary: "概要" },
-      { projectRoot: "/tmp" }
+      { projectRoot: "/tmp" },
     );
     assertEquals(result.isError, true);
   });

@@ -3,7 +3,10 @@
  * タイムラインの一覧または詳細を表示するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import type { Timeline } from "../../../type/v2/timeline.ts";
 
 export const timelineViewTool: McpToolDefinition = {
@@ -25,7 +28,10 @@ export const timelineViewTool: McpToolDefinition = {
     },
     required: [],
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     const timelineId = args.timelineId as string | undefined;
     const format = (args.format as string | undefined) ?? "text";
     const projectRoot = context?.projectRoot ?? Deno.cwd();

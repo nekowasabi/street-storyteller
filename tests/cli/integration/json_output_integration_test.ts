@@ -110,7 +110,11 @@ Deno.test("Integration - JSON Output: timestamp is valid ISO 8601 format", () =>
   const date = new Date(parsed.timestamp);
 
   // Should be a valid date
-  assertEquals(isNaN(date.getTime()), false, "Timestamp should be a valid date");
+  assertEquals(
+    isNaN(date.getTime()),
+    false,
+    "Timestamp should be a valid date",
+  );
 
   // Should be recent (within last minute)
   const now = new Date();
@@ -195,7 +199,11 @@ Deno.test("Integration - JSON Output: handles newlines and tabs", () => {
     });
 
     const parsed = JSON.parse(logs[0]) as JsonOutput;
-    assertEquals(parsed.message, message, `Should preserve whitespace in: ${JSON.stringify(message)}`);
+    assertEquals(
+      parsed.message,
+      message,
+      `Should preserve whitespace in: ${JSON.stringify(message)}`,
+    );
   }
 });
 
@@ -213,7 +221,11 @@ Deno.test("Integration - JSON Output: handles unicode emojis", () => {
     });
 
     const parsed = JSON.parse(logs[0]) as JsonOutput;
-    assertEquals(parsed.message, message, `Should preserve emoji in: ${message}`);
+    assertEquals(
+      parsed.message,
+      message,
+      `Should preserve emoji in: ${message}`,
+    );
   }
 });
 
@@ -258,7 +270,11 @@ Deno.test("Integration - JSON Output: createPresenterFromArgs with json=false re
   }
 
   assertEquals(logs.length, 1);
-  assertEquals(logs[0], "plain text message", "Console presenter should output plain text");
+  assertEquals(
+    logs[0],
+    "plain text message",
+    "Console presenter should output plain text",
+  );
 
   // Should NOT be JSON
   let isJson = false;

@@ -6,7 +6,10 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import { TimelinePlugin } from "../../../../src/plugins/core/timeline/plugin.ts";
-import type { Timeline, TimelineScope } from "../../../../src/type/v2/timeline.ts";
+import type {
+  Timeline,
+  TimelineScope,
+} from "../../../../src/type/v2/timeline.ts";
 
 Deno.test("TimelinePlugin", async (t) => {
   const plugin = new TimelinePlugin();
@@ -22,46 +25,55 @@ Deno.test("TimelinePlugin", async (t) => {
     assertEquals(plugin.elementType, "timeline");
   });
 
-  await t.step("createElementFile()でタイムラインファイルを生成できること", async () => {
-    const timeline: Timeline = {
-      id: "main_story",
-      name: "メインストーリー",
-      scope: "story",
-      summary: "物語の主要なタイムライン",
-      events: [],
-    };
+  await t.step(
+    "createElementFile()でタイムラインファイルを生成できること",
+    async () => {
+      const timeline: Timeline = {
+        id: "main_story",
+        name: "メインストーリー",
+        scope: "story",
+        summary: "物語の主要なタイムライン",
+        events: [],
+      };
 
-    const result = await plugin.createElementFile(timeline);
+      const result = await plugin.createElementFile(timeline);
 
-    assertEquals(result.ok, true);
-    if (result.ok) {
-      assertEquals(result.value.filePath, "src/timelines/main_story.ts");
-      // 生成されたコンテンツにTimeline型インポートが含まれること
-      assertEquals(
-        result.value.content.includes('import type { Timeline }'),
-        true
-      );
-      // エクスポートが含まれること
-      assertEquals(
-        result.value.content.includes("export const main_story"),
-        true
-      );
-    }
-  });
+      assertEquals(result.ok, true);
+      if (result.ok) {
+        assertEquals(result.value.filePath, "src/timelines/main_story.ts");
+        // 生成されたコンテンツにTimeline型インポートが含まれること
+        assertEquals(
+          result.value.content.includes("import type { Timeline }"),
+          true,
+        );
+        // エクスポートが含まれること
+        assertEquals(
+          result.value.content.includes("export const main_story"),
+          true,
+        );
+      }
+    },
+  );
 
-  await t.step("createElementFile()が必須フィールド欠落時にエラーを返すこと", async () => {
-    const invalidTimeline = {
-      id: "invalid",
-      // name, scope, summary, events が欠落
-    };
+  await t.step(
+    "createElementFile()が必須フィールド欠落時にエラーを返すこと",
+    async () => {
+      const invalidTimeline = {
+        id: "invalid",
+        // name, scope, summary, events が欠落
+      };
 
-    const result = await plugin.createElementFile(invalidTimeline);
+      const result = await plugin.createElementFile(invalidTimeline);
 
-    assertEquals(result.ok, false);
-    if (!result.ok) {
-      assertEquals(result.error.message.includes("Missing required fields"), true);
-    }
-  });
+      assertEquals(result.ok, false);
+      if (!result.ok) {
+        assertEquals(
+          result.error.message.includes("Missing required fields"),
+          true,
+        );
+      }
+    },
+  );
 
   await t.step("validateElement()がTimeline整合性チェックできること", () => {
     const validTimeline: Timeline = {
@@ -101,7 +113,9 @@ Deno.test("TimelinePlugin", async (t) => {
     assertEquals(result.valid, false);
     assertExists(result.errors);
     // scopeエラーが含まれることを確認
-    const scopeError = result.errors.find((e: { field: string }) => e.field === "scope");
+    const scopeError = result.errors.find((e: { field: string }) =>
+      e.field === "scope"
+    );
     assertExists(scopeError);
   });
 

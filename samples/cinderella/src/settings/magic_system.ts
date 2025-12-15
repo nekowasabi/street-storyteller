@@ -12,6 +12,6 @@ export const magic_system: Setting = {
   "appearingChapters": [],
   "displayNames": [
     "魔法",
-    "妖精魔法"
-  ]
+    "妖精魔法",
+  ],
 };

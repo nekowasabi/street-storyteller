@@ -82,16 +82,16 @@ src/lsp/
 
 ### 2. サーバー機能
 
-| 機能                    | メソッド             | 状態    |
-| ----------------------- | -------------------- | ------- |
-| initialize              | `handleInitialize()` | ✅ 完了 |
-| initialized             | 通知処理             | ✅ 完了 |
-| shutdown                | `handleShutdown()`   | ✅ 完了 |
-| textDocument/didOpen    | `handleDidOpen()`    | ✅ 完了 |
-| textDocument/didChange  | `handleDidChange()`  | ✅ 完了 |
-| textDocument/didClose   | `handleDidClose()`   | ✅ 完了 |
-| textDocument/definition | `handleDefinition()` | ✅ 完了 |
-| textDocument/hover      | `handleHover()`      | ✅ 完了 |
+| 機能                    | メソッド             | 状態           |
+| ----------------------- | -------------------- | -------------- |
+| initialize              | `handleInitialize()` | ✅ 完了        |
+| initialized             | 通知処理             | ✅ 完了        |
+| shutdown                | `handleShutdown()`   | ✅ 完了        |
+| textDocument/didOpen    | `handleDidOpen()`    | ✅ 完了        |
+| textDocument/didChange  | `handleDidChange()`  | ✅ 完了        |
+| textDocument/didClose   | `handleDidClose()`   | ✅ 完了        |
+| textDocument/definition | `handleDefinition()` | ✅ 完了        |
+| textDocument/hover      | `handleHover()`      | ✅ 完了        |
 | textDocument/codeAction | `handleCodeAction()` | ✅ 完了 (v1.0) |
 
 ### 3. 検出機能

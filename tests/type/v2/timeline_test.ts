@@ -45,25 +45,28 @@ Deno.test("Timeline型定義", async (t) => {
     assertEquals(scopes.length, 4);
   });
 
-  await t.step("TimePoint型がorder（必須）とオプショナルフィールドを持つこと", () => {
-    // 必須のorderのみ
-    const minimalTimePoint: TimePoint = {
-      order: 1,
-    };
-    assertExists(minimalTimePoint.order);
+  await t.step(
+    "TimePoint型がorder（必須）とオプショナルフィールドを持つこと",
+    () => {
+      // 必須のorderのみ
+      const minimalTimePoint: TimePoint = {
+        order: 1,
+      };
+      assertExists(minimalTimePoint.order);
 
-    // 全フィールド指定
-    const fullTimePoint: TimePoint = {
-      order: 1,
-      label: "物語開始",
-      date: "春の初め",
-      chapter: "chapter_01",
-    };
-    assertExists(fullTimePoint.order);
-    assertEquals(fullTimePoint.label, "物語開始");
-    assertEquals(fullTimePoint.date, "春の初め");
-    assertEquals(fullTimePoint.chapter, "chapter_01");
-  });
+      // 全フィールド指定
+      const fullTimePoint: TimePoint = {
+        order: 1,
+        label: "物語開始",
+        date: "春の初め",
+        chapter: "chapter_01",
+      };
+      assertExists(fullTimePoint.order);
+      assertEquals(fullTimePoint.label, "物語開始");
+      assertEquals(fullTimePoint.date, "春の初め");
+      assertEquals(fullTimePoint.chapter, "chapter_01");
+    },
+  );
 
   await t.step("TimelineEvent型が必須フィールドを持つこと", () => {
     const event: TimelineEvent = {
@@ -87,25 +90,28 @@ Deno.test("Timeline型定義", async (t) => {
     assertExists(event.chapters);
   });
 
-  await t.step("TimelineEvent型のcausedBy, causesがstring[]型であること", () => {
-    const event: TimelineEvent = {
-      id: "ball_dance",
-      title: "舞踏会での踊り",
-      category: "plot_point",
-      time: { order: 2 },
-      summary: "シンデレラと王子が踊る",
-      characters: ["cinderella", "prince"],
-      settings: ["royal_palace"],
-      chapters: ["chapter_02"],
-      causedBy: ["ball_invitation"],
-      causes: ["midnight_escape"],
-    };
+  await t.step(
+    "TimelineEvent型のcausedBy, causesがstring[]型であること",
+    () => {
+      const event: TimelineEvent = {
+        id: "ball_dance",
+        title: "舞踏会での踊り",
+        category: "plot_point",
+        time: { order: 2 },
+        summary: "シンデレラと王子が踊る",
+        characters: ["cinderella", "prince"],
+        settings: ["royal_palace"],
+        chapters: ["chapter_02"],
+        causedBy: ["ball_invitation"],
+        causes: ["midnight_escape"],
+      };
 
-    assertExists(event.causedBy);
-    assertEquals(event.causedBy, ["ball_invitation"]);
-    assertExists(event.causes);
-    assertEquals(event.causes, ["midnight_escape"]);
-  });
+      assertExists(event.causedBy);
+      assertEquals(event.causedBy, ["ball_invitation"]);
+      assertExists(event.causes);
+      assertEquals(event.causes, ["midnight_escape"]);
+    },
+  );
 
   await t.step("TimelineEvent型のオプショナルフィールドを持てること", () => {
     const event: TimelineEvent = {

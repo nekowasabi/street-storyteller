@@ -191,23 +191,35 @@ Deno.test("LspServer - handles textDocument/codeAction request for low confidenc
   const response = extractResponseBody(responseData) as {
     jsonrpc: string;
     id: number;
-    result: Array<{
-      title: string;
-      kind: string;
-      edit?: {
-        changes: { [uri: string]: Array<{ range: unknown; newText: string }> };
-      };
-    }> | null;
+    result:
+      | Array<{
+        title: string;
+        kind: string;
+        edit?: {
+          changes: {
+            [uri: string]: Array<{ range: unknown; newText: string }>;
+          };
+        };
+      }>
+      | null;
   };
 
   assertEquals(response.jsonrpc, "2.0");
   assertEquals(response.id, 100);
   assertExists(response.result, "Code action result should exist");
-  assertEquals(response.result.length > 0, true, "Should return at least one code action");
+  assertEquals(
+    response.result.length > 0,
+    true,
+    "Should return at least one code action",
+  );
 
   const action = response.result[0];
   assertEquals(action.kind, "quickfix");
-  assertEquals(action.title.includes("@hero"), true, "Title should mention @hero");
+  assertEquals(
+    action.title.includes("@hero"),
+    true,
+    "Title should mention @hero",
+  );
 });
 
 Deno.test("LspServer - returns empty array for high confidence reference", async () => {
@@ -378,7 +390,10 @@ Deno.test("LspServer - code action includes correct workspace edit", async () =>
       edit?: {
         changes: {
           [uri: string]: Array<{
-            range: { start: { line: number; character: number }; end: { line: number; character: number } };
+            range: {
+              start: { line: number; character: number };
+              end: { line: number; character: number };
+            };
             newText: string;
           }>;
         };

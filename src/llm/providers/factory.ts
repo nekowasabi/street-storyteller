@@ -11,7 +11,10 @@ import { DEFAULT_SAFETY_CONFIG } from "../config/llm_config.ts";
 import type { LLMProvider } from "./provider.ts";
 import { OpenRouterProvider } from "./openrouter.ts";
 import { MockLLMProvider } from "./mock.ts";
-import { wrapWithSafety, type SafeLLMProvider } from "../safety/safe_provider.ts";
+import {
+  type SafeLLMProvider,
+  wrapWithSafety,
+} from "../safety/safe_provider.ts";
 import type { CallLimitError } from "../safety/call_limiter.ts";
 
 /**

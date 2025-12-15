@@ -17,7 +17,13 @@ Deno.test("parseCliArgs - json defaults to undefined when not specified", () => 
 });
 
 Deno.test("parseCliArgs - parses --json with other options", () => {
-  const result = parseCliArgs(["meta", "check", "--json", "--path", "./project"]);
+  const result = parseCliArgs([
+    "meta",
+    "check",
+    "--json",
+    "--path",
+    "./project",
+  ]);
   assertEquals(result.json, true);
   assertEquals(result.path, "./project");
 });

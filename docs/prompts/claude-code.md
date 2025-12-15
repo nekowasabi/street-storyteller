@@ -1,7 +1,8 @@
 # Street Storyteller - Claude Code プラットフォームプロンプト
 
-このドキュメントは、Claude Code環境でStory Directorを使用する際のプラットフォーム固有情報を定義します。
-基盤として `core.md` と `director.md` を参照します。
+このドキュメントは、Claude Code環境でStory
+Directorを使用する際のプラットフォーム固有情報を定義します。 基盤として
+`core.md` と `director.md` を参照します。
 
 ## プラットフォーム概要
 
@@ -115,6 +116,7 @@ storyteller lsp validate --json
 ### 出力フォーマット
 
 **成功時:**
+
 ```json
 {
   "type": "success",
@@ -128,6 +130,7 @@ storyteller lsp validate --json
 ```
 
 **エラー時:**
+
 ```json
 {
   "type": "error",
@@ -152,14 +155,15 @@ RESULT=$(storyteller lsp validate --json)
 
 ## スラッシュコマンド一覧
 
-Claude Code用のスラッシュコマンドです。
-`.claude/commands/` ディレクトリに配置されています。
+Claude Code用のスラッシュコマンドです。 `.claude/commands/`
+ディレクトリに配置されています。
 
 ### `/story-director`
 
 物語のディレクターとして質問に回答します。
 
 **使用方法:**
+
 ```
 /story-director キャラクター構成を評価して
 /story-director この章の問題点を指摘して
@@ -167,6 +171,7 @@ Claude Code用のスラッシュコマンドです。
 ```
 
 **内部動作:**
+
 1. `storyteller://project` リソースを参照
 2. `storyteller://characters` リソースを参照
 3. `storyteller://settings` リソースを参照
@@ -177,12 +182,14 @@ Claude Code用のスラッシュコマンドです。
 原稿の整合性を一括チェックします。
 
 **使用方法:**
+
 ```
 /story-check
 /story-check manuscripts/chapter01.md
 ```
 
 **内部動作:**
+
 ```bash
 storyteller lsp validate --dir manuscripts --recursive
 ```
@@ -192,12 +199,14 @@ storyteller lsp validate --dir manuscripts --recursive
 キャラクター操作を行います。
 
 **使用方法:**
+
 ```
 /story-char hero
 /story-char --create sage
 ```
 
 **内部動作:**
+
 ```bash
 storyteller element character --name <name>
 ```
@@ -207,11 +216,13 @@ storyteller element character --name <name>
 プロジェクトビューアを起動します。
 
 **使用方法:**
+
 ```
 /story-view
 ```
 
 **内部動作:**
+
 ```bash
 storyteller view --serve
 ```
@@ -375,4 +386,5 @@ fi
 
 ---
 
-_このドキュメントはClaude Code固有の情報です。他のプラットフォームについては各ドキュメントを参照してください。_
+_このドキュメントはClaude
+Code固有の情報です。他のプラットフォームについては各ドキュメントを参照してください。_

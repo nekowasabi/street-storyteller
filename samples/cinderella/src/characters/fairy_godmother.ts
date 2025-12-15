@@ -11,9 +11,9 @@ export const fairy_godmother: Character = {
   "traits": [
     "慈愛深い",
     "魔法使い",
-    "神秘的"
+    "神秘的",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "シンデレラを助ける魔法使い"
+  "summary": "シンデレラを助ける魔法使い",
 };

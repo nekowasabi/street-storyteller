@@ -12,6 +12,6 @@ export const royal_capital: Setting = {
   "appearingChapters": [],
   "displayNames": [
     "王都",
-    "首都"
-  ]
+    "首都",
+  ],
 };

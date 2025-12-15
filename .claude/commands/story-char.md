@@ -21,12 +21,12 @@ storyteller element character --name "キャラ名" --role antagonist --summary 
 
 ### 役割オプション
 
-| 役割 | 説明 |
-|------|------|
-| `protagonist` | 主人公 |
-| `antagonist` | 敵対者 |
-| `supporting` | 脇役・サポート |
-| `guest` | ゲスト・一時的登場 |
+| 役割          | 説明               |
+| ------------- | ------------------ |
+| `protagonist` | 主人公             |
+| `antagonist`  | 敵対者             |
+| `supporting`  | 脇役・サポート     |
+| `guest`       | ゲスト・一時的登場 |
 
 ## 引数の解析
 
@@ -39,8 +39,8 @@ storyteller element character --name "キャラ名" --role antagonist --summary 
 
 ### 解析例
 
-入力: 「勇者という主人公を作って。勇敢で正義感が強い」
-→ `storyteller element character --name "勇者" --role protagonist --summary "勇敢で正義感が強い主人公" --traits "勇敢,正義感"`
+入力: 「勇者という主人公を作って。勇敢で正義感が強い」 →
+`storyteller element character --name "勇者" --role protagonist --summary "勇敢で正義感が強い主人公" --traits "勇敢,正義感"`
 
 ## 出力フォーマット
 
@@ -48,14 +48,16 @@ storyteller element character --name "キャラ名" --role antagonist --summary 
 ## キャラクター作成
 
 ### 実行コマンド
-\`\`\`bash
-storyteller element character --name "..." --role ... --summary "..."
+
+\`\`\`bash storyteller element character --name "..." --role ... --summary "..."
 \`\`\`
 
 ### 作成されるファイル
+
 `src/characters/{name}.ts`
 
 ### 次のステップ
+
 1. ファイルを確認・編集
 2. 詳細情報の追加（必要に応じて）
 3. 関係性の定義

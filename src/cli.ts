@@ -28,7 +28,8 @@ const aliasMap = new Map<string, string>([
 
 export async function runCLI(deps: CliDependencies = {}): Promise<void> {
   const rawArgs = parseCliArgs(Deno.args);
-  const presenter = deps.presenter ?? createPresenterFromArgs({ json: rawArgs.json });
+  const presenter = deps.presenter ??
+    createPresenterFromArgs({ json: rawArgs.json });
 
   const configurationManager = deps.createConfigurationManager?.() ??
     createDefaultConfigurationManager(rawArgs);

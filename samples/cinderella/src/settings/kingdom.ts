@@ -13,10 +13,10 @@ export const kingdom: Setting = {
   "displayNames": [
     "王国",
     "フェアリーテイル",
-    "王都"
+    "王都",
   ],
   "relatedSettings": [
     "castle",
-    "mansion"
-  ]
+    "mansion",
+  ],
 };

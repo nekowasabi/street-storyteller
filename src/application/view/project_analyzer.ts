@@ -292,7 +292,9 @@ export class ProjectAnalyzer {
   /**
    * タイムラインをパース
    */
-  private parseTimeline(value: unknown): Omit<TimelineSummary, "filePath"> | null {
+  private parseTimeline(
+    value: unknown,
+  ): Omit<TimelineSummary, "filePath"> | null {
     if (!value || typeof value !== "object") return null;
     const record = value as Record<string, unknown>;
 

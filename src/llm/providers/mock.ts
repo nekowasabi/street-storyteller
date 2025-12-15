@@ -112,9 +112,7 @@ export class MockLLMProvider implements StreamingLLMProvider {
     // 遅延をシミュレート
     const delay = this.options.delay;
     if (delay && delay > 0) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, delay / 2)
-      );
+      await new Promise((resolve) => setTimeout(resolve, delay / 2));
     }
 
     // エラーをシミュレート

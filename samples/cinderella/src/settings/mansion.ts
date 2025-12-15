@@ -13,6 +13,6 @@ export const mansion: Setting = {
   "displayNames": [
     "屋敷",
     "邸宅",
-    "お屋敷"
-  ]
+    "お屋敷",
+  ],
 };

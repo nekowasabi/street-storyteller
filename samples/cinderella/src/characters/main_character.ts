@@ -7,5 +7,5 @@ export const mainCharacter: Character = {
   traits: [],
   relationships: {},
   appearingChapters: [],
-  summary: "Template character"
+  summary: "Template character",
 };

@@ -3,7 +3,10 @@
  * タイムライン要素を作成するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import { executeCliCommand } from "../cli_adapter.ts";
 import { ElementTimelineCommand } from "../../../cli/modules/element/timeline.ts";
 
@@ -21,7 +24,8 @@ export const timelineCreateTool: McpToolDefinition = {
       scope: {
         type: "string",
         enum: ["story", "world", "character", "arc"],
-        description: "タイムラインのスコープ: story（物語全体）, world（世界史）, character（キャラクター固有）, arc（章・アーク単位）",
+        description:
+          "タイムラインのスコープ: story（物語全体）, world（世界史）, character（キャラクター固有）, arc（章・アーク単位）",
       },
       summary: {
         type: "string",
@@ -47,7 +51,10 @@ export const timelineCreateTool: McpToolDefinition = {
     },
     required: ["name", "scope"],
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     const name = args.name as string | undefined;
     const scope = args.scope as string | undefined;
 
@@ -68,7 +75,8 @@ export const timelineCreateTool: McpToolDefinition = {
         content: [
           {
             type: "text" as const,
-            text: "Error: 'scope' parameter is required (story|world|character|arc).",
+            text:
+              "Error: 'scope' parameter is required (story|world|character|arc).",
           },
         ],
         isError: true,
@@ -81,7 +89,9 @@ export const timelineCreateTool: McpToolDefinition = {
         content: [
           {
             type: "text" as const,
-            text: `Error: Invalid scope '${scope}'. Must be one of: ${validScopes.join(", ")}.`,
+            text: `Error: Invalid scope '${scope}'. Must be one of: ${
+              validScopes.join(", ")
+            }.`,
           },
         ],
         isError: true,

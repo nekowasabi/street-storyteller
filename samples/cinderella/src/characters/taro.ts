@@ -10,9 +10,9 @@ export const taro: Character = {
   "role": "protagonist",
   "traits": [
     "勇敢",
-    "正直"
+    "正直",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "主人公の少年"
+  "summary": "主人公の少年",
 };

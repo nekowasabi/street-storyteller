@@ -89,7 +89,11 @@ Deno.test("SemanticTokensProvider - detects character name", async () => {
   const provider = new SemanticTokensProvider(detector);
 
   const content = "勇者は冒険を始めた。";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // data配列は5要素ごとにトークンを表す
   // [line_delta, char_delta, length, token_type, modifier_mask]
@@ -113,7 +117,11 @@ Deno.test("SemanticTokensProvider - detects setting name", async () => {
   const provider = new SemanticTokensProvider(detector);
 
   const content = "城に向かった。";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   assertEquals(result.data.length >= 5, true);
   assertEquals(result.data[3], 1); // token_type (setting = 1)
@@ -130,7 +138,11 @@ Deno.test("SemanticTokensProvider - handles multiple tokens on same line", async
   const provider = new SemanticTokensProvider(detector);
 
   const content = "勇者と姫が出会った。";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 2つのトークン = 10要素
   assertEquals(result.data.length >= 10, true);
@@ -156,7 +168,11 @@ Deno.test("SemanticTokensProvider - handles tokens on different lines", async ()
   const provider = new SemanticTokensProvider(detector);
 
   const content = "勇者は冒険を始めた。\n城に向かった。";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   assertEquals(result.data.length >= 10, true);
 
@@ -180,11 +196,15 @@ Deno.test("SemanticTokensProvider - high confidence modifier", async () => {
 
   // "勇者"はname直接マッチで信頼度1.0 → highConfidence (bit 0)
   const content = "勇者";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   assertEquals(result.data.length >= 5, true);
   // modifier_mask: bit 0 = highConfidence
-  assertEquals((result.data[4] & 1), 1);
+  assertEquals(result.data[4] & 1, 1);
 });
 
 Deno.test("SemanticTokensProvider - medium confidence modifier for alias", async () => {
@@ -197,11 +217,15 @@ Deno.test("SemanticTokensProvider - medium confidence modifier for alias", async
 
   // "主人公"はaliasマッチで信頼度0.8 → mediumConfidence (bit 1)
   const content = "主人公";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   assertEquals(result.data.length >= 5, true);
   // modifier_mask: bit 1 = mediumConfidence
-  assertEquals((result.data[4] & 2), 2);
+  assertEquals(result.data[4] & 2, 2);
 });
 
 // ===== 範囲トークンテスト =====
@@ -270,7 +294,11 @@ Deno.test("SemanticTokensProvider - Japanese: correct character position for mul
 
   // "勇者"は位置0から始まり、長さ2
   const content = "勇者";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   assertEquals(result.data[0], 0); // line
   assertEquals(result.data[1], 0); // character (位置0)
@@ -287,7 +315,11 @@ Deno.test("SemanticTokensProvider - Japanese: middle of line detection", async (
 
   // "あいう勇者えお" - "勇者"は位置3から始まる
   const content = "あいう勇者えお";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   assertEquals(result.data[0], 0); // line
   assertEquals(result.data[1], 3); // character (位置3)
@@ -304,7 +336,11 @@ Deno.test("SemanticTokensProvider - Japanese: mixed Japanese and ASCII", async (
 
   // "ABC勇者DEF" - "勇者"は位置3から始まる
   const content = "ABC勇者DEF";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   assertEquals(result.data[0], 0); // line
   assertEquals(result.data[1], 3); // character (位置3)
@@ -321,7 +357,11 @@ Deno.test("SemanticTokensProvider - Japanese: multiple entities in Japanese text
 
   // "勇者と姫が城で会った" - 勇者(0), 姫(3), 城(5)
   const content = "勇者と姫が城で会った";
-  const result = provider.getSemanticTokens("file:///test.md", content, "/project");
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 3つのトークン = 15要素
   assertEquals(result.data.length, 15);

@@ -3,10 +3,10 @@
  */
 
 import type {
-  Timeline,
-  TimelineScope,
-  TimelineEvent,
   EventCategory,
+  Timeline,
+  TimelineEvent,
+  TimelineScope,
 } from "../../../type/v2/timeline.ts";
 import type {
   ValidationError,
@@ -150,7 +150,9 @@ function validateTimelineEvent(
   if (!ev.category || !validCategories.includes(ev.category)) {
     errors.push({
       field: `${prefix}.category`,
-      message: `${prefix}.category must be one of: ${validCategories.join(", ")}`,
+      message: `${prefix}.category must be one of: ${
+        validCategories.join(", ")
+      }`,
     });
   }
 
@@ -168,7 +170,9 @@ function validateTimelineEvent(
   }
 
   // summary検証
-  if (!ev.summary || typeof ev.summary !== "string" || ev.summary.trim() === "") {
+  if (
+    !ev.summary || typeof ev.summary !== "string" || ev.summary.trim() === ""
+  ) {
     errors.push({
       field: `${prefix}.summary`,
       message: `${prefix}.summary is required and must be a non-empty string`,

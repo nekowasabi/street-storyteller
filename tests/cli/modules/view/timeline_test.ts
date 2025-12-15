@@ -43,7 +43,8 @@ Deno.test("ViewTimelineCommand - timelines一覧表示", async (t) => {
       const timelinesDir = `${tempDir}/src/timelines`;
       await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timeline =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const main_story: Timeline = {
   "id": "main_story",
@@ -98,7 +99,8 @@ Deno.test("ViewTimelineCommand - timeline詳細表示", async (t) => {
       const timelinesDir = `${tempDir}/src/timelines`;
       await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timeline =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const main_story: Timeline = {
   "id": "main_story",
@@ -143,7 +145,8 @@ Deno.test("ViewTimelineCommand - JSON出力", async (t) => {
       const timelinesDir = `${tempDir}/src/timelines`;
       await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timeline =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const test_timeline: Timeline = {
   "id": "test_timeline",
@@ -175,14 +178,17 @@ export const test_timeline: Timeline = {
 });
 
 Deno.test("ViewTimelineCommand - Mermaid出力", async (t) => {
-  await t.step("--format mermaid オプションでMermaid図を出力すること", async () => {
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "--format mermaid オプションでMermaid図を出力すること",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      const timelinesDir = `${tempDir}/src/timelines`;
-      await Deno.mkdir(timelinesDir, { recursive: true });
+      try {
+        const timelinesDir = `${tempDir}/src/timelines`;
+        await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+        const timeline =
+          `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const test_timeline: Timeline = {
   "id": "test_timeline",
@@ -215,26 +221,31 @@ export const test_timeline: Timeline = {
   ]
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/test_timeline.ts`, timeline);
+        await Deno.writeTextFile(`${timelinesDir}/test_timeline.ts`, timeline);
 
-      const cmd = new ViewTimelineCommand();
-      const context = createMockContext({
-        args: { id: "test_timeline", format: "mermaid" },
-        projectRoot: tempDir,
-      });
+        const cmd = new ViewTimelineCommand();
+        const context = createMockContext({
+          args: { id: "test_timeline", format: "mermaid" },
+          projectRoot: tempDir,
+        });
 
-      const result = await cmd.execute(context);
-      assertEquals(result.ok, true);
+        const result = await cmd.execute(context);
+        assertEquals(result.ok, true);
 
-      // Mermaid形式の場合、結果にMermaidコードが含まれること
-      if (result.ok && result.value) {
-        const output = result.value as { mermaid?: string };
-        if (output.mermaid) {
-          assertEquals(output.mermaid.includes("graph") || output.mermaid.includes("flowchart"), true);
+        // Mermaid形式の場合、結果にMermaidコードが含まれること
+        if (result.ok && result.value) {
+          const output = result.value as { mermaid?: string };
+          if (output.mermaid) {
+            assertEquals(
+              output.mermaid.includes("graph") ||
+                output.mermaid.includes("flowchart"),
+              true,
+            );
+          }
         }
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
       }
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+    },
+  );
 });

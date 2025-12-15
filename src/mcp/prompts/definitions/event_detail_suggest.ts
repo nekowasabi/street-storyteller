@@ -7,7 +7,8 @@ import type { McpPromptDefinition } from "../prompt_registry.ts";
 
 export const eventDetailSuggestPrompt: McpPromptDefinition = {
   name: "event_detail_suggest",
-  description: "タイムラインイベントの詳細（キャラクター、設定、因果関係など）を提案します。",
+  description:
+    "タイムラインイベントの詳細（キャラクター、設定、因果関係など）を提案します。",
   arguments: [
     {
       name: "event_title",
@@ -58,7 +59,8 @@ export const eventDetailSuggestPrompt: McpPromptDefinition = {
     return [
       {
         role: "system" as const,
-        content: `あなたは物語構成の専門家です。イベントの詳細を、物語全体の整合性を考慮しながら提案してください。
+        content:
+          `あなたは物語構成の専門家です。イベントの詳細を、物語全体の整合性を考慮しながら提案してください。
 出力は日本語で、具体的かつ実用的な提案を心がけてください。`,
       },
       {

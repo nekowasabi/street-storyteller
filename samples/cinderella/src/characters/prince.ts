@@ -11,9 +11,9 @@ export const prince: Character = {
   "traits": [
     "誠実",
     "優雅",
-    "ロマンチスト"
+    "ロマンチスト",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "真実の愛を求める王国の王子"
+  "summary": "真実の愛を求める王国の王子",
 };

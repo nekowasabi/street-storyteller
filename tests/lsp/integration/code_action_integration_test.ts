@@ -13,10 +13,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { LspServer } from "../../../src/lsp/server/server.ts";
 import { LspTransport } from "../../../src/lsp/protocol/transport.ts";
-import {
-  createLspMessage,
-  createMockWriter,
-} from "../helpers.ts";
+import { createLspMessage, createMockWriter } from "../helpers.ts";
 import type { DetectableEntity } from "../../../src/lsp/detection/positioned_detector.ts";
 import type { EntityInfo } from "../../../src/lsp/providers/hover_provider.ts";
 
@@ -209,13 +206,17 @@ Deno.test("Integration - Code Action E2E: low confidence reference gets code act
     (r: unknown) => (r as { id?: number }).id === 10,
   ) as {
     id: number;
-    result: Array<{
-      title: string;
-      kind: string;
-      edit?: {
-        changes: { [uri: string]: Array<{ range: unknown; newText: string }> };
-      };
-    }> | null;
+    result:
+      | Array<{
+        title: string;
+        kind: string;
+        edit?: {
+          changes: {
+            [uri: string]: Array<{ range: unknown; newText: string }>;
+          };
+        };
+      }>
+      | null;
   };
 
   assertExists(codeActionResponse, "Code action response should exist");
@@ -478,11 +479,14 @@ Deno.test("Integration - Code Action E2E: multiple low confidence references in 
   const response20 = allResponses.find(
     (r: unknown) => (r as { id?: number }).id === 20,
   ) as {
-    result: Array<{ title: string; edit?: { changes: Record<string, unknown[]> } }>;
+    result: Array<
+      { title: string; edit?: { changes: Record<string, unknown[]> } }
+    >;
   };
   assertExists(response20.result);
   assertEquals(
-    response20.result.length > 0 && response20.result[0].title.includes("@hero"),
+    response20.result.length > 0 &&
+      response20.result[0].title.includes("@hero"),
     true,
     "Should suggest @hero for 主人公 (alias with confidence 0.8)",
   );
@@ -492,7 +496,9 @@ Deno.test("Integration - Code Action E2E: multiple low confidence references in 
   const response21 = allResponses.find(
     (r: unknown) => (r as { id?: number }).id === 21,
   ) as {
-    result: Array<{ title: string; edit?: { changes: Record<string, unknown[]> } }>;
+    result: Array<
+      { title: string; edit?: { changes: Record<string, unknown[]> } }
+    >;
   };
   assertExists(response21.result);
   assertEquals(

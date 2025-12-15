@@ -9,11 +9,14 @@ import {
   PositionedDetector,
   type PositionedMatch,
 } from "../detection/positioned_detector.ts";
-import type { Range, MarkupContent, Hover } from "./lsp_types.ts";
-import { createEntityResolver, type EntityResolver } from "./entity_resolver.ts";
+import type { Hover, MarkupContent, Range } from "./lsp_types.ts";
+import {
+  createEntityResolver,
+  type EntityResolver,
+} from "./entity_resolver.ts";
 
 // 型の再エクスポート（後方互換性のため）
-export type { Range, MarkupContent, Hover };
+export type { Hover, MarkupContent, Range };
 
 /**
  * エンティティの詳細情報

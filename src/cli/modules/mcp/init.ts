@@ -10,7 +10,11 @@ import type {
 } from "../../types.ts";
 import { BaseCliCommand } from "../../base_command.ts";
 import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import { join, dirname, fromFileUrl } from "https://deno.land/std@0.224.0/path/mod.ts";
+import {
+  dirname,
+  fromFileUrl,
+  join,
+} from "https://deno.land/std@0.224.0/path/mod.ts";
 
 /**
  * .mcp.json のフォーマット
@@ -48,9 +52,10 @@ export class McpInitCommand extends BaseCliCommand {
     }
 
     // 出力先ディレクトリ（デフォルト: カレントディレクトリ）
-    const outputDir = typeof args.output === "string" && args.output.trim().length > 0
-      ? args.output
-      : Deno.cwd();
+    const outputDir =
+      typeof args.output === "string" && args.output.trim().length > 0
+        ? args.output
+        : Deno.cwd();
 
     // storytellerの実行パスを検出
     const storytellerPath = await this.detectStorytellerPath();
@@ -67,7 +72,8 @@ export class McpInitCommand extends BaseCliCommand {
         await Deno.stat(outputPath);
         return err({
           code: "file_exists",
-          message: `.mcp.json already exists at ${outputPath}. Use --force to overwrite.`,
+          message:
+            `.mcp.json already exists at ${outputPath}. Use --force to overwrite.`,
         });
       } catch {
         // ファイルが存在しない場合は続行
@@ -83,11 +89,16 @@ export class McpInitCommand extends BaseCliCommand {
 
     // ファイル書き込み
     try {
-      await Deno.writeTextFile(outputPath, JSON.stringify(config, null, 2) + "\n");
+      await Deno.writeTextFile(
+        outputPath,
+        JSON.stringify(config, null, 2) + "\n",
+      );
       context.presenter.showInfo(`✅ Created ${outputPath}`);
       context.presenter.showInfo("");
       context.presenter.showInfo("MCP is now configured for this project.");
-      context.presenter.showInfo("Claude Code will automatically detect and use this configuration.");
+      context.presenter.showInfo(
+        "Claude Code will automatically detect and use this configuration.",
+      );
       return ok({ outputPath, config });
     } catch (error) {
       return err({
@@ -171,7 +182,9 @@ export class McpInitCommand extends BaseCliCommand {
   /**
    * 環境変数設定を生成
    */
-  private generateEnvConfig(args: Record<string, unknown>): Record<string, string> {
+  private generateEnvConfig(
+    args: Record<string, unknown>,
+  ): Record<string, string> {
     const env: Record<string, string> = {};
 
     // OpenRouter APIキーの参照を追加（オプション）
@@ -194,7 +207,9 @@ function renderMcpInitHelp(): string {
   lines.push("  storyteller mcp init [options]");
   lines.push("");
   lines.push("Options:");
-  lines.push("  --output <dir>      Output directory (default: current directory)");
+  lines.push(
+    "  --output <dir>      Output directory (default: current directory)",
+  );
   lines.push("  --force             Overwrite existing .mcp.json");
   lines.push("  --with-openrouter   Include OpenRouter API key reference");
   lines.push("  --dry-run           Preview without creating file");
@@ -207,11 +222,17 @@ function renderMcpInitHelp(): string {
   lines.push("  storyteller mcp init --dry-run");
   lines.push("");
   lines.push("Description:");
-  lines.push("  This command creates a .mcp.json file in your project directory.");
-  lines.push("  Claude Code will automatically detect this file and enable MCP");
+  lines.push(
+    "  This command creates a .mcp.json file in your project directory.",
+  );
+  lines.push(
+    "  Claude Code will automatically detect this file and enable MCP",
+  );
   lines.push("  integration with storyteller.");
   lines.push("");
-  lines.push("  After running this command, you can use storyteller tools directly");
+  lines.push(
+    "  After running this command, you can use storyteller tools directly",
+  );
   lines.push("  from Claude Code without any additional configuration.");
   return lines.join("\n");
 }

@@ -34,7 +34,12 @@ function createTestContext(
     config: {
       resolve: async () => ({
         runtime: { environment: "test", paths: {} },
-        logging: { level: "info", format: "human", color: false, timestamps: false },
+        logging: {
+          level: "info",
+          format: "human",
+          color: false,
+          timestamps: false,
+        },
         features: {},
         cache: { defaultTtlSeconds: 900 },
         external: { providers: [] },
@@ -69,7 +74,11 @@ Deno.test("LspValidateCommand - 基本構造", async (t) => {
 Deno.test("LspValidateCommand - ヘルプ表示", async (t) => {
   await t.step("--help オプションでヘルプを表示する", async () => {
     const command = new LspValidateCommand();
-    const messages = { info: [] as string[], error: [] as string[], success: [] as string[] };
+    const messages = {
+      info: [] as string[],
+      error: [] as string[],
+      success: [] as string[],
+    };
     const context = createTestContext({ help: true }, messages);
 
     const result = await command.execute(context);
@@ -90,7 +99,10 @@ Deno.test("LspValidateCommand - エラーハンドリング", async (t) => {
     const result = await command.execute(context);
     assert(!result.ok, "ファイル指定なしではエラーを返すべき");
     if (!result.ok) {
-      assert(result.error.message.includes("file"), "エラーメッセージにファイルについて言及すべき");
+      assert(
+        result.error.message.includes("file"),
+        "エラーメッセージにファイルについて言及すべき",
+      );
     }
   });
 });
@@ -110,21 +122,31 @@ Deno.test("LspValidateCommand - 検証実行", async (t) => {
     // テスト用の一時ファイルを作成
     const testDir = await Deno.makeTempDir({ prefix: "storyteller_validate_" });
     const testFile = `${testDir}/test_manuscript.md`;
-    await Deno.writeTextFile(testFile, "勇者が剣を抜いた。知らない人が現れた。");
+    await Deno.writeTextFile(
+      testFile,
+      "勇者が剣を抜いた。知らない人が現れた。",
+    );
 
     try {
       const command = new LspValidateCommand({
         loadEntities: async () => testEntities,
       });
 
-      const messages = { info: [] as string[], error: [] as string[], success: [] as string[] };
+      const messages = {
+        info: [] as string[],
+        error: [] as string[],
+        success: [] as string[],
+      };
       const context = createTestContext({ file: testFile }, messages);
 
       const result = await command.execute(context);
       assert(result.ok, "検証は成功すべき");
 
       if (result.ok) {
-        const value = result.value as { diagnostics: unknown[]; filePath: string };
+        const value = result.value as {
+          diagnostics: unknown[];
+          filePath: string;
+        };
         assertExists(value.diagnostics, "診断結果が返されるべき");
         assertEquals(value.filePath, testFile, "ファイルパスが返されるべき");
       }
@@ -158,14 +180,24 @@ Deno.test("LspValidateCommand - JSON出力", async (t) => {
         loadEntities: async () => testEntities,
       });
 
-      const messages = { info: [] as string[], error: [] as string[], success: [] as string[] };
-      const context = createTestContext({ file: testFile, json: true }, messages);
+      const messages = {
+        info: [] as string[],
+        error: [] as string[],
+        success: [] as string[],
+      };
+      const context = createTestContext(
+        { file: testFile, json: true },
+        messages,
+      );
 
       const result = await command.execute(context);
       assert(result.ok, "JSON出力モードでも成功すべき");
 
       if (result.ok) {
-        const value = result.value as { diagnostics: unknown[]; filePath: string };
+        const value = result.value as {
+          diagnostics: unknown[];
+          filePath: string;
+        };
         assertExists(value.diagnostics);
       }
     } finally {

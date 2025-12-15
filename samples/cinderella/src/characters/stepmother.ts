@@ -11,9 +11,9 @@ export const stepmother: Character = {
   "traits": [
     "冷酷",
     "虚栄心が強い",
-    "計算高い"
+    "計算高い",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "シンデレラを虐げる冷酷な継母"
+  "summary": "シンデレラを虐げる冷酷な継母",
 };

@@ -88,7 +88,9 @@ Deno.test("claude-desktop.md: ファイルが存在すること", async () => {
 });
 
 Deno.test("claude-desktop.md: MCPツール一覧が含まれること", async () => {
-  const content = await Deno.readTextFile(`${DOCS_PROMPTS_DIR}/claude-desktop.md`);
+  const content = await Deno.readTextFile(
+    `${DOCS_PROMPTS_DIR}/claude-desktop.md`,
+  );
   // MCPツールについての記述
   assertStringIncludes(content, "MCP");
   assertStringIncludes(content, "element_create");
@@ -96,7 +98,9 @@ Deno.test("claude-desktop.md: MCPツール一覧が含まれること", async ()
 });
 
 Deno.test("claude-desktop.md: MCPリソース一覧が含まれること", async () => {
-  const content = await Deno.readTextFile(`${DOCS_PROMPTS_DIR}/claude-desktop.md`);
+  const content = await Deno.readTextFile(
+    `${DOCS_PROMPTS_DIR}/claude-desktop.md`,
+  );
   // MCPリソースについての記述
   assertStringIncludes(content, "storyteller://");
 });

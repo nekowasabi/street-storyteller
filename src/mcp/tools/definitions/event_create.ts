@@ -3,7 +3,10 @@
  * タイムラインにイベントを追加するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import { executeCliCommand } from "../cli_adapter.ts";
 import { ElementEventCommand } from "../../../cli/modules/element/event.ts";
 
@@ -38,7 +41,8 @@ export const eventCreateTool: McpToolDefinition = {
       category: {
         type: "string",
         enum: validCategories,
-        description: "イベントのカテゴリ: plot_point（プロットポイント）, character_event（キャラクターイベント）, world_event（世界イベント）, backstory（バックストーリー）, foreshadow（伏線）, climax（クライマックス）, resolution（解決）",
+        description:
+          "イベントのカテゴリ: plot_point（プロットポイント）, character_event（キャラクターイベント）, world_event（世界イベント）, backstory（バックストーリー）, foreshadow（伏線）, climax（クライマックス）, resolution（解決）",
       },
       order: {
         type: "number",
@@ -85,14 +89,19 @@ export const eventCreateTool: McpToolDefinition = {
     },
     required: ["timelineId", "title", "category", "order"],
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     const timelineId = args.timelineId as string | undefined;
     const title = args.title as string | undefined;
     const category = args.category as string | undefined;
     const order = args.order as number | undefined;
 
     // 必須パラメータのチェック
-    if (!timelineId || typeof timelineId !== "string" || timelineId.trim() === "") {
+    if (
+      !timelineId || typeof timelineId !== "string" || timelineId.trim() === ""
+    ) {
       return {
         content: [
           {
@@ -133,7 +142,9 @@ export const eventCreateTool: McpToolDefinition = {
         content: [
           {
             type: "text" as const,
-            text: `Error: Invalid category '${category}'. Must be one of: ${validCategories.join(", ")}.`,
+            text: `Error: Invalid category '${category}'. Must be one of: ${
+              validCategories.join(", ")
+            }.`,
           },
         ],
         isError: true,
@@ -154,7 +165,7 @@ export const eventCreateTool: McpToolDefinition = {
 
     // CLIコマンド用の引数を構築（CLIの引数名にマッピング）
     const commandArgs: Record<string, unknown> = {
-      timeline: timelineId,  // MCP: timelineId → CLI: timeline
+      timeline: timelineId, // MCP: timelineId → CLI: timeline
       title,
       category,
       order,

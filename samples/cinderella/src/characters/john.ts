@@ -11,5 +11,5 @@ export const john: Character = {
   "traits": [],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "Johnという名前の登場人物"
+  "summary": "Johnという名前の登場人物",
 };

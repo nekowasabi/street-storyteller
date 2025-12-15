@@ -3,8 +3,11 @@
  *
  * API呼び出し回数の制限機能をテスト
  */
-import { assertEquals, assert } from "@std/assert";
-import { CallLimiter, type CallLimitConfig } from "../../src/llm/safety/call_limiter.ts";
+import { assert, assertEquals } from "@std/assert";
+import {
+  type CallLimitConfig,
+  CallLimiter,
+} from "../../src/llm/safety/call_limiter.ts";
 
 Deno.test("CallLimiter - 基本動作", async (t) => {
   await t.step("上限内の呼び出しは許可される", () => {

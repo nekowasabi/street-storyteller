@@ -1,12 +1,12 @@
 /**
  * LLM Config テスト
  */
-import { assertEquals, assert } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
+  createMockConfig,
   DEFAULT_LLM_CONFIG,
   mergeWithDefaults,
   validateConfig,
-  createMockConfig,
 } from "../../src/llm/index.ts";
 
 Deno.test("LLM Config - デフォルト設定", async (t) => {
@@ -29,7 +29,10 @@ Deno.test("LLM Config - マージ", async (t) => {
 
     assertEquals(merged.model, "custom-model");
     assertEquals(merged.timeout, DEFAULT_LLM_CONFIG.timeout);
-    assertEquals(merged.retry?.maxRetries, DEFAULT_LLM_CONFIG.retry?.maxRetries);
+    assertEquals(
+      merged.retry?.maxRetries,
+      DEFAULT_LLM_CONFIG.retry?.maxRetries,
+    );
   });
 
   await t.step("リトライ設定を部分的にオーバーライド", () => {
@@ -44,7 +47,10 @@ Deno.test("LLM Config - マージ", async (t) => {
     const merged = mergeWithDefaults(partial);
 
     assertEquals(merged.retry?.maxRetries, 5);
-    assertEquals(merged.retry?.initialDelay, DEFAULT_LLM_CONFIG.retry?.initialDelay);
+    assertEquals(
+      merged.retry?.initialDelay,
+      DEFAULT_LLM_CONFIG.retry?.initialDelay,
+    );
   });
 });
 

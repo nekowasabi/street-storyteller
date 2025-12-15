@@ -8,12 +8,21 @@ import {
   PositionedDetector,
   type PositionedMatch,
 } from "../detection/positioned_detector.ts";
-import type { Range, TextEdit, WorkspaceEdit, Diagnostic, CodeAction } from "./lsp_types.ts";
-import { createEntityResolver, type EntityResolver } from "./entity_resolver.ts";
+import type {
+  CodeAction,
+  Diagnostic,
+  Range,
+  TextEdit,
+  WorkspaceEdit,
+} from "./lsp_types.ts";
+import {
+  createEntityResolver,
+  type EntityResolver,
+} from "./entity_resolver.ts";
 import { isValidContent } from "./provider_utils.ts";
 
 // 型の再エクスポート（後方互換性のため）
-export type { Range, TextEdit, WorkspaceEdit, Diagnostic, CodeAction };
+export type { CodeAction, Diagnostic, Range, TextEdit, WorkspaceEdit };
 
 /**
  * Code Action提案の閾値
@@ -161,7 +170,8 @@ export class CodeActionProvider {
     const confidencePercent = Math.round(match.confidence * 100);
 
     return {
-      title: `明示的参照に変換: ${match.matchedPattern} -> ${newText} (現在の信頼度: ${confidencePercent}%)`,
+      title:
+        `明示的参照に変換: ${match.matchedPattern} -> ${newText} (現在の信頼度: ${confidencePercent}%)`,
       kind: "quickfix",
       isPreferred: true,
       edit: {

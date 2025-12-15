@@ -14,7 +14,10 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { IntentAnalyzer, type Intent } from "../../../src/mcp/nlp/intent_analyzer.ts";
+import {
+  type Intent,
+  IntentAnalyzer,
+} from "../../../src/mcp/nlp/intent_analyzer.ts";
 import { CommandMapper } from "../../../src/mcp/nlp/command_mapper.ts";
 
 // ===== キャラクター作成関連テスト =====
@@ -297,7 +300,9 @@ Deno.test("Integration - Intent Analyzer: confidence is clamped between 0 and 1"
     assertEquals(
       intent.confidence >= 0 && intent.confidence <= 1,
       true,
-      `Confidence for "${input.slice(0, 50)}..." should be between 0 and 1, got ${intent.confidence}`,
+      `Confidence for "${
+        input.slice(0, 50)
+      }..." should be between 0 and 1, got ${intent.confidence}`,
     );
   }
 });

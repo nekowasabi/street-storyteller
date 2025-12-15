@@ -7,7 +7,8 @@ import type { McpPromptDefinition } from "../prompt_registry.ts";
 
 export const timelineBrainstormPrompt: McpPromptDefinition = {
   name: "timeline_brainstorm",
-  description: "物語のタイムライン構成をブレインストーミングします。スコープに応じたイベント案や時系列構造を提案します。",
+  description:
+    "物語のタイムライン構成をブレインストーミングします。スコープに応じたイベント案や時系列構造を提案します。",
   arguments: [
     {
       name: "scope",
@@ -46,7 +47,8 @@ export const timelineBrainstormPrompt: McpPromptDefinition = {
     return [
       {
         role: "system" as const,
-        content: `あなたは物語構成の専門家です。タイムライン設計の観点から、因果関係が明確で、読者を引き込む構成を提案してください。
+        content:
+          `あなたは物語構成の専門家です。タイムライン設計の観点から、因果関係が明確で、読者を引き込む構成を提案してください。
 出力は日本語で、構造化された形式で提供してください。`,
       },
       {

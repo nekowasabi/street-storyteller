@@ -17,7 +17,8 @@ export const PresenterType = {
   JSON: "json",
 } as const;
 
-export type PresenterTypeValue = typeof PresenterType[keyof typeof PresenterType];
+export type PresenterTypeValue =
+  typeof PresenterType[keyof typeof PresenterType];
 
 /**
  * Presenter生成オプション

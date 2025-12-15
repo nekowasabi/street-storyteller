@@ -148,15 +148,19 @@ ${CSS_STYLES}
             <span class="id">${escapeHtml(timeline.id)}</span>
           </div>
           ${
-            timeline.parentTimeline
-              ? `<div class="parent-timeline"><span class="label">Parent:</span> ${escapeHtml(timeline.parentTimeline)}</div>`
-              : ""
-          }
+      timeline.parentTimeline
+        ? `<div class="parent-timeline"><span class="label">Parent:</span> ${
+          escapeHtml(timeline.parentTimeline)
+        }</div>`
+        : ""
+    }
           ${
-            timeline.relatedCharacter
-              ? `<div class="related-character"><span class="label">Character:</span> ${escapeHtml(timeline.relatedCharacter)}</div>`
-              : ""
-          }
+      timeline.relatedCharacter
+        ? `<div class="related-character"><span class="label">Character:</span> ${
+          escapeHtml(timeline.relatedCharacter)
+        }</div>`
+        : ""
+    }
           <p class="summary">${escapeHtml(timeline.summary ?? "")}</p>
           ${this.renderTimelineEvents(timeline.events)}
           <div class="file-path">
@@ -187,40 +191,50 @@ ${CSS_STYLES}
         </div>
         <div class="event-summary">${escapeHtml(event.summary ?? "")}</div>
         ${
-          event.characters.length > 0
-            ? `<div class="event-refs"><span class="label">Characters:</span> ${
-                event.characters.map((c) => `<span class="ref character">${escapeHtml(c)}</span>`).join(" ")
-              }</div>`
-            : ""
-        }
+      event.characters.length > 0
+        ? `<div class="event-refs"><span class="label">Characters:</span> ${
+          event.characters.map((c) =>
+            `<span class="ref character">${escapeHtml(c)}</span>`
+          ).join(" ")
+        }</div>`
+        : ""
+    }
         ${
-          event.settings.length > 0
-            ? `<div class="event-refs"><span class="label">Settings:</span> ${
-                event.settings.map((s) => `<span class="ref setting">${escapeHtml(s)}</span>`).join(" ")
-              }</div>`
-            : ""
-        }
+      event.settings.length > 0
+        ? `<div class="event-refs"><span class="label">Settings:</span> ${
+          event.settings.map((s) =>
+            `<span class="ref setting">${escapeHtml(s)}</span>`
+          ).join(" ")
+        }</div>`
+        : ""
+    }
         ${
-          event.chapters.length > 0
-            ? `<div class="event-refs"><span class="label">Chapters:</span> ${
-                event.chapters.map((c) => `<span class="ref chapter">${escapeHtml(c)}</span>`).join(" ")
-              }</div>`
-            : ""
-        }
+      event.chapters.length > 0
+        ? `<div class="event-refs"><span class="label">Chapters:</span> ${
+          event.chapters.map((c) =>
+            `<span class="ref chapter">${escapeHtml(c)}</span>`
+          ).join(" ")
+        }</div>`
+        : ""
+    }
         ${
-          event.causedBy && event.causedBy.length > 0
-            ? `<div class="event-causality caused-by"><span class="label">Caused by:</span> ${
-                event.causedBy.map((e) => `<span class="ref causality">${escapeHtml(e)}</span>`).join(" ")
-              }</div>`
-            : ""
-        }
+      event.causedBy && event.causedBy.length > 0
+        ? `<div class="event-causality caused-by"><span class="label">Caused by:</span> ${
+          event.causedBy.map((e) =>
+            `<span class="ref causality">${escapeHtml(e)}</span>`
+          ).join(" ")
+        }</div>`
+        : ""
+    }
         ${
-          event.causes && event.causes.length > 0
-            ? `<div class="event-causality causes"><span class="label">Causes:</span> ${
-                event.causes.map((e) => `<span class="ref causality">${escapeHtml(e)}</span>`).join(" ")
-              }</div>`
-            : ""
-        }
+      event.causes && event.causes.length > 0
+        ? `<div class="event-causality causes"><span class="label">Causes:</span> ${
+          event.causes.map((e) =>
+            `<span class="ref causality">${escapeHtml(e)}</span>`
+          ).join(" ")
+        }</div>`
+        : ""
+    }
       </div>`).join("\n");
 
     return `<div class="timeline-events event-list">${eventItems}</div>`;

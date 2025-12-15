@@ -1,7 +1,8 @@
 # Street Storyteller - Neovim プラットフォームプロンプト
 
-このドキュメントは、Neovim環境でStory Directorを使用する際のプラットフォーム固有情報を定義します。
-基盤として `core.md` と `director.md` を参照します。
+このドキュメントは、Neovim環境でStory
+Directorを使用する際のプラットフォーム固有情報を定義します。 基盤として
+`core.md` と `director.md` を参照します。
 
 ## プラットフォーム概要
 
@@ -50,11 +51,13 @@ export OPENROUTER_API_KEY="your-api-key"
 現在のバッファとプロジェクト情報をコンテキストとして使用します。
 
 **使用方法:**
+
 ```vim
 :StoryDirector
 ```
 
 **動作:**
+
 1. 現在のバッファ内容を取得
 2. カーソル位置を特定
 3. `storyteller meta check --json` でプロジェクト情報取得
@@ -66,6 +69,7 @@ export OPENROUTER_API_KEY="your-api-key"
 選択範囲またはカーソル行の文章改善提案を取得します。
 
 **使用方法:**
+
 ```vim
 " ビジュアルモードで選択してから
 :'<,'>StoryImprove
@@ -75,6 +79,7 @@ export OPENROUTER_API_KEY="your-api-key"
 ```
 
 **動作:**
+
 1. 選択範囲（または現在行）を取得
 2. 前後の文脈を含めてコンテキスト構築
 3. 改善提案をフローティングウィンドウに表示
@@ -84,12 +89,14 @@ export OPENROUTER_API_KEY="your-api-key"
 自由な質問をAIに投げかけます。
 
 **使用方法:**
+
 ```vim
 :StoryAsk この章の問題点は？
 :StoryAsk 主人公の動機を強化するには
 ```
 
 **動作:**
+
 1. 現在のバッファをコンテキストに含める
 2. 指定された質問でAI呼び出し
 3. フローティングウィンドウに応答を表示
@@ -99,11 +106,13 @@ export OPENROUTER_API_KEY="your-api-key"
 現在のファイルの整合性チェックを実行します。
 
 **使用方法:**
+
 ```vim
 :StoryValidate
 ```
 
 **動作:**
+
 1. `storyteller lsp validate {current_file}` を実行
 2. 結果をquickfixリストに設定
 3. 問題がある場合はdiagnosticsとして表示
@@ -150,13 +159,13 @@ end, opts)
 
 ### キーマッピング一覧
 
-| キー | コマンド | 説明 |
-|------|----------|------|
+| キー         | コマンド         | 説明                 |
+| ------------ | ---------------- | -------------------- |
 | `<Leader>sd` | `:StoryDirector` | ディレクター呼び出し |
-| `<Leader>si` | `:StoryImprove` | 文章改善 |
-| `<Leader>sa` | `:StoryAsk ` | 質問（入力待ち） |
-| `<Leader>sv` | `:StoryValidate` | 整合性チェック |
-| `<Leader>sc` | - | ウィンドウを閉じる |
+| `<Leader>si` | `:StoryImprove`  | 文章改善             |
+| `<Leader>sa` | `:StoryAsk`      | 質問（入力待ち）     |
+| `<Leader>sv` | `:StoryValidate` | 整合性チェック       |
+| `<Leader>sc` | -                | ウィンドウを閉じる   |
 
 ## 簡潔応答モード
 
@@ -172,20 +181,25 @@ Neovim環境では、フローティングウィンドウでの表示に最適�
 ### 応答フォーマット例
 
 **通常応答（Claude Desktop/Code）:**
+
 ```markdown
 ## 分析結果
 
 ### 概要
+
 このプロジェクトは現在8章構成で、5名のキャラクターと3つの設定が定義されています。
 
 ### 詳細
+
 ...（長文の説明）...
 
 ### 推奨アクション
+
 ...
 ```
 
 **簡潔応答（Neovim）:**
+
 ```
 [分析] 8章/5キャラ/3設定
 警告2件:
@@ -225,12 +239,12 @@ fix: storyteller element character --name witch
 
 ### 操作方法
 
-| キー | 動作 |
-|------|------|
-| `q` / `<Esc>` | ウィンドウを閉じる |
-| `y` | 内容をクリップボードにコピー |
-| `Enter` | コマンド提案を実行（該当する場合） |
-| `j` / `k` | スクロール |
+| キー          | 動作                               |
+| ------------- | ---------------------------------- |
+| `q` / `<Esc>` | ウィンドウを閉じる                 |
+| `y`           | 内容をクリップボードにコピー       |
+| `Enter`       | コマンド提案を実行（該当する場合） |
+| `j` / `k`     | スクロール                         |
 
 ## 設定オプション
 
@@ -288,6 +302,7 @@ E: OPENROUTER_API_KEY not set
 ```
 
 **解決方法:**
+
 ```bash
 export OPENROUTER_API_KEY="your-key"
 ```
@@ -305,6 +320,7 @@ E: denops server not started
 ```
 
 **解決方法:**
+
 ```vim
 :call denops#server#start()
 ```
@@ -312,6 +328,7 @@ E: denops server not started
 ### フローティングウィンドウが表示されない
 
 **確認事項:**
+
 1. Neovim 0.9以上であること
 2. `nvim_open_win` が利用可能であること
 

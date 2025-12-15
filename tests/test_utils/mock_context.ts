@@ -4,8 +4,17 @@
  * CLIコマンドのテスト用にモックされたCommandContextを提供
  */
 
-import type { CommandContext, OutputPresenter, ConfigurationManagerRef } from "../../src/cli/types.ts";
-import type { Logger, LogLevel, LogMetadata, LogContext } from "../../src/shared/logging/types.ts";
+import type {
+  CommandContext,
+  ConfigurationManagerRef,
+  OutputPresenter,
+} from "../../src/cli/types.ts";
+import type {
+  LogContext,
+  Logger,
+  LogLevel,
+  LogMetadata,
+} from "../../src/shared/logging/types.ts";
 import type { AppConfig } from "../../src/shared/config/schema.ts";
 
 /**
@@ -54,7 +63,9 @@ export function createMockLogger(): Logger {
 /**
  * モック設定マネージャー
  */
-export function createMockConfigManager(projectRoot?: string): ConfigurationManagerRef {
+export function createMockConfigManager(
+  projectRoot?: string,
+): ConfigurationManagerRef {
   return {
     async resolve(): Promise<AppConfig> {
       return {
@@ -92,8 +103,11 @@ export interface MockContextOptions {
 /**
  * モックコンテキストを作成
  */
-export function createMockContext(options: MockContextOptions = {}): CommandContext {
-  const projectRoot = options.args?.projectRoot as string | undefined ?? options.projectRoot;
+export function createMockContext(
+  options: MockContextOptions = {},
+): CommandContext {
+  const projectRoot = options.args?.projectRoot as string | undefined ??
+    options.projectRoot;
 
   return {
     args: options.args,

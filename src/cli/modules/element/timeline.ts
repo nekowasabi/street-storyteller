@@ -62,8 +62,10 @@ export class ElementTimelineCommand extends BaseCliCommand {
         scope: parsed.scope as TimelineScope,
         summary: parsed.summary ?? `${parsed.name}の概要（要追加）`,
         events: [],
-        ...(parsed["parent-timeline"] && { parentTimeline: parsed["parent-timeline"] }),
-        ...(parsed["related-character"] && { relatedCharacter: parsed["related-character"] }),
+        ...(parsed["parent-timeline"] &&
+          { parentTimeline: parsed["parent-timeline"] }),
+        ...(parsed["related-character"] &&
+          { relatedCharacter: parsed["related-character"] }),
         ...(parsed.displayNames && {
           displayNames: parsed.displayNames.split(",").map((n) => n.trim()),
         }),

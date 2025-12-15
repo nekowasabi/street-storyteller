@@ -123,9 +123,7 @@ export async function executeCliCommand(
   projectRoot?: string,
 ): Promise<McpCallToolResult> {
   // projectRootが指定されていれば引数に追加
-  const argsWithProjectRoot = projectRoot
-    ? { ...args, projectRoot }
-    : args;
+  const argsWithProjectRoot = projectRoot ? { ...args, projectRoot } : args;
   const context = createMockContext(argsWithProjectRoot);
 
   try {

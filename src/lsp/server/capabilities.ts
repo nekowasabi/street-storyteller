@@ -27,8 +27,7 @@ export const SEMANTIC_TOKEN_TYPES = [
   "setting", // 1: 設定名（場所・世界観）
 ] as const;
 
-export type SemanticTokenType =
-  (typeof SEMANTIC_TOKEN_TYPES)[number];
+export type SemanticTokenType = (typeof SEMANTIC_TOKEN_TYPES)[number];
 
 /**
  * セマンティックトークンモディファイア定義
@@ -40,8 +39,7 @@ export const SEMANTIC_TOKEN_MODIFIERS = [
   "lowConfidence", // 2: 信頼度70%未満
 ] as const;
 
-export type SemanticTokenModifier =
-  (typeof SEMANTIC_TOKEN_MODIFIERS)[number];
+export type SemanticTokenModifier = (typeof SEMANTIC_TOKEN_MODIFIERS)[number];
 
 /**
  * セマンティックトークンレジェンド型

@@ -183,7 +183,8 @@ const elementTimelineHandler = new ElementTimelineCommand();
 export const elementTimelineCommandDescriptor: CommandDescriptor =
   createLegacyCommandDescriptor(elementTimelineHandler, {
     summary: "Create a new timeline element.",
-    usage: "storyteller element timeline --name <name> --scope <scope> [options]",
+    usage:
+      "storyteller element timeline --name <name> --scope <scope> [options]",
     path: ["element", "timeline"],
     options: [
       {
@@ -337,7 +338,8 @@ export function createElementDescriptor(
 ): CommandDescriptor {
   const handler = new ElementCommand(registry);
   return createLegacyCommandDescriptor(handler, {
-    summary: "Create and manage story elements (characters, settings, timelines, events).",
+    summary:
+      "Create and manage story elements (characters, settings, timelines, events).",
     usage: "storyteller element <subcommand> [options]",
     children: [
       elementCharacterCommandDescriptor,

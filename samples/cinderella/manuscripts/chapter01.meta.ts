@@ -44,7 +44,9 @@ export const chapter01Meta: ChapterMeta = {
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("屋敷") || content.includes("邸宅") || content.includes("お屋敷"),
+      validate: (content: string) =>
+        content.includes("屋敷") || content.includes("邸宅") ||
+        content.includes("お屋敷"),
       message: "設定（mansion）が章内に登場していません",
     },
     {

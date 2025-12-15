@@ -3,7 +3,10 @@
  * 原稿（Markdown）の整合性診断を実行するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import { toFileUrl } from "@std/path";
 import { PositionedDetector } from "../../../lsp/detection/positioned_detector.ts";
 import { DiagnosticsGenerator } from "../../../lsp/diagnostics/diagnostics_generator.ts";
@@ -40,11 +43,14 @@ export const lspValidateTool: McpToolDefinition = {
       },
     },
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     // コンテキストからのprojectRootを優先、なければargsから、それもなければDeno.cwd()
-    const projectRoot =
-      context?.projectRoot ??
-      (typeof args.projectRoot === "string" && args.projectRoot.trim().length > 0
+    const projectRoot = context?.projectRoot ??
+      (typeof args.projectRoot === "string" &&
+          args.projectRoot.trim().length > 0
         ? args.projectRoot
         : Deno.cwd());
 

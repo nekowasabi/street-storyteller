@@ -1,7 +1,7 @@
 /**
  * Safe LLM Provider テスト
  */
-import { assertEquals, assert } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import { MockLLMProvider } from "../../src/llm/providers/mock.ts";
 import {
   SafeLLMProvider,
@@ -95,7 +95,10 @@ Deno.test("SafeLLMProvider - コールバック", async (t) => {
     await safeProvider.generate(testMessages);
 
     assertEquals(warningRemaining, 2);
-    assert(warningMessage.includes("2"), "警告メッセージに残り回数が含まれるべき");
+    assert(
+      warningMessage.includes("2"),
+      "警告メッセージに残り回数が含まれるべき",
+    );
   });
 
   await t.step("制限到達コールバックが呼ばれる", async () => {

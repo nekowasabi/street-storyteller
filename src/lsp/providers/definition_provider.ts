@@ -8,12 +8,15 @@ import {
   type Position,
   PositionedDetector,
 } from "../detection/positioned_detector.ts";
-import type { Range, Location } from "./lsp_types.ts";
-import { createEntityResolver, type EntityResolver } from "./entity_resolver.ts";
+import type { Location, Range } from "./lsp_types.ts";
+import {
+  createEntityResolver,
+  type EntityResolver,
+} from "./entity_resolver.ts";
 import { filePathToUri } from "./provider_utils.ts";
 
 // 型の再エクスポート（後方互換性のため）
-export type { Range, Location };
+export type { Location, Range };
 
 /**
  * 定義ジャンププロバイダークラス

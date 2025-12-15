@@ -20,7 +20,7 @@ Deno.test("timeline_brainstorm プロンプト", async (t) => {
 
   await t.step("scope 引数が必須であること", () => {
     const scopeArg = timelineBrainstormPrompt.arguments?.find(
-      (a) => a.name === "scope"
+      (a) => a.name === "scope",
     );
     assertExists(scopeArg);
     assertEquals(scopeArg.required, true);
@@ -45,7 +45,7 @@ Deno.test("event_detail_suggest プロンプト", async (t) => {
 
   await t.step("event_title 引数が必須であること", () => {
     const arg = eventDetailSuggestPrompt.arguments?.find(
-      (a) => a.name === "event_title"
+      (a) => a.name === "event_title",
     );
     assertExists(arg);
     assertEquals(arg.required, true);
@@ -68,52 +68,62 @@ Deno.test("causality_analysis プロンプト", async (t) => {
 
   await t.step("events 引数が必須であること", () => {
     const arg = causalityAnalysisPrompt.arguments?.find(
-      (a) => a.name === "events"
+      (a) => a.name === "events",
     );
     assertExists(arg);
     assertEquals(arg.required, true);
   });
 
-  await t.step("getMessages がイベント一覧を分析するメッセージを返すこと", () => {
-    const events = JSON.stringify([
-      { id: "e1", title: "王の死" },
-      { id: "e2", title: "王位継承争い" },
-    ]);
-    const messages = causalityAnalysisPrompt.getMessages({
-      events,
-    });
-    assertEquals(messages.length >= 2, true);
-    assertEquals(
-      messages[1].content.includes("王の死") || messages[1].content.includes("events"),
-      true
-    );
-  });
+  await t.step(
+    "getMessages がイベント一覧を分析するメッセージを返すこと",
+    () => {
+      const events = JSON.stringify([
+        { id: "e1", title: "王の死" },
+        { id: "e2", title: "王位継承争い" },
+      ]);
+      const messages = causalityAnalysisPrompt.getMessages({
+        events,
+      });
+      assertEquals(messages.length >= 2, true);
+      assertEquals(
+        messages[1].content.includes("王の死") ||
+          messages[1].content.includes("events"),
+        true,
+      );
+    },
+  );
 });
 
 Deno.test("timeline_consistency_check プロンプト", async (t) => {
   await t.step("name が timeline_consistency_check であること", () => {
-    assertEquals(timelineConsistencyCheckPrompt.name, "timeline_consistency_check");
+    assertEquals(
+      timelineConsistencyCheckPrompt.name,
+      "timeline_consistency_check",
+    );
   });
 
   await t.step("timeline 引数が必須であること", () => {
     const arg = timelineConsistencyCheckPrompt.arguments?.find(
-      (a) => a.name === "timeline"
+      (a) => a.name === "timeline",
     );
     assertExists(arg);
     assertEquals(arg.required, true);
   });
 
-  await t.step("getMessages がタイムライン整合性チェックを依頼するメッセージを返すこと", () => {
-    const timeline = JSON.stringify({
-      id: "main",
-      name: "メインストーリー",
-      events: [{ id: "e1", title: "始まり" }],
-    });
-    const messages = timelineConsistencyCheckPrompt.getMessages({
-      timeline,
-    });
-    assertEquals(messages.length >= 2, true);
-    assertEquals(messages[0].role, "system");
-    assertEquals(messages[1].role, "user");
-  });
+  await t.step(
+    "getMessages がタイムライン整合性チェックを依頼するメッセージを返すこと",
+    () => {
+      const timeline = JSON.stringify({
+        id: "main",
+        name: "メインストーリー",
+        events: [{ id: "e1", title: "始まり" }],
+      });
+      const messages = timelineConsistencyCheckPrompt.getMessages({
+        timeline,
+      });
+      assertEquals(messages.length >= 2, true);
+      assertEquals(messages[0].role, "system");
+      assertEquals(messages[1].role, "user");
+    },
+  );
 });

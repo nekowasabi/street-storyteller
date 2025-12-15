@@ -12,9 +12,9 @@ export const cinderella: Character = {
     "優しい",
     "忍耐強い",
     "美しい",
-    "夢見がち"
+    "夢見がち",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "継母にいじめられながらも優しさを失わない少女"
+  "summary": "継母にいじめられながらも優しさを失わない少女",
 };

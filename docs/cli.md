@@ -1,6 +1,7 @@
 # CLI リファレンス
 
-Street Storyteller CLIは、物語プロジェクトを管理するためのコマンドラインツールです。
+Street Storyteller
+CLIは、物語プロジェクトを管理するためのコマンドラインツールです。
 
 ## インストール
 
@@ -16,13 +17,13 @@ deno run -A main.ts [command]
 
 すべてのコマンドで使用可能なオプションです。
 
-| オプション | 短縮形 | 説明 |
-|-----------|--------|------|
-| `--json` | - | 出力をJSON形式で表示（v1.0新機能） |
-| `--help` | `-h` | ヘルプを表示 |
-| `--version` | `-v` | バージョンを表示 |
-| `--verbose` | - | 詳細な出力を表示 |
-| `--quiet` | `-q` | 出力を抑制 |
+| オプション  | 短縮形 | 説明                               |
+| ----------- | ------ | ---------------------------------- |
+| `--json`    | -      | 出力をJSON形式で表示（v1.0新機能） |
+| `--help`    | `-h`   | ヘルプを表示                       |
+| `--version` | `-v`   | バージョンを表示                   |
+| `--verbose` | -      | 詳細な出力を表示                   |
+| `--quiet`   | `-q`   | 出力を抑制                         |
 
 ## JSON出力（v1.0新機能）
 
@@ -62,11 +63,11 @@ fi
 storyteller generate --name "my-story" --template basic
 ```
 
-| オプション | 短縮形 | 説明 | デフォルト |
-|-----------|--------|------|-----------|
-| `--name` | `-n` | プロジェクト名 | 必須 |
-| `--template` | `-t` | テンプレート | `basic` |
-| `--path` | `-p` | 出力先パス | カレントディレクトリ |
+| オプション   | 短縮形 | 説明           | デフォルト           |
+| ------------ | ------ | -------------- | -------------------- |
+| `--name`     | `-n`   | プロジェクト名 | 必須                 |
+| `--template` | `-t`   | テンプレート   | `basic`              |
+| `--path`     | `-p`   | 出力先パス     | カレントディレクトリ |
 
 ### `storyteller meta`
 
@@ -87,14 +88,14 @@ storyteller meta check --dir manuscripts/ --recursive
 storyteller meta check --path chapter01.md --json
 ```
 
-| オプション | 説明 |
-|-----------|------|
-| `--path` | 対象ファイルパス |
-| `--dir` | 対象ディレクトリ |
-| `--recursive` | サブディレクトリも含める |
+| オプション     | 説明                         |
+| -------------- | ---------------------------- |
+| `--path`       | 対象ファイルパス             |
+| `--dir`        | 対象ディレクトリ             |
+| `--recursive`  | サブディレクトリも含める     |
 | `--characters` | キャラクター定義ディレクトリ |
-| `--settings` | 設定定義ディレクトリ |
-| `--preset` | プリセット名 |
+| `--settings`   | 設定定義ディレクトリ         |
+| `--preset`     | プリセット名                 |
 
 #### `storyteller meta generate`
 
@@ -105,16 +106,16 @@ storyteller meta generate --path manuscripts/chapter01.md
 storyteller meta generate --dir manuscripts/ --recursive --preview
 ```
 
-| オプション | 説明 |
-|-----------|------|
-| `--path` | 対象ファイルパス |
-| `--dir` | 対象ディレクトリ |
+| オプション    | 説明                     |
+| ------------- | ------------------------ |
+| `--path`      | 対象ファイルパス         |
+| `--dir`       | 対象ディレクトリ         |
 | `--recursive` | サブディレクトリも含める |
-| `--preview` | プレビュー表示のみ |
-| `--dry-run` | 実際には書き込まない |
-| `--force` | 既存ファイルを上書き |
-| `--update` | 既存ファイルを更新 |
-| `--output` | 出力先ディレクトリ |
+| `--preview`   | プレビュー表示のみ       |
+| `--dry-run`   | 実際には書き込まない     |
+| `--force`     | 既存ファイルを上書き     |
+| `--update`    | 既存ファイルを更新       |
+| `--output`    | 出力先ディレクトリ       |
 
 #### `storyteller meta watch`
 
@@ -136,17 +137,17 @@ storyteller meta watch --dir manuscripts/
 storyteller element character --name "hero" --role protagonist --summary "主人公"
 ```
 
-| オプション | 説明 |
-|-----------|------|
-| `--name` | キャラクター名（必須） |
-| `--id` | 内部ID（省略時はnameを使用） |
-| `--role` | 役割（protagonist/antagonist/supporting/guest） |
-| `--summary` | 概要説明 |
-| `--traits` | 特徴（カンマ区切り） |
-| `--with-details` | 詳細情報付きで作成 |
-| `--add-details` | 追加する詳細項目 |
-| `--separate-files` | ファイル分離する項目 |
-| `--force` | 既存ファイルを上書き |
+| オプション         | 説明                                            |
+| ------------------ | ----------------------------------------------- |
+| `--name`           | キャラクター名（必須）                          |
+| `--id`             | 内部ID（省略時はnameを使用）                    |
+| `--role`           | 役割（protagonist/antagonist/supporting/guest） |
+| `--summary`        | 概要説明                                        |
+| `--traits`         | 特徴（カンマ区切り）                            |
+| `--with-details`   | 詳細情報付きで作成                              |
+| `--add-details`    | 追加する詳細項目                                |
+| `--separate-files` | ファイル分離する項目                            |
+| `--force`          | 既存ファイルを上書き                            |
 
 ### `storyteller lsp`
 
@@ -160,9 +161,9 @@ LSPサーバーを起動します。
 storyteller lsp start --stdio
 ```
 
-| オプション | 説明 |
-|-----------|------|
-| `--stdio` | 標準入出力モード（必須） |
+| オプション | 説明                     |
+| ---------- | ------------------------ |
+| `--stdio`  | 標準入出力モード（必須） |
 
 #### `storyteller lsp install`
 
@@ -188,15 +189,15 @@ storyteller view --serve --port 8080
 storyteller view --serve --watch
 ```
 
-| オプション | 説明 |
-|-----------|------|
-| `--path` | プロジェクトパス |
-| `--output` | 出力先ディレクトリ |
-| `--serve` | ローカルサーバーを起動 |
-| `--port` | サーバーポート番号 |
-| `--watch` | ファイル監視モード |
-| `--timeout` | タイムアウト（秒） |
-| `--dry-run` | プレビューのみ |
+| オプション  | 説明                   |
+| ----------- | ---------------------- |
+| `--path`    | プロジェクトパス       |
+| `--output`  | 出力先ディレクトリ     |
+| `--serve`   | ローカルサーバーを起動 |
+| `--port`    | サーバーポート番号     |
+| `--watch`   | ファイル監視モード     |
+| `--timeout` | タイムアウト（秒）     |
+| `--dry-run` | プレビューのみ         |
 
 ### `storyteller mcp`
 
@@ -211,10 +212,10 @@ storyteller mcp start --stdio
 storyteller mcp start --stdio --path /path/to/project
 ```
 
-| オプション | 説明 |
-|-----------|------|
-| `--stdio` | 標準入出力モード（必須） |
-| `--path` | プロジェクトパス |
+| オプション | 説明                     |
+| ---------- | ------------------------ |
+| `--stdio`  | 標準入出力モード（必須） |
+| `--path`   | プロジェクトパス         |
 
 ### `storyteller help`
 
@@ -236,17 +237,17 @@ storyteller version
 
 ## 終了コード
 
-| コード | 説明 |
-|--------|------|
-| 0 | 成功 |
-| 1 | 一般的なエラー |
-| 2 | コマンドライン引数エラー |
+| コード | 説明                     |
+| ------ | ------------------------ |
+| 0      | 成功                     |
+| 1      | 一般的なエラー           |
+| 2      | コマンドライン引数エラー |
 
 ## 環境変数
 
-| 変数 | 説明 |
-|------|------|
-| `STORYTELLER_CONFIG` | 設定ファイルのパス |
+| 変数                    | 説明                                |
+| ----------------------- | ----------------------------------- |
+| `STORYTELLER_CONFIG`    | 設定ファイルのパス                  |
 | `STORYTELLER_LOG_LEVEL` | ログレベル（debug/info/warn/error） |
 
 ## 関連ドキュメント

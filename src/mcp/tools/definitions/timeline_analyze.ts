@@ -3,7 +3,10 @@
  * タイムラインの整合性を分析するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import type { Timeline, TimelineEvent } from "../../../type/v2/timeline.ts";
 
 interface AnalysisIssue {
@@ -42,7 +45,10 @@ export const timelineAnalyzeTool: McpToolDefinition = {
     },
     required: [],
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     const timelineId = args.timelineId as string | undefined;
     const projectRoot = context?.projectRoot ?? Deno.cwd();
 
@@ -137,7 +143,9 @@ export const timelineAnalyzeTool: McpToolDefinition = {
     }
 
     // 分析を実行
-    const analyses: TimelineAnalysis[] = timelines.map((tl) => analyzeTimeline(tl, timelines));
+    const analyses: TimelineAnalysis[] = timelines.map((tl) =>
+      analyzeTimeline(tl, timelines)
+    );
 
     // 結果をフォーマット
     const text = formatAnalysisResults(analyses);
@@ -175,7 +183,10 @@ function parseTimelineFromFile(content: string): Timeline | null {
 /**
  * タイムラインを分析する
  */
-function analyzeTimeline(timeline: Timeline, allTimelines: Timeline[]): TimelineAnalysis {
+function analyzeTimeline(
+  timeline: Timeline,
+  allTimelines: Timeline[],
+): TimelineAnalysis {
   const issues: AnalysisIssue[] = [];
   const stats: TimelineStats = {
     eventCount: timeline.events.length,
@@ -203,7 +214,8 @@ function analyzeTimeline(timeline: Timeline, allTimelines: Timeline[]): Timeline
   // 各イベントを分析
   for (const event of timeline.events) {
     // カテゴリ統計
-    stats.categoryBreakdown[event.category] = (stats.categoryBreakdown[event.category] || 0) + 1;
+    stats.categoryBreakdown[event.category] =
+      (stats.categoryBreakdown[event.category] || 0) + 1;
 
     // キャラクター統計
     for (const char of event.characters) {
@@ -212,12 +224,14 @@ function analyzeTimeline(timeline: Timeline, allTimelines: Timeline[]): Timeline
 
     // 設定統計
     for (const setting of event.settings) {
-      stats.settingMentions[setting] = (stats.settingMentions[setting] || 0) + 1;
+      stats.settingMentions[setting] = (stats.settingMentions[setting] || 0) +
+        1;
     }
 
     // チャプター統計
     for (const chapter of event.chapters) {
-      stats.chapterMentions[chapter] = (stats.chapterMentions[chapter] || 0) + 1;
+      stats.chapterMentions[chapter] = (stats.chapterMentions[chapter] || 0) +
+        1;
     }
 
     // 因果関係チェック
@@ -230,7 +244,8 @@ function analyzeTimeline(timeline: Timeline, allTimelines: Timeline[]): Timeline
           issues.push({
             type: "warning",
             eventId: event.id,
-            message: `Event '${event.id}' references nonexistent cause event '${causeId}'`,
+            message:
+              `Event '${event.id}' references nonexistent cause event '${causeId}'`,
           });
         } else {
           // 順序チェック（同じタイムライン内のみ）
@@ -239,7 +254,8 @@ function analyzeTimeline(timeline: Timeline, allTimelines: Timeline[]): Timeline
             issues.push({
               type: "warning",
               eventId: event.id,
-              message: `Event '${event.id}' (order ${event.time.order}) is caused by '${causeId}' (order ${causeEvent.time.order}) which comes after or at the same position`,
+              message:
+                `Event '${event.id}' (order ${event.time.order}) is caused by '${causeId}' (order ${causeEvent.time.order}) which comes after or at the same position`,
             });
           }
         }
@@ -255,7 +271,8 @@ function analyzeTimeline(timeline: Timeline, allTimelines: Timeline[]): Timeline
           issues.push({
             type: "warning",
             eventId: event.id,
-            message: `Event '${event.id}' references nonexistent effect event '${effectId}'`,
+            message:
+              `Event '${event.id}' references nonexistent effect event '${effectId}'`,
           });
         } else {
           // 順序チェック（同じタイムライン内のみ）
@@ -264,7 +281,8 @@ function analyzeTimeline(timeline: Timeline, allTimelines: Timeline[]): Timeline
             issues.push({
               type: "warning",
               eventId: event.id,
-              message: `Event '${event.id}' (order ${event.time.order}) causes '${effectId}' (order ${effectEvent.time.order}) which comes before or at the same position`,
+              message:
+                `Event '${event.id}' (order ${event.time.order}) causes '${effectId}' (order ${effectEvent.time.order}) which comes before or at the same position`,
             });
           }
         }
@@ -297,14 +315,22 @@ function formatAnalysisResults(analyses: TimelineAnalysis[]): string {
 
     if (Object.keys(analysis.stats.categoryBreakdown).length > 0) {
       lines.push("- Category Breakdown:");
-      for (const [category, count] of Object.entries(analysis.stats.categoryBreakdown)) {
+      for (
+        const [category, count] of Object.entries(
+          analysis.stats.categoryBreakdown,
+        )
+      ) {
         lines.push(`  - ${category}: ${count}`);
       }
     }
 
     if (Object.keys(analysis.stats.characterMentions).length > 0) {
       lines.push("- Character Mentions:");
-      for (const [character, count] of Object.entries(analysis.stats.characterMentions)) {
+      for (
+        const [character, count] of Object.entries(
+          analysis.stats.characterMentions,
+        )
+      ) {
         lines.push(`  - ${character}: ${count}`);
       }
     }

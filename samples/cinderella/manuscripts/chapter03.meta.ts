@@ -40,17 +40,21 @@ export const chapter03Meta: ChapterMeta = {
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("城") || content.includes("王城") || content.includes("お城"),
+      validate: (content: string) =>
+        content.includes("城") || content.includes("王城") ||
+        content.includes("お城"),
       message: "設定（castle）が章内に登場していません",
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("魔法") || content.includes("妖精魔法"),
+      validate: (content: string) =>
+        content.includes("魔法") || content.includes("妖精魔法"),
       message: "設定（magic_system）が章内に登場していません",
     },
     {
       type: "setting_consistency",
-      validate: (content: string) => content.includes("ガラスの靴") || content.includes("靴"),
+      validate: (content: string) =>
+        content.includes("ガラスの靴") || content.includes("靴"),
       message: "設定（glass_slipper）が章内に登場していません",
     },
     {

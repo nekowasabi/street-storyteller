@@ -928,6 +928,10 @@ Deno.test("Integration - unknown method handling returns null for coc.nvim compa
     (r: unknown) => (r as { id?: number }).id === 200,
   ) as { result?: unknown; error?: unknown };
   assertExists(response, "Response should exist");
-  assertEquals(response.result, null, "Result should be null for unknown method");
+  assertEquals(
+    response.result,
+    null,
+    "Result should be null for unknown method",
+  );
   assertEquals(response.error, undefined, "Error should not be present");
 });

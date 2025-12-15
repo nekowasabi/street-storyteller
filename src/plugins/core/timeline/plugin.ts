@@ -55,11 +55,15 @@ export class TimelinePlugin implements ElementPlugin {
         scope: timeline.scope,
         summary: timeline.summary,
         events: timeline.events ?? [],
-        ...(timeline.parentTimeline && { parentTimeline: timeline.parentTimeline }),
-        ...(timeline.childTimelines && { childTimelines: timeline.childTimelines }),
-        ...(timeline.relatedCharacter && { relatedCharacter: timeline.relatedCharacter }),
+        ...(timeline.parentTimeline &&
+          { parentTimeline: timeline.parentTimeline }),
+        ...(timeline.childTimelines &&
+          { childTimelines: timeline.childTimelines }),
+        ...(timeline.relatedCharacter &&
+          { relatedCharacter: timeline.relatedCharacter }),
         ...(timeline.displayNames && { displayNames: timeline.displayNames }),
-        ...(timeline.displayOptions && { displayOptions: timeline.displayOptions }),
+        ...(timeline.displayOptions &&
+          { displayOptions: timeline.displayOptions }),
         ...(timeline.details && { details: timeline.details }),
       };
 

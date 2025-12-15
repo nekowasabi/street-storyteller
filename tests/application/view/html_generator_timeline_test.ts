@@ -191,7 +191,11 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
     const html = generator.generate(analysis);
 
     // 因果関係の表示が含まれること
-    assertEquals(html.includes("causedBy") || html.includes("caused-by") || html.includes("ev1"), true);
+    assertEquals(
+      html.includes("causedBy") || html.includes("caused-by") ||
+        html.includes("ev1"),
+      true,
+    );
     assertEquals(html.includes("causes") || html.includes("ev3"), true);
   });
 
@@ -239,7 +243,10 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
     const html = generator.generate(analysis);
 
     // タイムライン用のCSSクラスが含まれること
-    assertEquals(html.includes("timeline-events") || html.includes("event-list"), true);
+    assertEquals(
+      html.includes("timeline-events") || html.includes("event-list"),
+      true,
+    );
   });
 
   await t.step("親タイムライン情報が表示されること", () => {

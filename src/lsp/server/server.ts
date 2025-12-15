@@ -443,7 +443,9 @@ export class LspServer {
   /**
    * textDocument/semanticTokens/full リクエストを処理
    */
-  private async handleSemanticTokensFull(request: JsonRpcRequest): Promise<void> {
+  private async handleSemanticTokensFull(
+    request: JsonRpcRequest,
+  ): Promise<void> {
     const params = request.params as SemanticTokensParams;
     const document = this.documentManager.get(params.textDocument.uri);
 
@@ -463,7 +465,9 @@ export class LspServer {
   /**
    * textDocument/semanticTokens/range リクエストを処理
    */
-  private async handleSemanticTokensRange(request: JsonRpcRequest): Promise<void> {
+  private async handleSemanticTokensRange(
+    request: JsonRpcRequest,
+  ): Promise<void> {
     const params = request.params as SemanticTokensRangeParams;
     const document = this.documentManager.get(params.textDocument.uri);
 

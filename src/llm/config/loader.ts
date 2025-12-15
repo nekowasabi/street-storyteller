@@ -54,7 +54,8 @@ export async function loadLLMConfig(
       if (!validateConfig(parsed)) {
         return err({
           code: "config_invalid",
-          message: `Invalid LLM config in ${configPath}. Required fields: provider, model`,
+          message:
+            `Invalid LLM config in ${configPath}. Required fields: provider, model`,
         });
       }
 
@@ -81,8 +82,9 @@ export async function loadLLMConfig(
 
   return err({
     code: "config_not_found",
-    message:
-      `LLM config not found. Create ${CONFIG_FILE_NAMES[0]} in project root.`,
+    message: `LLM config not found. Create ${
+      CONFIG_FILE_NAMES[0]
+    } in project root.`,
   });
 }
 

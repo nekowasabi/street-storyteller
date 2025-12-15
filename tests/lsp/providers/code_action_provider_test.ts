@@ -9,8 +9,8 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import {
-  CodeActionProvider,
   type CodeAction,
+  CodeActionProvider,
 } from "../../../src/lsp/providers/code_action_provider.ts";
 import {
   type DetectableEntity,
@@ -71,11 +71,19 @@ Deno.test("CodeActionProvider - returns code action for low confidence reference
   );
 
   assertExists(result);
-  assertEquals(result.length > 0, true, "Should return at least one code action");
+  assertEquals(
+    result.length > 0,
+    true,
+    "Should return at least one code action",
+  );
 
   const action = result[0];
   assertEquals(action.kind, "quickfix");
-  assertEquals(action.title.includes("@hero"), true, "Title should mention @hero");
+  assertEquals(
+    action.title.includes("@hero"),
+    true,
+    "Title should mention @hero",
+  );
   assertExists(action.edit, "Should include edit");
   assertExists(action.edit.changes, "Should include changes");
 });
@@ -102,7 +110,11 @@ Deno.test("CodeActionProvider - returns no code action for high confidence refer
     projectPath,
   );
 
-  assertEquals(result.length, 0, "Should return no code actions for high confidence");
+  assertEquals(
+    result.length,
+    0,
+    "Should return no code actions for high confidence",
+  );
 });
 
 Deno.test("CodeActionProvider - returns no code action for @-prefixed reference", async () => {
@@ -127,7 +139,11 @@ Deno.test("CodeActionProvider - returns no code action for @-prefixed reference"
     projectPath,
   );
 
-  assertEquals(result.length, 0, "Should return no code actions for @-prefixed reference");
+  assertEquals(
+    result.length,
+    0,
+    "Should return no code actions for @-prefixed reference",
+  );
 });
 
 // ===== TextEdit検証テスト =====
@@ -277,7 +293,11 @@ Deno.test("CodeActionProvider - handles multiple low confidence references in ra
   );
 
   // 少なくとも1つのcode actionが返される
-  assertEquals(result.length >= 1, true, "Should return at least one code action");
+  assertEquals(
+    result.length >= 1,
+    true,
+    "Should return at least one code action",
+  );
 });
 
 // ===== 信頼度閾値テスト =====
@@ -305,7 +325,11 @@ Deno.test("CodeActionProvider - respects confidence threshold (0.8)", async () =
   );
 
   // displayName (confidence 0.9) は閾値(0.8)を超えているのでCode Actionなし
-  assertEquals(result.length, 0, "Should not return code action for displayName (0.9)");
+  assertEquals(
+    result.length,
+    0,
+    "Should not return code action for displayName (0.9)",
+  );
 });
 
 // ===== 診断連携テスト =====
@@ -344,5 +368,9 @@ Deno.test("CodeActionProvider - works with diagnostics context", async () => {
   );
 
   assertExists(result);
-  assertEquals(result.length > 0, true, "Should return code action with diagnostics context");
+  assertEquals(
+    result.length > 0,
+    true,
+    "Should return code action with diagnostics context",
+  );
 });

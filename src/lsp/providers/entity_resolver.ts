@@ -3,7 +3,11 @@
  * PositionedDetectorをラップし、エンティティ解決の共通ロジックを提供
  */
 
-import type { Position, PositionedMatch, PositionedDetector } from "../detection/positioned_detector.ts";
+import type {
+  Position,
+  PositionedDetector,
+  PositionedMatch,
+} from "../detection/positioned_detector.ts";
 import { isValidContent } from "./provider_utils.ts";
 
 /**
@@ -16,7 +20,10 @@ export interface EntityResolver {
    * @param position カーソル位置
    * @returns 見つかったエンティティ、またはundefined
    */
-  resolveAtPosition(content: string, position: Position): PositionedMatch | undefined;
+  resolveAtPosition(
+    content: string,
+    position: Position,
+  ): PositionedMatch | undefined;
 
   /**
    * コンテンツ内のすべてのエンティティを検出
@@ -31,9 +38,14 @@ export interface EntityResolver {
  * @param detector PositionedDetectorインスタンス
  * @returns EntityResolverインターフェース実装
  */
-export function createEntityResolver(detector: PositionedDetector): EntityResolver {
+export function createEntityResolver(
+  detector: PositionedDetector,
+): EntityResolver {
   return {
-    resolveAtPosition(content: string, position: Position): PositionedMatch | undefined {
+    resolveAtPosition(
+      content: string,
+      position: Position,
+    ): PositionedMatch | undefined {
       // 空のコンテンツは処理しない
       if (!isValidContent(content)) {
         return undefined;

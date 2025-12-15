@@ -86,7 +86,9 @@ export class DocumentSymbolProvider {
   /**
    * PositionedMatchをDocumentSymbolに変換
    */
-  private convertMatchesToSymbols(matches: PositionedMatch[]): DocumentSymbol[] {
+  private convertMatchesToSymbols(
+    matches: PositionedMatch[],
+  ): DocumentSymbol[] {
     const symbols: DocumentSymbol[] = [];
 
     for (const match of matches) {
@@ -117,7 +119,9 @@ export class DocumentSymbolProvider {
   /**
    * エンティティ種別に応じたSymbolKindを返す
    */
-  private getSymbolKindForEntity(kind: "character" | "setting"): SymbolKindType {
+  private getSymbolKindForEntity(
+    kind: "character" | "setting",
+  ): SymbolKindType {
     switch (kind) {
       case "character":
         return SymbolKind.Variable;
@@ -168,7 +172,9 @@ export class DocumentSymbolProvider {
       };
 
       // スタックから親を見つける
-      while (stack.length > 0 && stack[stack.length - 1].level >= header.level) {
+      while (
+        stack.length > 0 && stack[stack.length - 1].level >= header.level
+      ) {
         stack.pop();
       }
 

@@ -56,8 +56,10 @@ export class SettingPlugin implements ElementPlugin {
         appearingChapters: setting.appearingChapters ?? [],
         ...(setting.displayNames && { displayNames: setting.displayNames }),
         ...(setting.details && { details: setting.details }),
-        ...(setting.relatedSettings && { relatedSettings: setting.relatedSettings }),
-        ...(setting.detectionHints && { detectionHints: setting.detectionHints }),
+        ...(setting.relatedSettings &&
+          { relatedSettings: setting.relatedSettings }),
+        ...(setting.detectionHints &&
+          { detectionHints: setting.detectionHints }),
       };
 
       // 検証

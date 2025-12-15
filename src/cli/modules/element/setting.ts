@@ -65,7 +65,9 @@ export class ElementSettingCommand extends BaseCliCommand {
           displayNames: parsed.displayNames.split(",").map((n) => n.trim()),
         }),
         ...(parsed.relatedSettings && {
-          relatedSettings: parsed.relatedSettings.split(",").map((s) => s.trim()),
+          relatedSettings: parsed.relatedSettings.split(",").map((s) =>
+            s.trim()
+          ),
         }),
       };
 

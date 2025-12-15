@@ -3,7 +3,10 @@
  * 既存のイベントを更新するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import type { Timeline, TimelineEvent } from "../../../type/v2/timeline.ts";
 
 export const eventUpdateTool: McpToolDefinition = {
@@ -31,7 +34,15 @@ export const eventUpdateTool: McpToolDefinition = {
       },
       category: {
         type: "string",
-        enum: ["plot_point", "character_event", "world_event", "backstory", "foreshadow", "climax", "resolution"],
+        enum: [
+          "plot_point",
+          "character_event",
+          "world_event",
+          "backstory",
+          "foreshadow",
+          "climax",
+          "resolution",
+        ],
         description: "新しいイベントカテゴリ",
       },
       order: {
@@ -71,13 +82,18 @@ export const eventUpdateTool: McpToolDefinition = {
     },
     required: ["timelineId", "eventId"],
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     const timelineId = args.timelineId as string | undefined;
     const eventId = args.eventId as string | undefined;
     const projectRoot = context?.projectRoot ?? Deno.cwd();
 
     // 必須パラメータのチェック
-    if (!timelineId || typeof timelineId !== "string" || timelineId.trim() === "") {
+    if (
+      !timelineId || typeof timelineId !== "string" || timelineId.trim() === ""
+    ) {
       return {
         content: [
           {
@@ -129,7 +145,8 @@ export const eventUpdateTool: McpToolDefinition = {
         content: [
           {
             type: "text" as const,
-            text: `Error: Failed to parse timeline from file: ${timelineFilePath}`,
+            text:
+              `Error: Failed to parse timeline from file: ${timelineFilePath}`,
           },
         ],
         isError: true,
@@ -156,14 +173,40 @@ export const eventUpdateTool: McpToolDefinition = {
       ...existingEvent,
       ...(typeof args.title === "string" && { title: args.title }),
       ...(typeof args.summary === "string" && { summary: args.summary }),
-      ...(typeof args.category === "string" && { category: args.category as TimelineEvent["category"] }),
-      ...(typeof args.order === "number" && { time: { ...existingEvent.time, order: args.order } }),
-      ...(Array.isArray(args.characters) && { characters: args.characters.filter((c): c is string => typeof c === "string") }),
-      ...(Array.isArray(args.settings) && { settings: args.settings.filter((s): s is string => typeof s === "string") }),
-      ...(Array.isArray(args.chapters) && { chapters: args.chapters.filter((c): c is string => typeof c === "string") }),
-      ...(Array.isArray(args.causedBy) && { causedBy: args.causedBy.filter((c): c is string => typeof c === "string") }),
-      ...(Array.isArray(args.causes) && { causes: args.causes.filter((c): c is string => typeof c === "string") }),
-      ...(typeof args.importance === "string" && { importance: args.importance as TimelineEvent["importance"] }),
+      ...(typeof args.category === "string" &&
+        { category: args.category as TimelineEvent["category"] }),
+      ...(typeof args.order === "number" &&
+        { time: { ...existingEvent.time, order: args.order } }),
+      ...(Array.isArray(args.characters) &&
+        {
+          characters: args.characters.filter((c): c is string =>
+            typeof c === "string"
+          ),
+        }),
+      ...(Array.isArray(args.settings) &&
+        {
+          settings: args.settings.filter((s): s is string =>
+            typeof s === "string"
+          ),
+        }),
+      ...(Array.isArray(args.chapters) &&
+        {
+          chapters: args.chapters.filter((c): c is string =>
+            typeof c === "string"
+          ),
+        }),
+      ...(Array.isArray(args.causedBy) &&
+        {
+          causedBy: args.causedBy.filter((c): c is string =>
+            typeof c === "string"
+          ),
+        }),
+      ...(Array.isArray(args.causes) &&
+        {
+          causes: args.causes.filter((c): c is string => typeof c === "string"),
+        }),
+      ...(typeof args.importance === "string" &&
+        { importance: args.importance as TimelineEvent["importance"] }),
     };
 
     timeline.events[eventIndex] = updatedEvent;
@@ -181,7 +224,8 @@ export const eventUpdateTool: McpToolDefinition = {
       content: [
         {
           type: "text" as const,
-          text: `Successfully updated event '${eventId}' in timeline '${timelineId}'`,
+          text:
+            `Successfully updated event '${eventId}' in timeline '${timelineId}'`,
         },
       ],
       isError: false,

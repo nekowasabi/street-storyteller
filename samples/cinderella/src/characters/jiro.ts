@@ -10,9 +10,9 @@ export const jiro: Character = {
   "role": "supporting",
   "traits": [
     "明るい",
-    "好奇心旺盛"
+    "好奇心旺盛",
   ],
   "relationships": {},
   "appearingChapters": [],
-  "summary": "太郎の弟"
+  "summary": "太郎の弟",
 };

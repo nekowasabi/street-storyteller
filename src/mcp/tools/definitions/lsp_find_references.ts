@@ -3,7 +3,10 @@
  * 原稿内の参照箇所（キャラクター/設定）を位置情報付きで検索するMCPツール
  */
 
-import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
+import type {
+  McpToolDefinition,
+  ToolExecutionContext,
+} from "../tool_registry.ts";
 import { PositionedDetector } from "../../../lsp/detection/positioned_detector.ts";
 import {
   listMarkdownFiles,
@@ -56,11 +59,14 @@ export const lspFindReferencesTool: McpToolDefinition = {
       },
     },
   },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
+  execute: async (
+    args: Record<string, unknown>,
+    context?: ToolExecutionContext,
+  ) => {
     // コンテキストからのprojectRootを優先、なければargsから、それもなければDeno.cwd()
-    const projectRoot =
-      context?.projectRoot ??
-      (typeof args.projectRoot === "string" && args.projectRoot.trim().length > 0
+    const projectRoot = context?.projectRoot ??
+      (typeof args.projectRoot === "string" &&
+          args.projectRoot.trim().length > 0
         ? args.projectRoot
         : Deno.cwd());
 

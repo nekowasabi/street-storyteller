@@ -26,7 +26,7 @@ Deno.test("timeline_analyze MCPツール", async (t) => {
     try {
       const result = await timelineAnalyzeTool.execute(
         {},
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       assertEquals(result.isError, false);
@@ -43,7 +43,8 @@ Deno.test("timeline_analyze MCPツール", async (t) => {
       await Deno.mkdir(timelinesDir, { recursive: true });
 
       // 不整合な因果関係を持つタイムライン
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timeline =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const test_timeline: Timeline = {
   "id": "test_timeline",
@@ -69,7 +70,7 @@ export const test_timeline: Timeline = {
 
       const result = await timelineAnalyzeTool.execute(
         { timelineId: "test_timeline" },
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       assertEquals(result.isError, false);
@@ -77,8 +78,9 @@ export const test_timeline: Timeline = {
       // 分析結果に警告が含まれること
       const text = (result.content[0] as { text: string }).text;
       assertEquals(
-        text.includes("nonexistent") || text.includes("warning") || text.includes("Warning") || text.includes("issue"),
-        true
+        text.includes("nonexistent") || text.includes("warning") ||
+          text.includes("Warning") || text.includes("issue"),
+        true,
       );
     } finally {
       await Deno.remove(tempDir, { recursive: true });
@@ -93,7 +95,8 @@ export const test_timeline: Timeline = {
       await Deno.mkdir(timelinesDir, { recursive: true });
 
       // 因果関係と順序が矛盾するタイムライン
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timeline =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const order_issue: Timeline = {
   "id": "order_issue",
@@ -129,7 +132,7 @@ export const order_issue: Timeline = {
 
       const result = await timelineAnalyzeTool.execute(
         { timelineId: "order_issue" },
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       assertEquals(result.isError, false);
@@ -137,8 +140,9 @@ export const order_issue: Timeline = {
       // 分析結果に問題が含まれること（原因イベントが後に来ている）
       const text = (result.content[0] as { text: string }).text;
       assertEquals(
-        text.includes("order") || text.includes("Order") || text.includes("before") || text.includes("after"),
-        true
+        text.includes("order") || text.includes("Order") ||
+          text.includes("before") || text.includes("after"),
+        true,
       );
     } finally {
       await Deno.remove(tempDir, { recursive: true });
@@ -152,7 +156,8 @@ export const order_issue: Timeline = {
       const timelinesDir = `${tempDir}/src/timelines`;
       await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+      const timeline =
+        `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const stats_timeline: Timeline = {
   "id": "stats_timeline",
@@ -187,7 +192,7 @@ export const stats_timeline: Timeline = {
 
       const result = await timelineAnalyzeTool.execute(
         { timelineId: "stats_timeline" },
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       assertEquals(result.isError, false);
@@ -195,8 +200,9 @@ export const stats_timeline: Timeline = {
       // 統計情報が含まれること
       const text = (result.content[0] as { text: string }).text;
       assertEquals(
-        text.includes("2") || text.includes("event") || text.includes("character"),
-        true
+        text.includes("2") || text.includes("event") ||
+          text.includes("character"),
+        true,
       );
     } finally {
       await Deno.remove(tempDir, { recursive: true });

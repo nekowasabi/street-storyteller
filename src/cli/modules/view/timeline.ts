@@ -122,7 +122,7 @@ export class ViewTimelineCommand extends BaseCliCommand {
   private parseTimelineFromFile(content: string): Timeline | null {
     try {
       const match = content.match(
-        /export\s+const\s+\w+\s*:\s*Timeline\s*=\s*(\{[\s\S]*?\});?\s*$/
+        /export\s+const\s+\w+\s*:\s*Timeline\s*=\s*(\{[\s\S]*?\});?\s*$/,
       );
       if (!match) {
         return null;
@@ -253,10 +253,18 @@ export class ViewTimelineCommand extends BaseCliCommand {
     lines.push("view timeline - Display timeline information");
     lines.push("");
     lines.push("Usage:");
-    lines.push("  storyteller view timeline --list          # List all timelines");
-    lines.push("  storyteller view timeline --id <id>       # Show timeline details");
-    lines.push("  storyteller view timeline --id <id> --json         # JSON output");
-    lines.push("  storyteller view timeline --id <id> --format mermaid  # Mermaid diagram");
+    lines.push(
+      "  storyteller view timeline --list          # List all timelines",
+    );
+    lines.push(
+      "  storyteller view timeline --id <id>       # Show timeline details",
+    );
+    lines.push(
+      "  storyteller view timeline --id <id> --json         # JSON output",
+    );
+    lines.push(
+      "  storyteller view timeline --id <id> --format mermaid  # Mermaid diagram",
+    );
     lines.push("");
     lines.push("Options:");
     lines.push("  --list             List all timelines");

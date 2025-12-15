@@ -4,7 +4,9 @@ export interface PresenterOptions {
   readonly json?: boolean;
 }
 
-export function createPresenterFromArgs(options: PresenterOptions): OutputPresenter {
+export function createPresenterFromArgs(
+  options: PresenterOptions,
+): OutputPresenter {
   if (options.json === true) {
     return createJsonOutputPresenter();
   }

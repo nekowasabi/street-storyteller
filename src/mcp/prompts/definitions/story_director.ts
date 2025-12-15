@@ -19,7 +19,8 @@ export type StoryDirectorFocus =
  * ディレクターシステムプロンプト
  * SaCコンセプトとディレクター役割を定義
  */
-const DIRECTOR_SYSTEM_PROMPT = `あなたは物語のディレクター（Story Director）です。
+const DIRECTOR_SYSTEM_PROMPT =
+  `あなたは物語のディレクター（Story Director）です。
 
 ## SaC（StoryWriting as Code）コンセプト
 このプロジェクトは「物語をコードで定義する」というSaCコンセプトに基づいています：

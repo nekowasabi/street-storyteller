@@ -145,7 +145,9 @@ export class PositionedDetector {
 
     // displayNames: confidence 0.9
     for (const displayName of entity.displayNames ?? []) {
-      if (displayName && displayName !== entity.name && displayName !== entity.id) {
+      if (
+        displayName && displayName !== entity.name && displayName !== entity.id
+      ) {
         patterns.push({ pattern: displayName, confidence: 0.9 });
       }
     }

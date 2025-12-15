@@ -13,7 +13,7 @@ import type { Timeline, TimelineEvent } from "../../type/v2/timeline.ts";
 export function parseTimelineFromFile(content: string): Timeline | null {
   try {
     const match = content.match(
-      /export\s+const\s+\w+\s*:\s*Timeline\s*=\s*(\{[\s\S]*?\});?\s*$/
+      /export\s+const\s+\w+\s*:\s*Timeline\s*=\s*(\{[\s\S]*?\});?\s*$/,
     );
     if (!match) {
       return null;
@@ -33,7 +33,7 @@ export function parseTimelineFromFile(content: string): Timeline | null {
  */
 export function parseTimelineFromFileWithMutableEvents(
   content: string,
-  timelineId?: string
+  timelineId?: string,
 ): (Omit<Timeline, "events"> & { events: TimelineEvent[] }) | null {
   const timeline = parseTimelineFromFile(content);
   if (!timeline) {
@@ -75,7 +75,7 @@ export const ${timeline.id}: Timeline = ${timelineJson};
  * @returns Timeline配列
  */
 export async function loadTimelinesFromDirectory(
-  timelinesDir: string
+  timelinesDir: string,
 ): Promise<Timeline[]> {
   const timelines: Timeline[] = [];
 
@@ -107,7 +107,7 @@ export async function loadTimelinesFromDirectory(
  * @returns Timelineオブジェクト、失敗時はnull
  */
 export async function loadTimelineFromFile(
-  filePath: string
+  filePath: string,
 ): Promise<Timeline | null> {
   try {
     const content = await Deno.readTextFile(filePath);
@@ -124,7 +124,7 @@ export async function loadTimelineFromFile(
  */
 export async function saveTimelineToFile(
   filePath: string,
-  timeline: Timeline
+  timeline: Timeline,
 ): Promise<void> {
   const content = generateTimelineFile(timeline);
   await Deno.writeTextFile(filePath, content);

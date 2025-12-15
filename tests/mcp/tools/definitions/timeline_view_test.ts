@@ -26,7 +26,7 @@ Deno.test("timeline_view MCPツール", async (t) => {
     try {
       const result = await timelineViewTool.execute(
         {},
-        { projectRoot: tempDir }
+        { projectRoot: tempDir },
       );
 
       assertEquals(result.isError, false);
@@ -36,15 +36,18 @@ Deno.test("timeline_view MCPツール", async (t) => {
     }
   });
 
-  await t.step("timelineIdなしの場合に全タイムライン一覧を返すこと", async () => {
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "timelineIdなしの場合に全タイムライン一覧を返すこと",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      // タイムラインを作成
-      const timelinesDir = `${tempDir}/src/timelines`;
-      await Deno.mkdir(timelinesDir, { recursive: true });
+      try {
+        // タイムラインを作成
+        const timelinesDir = `${tempDir}/src/timelines`;
+        await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timeline1 = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+        const timeline1 =
+          `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const main_story: Timeline = {
   "id": "main_story",
@@ -54,7 +57,8 @@ export const main_story: Timeline = {
   "events": []
 };
 `;
-      const timeline2 = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+        const timeline2 =
+          `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const sub_story: Timeline = {
   "id": "sub_story",
@@ -64,34 +68,44 @@ export const sub_story: Timeline = {
   "events": []
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/main_story.ts`, timeline1);
-      await Deno.writeTextFile(`${timelinesDir}/sub_story.ts`, timeline2);
+        await Deno.writeTextFile(`${timelinesDir}/main_story.ts`, timeline1);
+        await Deno.writeTextFile(`${timelinesDir}/sub_story.ts`, timeline2);
 
-      const result = await timelineViewTool.execute(
-        {},
-        { projectRoot: tempDir }
-      );
+        const result = await timelineViewTool.execute(
+          {},
+          { projectRoot: tempDir },
+        );
 
-      assertEquals(result.isError, false);
+        assertEquals(result.isError, false);
 
-      // 結果に両方のタイムラインが含まれていること
-      const text = (result.content[0] as { text: string }).text;
-      assertEquals(text.includes("main_story") || text.includes("メインストーリー"), true);
-      assertEquals(text.includes("sub_story") || text.includes("サブストーリー"), true);
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+        // 結果に両方のタイムラインが含まれていること
+        const text = (result.content[0] as { text: string }).text;
+        assertEquals(
+          text.includes("main_story") || text.includes("メインストーリー"),
+          true,
+        );
+        assertEquals(
+          text.includes("sub_story") || text.includes("サブストーリー"),
+          true,
+        );
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
 
-  await t.step("特定のtimelineIdを指定した場合にそのタイムライン詳細を返すこと", async () => {
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "特定のtimelineIdを指定した場合にそのタイムライン詳細を返すこと",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      // タイムラインを作成
-      const timelinesDir = `${tempDir}/src/timelines`;
-      await Deno.mkdir(timelinesDir, { recursive: true });
+      try {
+        // タイムラインを作成
+        const timelinesDir = `${tempDir}/src/timelines`;
+        await Deno.mkdir(timelinesDir, { recursive: true });
 
-      const timeline = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+        const timeline =
+          `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const main_story: Timeline = {
   "id": "main_story",
@@ -122,36 +136,40 @@ export const main_story: Timeline = {
   ]
 };
 `;
-      await Deno.writeTextFile(`${timelinesDir}/main_story.ts`, timeline);
+        await Deno.writeTextFile(`${timelinesDir}/main_story.ts`, timeline);
 
-      const result = await timelineViewTool.execute(
-        { timelineId: "main_story" },
-        { projectRoot: tempDir }
-      );
+        const result = await timelineViewTool.execute(
+          { timelineId: "main_story" },
+          { projectRoot: tempDir },
+        );
 
-      assertEquals(result.isError, false);
+        assertEquals(result.isError, false);
 
-      // 詳細にイベント情報が含まれていること
-      const text = (result.content[0] as { text: string }).text;
-      assertEquals(text.includes("物語の始まり"), true);
-      assertEquals(text.includes("旅立ち"), true);
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+        // 詳細にイベント情報が含まれていること
+        const text = (result.content[0] as { text: string }).text;
+        assertEquals(text.includes("物語の始まり"), true);
+        assertEquals(text.includes("旅立ち"), true);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
 
-  await t.step("存在しないtimelineIdを指定した場合にエラーを返すこと", async () => {
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "存在しないtimelineIdを指定した場合にエラーを返すこと",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      const result = await timelineViewTool.execute(
-        { timelineId: "nonexistent" },
-        { projectRoot: tempDir }
-      );
+      try {
+        const result = await timelineViewTool.execute(
+          { timelineId: "nonexistent" },
+          { projectRoot: tempDir },
+        );
 
-      assertEquals(result.isError, true);
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+        assertEquals(result.isError, true);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
 });
