@@ -190,3 +190,51 @@ Deno.test("PositionedDetector - handles emoji and special characters", () => {
   // "冒険開始!" = 5文字なので、"勇者" は位置5から
   assertEquals(results[0].positions[0].character, 5);
 });
+
+Deno.test("PositionedDetector - detects entity by id (for frontmatter)", () => {
+  const detector = new PositionedDetector(mockEntities);
+
+  // Frontmatter内のIDで検出
+  const content = `---
+storyteller:
+  characters:
+    - hero
+    - princess
+  settings:
+    - castle
+---`;
+  const results = detector.detectWithPositions(content);
+
+  // hero, princess, castle がIDで検出される
+  assertEquals(results.length, 3);
+
+  const heroResult = results.find((r) => r.id === "hero");
+  assertExists(heroResult);
+  assertEquals(heroResult.confidence, 1.0); // IDは confidence 1.0
+
+  const princessResult = results.find((r) => r.id === "princess");
+  assertExists(princessResult);
+
+  const castleResult = results.find((r) => r.id === "castle");
+  assertExists(castleResult);
+});
+
+Deno.test("PositionedDetector - getEntityAtPosition works with id in frontmatter", () => {
+  const detector = new PositionedDetector(mockEntities);
+
+  const content = `---
+storyteller:
+  characters:
+    - hero
+---`;
+  detector.detectWithPositions(content);
+
+  // "hero" は行3、位置6から
+  const entity = detector.getEntityAtPosition(content, {
+    line: 3,
+    character: 6,
+  });
+  assertExists(entity);
+  assertEquals(entity.id, "hero");
+  assertEquals(entity.kind, "character");
+});

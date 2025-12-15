@@ -100,6 +100,12 @@ export type ServerCapabilities = {
   readonly codeActionProvider: boolean;
 
   /**
+   * ドキュメントシンボル機能のサポート
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_documentSymbol
+   */
+  readonly documentSymbolProvider?: boolean;
+
+  /**
    * セマンティックトークン機能のサポート
    * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens
    */
@@ -108,7 +114,7 @@ export type ServerCapabilities = {
 
 /**
  * サーバーキャパビリティを取得する
- * Full同期、定義ジャンプ、ホバー、Code Action、セマンティックトークンをサポート
+ * Full同期、定義ジャンプ、ホバー、Code Action、ドキュメントシンボル、セマンティックトークンをサポート
  */
 export function getServerCapabilities(): ServerCapabilities {
   return {
@@ -116,6 +122,7 @@ export function getServerCapabilities(): ServerCapabilities {
     definitionProvider: true,
     hoverProvider: true,
     codeActionProvider: true,
+    documentSymbolProvider: true,
     semanticTokensProvider: {
       legend: getSemanticTokensLegend(),
       full: true,

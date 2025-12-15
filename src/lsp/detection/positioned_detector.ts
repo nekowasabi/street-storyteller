@@ -133,14 +133,19 @@ export class PositionedDetector {
   ): Array<{ pattern: string; confidence: number }> {
     const patterns: Array<{ pattern: string; confidence: number }> = [];
 
+    // id: confidence 1.0 (Frontmatter内のID参照用)
+    if (entity.id) {
+      patterns.push({ pattern: entity.id, confidence: 1.0 });
+    }
+
     // name: confidence 1.0
-    if (entity.name) {
+    if (entity.name && entity.name !== entity.id) {
       patterns.push({ pattern: entity.name, confidence: 1.0 });
     }
 
     // displayNames: confidence 0.9
     for (const displayName of entity.displayNames ?? []) {
-      if (displayName && displayName !== entity.name) {
+      if (displayName && displayName !== entity.name && displayName !== entity.id) {
         patterns.push({ pattern: displayName, confidence: 0.9 });
       }
     }

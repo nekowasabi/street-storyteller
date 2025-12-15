@@ -121,6 +121,54 @@ export type SemanticTokensRangeParams = {
   readonly range: Range;
 };
 
+/**
+ * LSP SymbolKind 列挙型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#symbolKind
+ */
+export const SymbolKind = {
+  File: 1,
+  Module: 2,
+  Namespace: 3,
+  Package: 4,
+  Class: 5,
+  Method: 6,
+  Property: 7,
+  Field: 8,
+  Constructor: 9,
+  Enum: 10,
+  Interface: 11,
+  Function: 12,
+  Variable: 13,
+  Constant: 14,
+  String: 15,
+  Number: 16,
+  Boolean: 17,
+  Array: 18,
+  Object: 19,
+  Key: 20,
+  Null: 21,
+  EnumMember: 22,
+  Struct: 23,
+  Event: 24,
+  Operator: 25,
+  TypeParameter: 26,
+} as const;
+
+export type SymbolKindType = typeof SymbolKind[keyof typeof SymbolKind];
+
+/**
+ * LSP DocumentSymbol 型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#documentSymbol
+ */
+export type DocumentSymbol = {
+  readonly name: string;
+  readonly detail?: string;
+  readonly kind: SymbolKindType;
+  readonly range: Range;
+  readonly selectionRange: Range;
+  readonly children?: DocumentSymbol[];
+};
+
 // ランタイム型チェック用ダミーオブジェクト
 // テストで型の存在を確認するために使用
 export const Position = {} as const;
@@ -129,3 +177,4 @@ export const SemanticTokens = {} as const;
 export const SemanticTokensParams = {} as const;
 export const SemanticTokensRangeParams = {} as const;
 export const TextDocumentIdentifier = {} as const;
+export const DocumentSymbol = {} as const;

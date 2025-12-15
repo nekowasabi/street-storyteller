@@ -46,6 +46,7 @@ import {
   type Range,
 } from "../providers/code_action_provider.ts";
 import { SemanticTokensProvider } from "../providers/semantic_tokens_provider.ts";
+import { DocumentSymbolProvider } from "../providers/document_symbol_provider.ts";
 import type {
   SemanticTokensParams,
   SemanticTokensRangeParams,
@@ -141,6 +142,7 @@ export class LspServer {
   private readonly hoverProvider: HoverProvider;
   private readonly codeActionProvider: CodeActionProvider;
   private readonly semanticTokensProvider: SemanticTokensProvider;
+  private readonly documentSymbolProvider: DocumentSymbolProvider;
 
   // 診断
   private readonly diagnosticsGenerator: DiagnosticsGenerator;
@@ -172,6 +174,7 @@ export class LspServer {
     );
     this.codeActionProvider = new CodeActionProvider(this.detector);
     this.semanticTokensProvider = new SemanticTokensProvider(this.detector);
+    this.documentSymbolProvider = new DocumentSymbolProvider(this.detector);
 
     // 診断機能の初期化
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
@@ -245,8 +248,10 @@ export class LspServer {
       case "textDocument/codeAction":
         await this.handleCodeAction(request);
         break;
-      // coc.nvim互換性のため、未実装の機能には空配列を返す
       case "textDocument/documentSymbol":
+        await this.handleDocumentSymbol(request);
+        break;
+      // coc.nvim互換性のため、未実装の機能には空配列を返す
       case "textDocument/references":
       case "textDocument/documentHighlight":
       case "textDocument/foldingRange":
@@ -408,6 +413,25 @@ export class LspServer {
         document.content,
         params.range,
         params.context.diagnostics,
+        this.projectRoot,
+      );
+    }
+
+    const response = createSuccessResponse(request.id, result);
+    await this.transport.writeMessage(response);
+  }
+
+  /**
+   * textDocument/documentSymbol リクエストを処理
+   */
+  private async handleDocumentSymbol(request: JsonRpcRequest): Promise<void> {
+    const params = request.params as { textDocument: { uri: string } };
+    const document = this.documentManager.get(params.textDocument.uri);
+
+    let result: unknown[] = [];
+    if (document) {
+      result = await this.documentSymbolProvider.getDocumentSymbols(
+        document.content,
         this.projectRoot,
       );
     }
