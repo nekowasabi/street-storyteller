@@ -45,6 +45,11 @@ import {
   CodeActionProvider,
   type Range,
 } from "../providers/code_action_provider.ts";
+import { SemanticTokensProvider } from "../providers/semantic_tokens_provider.ts";
+import type {
+  SemanticTokensParams,
+  SemanticTokensRangeParams,
+} from "../providers/lsp_types.ts";
 import { DiagnosticsGenerator } from "../diagnostics/diagnostics_generator.ts";
 import { DiagnosticsPublisher } from "../diagnostics/diagnostics_publisher.ts";
 
@@ -135,6 +140,7 @@ export class LspServer {
   private readonly definitionProvider: DefinitionProvider;
   private readonly hoverProvider: HoverProvider;
   private readonly codeActionProvider: CodeActionProvider;
+  private readonly semanticTokensProvider: SemanticTokensProvider;
 
   // 診断
   private readonly diagnosticsGenerator: DiagnosticsGenerator;
@@ -165,6 +171,7 @@ export class LspServer {
       options?.entityInfoMap ?? new Map(),
     );
     this.codeActionProvider = new CodeActionProvider(this.detector);
+    this.semanticTokensProvider = new SemanticTokensProvider(this.detector);
 
     // 診断機能の初期化
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
@@ -260,13 +267,13 @@ export class LspServer {
         await this.transport.writeMessage(emptyResponse);
         break;
       }
-      // semantic tokens は専用の空レスポンス形式
+      // semantic tokens ハンドラー
       case "textDocument/semanticTokens/full":
-      case "textDocument/semanticTokens/range": {
-        const semanticResponse = createSuccessResponse(request.id, { data: [] });
-        await this.transport.writeMessage(semanticResponse);
+        await this.handleSemanticTokensFull(request);
         break;
-      }
+      case "textDocument/semanticTokens/range":
+        await this.handleSemanticTokensRange(request);
+        break;
       default: {
         // 未実装のメソッドにはnullを返す（エラーの代わりに）
         // これによりcoc.nvimとの互換性を向上
@@ -401,6 +408,47 @@ export class LspServer {
         document.content,
         params.range,
         params.context.diagnostics,
+        this.projectRoot,
+      );
+    }
+
+    const response = createSuccessResponse(request.id, result);
+    await this.transport.writeMessage(response);
+  }
+
+  /**
+   * textDocument/semanticTokens/full リクエストを処理
+   */
+  private async handleSemanticTokensFull(request: JsonRpcRequest): Promise<void> {
+    const params = request.params as SemanticTokensParams;
+    const document = this.documentManager.get(params.textDocument.uri);
+
+    let result = { data: [] as number[] };
+    if (document) {
+      result = this.semanticTokensProvider.getSemanticTokens(
+        params.textDocument.uri,
+        document.content,
+        this.projectRoot,
+      );
+    }
+
+    const response = createSuccessResponse(request.id, result);
+    await this.transport.writeMessage(response);
+  }
+
+  /**
+   * textDocument/semanticTokens/range リクエストを処理
+   */
+  private async handleSemanticTokensRange(request: JsonRpcRequest): Promise<void> {
+    const params = request.params as SemanticTokensRangeParams;
+    const document = this.documentManager.get(params.textDocument.uri);
+
+    let result = { data: [] as number[] };
+    if (document) {
+      result = this.semanticTokensProvider.getSemanticTokensRange(
+        params.textDocument.uri,
+        document.content,
+        params.range,
         this.projectRoot,
       );
     }

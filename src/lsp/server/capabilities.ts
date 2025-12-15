@@ -19,6 +19,60 @@ export type TextDocumentSyncKind =
   (typeof TextDocumentSyncKind)[keyof typeof TextDocumentSyncKind];
 
 /**
+ * セマンティックトークンタイプ定義
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokenTypes
+ */
+export const SEMANTIC_TOKEN_TYPES = [
+  "character", // 0: キャラクター名
+  "setting", // 1: 設定名（場所・世界観）
+] as const;
+
+export type SemanticTokenType =
+  (typeof SEMANTIC_TOKEN_TYPES)[number];
+
+/**
+ * セマンティックトークンモディファイア定義
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokenModifiers
+ */
+export const SEMANTIC_TOKEN_MODIFIERS = [
+  "highConfidence", // 0: 信頼度90%以上
+  "mediumConfidence", // 1: 信頼度70-90%
+  "lowConfidence", // 2: 信頼度70%未満
+] as const;
+
+export type SemanticTokenModifier =
+  (typeof SEMANTIC_TOKEN_MODIFIERS)[number];
+
+/**
+ * セマンティックトークンレジェンド型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokensLegend
+ */
+export type SemanticTokensLegend = {
+  readonly tokenTypes: readonly string[];
+  readonly tokenModifiers: readonly string[];
+};
+
+/**
+ * セマンティックトークンプロバイダーオプション型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokensOptions
+ */
+export type SemanticTokensOptions = {
+  readonly legend: SemanticTokensLegend;
+  readonly range?: boolean;
+  readonly full?: boolean;
+};
+
+/**
+ * セマンティックトークンレジェンドを取得する
+ */
+export function getSemanticTokensLegend(): SemanticTokensLegend {
+  return {
+    tokenTypes: SEMANTIC_TOKEN_TYPES,
+    tokenModifiers: SEMANTIC_TOKEN_MODIFIERS,
+  };
+}
+
+/**
  * サーバーキャパビリティ
  * LSPサーバーがサポートする機能を定義
  */
@@ -44,11 +98,17 @@ export type ServerCapabilities = {
    * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_codeAction
    */
   readonly codeActionProvider: boolean;
+
+  /**
+   * セマンティックトークン機能のサポート
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens
+   */
+  readonly semanticTokensProvider?: SemanticTokensOptions;
 };
 
 /**
  * サーバーキャパビリティを取得する
- * MVPではFull同期、定義ジャンプ、ホバー、Code Actionをサポート
+ * Full同期、定義ジャンプ、ホバー、Code Action、セマンティックトークンをサポート
  */
 export function getServerCapabilities(): ServerCapabilities {
   return {
@@ -56,5 +116,10 @@ export function getServerCapabilities(): ServerCapabilities {
     definitionProvider: true,
     hoverProvider: true,
     codeActionProvider: true,
+    semanticTokensProvider: {
+      legend: getSemanticTokensLegend(),
+      full: true,
+      range: true,
+    },
   };
 }

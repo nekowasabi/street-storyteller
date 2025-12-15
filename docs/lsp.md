@@ -115,6 +115,69 @@ export const hero: Character = {
 @heroは剣を抜いた。
 ```
 
+### 6. セマンティックトークン（v1.1新機能）
+
+キャラクター名・設定名をエディタ上でハイライト表示します。
+
+#### 機能概要
+
+- キャラクター名を `character` トークンとしてハイライト
+- 設定名（場所・世界観）を `setting` トークンとしてハイライト
+- 信頼度に応じた3段階のスタイル
+
+#### トークンタイプ
+
+| トークンタイプ | 対象 | 例 |
+|--------------|------|-----|
+| `character` | キャラクター名（name, displayNames, aliases） | 勇者、姫、主人公 |
+| `setting` | 設定名（name, displayNames） | 城、王都、魔法の森 |
+
+#### 信頼度モディファイア
+
+| モディファイア | 条件 | 推奨スタイル |
+|---------------|------|-------------|
+| `highConfidence` | 信頼度 >= 90% | 通常色 |
+| `mediumConfidence` | 70% <= 信頼度 < 90% | 薄め |
+| `lowConfidence` | 信頼度 < 70% | 点線下線 |
+
+#### サポートするメソッド
+
+| メソッド | 説明 |
+|---------|------|
+| `textDocument/semanticTokens/full` | ドキュメント全体のトークン取得 |
+| `textDocument/semanticTokens/range` | 指定範囲のトークン取得 |
+
+#### neovim設定例
+
+```lua
+-- セマンティックトークンのハイライトグループを設定
+vim.api.nvim_set_hl(0, "@lsp.type.character", { fg = "#61afef", bold = true })
+vim.api.nvim_set_hl(0, "@lsp.type.setting", { fg = "#98c379", italic = true })
+
+-- 信頼度によるスタイル分け
+vim.api.nvim_set_hl(0, "@lsp.mod.highConfidence", {})
+vim.api.nvim_set_hl(0, "@lsp.mod.mediumConfidence", { fg = "#abb2bf" })
+vim.api.nvim_set_hl(0, "@lsp.mod.lowConfidence", { underdotted = true })
+```
+
+#### VSCode設定例
+
+`settings.json`:
+
+```json
+{
+  "editor.semanticTokenColorCustomizations": {
+    "[*]": {
+      "rules": {
+        "character": { "foreground": "#61afef", "bold": true },
+        "setting": { "foreground": "#98c379", "italic": true },
+        "*.lowConfidence": { "fontStyle": "underline" }
+      }
+    }
+  }
+}
+```
+
 ## 信頼度システム
 
 ### 基本信頼度

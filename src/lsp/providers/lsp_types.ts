@@ -87,7 +87,45 @@ export type CodeAction = {
   readonly edit?: WorkspaceEdit;
 };
 
+/**
+ * LSP TextDocumentIdentifier型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocumentIdentifier
+ */
+export type TextDocumentIdentifier = {
+  readonly uri: string;
+};
+
+/**
+ * LSP SemanticTokens型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokens
+ */
+export type SemanticTokens = {
+  readonly data: number[];
+  readonly resultId?: string;
+};
+
+/**
+ * LSP SemanticTokensParams型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokensParams
+ */
+export type SemanticTokensParams = {
+  readonly textDocument: TextDocumentIdentifier;
+};
+
+/**
+ * LSP SemanticTokensRangeParams型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokensRangeParams
+ */
+export type SemanticTokensRangeParams = {
+  readonly textDocument: TextDocumentIdentifier;
+  readonly range: Range;
+};
+
 // ランタイム型チェック用ダミーオブジェクト
 // テストで型の存在を確認するために使用
 export const Position = {} as const;
 export const Range = {} as const;
+export const SemanticTokens = {} as const;
+export const SemanticTokensParams = {} as const;
+export const SemanticTokensRangeParams = {} as const;
+export const TextDocumentIdentifier = {} as const;
