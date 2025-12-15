@@ -3,26 +3,41 @@
     "@std/assert": "jsr:@std/assert@^1.0.0",
     "@std/fs": "jsr:@std/fs@^1.0.0",
     "@std/path": "jsr:@std/path@^1.0.0",
+    "@std/testing": "jsr:@std/testing@^1.0.0",
     "@std/cli": "jsr:@std/cli@^1.0.0",
-    "@std/yaml": "jsr:@std/yaml@^1.0.0"
+    "@std/yaml": "jsr:@std/yaml@^1.0.0",
+    "zod": "npm:zod@4.1.12"
   },
   "tasks": {
+    "fmt:check": "deno fmt --check",
+    "lint": "deno lint",
     "build": "deno compile --allow-write --allow-env --allow-read --output storyteller main.ts",
     "generate": "deno run --allow-write --allow-read main.ts generate",
     "meta:check": "deno run --allow-read main.ts meta check",
-    "test": "deno test --allow-write --allow-read",
+    "coverage:collect": "deno test --allow-write --allow-read --allow-net --coverage=coverage/profile --coverage-raw-data-only",
+    "coverage:report": "deno run --allow-read --allow-run --allow-write scripts/coverage_threshold.ts --profile=coverage/profile --html=coverage/html",
+    "coverage": "deno task coverage:collect && deno task coverage:report",
+    "check": "deno task fmt:check && deno task lint && deno task test && deno task coverage && deno task meta:check -- --dir sample/manuscripts --recursive",
+    "bench": "deno bench --allow-read --allow-write --allow-net bench/",
+    "test": "deno test --allow-write --allow-read --allow-net",
     "test:cli": "deno test --allow-read --allow-write tests/cli_test.ts tests/command_registry_test.ts",
     "test:domain": "deno test --allow-read --allow-write tests/story_domain_service_test.ts tests/template_catalog_test.ts",
     "test:application": "deno test --allow-read --allow-write tests/project_scaffolding_service_test.ts tests/migration_facilitator_test.ts",
     "test:scaffold": "deno test --allow-read --allow-write tests/generate_test.ts",
-    "cli:build": "deno run --allow-read --allow-write scripts/build_cli.ts --out dist --artifacts dist/storyteller",
+    "cli:compile": "deno compile --allow-read --allow-write --allow-net --allow-env --output dist/storyteller main.ts",
+    "cli:manifest": "deno run --allow-read --allow-write scripts/build_cli.ts --out dist --artifacts dist/storyteller",
+    "cli:build": "deno task cli:manifest",
     "cli:completions": "deno run --allow-read --allow-write scripts/generate_completions.ts",
-    "cli:package": "deno task cli:build && deno task cli:completions"
+    "cli:package": "deno task cli:compile && deno task cli:manifest && deno task cli:completions"
   },
   "fmt": {
-    "exclude": ["output/"]
+    "exclude": ["coverage/", "dist/", "output/", "test_output/"]
   },
   "lint": {
-    "exclude": ["output/"]
+    "exclude": ["coverage/", "dist/", "output/", "test_output/"],
+    "rules": {
+      "tags": ["recommended"],
+      "exclude": ["no-explicit-any", "require-await"]
+    }
   }
 }
