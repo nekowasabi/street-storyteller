@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v2.x
+
+      - name: Build CLI artifacts
+        run: deno task cli:package
+
+      - name: Stamp manifest version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          deno run --allow-read --allow-write scripts/build_cli.ts --version "$VERSION" --out dist --artifacts dist/storyteller
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist/storyteller
+            dist/storyteller-manifest.json
+            dist/completions/*
