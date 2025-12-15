@@ -267,10 +267,11 @@ Deno.test("LspServer integration - textDocument/definition returns null for non-
   };
 
   assertEquals(response.id, 11);
+  // coc.nvim互換性のため、nullではなく空配列を返す
   assertEquals(
     response.result,
-    null,
-    "Should return null for non-entity position",
+    [],
+    "Should return empty array for non-entity position (coc.nvim compatibility)",
   );
 });
 
@@ -630,8 +631,8 @@ Deno.test("LspServer integration - handles definition request for unopened docum
   };
 
   assertEquals(response.id, 30);
-  // ドキュメントが開かれていない場合はnullを返す
-  assertEquals(response.result, null);
+  // ドキュメントが開かれていない場合は空配列を返す（coc.nvim互換性）
+  assertEquals(response.result, []);
 });
 
 Deno.test("LspServer integration - handles hover request for unopened document", async () => {
