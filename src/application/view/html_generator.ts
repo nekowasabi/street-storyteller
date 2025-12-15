@@ -4,9 +4,11 @@
  */
 import type {
   CharacterSummary,
+  EventSummary,
   ManuscriptSummary,
   ProjectAnalysis,
   SettingSummary,
+  TimelineSummary,
 } from "./project_analyzer.ts";
 
 /**
@@ -19,6 +21,7 @@ export class HtmlGenerator {
   generate(analysis: ProjectAnalysis): string {
     const charactersSection = this.renderCharacters(analysis.characters);
     const settingsSection = this.renderSettings(analysis.settings);
+    const timelinesSection = this.renderTimelines(analysis.timelines);
     const manuscriptsSection = this.renderManuscripts(analysis.manuscripts);
 
     return `<!DOCTYPE html>
@@ -46,6 +49,11 @@ ${CSS_STYLES}
       <section class="settings">
         <h2>Settings</h2>
         ${settingsSection}
+      </section>
+
+      <section class="timelines">
+        <h2>Timelines</h2>
+        ${timelinesSection}
       </section>
 
       <section class="manuscripts">
@@ -122,6 +130,100 @@ ${CSS_STYLES}
         </div>`).join("\n");
 
     return `<div class="card-grid">${cards}</div>`;
+  }
+
+  /**
+   * タイムラインセクションをレンダリング
+   */
+  private renderTimelines(timelines: readonly TimelineSummary[]): string {
+    if (timelines.length === 0) {
+      return '<p class="empty">No timelines found.</p>';
+    }
+
+    const cards = timelines.map((timeline) => `
+        <div class="card timeline-card">
+          <h3>${escapeHtml(timeline.name)}</h3>
+          <div class="meta">
+            <span class="scope">${escapeHtml(timeline.scope)}</span>
+            <span class="id">${escapeHtml(timeline.id)}</span>
+          </div>
+          ${
+            timeline.parentTimeline
+              ? `<div class="parent-timeline"><span class="label">Parent:</span> ${escapeHtml(timeline.parentTimeline)}</div>`
+              : ""
+          }
+          ${
+            timeline.relatedCharacter
+              ? `<div class="related-character"><span class="label">Character:</span> ${escapeHtml(timeline.relatedCharacter)}</div>`
+              : ""
+          }
+          <p class="summary">${escapeHtml(timeline.summary ?? "")}</p>
+          ${this.renderTimelineEvents(timeline.events)}
+          <div class="file-path">
+            <code>${escapeHtml(timeline.filePath)}</code>
+          </div>
+        </div>`).join("\n");
+
+    return `<div class="timeline-list">${cards}</div>`;
+  }
+
+  /**
+   * タイムラインイベントをレンダリング
+   */
+  private renderTimelineEvents(events: readonly EventSummary[]): string {
+    if (events.length === 0) {
+      return '<div class="timeline-events empty">No events.</div>';
+    }
+
+    // orderでソート
+    const sortedEvents = [...events].sort((a, b) => a.order - b.order);
+
+    const eventItems = sortedEvents.map((event) => `
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">${event.order}</span>
+          <span class="event-title">${escapeHtml(event.title)}</span>
+          <span class="event-category">${escapeHtml(event.category)}</span>
+        </div>
+        <div class="event-summary">${escapeHtml(event.summary ?? "")}</div>
+        ${
+          event.characters.length > 0
+            ? `<div class="event-refs"><span class="label">Characters:</span> ${
+                event.characters.map((c) => `<span class="ref character">${escapeHtml(c)}</span>`).join(" ")
+              }</div>`
+            : ""
+        }
+        ${
+          event.settings.length > 0
+            ? `<div class="event-refs"><span class="label">Settings:</span> ${
+                event.settings.map((s) => `<span class="ref setting">${escapeHtml(s)}</span>`).join(" ")
+              }</div>`
+            : ""
+        }
+        ${
+          event.chapters.length > 0
+            ? `<div class="event-refs"><span class="label">Chapters:</span> ${
+                event.chapters.map((c) => `<span class="ref chapter">${escapeHtml(c)}</span>`).join(" ")
+              }</div>`
+            : ""
+        }
+        ${
+          event.causedBy && event.causedBy.length > 0
+            ? `<div class="event-causality caused-by"><span class="label">Caused by:</span> ${
+                event.causedBy.map((e) => `<span class="ref causality">${escapeHtml(e)}</span>`).join(" ")
+              }</div>`
+            : ""
+        }
+        ${
+          event.causes && event.causes.length > 0
+            ? `<div class="event-causality causes"><span class="label">Causes:</span> ${
+                event.causes.map((e) => `<span class="ref causality">${escapeHtml(e)}</span>`).join(" ")
+              }</div>`
+            : ""
+        }
+      </div>`).join("\n");
+
+    return `<div class="timeline-events event-list">${eventItems}</div>`;
   }
 
   /**
@@ -310,6 +412,122 @@ const CSS_STYLES = `
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
       font-size: 0.8rem;
+    }
+
+    .timeline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .timeline-card {
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .timeline-card .scope {
+      background: #9b59b6;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .timeline-card .parent-timeline,
+    .timeline-card .related-character {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .timeline-events {
+      margin: 1rem 0;
+      padding: 1rem;
+      background: var(--background-color);
+      border-radius: 8px;
+    }
+
+    .timeline-events.empty {
+      color: #999;
+      font-style: italic;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .event-item {
+      background: var(--card-background);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--secondary-color);
+    }
+
+    .event-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-order {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: bold;
+      min-width: 1.5rem;
+      text-align: center;
+    }
+
+    .event-title {
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    .event-category {
+      background: var(--border-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-left: auto;
+    }
+
+    .event-summary {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-refs {
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .event-refs .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .event-causality {
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .event-causality .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .ref.chapter {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .ref.causality {
+      background: #fce4ec;
+      color: #c2185b;
     }
 
     .manuscript-list {

@@ -29,6 +29,37 @@ export interface SettingSummary {
 }
 
 /**
+ * イベントサマリー
+ */
+export interface EventSummary {
+  readonly id: string;
+  readonly title: string;
+  readonly category: string;
+  readonly order: number;
+  readonly label?: string;
+  readonly summary?: string;
+  readonly characters: readonly string[];
+  readonly settings: readonly string[];
+  readonly chapters: readonly string[];
+  readonly causedBy?: readonly string[];
+  readonly causes?: readonly string[];
+}
+
+/**
+ * タイムラインサマリー
+ */
+export interface TimelineSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly scope: string;
+  readonly summary?: string;
+  readonly events: readonly EventSummary[];
+  readonly parentTimeline?: string;
+  readonly relatedCharacter?: string;
+  readonly filePath: string;
+}
+
+/**
  * エンティティ参照
  */
 export interface EntityReference {
@@ -52,6 +83,7 @@ export interface ManuscriptSummary {
 export interface ProjectAnalysis {
   readonly characters: readonly CharacterSummary[];
   readonly settings: readonly SettingSummary[];
+  readonly timelines: readonly TimelineSummary[];
   readonly manuscripts: readonly ManuscriptSummary[];
 }
 
@@ -80,6 +112,9 @@ export class ProjectAnalyzer {
       // 設定をロード
       const settings = await this.loadSettings(projectPath);
 
+      // タイムラインをロード
+      const timelines = await this.loadTimelines(projectPath);
+
       // 原稿を解析
       const manuscripts = await this.analyzeManuscripts(
         projectPath,
@@ -90,6 +125,7 @@ export class ProjectAnalyzer {
       return ok({
         characters,
         settings,
+        timelines,
         manuscripts,
       });
     } catch (error) {
@@ -186,6 +222,46 @@ export class ProjectAnalyzer {
   }
 
   /**
+   * タイムラインをロード
+   */
+  private async loadTimelines(
+    projectPath: string,
+  ): Promise<TimelineSummary[]> {
+    const timelinesDir = join(projectPath, "src/timelines");
+    const timelines: TimelineSummary[] = [];
+
+    try {
+      for await (const entry of Deno.readDir(timelinesDir)) {
+        if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+
+        const absPath = join(timelinesDir, entry.name);
+        try {
+          const mod = await import(toFileUrl(absPath).href);
+          for (const [, value] of Object.entries(mod)) {
+            const parsed = this.parseTimeline(value);
+            if (parsed) {
+              const relPath = relative(projectPath, absPath).replaceAll(
+                "\\",
+                "/",
+              );
+              timelines.push({
+                ...parsed,
+                filePath: relPath,
+              });
+            }
+          }
+        } catch {
+          // スキップ
+        }
+      }
+    } catch {
+      // ディレクトリが存在しない場合はスキップ
+    }
+
+    return timelines;
+  }
+
+  /**
    * エンティティをパース
    */
   private parseEntity(value: unknown): {
@@ -211,6 +287,124 @@ export class ProjectAnalyzer {
       : undefined;
 
     return { id, name, displayNames, role, summary };
+  }
+
+  /**
+   * タイムラインをパース
+   */
+  private parseTimeline(value: unknown): Omit<TimelineSummary, "filePath"> | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+
+    const id = record.id;
+    const name = record.name;
+    const scope = record.scope;
+
+    if (
+      typeof id !== "string" ||
+      typeof name !== "string" ||
+      typeof scope !== "string"
+    ) {
+      return null;
+    }
+
+    const summary = typeof record.summary === "string"
+      ? record.summary
+      : undefined;
+
+    const events: EventSummary[] = [];
+    if (Array.isArray(record.events)) {
+      for (const evt of record.events) {
+        const parsed = this.parseEvent(evt);
+        if (parsed) {
+          events.push(parsed);
+        }
+      }
+    }
+
+    const parentTimeline = typeof record.parentTimeline === "string"
+      ? record.parentTimeline
+      : undefined;
+
+    const relatedCharacter = typeof record.relatedCharacter === "string"
+      ? record.relatedCharacter
+      : undefined;
+
+    return {
+      id,
+      name,
+      scope,
+      summary,
+      events,
+      parentTimeline,
+      relatedCharacter,
+    };
+  }
+
+  /**
+   * イベントをパース
+   */
+  private parseEvent(value: unknown): EventSummary | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+
+    const id = record.id;
+    const title = record.title;
+    const category = record.category;
+    const time = record.time;
+
+    if (
+      typeof id !== "string" ||
+      typeof title !== "string" ||
+      typeof category !== "string" ||
+      !time || typeof time !== "object"
+    ) {
+      return null;
+    }
+
+    const timeRecord = time as Record<string, unknown>;
+    const order = typeof timeRecord.order === "number" ? timeRecord.order : 0;
+    const label = typeof timeRecord.label === "string"
+      ? timeRecord.label
+      : undefined;
+
+    const summary = typeof record.summary === "string"
+      ? record.summary
+      : undefined;
+
+    const characters = Array.isArray(record.characters)
+      ? record.characters.filter((v): v is string => typeof v === "string")
+      : [];
+
+    const settings = Array.isArray(record.settings)
+      ? record.settings.filter((v): v is string => typeof v === "string")
+      : [];
+
+    const chapters = Array.isArray(record.chapters)
+      ? record.chapters.filter((v): v is string => typeof v === "string")
+      : [];
+
+    const causedBy = Array.isArray(record.causedBy)
+      ? record.causedBy.filter((v): v is string => typeof v === "string")
+      : undefined;
+
+    const causes = Array.isArray(record.causes)
+      ? record.causes.filter((v): v is string => typeof v === "string")
+      : undefined;
+
+    return {
+      id,
+      title,
+      category,
+      order,
+      label,
+      summary,
+      characters,
+      settings,
+      chapters,
+      causedBy,
+      causes,
+    };
   }
 
   /**

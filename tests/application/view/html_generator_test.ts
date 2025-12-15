@@ -35,6 +35,7 @@ const mockAnalysis: ProjectAnalysis = {
       filePath: "src/settings/kingdom.ts",
     },
   ],
+  timelines: [],
   manuscripts: [
     {
       path: "manuscripts/chapter01.md",
@@ -116,6 +117,7 @@ Deno.test("HtmlGenerator - 空のデータ対応", async (t) => {
     const emptyAnalysis: ProjectAnalysis = {
       characters: [],
       settings: [],
+      timelines: [],
       manuscripts: [],
     };
 

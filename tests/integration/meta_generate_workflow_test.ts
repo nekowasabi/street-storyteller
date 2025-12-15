@@ -94,7 +94,7 @@ Deno.test("integration - meta generation workflow writes a .meta.ts file", async
 });
 
 Deno.test("integration - sample chapter01 generates a compatible meta file (subset match)", async () => {
-  const sampleRoot = joinPath(Deno.cwd(), "sample");
+  const sampleRoot = joinPath(Deno.cwd(), "samples/cinderella");
   const markdownPath = joinPath(sampleRoot, "manuscripts/chapter01.md");
   const outputPath = joinPath(
     sampleRoot,
@@ -123,27 +123,29 @@ Deno.test("integration - sample chapter01 generates a compatible meta file (subs
     const expectedOrder = expected.match(/order:\s*(\d+)/)?.[1];
 
     assertEquals(expectedId, "chapter01");
-    assertEquals(expectedTitle, "旅の始まり");
+    assertEquals(expectedTitle, "灰かぶり姫の日常");
     assertEquals(expectedOrder, "1");
 
     assertEquals(generated.includes('id: "chapter01"'), true);
-    assertEquals(generated.includes('title: "旅の始まり"'), true);
+    assertEquals(generated.includes('title: "灰かぶり姫の日常"'), true);
     assertEquals(generated.includes("order: 1"), true);
 
     // At minimum, ensure the main entities from the sample meta are imported.
     assertEquals(
-      generated.includes('import { hero } from "../src/characters/hero.ts";'),
-      true,
-    );
-    assertEquals(
       generated.includes(
-        'import { heroine } from "../src/characters/heroine.ts";',
+        'import { cinderella } from "../src/characters/cinderella.ts";',
       ),
       true,
     );
     assertEquals(
       generated.includes(
-        'import { kingdom } from "../src/settings/kingdom.ts";',
+        'import { stepmother } from "../src/characters/stepmother.ts";',
+      ),
+      true,
+    );
+    assertEquals(
+      generated.includes(
+        'import { mansion } from "../src/settings/mansion.ts";',
       ),
       true,
     );
