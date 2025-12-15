@@ -150,12 +150,15 @@ function createStdoutWriter(): { write(p: Uint8Array): Promise<number> } {
 export async function loadEntities(
   projectRoot: string,
 ): Promise<DetectableEntity[]> {
-  const { join, toFileUrl, relative } = await import("@std/path");
+  const { join, toFileUrl, relative, resolve } = await import("@std/path");
   const entities: DetectableEntity[] = [];
+
+  // 相対パスを絶対パスに解決
+  const absoluteProjectRoot = resolve(projectRoot);
 
   // キャラクターをロード
   try {
-    const charactersDir = join(projectRoot, "src/characters");
+    const charactersDir = join(absoluteProjectRoot, "src/characters");
     for await (const entry of Deno.readDir(charactersDir)) {
       if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
       const absPath = join(charactersDir, entry.name);
@@ -164,7 +167,7 @@ export async function loadEntities(
         for (const [, value] of Object.entries(mod)) {
           const parsed = parseEntity(value);
           if (parsed) {
-            const relPath = relative(projectRoot, absPath).replaceAll(
+            const relPath = relative(absoluteProjectRoot, absPath).replaceAll(
               "\\",
               "/",
             );
@@ -188,7 +191,7 @@ export async function loadEntities(
 
   // 設定をロード
   try {
-    const settingsDir = join(projectRoot, "src/settings");
+    const settingsDir = join(absoluteProjectRoot, "src/settings");
     for await (const entry of Deno.readDir(settingsDir)) {
       if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
       const absPath = join(settingsDir, entry.name);
@@ -197,7 +200,7 @@ export async function loadEntities(
         for (const [, value] of Object.entries(mod)) {
           const parsed = parseEntity(value);
           if (parsed) {
-            const relPath = relative(projectRoot, absPath).replaceAll(
+            const relPath = relative(absoluteProjectRoot, absPath).replaceAll(
               "\\",
               "/",
             );

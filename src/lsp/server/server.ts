@@ -239,14 +239,40 @@ export class LspServer {
       case "textDocument/codeAction":
         await this.handleCodeAction(request);
         break;
+      // coc.nvim互換性のため、未実装の機能には空配列を返す
+      case "textDocument/documentSymbol":
+      case "textDocument/references":
+      case "textDocument/documentHighlight":
+      case "textDocument/foldingRange":
+      case "textDocument/selectionRange":
+      case "textDocument/documentLink":
+      case "textDocument/formatting":
+      case "textDocument/rangeFormatting":
+      case "textDocument/onTypeFormatting":
+      case "textDocument/prepareRename":
+      case "textDocument/linkedEditingRange":
+      case "textDocument/moniker":
+      case "textDocument/colorPresentation":
+      case "textDocument/documentColor":
+      case "textDocument/inlayHint":
+      case "textDocument/inlineValue":
+      case "workspace/symbol": {
+        const emptyResponse = createSuccessResponse(request.id, []);
+        await this.transport.writeMessage(emptyResponse);
+        break;
+      }
+      // semantic tokens は専用の空レスポンス形式
+      case "textDocument/semanticTokens/full":
+      case "textDocument/semanticTokens/range": {
+        const semanticResponse = createSuccessResponse(request.id, { data: [] });
+        await this.transport.writeMessage(semanticResponse);
+        break;
+      }
       default: {
-        // 未実装のメソッド
-        const errorResponse = createErrorResponse(
-          request.id,
-          JSON_RPC_METHOD_NOT_FOUND,
-          `Method not found: ${request.method}`,
-        );
-        await this.transport.writeMessage(errorResponse);
+        // 未実装のメソッドにはnullを返す（エラーの代わりに）
+        // これによりcoc.nvimとの互換性を向上
+        const nullResponse = createSuccessResponse(request.id, null);
+        await this.transport.writeMessage(nullResponse);
         break;
       }
     }
@@ -336,7 +362,8 @@ export class LspServer {
       );
     }
 
-    const response = createSuccessResponse(request.id, result);
+    // coc.nvim等のクライアント互換性のため、nullの代わりに空配列を返す
+    const response = createSuccessResponse(request.id, result ?? []);
     await this.transport.writeMessage(response);
   }
 
