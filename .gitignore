@@ -3,3 +3,12 @@ CLAUDE.md
 deno.lock
 .env
 .env.local
+
+# Build outputs
+dist/
+
+# Test coverage
+coverage/
+
+# Temporary files
+tmp/
