@@ -11,10 +11,19 @@ import type {
 } from "../protocol/types.ts";
 
 /**
+ * ツール実行時のコンテキスト
+ */
+export type ToolExecutionContext = {
+  /** プロジェクトルートディレクトリ */
+  projectRoot: string;
+};
+
+/**
  * ツール実行関数の型
  */
 export type ToolExecuteFunction = (
   args: Record<string, unknown>,
+  context?: ToolExecutionContext,
 ) => Promise<McpCallToolResult>;
 
 /**
@@ -37,6 +46,23 @@ export type McpToolDefinition = {
  */
 export class ToolRegistry {
   private readonly tools: Map<string, McpToolDefinition> = new Map();
+  private _projectRoot: string = Deno.cwd();
+
+  /**
+   * プロジェクトルートを設定する
+   * @param projectRoot プロジェクトルートディレクトリ
+   */
+  setProjectRoot(projectRoot: string): void {
+    this._projectRoot = projectRoot;
+  }
+
+  /**
+   * プロジェクトルートを取得する
+   * @returns プロジェクトルートディレクトリ
+   */
+  getProjectRoot(): string {
+    return this._projectRoot;
+  }
 
   /**
    * ツールを登録する
@@ -87,8 +113,13 @@ export class ToolRegistry {
       };
     }
 
+    // 実行コンテキストを作成
+    const context: ToolExecutionContext = {
+      projectRoot: this._projectRoot,
+    };
+
     try {
-      return await tool.execute(args);
+      return await tool.execute(args, context);
     } catch (error) {
       return {
         content: [

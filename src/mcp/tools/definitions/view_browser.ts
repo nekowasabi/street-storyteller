@@ -3,7 +3,7 @@
  * プロジェクトの物語要素をHTML形式で可視化するMCPツール
  */
 
-import type { McpToolDefinition } from "../tool_registry.ts";
+import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
 import { executeCliCommand } from "../cli_adapter.ts";
 import { ViewCommand } from "../../../cli/modules/view.ts";
 
@@ -48,10 +48,14 @@ export const viewBrowserTool: McpToolDefinition = {
       },
     },
   },
-  execute: async (args: Record<string, unknown>) => {
+  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
     const commandArgs: Record<string, unknown> = {};
+    const projectRoot = context?.projectRoot;
 
-    if (typeof args.path === "string" && args.path.trim().length > 0) {
+    // コンテキストからのprojectRootを優先、なければargsから
+    if (projectRoot) {
+      commandArgs.path = projectRoot;
+    } else if (typeof args.path === "string" && args.path.trim().length > 0) {
       commandArgs.path = args.path;
     }
 
@@ -84,6 +88,6 @@ export const viewBrowserTool: McpToolDefinition = {
     }
 
     const handler = new ViewCommand();
-    return await executeCliCommand(handler, commandArgs);
+    return await executeCliCommand(handler, commandArgs, projectRoot);
   },
 };

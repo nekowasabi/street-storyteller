@@ -114,13 +114,19 @@ export function createMockContext(
  * CommandHandlerをMCPツールとして実行する
  * @param handler 実行するコマンドハンドラー
  * @param args ツール引数
+ * @param projectRoot プロジェクトルートディレクトリ（省略時はDeno.cwd()）
  * @returns MCP形式の実行結果
  */
 export async function executeCliCommand(
   handler: CommandHandler,
   args: Record<string, unknown>,
+  projectRoot?: string,
 ): Promise<McpCallToolResult> {
-  const context = createMockContext(args);
+  // projectRootが指定されていれば引数に追加
+  const argsWithProjectRoot = projectRoot
+    ? { ...args, projectRoot }
+    : args;
+  const context = createMockContext(argsWithProjectRoot);
 
   try {
     const result = await handler.execute(context);

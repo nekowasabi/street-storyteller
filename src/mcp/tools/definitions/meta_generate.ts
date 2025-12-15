@@ -3,7 +3,7 @@
  * 原稿からメタデータファイル(.meta.ts)を生成するMCPツール
  */
 
-import type { McpToolDefinition } from "../tool_registry.ts";
+import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
 import { executeCliCommand } from "../cli_adapter.ts";
 import { MetaGenerateCommand } from "../../../cli/modules/meta/generate.ts";
 
@@ -72,10 +72,11 @@ export const metaGenerateTool: McpToolDefinition = {
       },
     },
   },
-  execute: async (args: Record<string, unknown>) => {
+  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
     // pathまたはdirが必要
     const path = args.path as string | undefined;
     const dir = args.dir as string | undefined;
+    const projectRoot = context?.projectRoot;
 
     if (!path && !dir) {
       return {
@@ -129,6 +130,6 @@ export const metaGenerateTool: McpToolDefinition = {
 
     // MetaGenerateCommandを実行
     const handler = new MetaGenerateCommand();
-    return await executeCliCommand(handler, commandArgs);
+    return await executeCliCommand(handler, commandArgs, projectRoot);
   },
 };

@@ -3,7 +3,7 @@
  * 原稿ファイルのメタデータ整合性を検証するMCPツール
  */
 
-import type { McpToolDefinition } from "../tool_registry.ts";
+import type { McpToolDefinition, ToolExecutionContext } from "../tool_registry.ts";
 import { executeCliCommand } from "../cli_adapter.ts";
 import { MetaCheckCommand } from "../../../cli/modules/meta/check.ts";
 
@@ -48,10 +48,11 @@ export const metaCheckTool: McpToolDefinition = {
       },
     },
   },
-  execute: async (args: Record<string, unknown>) => {
+  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
     // pathまたはdirが必要
     const path = args.path as string | undefined;
     const dir = args.dir as string | undefined;
+    const projectRoot = context?.projectRoot;
 
     if (!path && !dir) {
       return {
@@ -90,6 +91,6 @@ export const metaCheckTool: McpToolDefinition = {
 
     // MetaCheckCommandを実行
     const handler = new MetaCheckCommand();
-    return await executeCliCommand(handler, commandArgs);
+    return await executeCliCommand(handler, commandArgs, projectRoot);
   },
 };
