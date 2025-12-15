@@ -9,32 +9,11 @@ import {
   PositionedDetector,
   type PositionedMatch,
 } from "../detection/positioned_detector.ts";
+import type { Range, MarkupContent, Hover } from "./lsp_types.ts";
+import { createEntityResolver, type EntityResolver } from "./entity_resolver.ts";
 
-/**
- * LSP Range型
- */
-export type Range = {
-  readonly start: Position;
-  readonly end: Position;
-};
-
-/**
- * LSP MarkupContent型
- * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#markupContent
- */
-export type MarkupContent = {
-  readonly kind: "plaintext" | "markdown";
-  readonly value: string;
-};
-
-/**
- * LSP Hover型
- * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#hover
- */
-export type Hover = {
-  readonly contents: MarkupContent;
-  readonly range?: Range;
-};
+// 型の再エクスポート（後方互換性のため）
+export type { Range, MarkupContent, Hover };
 
 /**
  * エンティティの詳細情報
@@ -58,7 +37,7 @@ export type EntityInfo = {
  * ホバー情報プロバイダークラス
  */
 export class HoverProvider {
-  private readonly detector: PositionedDetector;
+  private readonly resolver: EntityResolver;
   private readonly entityInfoMap: Map<string, EntityInfo>;
 
   /**
@@ -69,7 +48,7 @@ export class HoverProvider {
     detector: PositionedDetector,
     entityInfoMap: Map<string, EntityInfo>,
   ) {
-    this.detector = detector;
+    this.resolver = createEntityResolver(detector);
     this.entityInfoMap = entityInfoMap;
   }
 
@@ -87,13 +66,8 @@ export class HoverProvider {
     position: Position,
     _projectPath: string,
   ): Promise<Hover | null> {
-    // 空のコンテンツは処理しない
-    if (!content) {
-      return null;
-    }
-
-    // 指定位置のエンティティを取得
-    const match = this.detector.getEntityAtPosition(content, position);
+    // 共通リゾルバーでエンティティを解決
+    const match = this.resolver.resolveAtPosition(content, position);
     if (!match) {
       return null;
     }

@@ -8,32 +8,21 @@ import {
   type Position,
   PositionedDetector,
 } from "../detection/positioned_detector.ts";
+import type { Range, Location } from "./lsp_types.ts";
+import { createEntityResolver, type EntityResolver } from "./entity_resolver.ts";
+import { filePathToUri } from "./provider_utils.ts";
 
-/**
- * LSP Range型
- */
-export type Range = {
-  readonly start: Position;
-  readonly end: Position;
-};
-
-/**
- * LSP Location型
- * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#location
- */
-export type Location = {
-  readonly uri: string;
-  readonly range: Range;
-};
+// 型の再エクスポート（後方互換性のため）
+export type { Range, Location };
 
 /**
  * 定義ジャンププロバイダークラス
  */
 export class DefinitionProvider {
-  private readonly detector: PositionedDetector;
+  private readonly resolver: EntityResolver;
 
   constructor(detector: PositionedDetector) {
-    this.detector = detector;
+    this.resolver = createEntityResolver(detector);
   }
 
   /**
@@ -50,19 +39,14 @@ export class DefinitionProvider {
     position: Position,
     projectPath: string,
   ): Promise<Location | null> {
-    // 空のコンテンツは処理しない
-    if (!content) {
-      return null;
-    }
-
-    // 指定位置のエンティティを取得
-    const entity = this.detector.getEntityAtPosition(content, position);
+    // 共通リゾルバーでエンティティを解決
+    const entity = this.resolver.resolveAtPosition(content, position);
     if (!entity) {
       return null;
     }
 
-    // ファイルパスをURIに変換
-    const definitionUri = this.filePathToUri(entity.filePath, projectPath);
+    // ファイルパスをURIに変換（共通ユーティリティ使用）
+    const definitionUri = filePathToUri(entity.filePath, projectPath);
 
     // 定義ファイルの先頭を指すLocation
     return {
@@ -72,25 +56,5 @@ export class DefinitionProvider {
         end: { line: 0, character: 0 },
       },
     };
-  }
-
-  /**
-   * ファイルパスをfile:// URIに変換
-   * @param filePath 相対または絶対ファイルパス
-   * @param projectPath プロジェクトルートパス
-   * @returns file:// URI
-   */
-  private filePathToUri(filePath: string, projectPath: string): string {
-    // 絶対パスの場合はそのまま使用
-    if (filePath.startsWith("/")) {
-      return `file://${filePath}`;
-    }
-
-    // 相対パスの場合はプロジェクトパスと結合
-    const absolutePath = projectPath.endsWith("/")
-      ? `${projectPath}${filePath}`
-      : `${projectPath}/${filePath}`;
-
-    return `file://${absolutePath}`;
   }
 }
