@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Project Overview</title>
+  <style>
+
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2ecc71;
+      --background-color: #f5f6fa;
+      --card-background: #ffffff;
+      --text-color: #2c3e50;
+      --border-color: #dfe6e9;
+      --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    header h1 {
+      color: var(--primary-color);
+      font-size: 2rem;
+    }
+
+    section {
+      margin-bottom: 2rem;
+    }
+
+    section h2 {
+      color: var(--text-color);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card h3 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .card .meta {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card .role {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .card .id {
+      background: var(--border-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .card .summary {
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .display-names {
+      margin-bottom: 0.5rem;
+    }
+
+    .display-names .label,
+    .references .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .tag {
+      background: var(--background-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-right: 0.25rem;
+    }
+
+    .file-path {
+      margin-top: 0.5rem;
+    }
+
+    .file-path code {
+      background: var(--background-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .manuscript-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .manuscript-item {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .manuscript-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .manuscript-header h3 {
+      color: var(--primary-color);
+    }
+
+    .manuscript-header .path {
+      background: var(--background-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .ref {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-right: 0.25rem;
+    }
+
+    .ref.character {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .ref.setting {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .empty {
+      color: #999;
+      font-style: italic;
+    }
+
+    .no-refs {
+      color: #999;
+      font-style: italic;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Story Project Overview</h1>
+    </header>
+
+    <main>
+      <section class="characters">
+        <h2>Characters</h2>
+        <div class="card-grid">
+        <div class="card character-card">
+          <h3>アナスタシア</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">stepsister_younger</span>
+          </div>
+          <p class="summary">わがままな妹義姉</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">アナスタシア</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/stepsister_younger.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>ドリゼラ</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">stepsister_elder</span>
+          </div>
+          <p class="summary">傲慢な姉義姉</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">ドリゼラ</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/stepsister_elder.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>妖精のおばあさん</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">fairy_godmother</span>
+          </div>
+          <p class="summary">シンデレラを助ける魔法使い</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">妖精のおばあさん</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/fairy_godmother.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>シンデレラ</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">cinderella</span>
+          </div>
+          <p class="summary">継母にいじめられながらも優しさを失わない少女</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">シンデレラ</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/cinderella.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>王子</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">prince</span>
+          </div>
+          <p class="summary">真実の愛を求める王国の王子</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">王子</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/prince.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>国王</h3>
+          <div class="meta">
+            <span class="role">guest</span>
+            <span class="id">king</span>
+          </div>
+          <p class="summary">王子の父、威厳ある国王</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">国王</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/king.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>継母</h3>
+          <div class="meta">
+            <span class="role">antagonist</span>
+            <span class="id">stepmother</span>
+          </div>
+          <p class="summary">シンデレラを虐げる冷酷な継母</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">継母</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/stepmother.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>The protagonist of our story</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">main_character</span>
+          </div>
+          <p class="summary">Template character</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">The protagonist of our story</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/main_character.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="settings">
+        <h2>Settings</h2>
+        <div class="card-grid">
+        <div class="card setting-card">
+          <h3>フェアリーテイル王国</h3>
+          <div class="meta">
+            <span class="id">kingdom</span>
+          </div>
+          <p class="summary">古き良き伝統と魔法が共存する王国。王子と姫の物語が生まれる舞台。</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">王国</span> <span class="tag">フェアリーテイル</span> <span class="tag">王都</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/kingdom.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>屋敷</h3>
+          <div class="meta">
+            <span class="id">mansion</span>
+          </div>
+          <p class="summary">シンデレラが継母と暮らす屋敷。</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">屋敷</span> <span class="tag">邸宅</span> <span class="tag">お屋敷</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/mansion.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>王城</h3>
+          <div class="meta">
+            <span class="id">castle</span>
+          </div>
+          <p class="summary">王族が住む壮麗な城。舞踏会の会場。</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">城</span> <span class="tag">王城</span> <span class="tag">お城</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/castle.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>妖精魔法</h3>
+          <div class="meta">
+            <span class="id">magic_system</span>
+          </div>
+          <p class="summary">妖精が使う魔法のシステム。真夜中に解ける制約がある。</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">魔法</span> <span class="tag">妖精魔法</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/magic_system.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>ガラスの靴</h3>
+          <div class="meta">
+            <span class="id">glass_slipper</span>
+          </div>
+          <p class="summary">妖精の魔法で作られた特別な靴。持ち主を証明する鍵。</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">ガラスの靴</span> <span class="tag">靴</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/glass_slipper.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="manuscripts">
+        <h2>Manuscripts</h2>
+        <div class="manuscript-list">
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;ガラスの靴&quot;</h3>
+            <code class="path">manuscripts/chapter04.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">stepsister_younger (2)</span> <span class="ref character">stepsister_elder (2)</span> <span class="ref character">cinderella (10)</span> <span class="ref character">prince (6)</span> <span class="ref character">king (2)</span> <span class="ref character">stepmother (8)</span> <span class="ref setting">kingdom (3)</span> <span class="ref setting">mansion (2)</span> <span class="ref setting">castle (4)</span> <span class="ref setting">glass_slipper (15)</span>
+          </div>
+        </div>
+
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;舞踏会への招待&quot;</h3>
+            <code class="path">manuscripts/chapter02.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">stepsister_younger (2)</span> <span class="ref character">stepsister_elder (2)</span> <span class="ref character">fairy_godmother (4)</span> <span class="ref character">cinderella (6)</span> <span class="ref character">prince (2)</span> <span class="ref character">stepmother (4)</span> <span class="ref setting">kingdom (1)</span> <span class="ref setting">mansion (2)</span> <span class="ref setting">magic_system (5)</span>
+          </div>
+        </div>
+
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;真夜中の魔法&quot;</h3>
+            <code class="path">manuscripts/chapter03.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">fairy_godmother (2)</span> <span class="ref character">cinderella (12)</span> <span class="ref character">prince (6)</span> <span class="ref setting">castle (4)</span> <span class="ref setting">magic_system (6)</span> <span class="ref setting">glass_slipper (9)</span>
+          </div>
+        </div>
+
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;灰かぶり姫の日常&quot;</h3>
+            <code class="path">manuscripts/chapter01.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">stepsister_younger (4)</span> <span class="ref character">stepsister_elder (4)</span> <span class="ref character">cinderella (8)</span> <span class="ref character">stepmother (2)</span> <span class="ref setting">mansion (6)</span>
+          </div>
+        </div></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Generated by storyteller</p>
+    </footer>
+  </div>
+</body>
+</html>

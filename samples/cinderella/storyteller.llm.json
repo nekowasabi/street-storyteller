@@ -1,0 +1,12 @@
+{
+  "provider": "openrouter",
+  "model": "openai/gpt-oss-120b",
+  "providerOrder": ["Cerebras"],
+  "timeout": 30000,
+  "retry": {
+    "maxRetries": 3,
+    "initialDelay": 1000,
+    "maxDelay": 10000,
+    "backoff": "exponential"
+  }
+}

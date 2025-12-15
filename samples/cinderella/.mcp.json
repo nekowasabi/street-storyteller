@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "storyteller": {
+      "command": "deno",
+      "args": [
+        "run",
+        "-A",
+        "/home/takets/repos/street-storyteller/main.ts",
+        "mcp",
+        "start",
+        "--stdio"
+      ],
+      "cwd": "samples/cinderella"
+    }
+  }
+}
