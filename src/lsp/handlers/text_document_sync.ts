@@ -6,7 +6,6 @@
 
 import {
   DocumentManager,
-  type Position,
   type Range,
   type TextDocumentContentChangeEvent,
 } from "../document/document_manager.ts";
@@ -104,7 +103,7 @@ export class TextDocumentSyncHandler {
       textDocument.uri,
       textDocument.text,
       textDocument.version,
-      textDocument.languageId
+      textDocument.languageId,
     );
 
     if (this.onDidOpenCallback) {
@@ -119,12 +118,18 @@ export class TextDocumentSyncHandler {
     const { textDocument, contentChanges } = params;
 
     // TextDocumentContentChangeEventに変換
-    const changes: TextDocumentContentChangeEvent[] = contentChanges.map((change) => ({
+    const changes: TextDocumentContentChangeEvent[] = contentChanges.map((
+      change,
+    ) => ({
       range: change.range,
       text: change.text,
     }));
 
-    this.documentManager.change(textDocument.uri, changes, textDocument.version);
+    this.documentManager.change(
+      textDocument.uri,
+      changes,
+      textDocument.version,
+    );
 
     if (this.onDidChangeCallback) {
       this.onDidChangeCallback(textDocument.uri);

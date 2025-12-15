@@ -16,7 +16,7 @@ import type {
 } from "../../../core/plugin_system.ts";
 import type { Character } from "../../../type/v2/character.ts";
 import { validateCharacter } from "./validator.ts";
-import { join } from "jsr:@std/path";
+import { join } from "@std/path";
 
 export class CharacterPlugin implements ElementPlugin {
   readonly meta: PluginMetadata = {

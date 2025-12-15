@@ -129,7 +129,7 @@ export class DetailsPlugin implements FeaturePlugin {
   async separateFiles(
     character: Character,
     fields: DetailField[] | "all",
-    projectRoot: string,
+    _projectRoot: string,
   ): Promise<Result<SeparateFilesResult, Error>> {
     try {
       const currentDetails = character.details ?? {};

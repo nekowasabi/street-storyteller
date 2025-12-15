@@ -4,7 +4,7 @@
  * 要素（Character, Setting等）の作成と詳細追加を統合的に管理するサービス
  */
 
-import { err, ok } from "../shared/result.ts";
+import { err } from "../shared/result.ts";
 import type { Result } from "../shared/result.ts";
 import type {
   CreateElementOptions,

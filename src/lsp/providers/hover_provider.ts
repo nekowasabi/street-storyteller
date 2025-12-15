@@ -5,8 +5,8 @@
  */
 
 import {
-  PositionedDetector,
   type Position,
+  PositionedDetector,
   type PositionedMatch,
 } from "../detection/positioned_detector.ts";
 
@@ -67,7 +67,7 @@ export class HoverProvider {
    */
   constructor(
     detector: PositionedDetector,
-    entityInfoMap: Map<string, EntityInfo>
+    entityInfoMap: Map<string, EntityInfo>,
   ) {
     this.detector = detector;
     this.entityInfoMap = entityInfoMap;
@@ -85,7 +85,7 @@ export class HoverProvider {
     _uri: string,
     content: string,
     position: Position,
-    _projectPath: string
+    _projectPath: string,
   ): Promise<Hover | null> {
     // 空のコンテンツは処理しない
     if (!content) {
@@ -114,12 +114,15 @@ export class HoverProvider {
       },
       range: matchPosition
         ? {
-            start: { line: matchPosition.line, character: matchPosition.character },
-            end: {
-              line: matchPosition.line,
-              character: matchPosition.character + matchPosition.length,
-            },
-          }
+          start: {
+            line: matchPosition.line,
+            character: matchPosition.character,
+          },
+          end: {
+            line: matchPosition.line,
+            character: matchPosition.character + matchPosition.length,
+          },
+        }
         : undefined,
     };
   }
@@ -129,7 +132,7 @@ export class HoverProvider {
    */
   private generateMarkdown(
     match: PositionedMatch,
-    entityInfo?: EntityInfo
+    entityInfo?: EntityInfo,
   ): string {
     const lines: string[] = [];
     const kindLabel = match.kind === "character" ? "キャラクター" : "設定";
@@ -158,10 +161,15 @@ export class HoverProvider {
         lines.push(`**特徴**: ${entityInfo.traits.join(", ")}`);
       }
 
-      if (entityInfo.relationships && Object.keys(entityInfo.relationships).length > 0) {
+      if (
+        entityInfo.relationships &&
+        Object.keys(entityInfo.relationships).length > 0
+      ) {
         lines.push("");
         lines.push("**関係性**:");
-        for (const [target, relation] of Object.entries(entityInfo.relationships)) {
+        for (
+          const [target, relation] of Object.entries(entityInfo.relationships)
+        ) {
           lines.push(`- ${target}: ${relation}`);
         }
       }
@@ -179,7 +187,7 @@ export class HoverProvider {
    */
   private findMatchPosition(
     match: PositionedMatch,
-    position: Position
+    position: Position,
   ): { line: number; character: number; length: number } | undefined {
     // 指定位置を含む位置を探す
     for (const pos of match.positions) {

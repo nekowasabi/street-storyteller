@@ -3,18 +3,15 @@
  * Process3: initialize/initialized ハンドシェイクのテスト
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertRejects,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
-import {
-  getServerCapabilities,
-  type ServerCapabilities,
-} from "../../src/lsp/server/capabilities.ts";
+import { assertEquals, assertExists } from "@std/assert";
+import { getServerCapabilities } from "../../src/lsp/server/capabilities.ts";
 import { LspServer } from "../../src/lsp/server/server.ts";
 import { LspTransport } from "../../src/lsp/protocol/transport.ts";
-import { createMockReader, createMockWriter, createLspMessage } from "./helpers.ts";
+import {
+  createLspMessage,
+  createMockReader,
+  createMockWriter,
+} from "./helpers.ts";
 
 // ===== Process3 Sub1: サーバーキャパビリティ定義 =====
 
@@ -22,9 +19,21 @@ Deno.test("ServerCapabilities - getServerCapabilities() returns correct capabili
   const capabilities = getServerCapabilities();
 
   // MVPで必要なキャパビリティが含まれていることを確認
-  assertEquals(capabilities.textDocumentSync, 1, "textDocumentSync should be Full (1)");
-  assertEquals(capabilities.definitionProvider, true, "definitionProvider should be true");
-  assertEquals(capabilities.hoverProvider, true, "hoverProvider should be true");
+  assertEquals(
+    capabilities.textDocumentSync,
+    1,
+    "textDocumentSync should be Full (1)",
+  );
+  assertEquals(
+    capabilities.definitionProvider,
+    true,
+    "definitionProvider should be true",
+  );
+  assertEquals(
+    capabilities.hoverProvider,
+    true,
+    "hoverProvider should be true",
+  );
 });
 
 Deno.test("ServerCapabilities - has correct structure", () => {
@@ -99,7 +108,7 @@ Deno.test("LspServer - handleInitialized processes notification", async () => {
   });
 
   const reader = createMockReader(
-    createLspMessage(initRequest) + createLspMessage(initializedNotification)
+    createLspMessage(initRequest) + createLspMessage(initializedNotification),
   );
   const writer = createMockWriter();
   const transport = new LspTransport(reader, writer);

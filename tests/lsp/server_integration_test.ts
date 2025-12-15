@@ -8,13 +8,14 @@
  * - ドキュメント変更時の診断発行
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import { LspServer } from "../../src/lsp/server/server.ts";
 import { LspTransport } from "../../src/lsp/protocol/transport.ts";
-import { createMockReader, createMockWriter, createLspMessage } from "./helpers.ts";
+import {
+  createLspMessage,
+  createMockReader,
+  createMockWriter,
+} from "./helpers.ts";
 import type { DetectableEntity } from "../../src/lsp/detection/positioned_detector.ts";
 import type { EntityInfo } from "../../src/lsp/providers/hover_provider.ts";
 
@@ -83,7 +84,7 @@ const mockEntityInfoMap = new Map<string, EntityInfo>([
  * ヘルパー: 初期化済みのLspServerを作成
  */
 async function createInitializedServer(
-  additionalMessages: string[] = []
+  additionalMessages: string[] = [],
 ): Promise<{
   server: LspServer;
   transport: LspTransport;
@@ -106,7 +107,11 @@ async function createInitializedServer(
     params: {},
   });
 
-  const allMessages = [initRequest, initializedNotification, ...additionalMessages];
+  const allMessages = [
+    initRequest,
+    initializedNotification,
+    ...additionalMessages,
+  ];
   const reader = createMockReader(allMessages.map(createLspMessage).join(""));
   const writer = createMockWriter();
   const transport = new LspTransport(reader, writer);
@@ -203,7 +208,7 @@ Deno.test("LspServer integration - handles textDocument/definition request", asy
   assertEquals(
     response.result.uri.includes("src/characters/hero.ts"),
     true,
-    "Should return hero.ts location"
+    "Should return hero.ts location",
   );
 });
 
@@ -262,7 +267,11 @@ Deno.test("LspServer integration - textDocument/definition returns null for non-
   };
 
   assertEquals(response.id, 11);
-  assertEquals(response.result, null, "Should return null for non-entity position");
+  assertEquals(
+    response.result,
+    null,
+    "Should return null for non-entity position",
+  );
 });
 
 // ===== textDocument/hover テスト =====
@@ -318,7 +327,9 @@ Deno.test("LspServer integration - handles textDocument/hover request", async ()
   const response = extractResponseBody(responseData) as {
     jsonrpc: string;
     id: number;
-    result: { contents: { kind: string; value: string }; range?: unknown } | null;
+    result:
+      | { contents: { kind: string; value: string }; range?: unknown }
+      | null;
   };
 
   assertEquals(response.jsonrpc, "2.0");
@@ -328,12 +339,12 @@ Deno.test("LspServer integration - handles textDocument/hover request", async ()
   assertEquals(
     response.result.contents.value.includes("勇者"),
     true,
-    "Hover should include character name"
+    "Hover should include character name",
   );
   assertEquals(
     response.result.contents.value.includes("protagonist"),
     true,
-    "Hover should include role"
+    "Hover should include role",
   );
 });
 
@@ -392,7 +403,11 @@ Deno.test("LspServer integration - textDocument/hover returns null for non-entit
   };
 
   assertEquals(response.id, 21);
-  assertEquals(response.result, null, "Should return null for non-entity position");
+  assertEquals(
+    response.result,
+    null,
+    "Should return null for non-entity position",
+  );
 });
 
 // ===== ドキュメント変更時の診断発行テスト =====
@@ -512,7 +527,7 @@ Deno.test("LspServer integration - publishes diagnostics on document change", as
   assertEquals(notification.method, "textDocument/publishDiagnostics");
   assertEquals(
     notification.params.uri,
-    "file:///test/project/manuscripts/chapter01.md"
+    "file:///test/project/manuscripts/chapter01.md",
   );
 });
 
@@ -572,7 +587,11 @@ Deno.test("LspServer integration - clears diagnostics on document close", async 
   };
 
   assertEquals(notification.method, "textDocument/publishDiagnostics");
-  assertEquals(notification.params.diagnostics.length, 0, "Diagnostics should be cleared");
+  assertEquals(
+    notification.params.diagnostics.length,
+    0,
+    "Diagnostics should be cleared",
+  );
 });
 
 // ===== ドキュメント未オープン時のエラーハンドリング =====

@@ -59,7 +59,10 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
         };
 
         await new Promise<void>((resolve, reject) => {
-          const timeout = setTimeout(() => reject(new Error("Connection timeout")), 2000);
+          const timeout = setTimeout(
+            () => reject(new Error("Connection timeout")),
+            2000,
+          );
           ws.onopen = () => {
             clearTimeout(timeout);
             resolve();
@@ -75,11 +78,17 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
       server.notify("reload");
 
       // メッセージ受信を待機
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // 両方のクライアントがメッセージを受信したか確認
-      assert(receivedMessages[0].includes("reload"), "クライアント1がメッセージを受信すべき");
-      assert(receivedMessages[1].includes("reload"), "クライアント2がメッセージを受信すべき");
+      assert(
+        receivedMessages[0].includes("reload"),
+        "クライアント1がメッセージを受信すべき",
+      );
+      assert(
+        receivedMessages[1].includes("reload"),
+        "クライアント2がメッセージを受信すべき",
+      );
 
       // クリーンアップ
       for (const ws of connections) {
@@ -101,7 +110,10 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
       const ws = new WebSocket(`ws://localhost:${port}/ws`);
 
       await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => reject(new Error("Connection timeout")), 2000);
+        const timeout = setTimeout(
+          () => reject(new Error("Connection timeout")),
+          2000,
+        );
         ws.onopen = () => {
           clearTimeout(timeout);
           resolve();
@@ -116,7 +128,7 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
       ws.close();
 
       // 待機
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // 切断後のnotifyでエラーが発生しないことを確認
       server.notify("test");

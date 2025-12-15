@@ -1,9 +1,6 @@
 import { assert, assertEquals } from "../../asserts.ts";
-import {
-  parseProjectMetadata,
-  ProjectMetadataSchema,
-} from "../../../src/shared/config/schema.ts";
-import { z } from "npm:zod";
+import { parseProjectMetadata } from "../../../src/shared/config/schema.ts";
+import { z } from "zod";
 
 Deno.test("ProjectMetadataSchema - 基本的な解析", () => {
   const input = {

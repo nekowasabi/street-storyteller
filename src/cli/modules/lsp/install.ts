@@ -3,7 +3,11 @@
  * エディタ用のLSP設定ファイルを生成する
  */
 import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandDescriptor, CommandOptionDescriptor } from "../../types.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+  CommandOptionDescriptor,
+} from "../../types.ts";
 import { BaseCliCommand } from "../../base_command.ts";
 import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
 
@@ -46,7 +50,8 @@ export class LspInstallCommand extends BaseCliCommand {
     if (!isSupportedEditor(editor)) {
       return err({
         code: "invalid_arguments",
-        message: `Unsupported editor: ${editor}. Supported editors: nvim, vscode`,
+        message:
+          `Unsupported editor: ${editor}. Supported editors: nvim, vscode`,
       });
     }
 
@@ -55,18 +60,23 @@ export class LspInstallCommand extends BaseCliCommand {
 
     // dry-runモードの場合は出力せずに表示
     if (args["dry-run"] === true) {
-      context.presenter.showInfo(`[dry-run] Generated ${editor} configuration:\n\n${config}`);
+      context.presenter.showInfo(
+        `[dry-run] Generated ${editor} configuration:\n\n${config}`,
+      );
       return ok({ editor, config });
     }
 
     // 出力先が指定されている場合はファイルに書き込み
-    const outputPath = typeof args.output === "string" && args.output.trim().length > 0
-      ? args.output
-      : null;
+    const outputPath =
+      typeof args.output === "string" && args.output.trim().length > 0
+        ? args.output
+        : null;
 
     if (outputPath) {
       await Deno.writeTextFile(outputPath, config);
-      context.presenter.showSuccess?.(`Configuration written to: ${outputPath}`);
+      context.presenter.showSuccess?.(
+        `Configuration written to: ${outputPath}`,
+      );
       return ok({ editor, outputPath });
     }
 
@@ -169,7 +179,9 @@ function generateVscodeConfig(): string {
  */
 function renderLspInstallHelp(): string {
   const lines: string[] = [];
-  lines.push("lsp install — Generate editor configuration for the storyteller LSP server.");
+  lines.push(
+    "lsp install — Generate editor configuration for the storyteller LSP server.",
+  );
   lines.push("");
   lines.push("Usage:");
   lines.push("  storyteller lsp install <editor> [options]");
@@ -179,13 +191,17 @@ function renderLspInstallHelp(): string {
   lines.push("  vscode     Generate VSCode settings.json snippet");
   lines.push("");
   lines.push("Options:");
-  lines.push("  --output <file>  Write configuration to file instead of stdout");
+  lines.push(
+    "  --output <file>  Write configuration to file instead of stdout",
+  );
   lines.push("  --dry-run        Show configuration without writing");
   lines.push("  --help, -h       Show this help message");
   lines.push("");
   lines.push("Examples:");
   lines.push("  storyteller lsp install nvim");
-  lines.push("  storyteller lsp install nvim --output ~/.config/nvim/lua/storyteller.lua");
+  lines.push(
+    "  storyteller lsp install nvim --output ~/.config/nvim/lua/storyteller.lua",
+  );
   lines.push("  storyteller lsp install vscode --output .vscode/settings.json");
   return lines.join("\n");
 }
@@ -225,7 +241,8 @@ export const lspInstallCommandDescriptor: CommandDescriptor =
         },
         {
           summary: "Generate and save Neovim configuration",
-          command: "storyteller lsp install nvim --output ~/.config/nvim/lua/storyteller.lua",
+          command:
+            "storyteller lsp install nvim --output ~/.config/nvim/lua/storyteller.lua",
         },
         {
           summary: "Generate VSCode configuration",

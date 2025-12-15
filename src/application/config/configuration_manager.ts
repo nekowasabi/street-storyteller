@@ -10,11 +10,7 @@ export class ConfigurationError extends Error {
   override cause?: unknown;
 
   constructor(message: string, options: { cause?: unknown } = {}) {
-    if (options.cause !== undefined) {
-      super(message, { cause: options.cause });
-    } else {
-      super(message);
-    }
+    super(message, options.cause !== undefined ? { cause: options.cause } : {});
     this.name = "ConfigurationError";
     if (options.cause !== undefined) {
       this.cause = options.cause;

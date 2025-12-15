@@ -8,6 +8,24 @@
 import { chapter01Meta } from "./manuscripts/chapter01.meta.ts";
 import { chapter02Meta } from "./manuscripts/chapter02.meta.ts";
 
+type ChapterMeta = {
+  readonly title: string;
+  readonly characters: ReadonlyArray<{
+    readonly name: string;
+    readonly displayNames?: readonly string[];
+  }>;
+  readonly settings: ReadonlyArray<{
+    readonly name: string;
+    readonly displayNames?: readonly string[];
+  }>;
+  readonly validations?: ReadonlyArray<{
+    readonly type: string;
+    readonly message: string;
+    readonly validate: (content: string) => Promise<boolean>;
+  }>;
+  readonly references?: Record<string, unknown>;
+};
+
 // 色付きコンソール出力用
 const colors = {
   reset: "\x1b[0m",
@@ -34,7 +52,7 @@ async function readMarkdown(path: string): Promise<string> {
 }
 
 // 章の検証を実行
-async function validateChapter(chapterMeta: any, markdownPath: string) {
+async function validateChapter(chapterMeta: ChapterMeta, markdownPath: string) {
   log(`\n📖 Validating Chapter: ${chapterMeta.title}`, colors.cyan);
   log(`   File: ${markdownPath}`, colors.cyan);
 
@@ -95,7 +113,7 @@ async function validateChapter(chapterMeta: any, markdownPath: string) {
 
   // 参照の実際の使用状況をチェック
   let usedReferences = 0;
-  for (const [word, entity] of Object.entries(chapterMeta.references || {})) {
+  for (const [word, _entity] of Object.entries(chapterMeta.references || {})) {
     if (content.includes(word)) {
       usedReferences++;
     }

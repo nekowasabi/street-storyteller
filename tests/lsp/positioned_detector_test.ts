@@ -3,14 +3,9 @@
  * Process5 Sub1: 位置追跡付き検出エンジンのテスト
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import {
   PositionedDetector,
-  type PositionedMatch,
-  type Position,
 } from "../../src/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ
@@ -142,10 +137,14 @@ Deno.test("PositionedDetector - detects both characters and settings", () => {
 
   assertEquals(results.length, 2);
 
-  const heroResult = results.find((r) => r.kind === "character" && r.id === "hero");
+  const heroResult = results.find((r) =>
+    r.kind === "character" && r.id === "hero"
+  );
   assertExists(heroResult);
 
-  const castleResult = results.find((r) => r.kind === "setting" && r.id === "castle");
+  const castleResult = results.find((r) =>
+    r.kind === "setting" && r.id === "castle"
+  );
   assertExists(castleResult);
 });
 
@@ -156,17 +155,26 @@ Deno.test("PositionedDetector - getEntityAtPosition returns correct entity", () 
   detector.detectWithPositions(content);
 
   // 位置0の "勇" の位置
-  const entity = detector.getEntityAtPosition(content, { line: 0, character: 0 });
+  const entity = detector.getEntityAtPosition(content, {
+    line: 0,
+    character: 0,
+  });
   assertExists(entity);
   assertEquals(entity.id, "hero");
 
   // 位置3の "城" の位置
-  const castleEntity = detector.getEntityAtPosition(content, { line: 0, character: 3 });
+  const castleEntity = detector.getEntityAtPosition(content, {
+    line: 0,
+    character: 3,
+  });
   assertExists(castleEntity);
   assertEquals(castleEntity.id, "castle");
 
   // 位置2は "は" なので何もマッチしない
-  const noEntity = detector.getEntityAtPosition(content, { line: 0, character: 2 });
+  const noEntity = detector.getEntityAtPosition(content, {
+    line: 0,
+    character: 2,
+  });
   assertEquals(noEntity, undefined);
 });
 

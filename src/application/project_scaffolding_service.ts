@@ -6,11 +6,7 @@ import type {
   MigrationPlan,
   MigrationReport,
 } from "./migration_facilitator.ts";
-import type {
-  ProjectBlueprint,
-  TemplateError,
-  TemplateId,
-} from "../domain/project_blueprint.ts";
+import type { TemplateError, TemplateId } from "../domain/project_blueprint.ts";
 import type { StoryDomainService } from "../domain/story_domain_service.ts";
 
 export interface ProjectScaffoldingOptions {

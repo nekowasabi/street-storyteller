@@ -45,7 +45,7 @@ Deno.test("VersionService - loadProjectMetadata", async (t) => {
     const files = {
       "/project/.storyteller/config.json": JSON.stringify(
         metadata,
-        (key, value) => {
+        (_key, value) => {
           if (value instanceof Date) {
             return value.toISOString();
           }
@@ -130,7 +130,7 @@ Deno.test("VersionService - checkCompatibility", async (t) => {
     const files = {
       "/project/.storyteller/config.json": JSON.stringify(
         metadata,
-        (key, value) => {
+        (_key, value) => {
           if (value instanceof Date) {
             return value.toISOString();
           }
@@ -166,7 +166,7 @@ Deno.test("VersionService - checkCompatibility", async (t) => {
     const files = {
       "/project/.storyteller/config.json": JSON.stringify(
         metadata,
-        (key, value) => {
+        (_key, value) => {
           if (value instanceof Date) {
             return value.toISOString();
           }
@@ -204,7 +204,7 @@ Deno.test("VersionService - checkForUpdates", async (t) => {
     const files = {
       "/project/.storyteller/config.json": JSON.stringify(
         metadata,
-        (key, value) => {
+        (_key, value) => {
           if (value instanceof Date) {
             return value.toISOString();
           }
@@ -237,7 +237,7 @@ Deno.test("VersionService - checkForUpdates", async (t) => {
     const files = {
       "/project/.storyteller/config.json": JSON.stringify(
         metadata,
-        (key, value) => {
+        (_key, value) => {
           if (value instanceof Date) {
             return value.toISOString();
           }

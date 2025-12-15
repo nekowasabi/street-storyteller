@@ -44,19 +44,71 @@ type LoadedEntity = {
   readonly binding?: BindingDefinition;
 };
 
+export type { LoadedEntity };
+
+export type EntityLoader = (
+  projectPath: string,
+  kind: LoadedEntity["kind"],
+) => Promise<LoadedEntity[]>;
+
+function defaultEntityLoader(
+  projectPath: string,
+  kind: LoadedEntity["kind"],
+): Promise<LoadedEntity[]> {
+  const dir = kind === "character"
+    ? join(projectPath, "src/characters")
+    : join(projectPath, "src/settings");
+  return loadEntities(dir, projectPath, kind);
+}
+
 export class ReferenceDetector {
+  #entityCache = new Map<string, Promise<LoadedEntity[]>>();
+
+  constructor(
+    private readonly entityLoader: EntityLoader = defaultEntityLoader,
+  ) {}
+
+  clearCache(projectPath?: string): void {
+    if (!projectPath) {
+      this.#entityCache.clear();
+      return;
+    }
+    const prefix = `${projectPath}:`;
+    for (const key of this.#entityCache.keys()) {
+      if (key.startsWith(prefix)) {
+        this.#entityCache.delete(key);
+      }
+    }
+  }
+
+  private async loadEntitiesCached(
+    projectPath: string,
+    kind: LoadedEntity["kind"],
+  ): Promise<LoadedEntity[]> {
+    const key = `${projectPath}:${kind}`;
+    const cached = this.#entityCache.get(key);
+    if (cached) {
+      return await cached;
+    }
+
+    const pending = this.entityLoader(projectPath, kind);
+    this.#entityCache.set(key, pending);
+    try {
+      return await pending;
+    } catch (error) {
+      this.#entityCache.delete(key);
+      throw error;
+    }
+  }
+
   async detect(
     content: string,
     frontmatter: FrontmatterLike,
     projectPath: string,
   ): Promise<DetectionResult> {
     const [characters, settings] = await Promise.all([
-      loadEntities(
-        join(projectPath, "src/characters"),
-        projectPath,
-        "character",
-      ),
-      loadEntities(join(projectPath, "src/settings"), projectPath, "setting"),
+      this.loadEntitiesCached(projectPath, "character"),
+      this.loadEntitiesCached(projectPath, "setting"),
     ]);
 
     const byCharacterId = new Map<string, LoadedEntity>();

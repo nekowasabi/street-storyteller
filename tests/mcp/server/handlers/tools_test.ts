@@ -4,9 +4,9 @@
  */
 import { assertEquals, assertExists } from "@std/assert";
 import {
-  handleToolsList,
-  handleToolsCall,
   createDefaultToolRegistry,
+  handleToolsCall,
+  handleToolsList,
 } from "../../../../src/mcp/server/handlers/tools.ts";
 import { ToolRegistry } from "../../../../src/mcp/tools/tool_registry.ts";
 
@@ -42,7 +42,10 @@ Deno.test("handleToolsCall: 指定ツールを実行して結果を返す", asyn
   registry.register({
     name: "echo_tool",
     description: "Echo tool",
-    inputSchema: { type: "object", properties: { message: { type: "string" } } },
+    inputSchema: {
+      type: "object",
+      properties: { message: { type: "string" } },
+    },
     execute: async (args) => ({
       content: [{ type: "text", text: `Echo: ${args.message}` }],
     }),
@@ -97,6 +100,11 @@ Deno.test("createDefaultToolRegistry: meta_checkとmeta_generateを含むレジ�
   assertExists(registry);
   assertExists(registry.get("meta_check"));
   assertExists(registry.get("meta_generate"));
+  // Phase 2: 追加ツール
+  assertExists(registry.get("element_create"));
+  assertExists(registry.get("view_browser"));
+  assertExists(registry.get("lsp_validate"));
+  assertExists(registry.get("lsp_find_references"));
 });
 
 Deno.test("createDefaultToolRegistry: toMcpTools()で正しいツール配列を返す", () => {

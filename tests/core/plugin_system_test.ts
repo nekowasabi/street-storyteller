@@ -1,9 +1,6 @@
 import { assert, assertEquals, assertFalse } from "../asserts.ts";
 import {
   createPluginRegistry,
-  type ElementPlugin,
-  type FeaturePlugin,
-  type PluginRegistry,
   type StorytellerPlugin,
 } from "../../src/core/plugin_system.ts";
 

@@ -2,11 +2,8 @@ import { assert, assertEquals } from "../asserts.ts";
 import {
   checkUpdates,
   compareVersions,
-  type CompatibilityCheckResult,
   isCompatible,
   type ProjectMetadata,
-  type UpdateCheckResult,
-  type VersionComparisonResult,
 } from "../../src/core/version_manager.ts";
 
 Deno.test("VersionManager - compareVersions", async (t) => {

@@ -136,6 +136,14 @@ export class MetaWatchCommand extends BaseCliCommand {
   constructor(
     private readonly service: MetaGeneratorService = new MetaGeneratorService(),
     private readonly emitter: TypeScriptEmitter = new TypeScriptEmitter(),
+    private readonly watcherFactory: (
+      paths: readonly string[],
+      options: { recursive: boolean },
+    ) => { close(): void } & AsyncIterable<{ kind: string; paths: string[] }> =
+      (
+        paths,
+        options,
+      ) => Deno.watchFs([...paths], options),
   ) {
     super([]);
   }
@@ -178,7 +186,7 @@ export class MetaWatchCommand extends BaseCliCommand {
       }, debounce:${parsed.debounceMs}ms)`,
     );
 
-    const watcher = Deno.watchFs(watchTargets, { recursive });
+    const watcher = this.watcherFactory(watchTargets, { recursive });
     const pending = new Set<string>();
     let timer: number | null = null;
 

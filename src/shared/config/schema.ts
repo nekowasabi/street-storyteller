@@ -1,4 +1,4 @@
-import { z } from "npm:zod";
+import { z } from "zod";
 import { LOG_LEVELS } from "../logging/types.ts";
 
 export const RuntimeEnvironmentSchema = z.enum([

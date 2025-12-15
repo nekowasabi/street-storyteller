@@ -3,27 +3,16 @@
  * TDD Red Phase: このテストは実装がないため最初は失敗する
  */
 
-import {
-  assertEquals,
-  assertExists,
-  assertRejects,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
-import { describe, it } from "https://deno.land/std@0.224.0/testing/bdd.ts";
+import { assertEquals, assertExists } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
 
 // Process2 Sub1: モックReader/Writerのテスト
-import {
-  createMockReader,
-  createMockWriter,
-  type MockWriter,
-} from "./helpers.ts";
+import { createMockReader, createMockWriter } from "./helpers.ts";
 
 // Process2 Sub2: LspTransportクラスのテスト
 import { LspTransport } from "../../src/lsp/protocol/transport.ts";
 
-import type {
-  JsonRpcMessage,
-  JsonRpcRequest,
-} from "../../src/lsp/protocol/types.ts";
+import type { JsonRpcRequest } from "../../src/lsp/protocol/types.ts";
 
 describe("モックReader/Writer", () => {
   describe("createMockReader", () => {
@@ -141,7 +130,10 @@ describe("LspTransport", () => {
       assertEquals(result.ok, true);
       if (result.ok) {
         const parsedMessage = result.value as JsonRpcRequest;
-        assertEquals((parsedMessage.params as { text: string }).text, "日本語テスト");
+        assertEquals(
+          (parsedMessage.params as { text: string }).text,
+          "日本語テスト",
+        );
       }
     });
 
@@ -159,8 +151,7 @@ describe("LspTransport", () => {
 
       const body1 = JSON.stringify(message1);
       const body2 = JSON.stringify(message2);
-      const lspData =
-        `Content-Length: ${body1.length}\r\n\r\n${body1}` +
+      const lspData = `Content-Length: ${body1.length}\r\n\r\n${body1}` +
         `Content-Length: ${body2.length}\r\n\r\n${body2}`;
 
       const reader = createMockReader(lspData);
@@ -187,8 +178,7 @@ describe("LspTransport", () => {
         method: "test",
       };
       const body = JSON.stringify(message);
-      const lspMessage =
-        `Content-Length: ${body.length}\r\n` +
+      const lspMessage = `Content-Length: ${body.length}\r\n` +
         `Content-Type: application/vscode-jsonrpc; charset=utf-8\r\n\r\n${body}`;
 
       const reader = createMockReader(lspMessage);

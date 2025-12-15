@@ -13,6 +13,7 @@ import { createPluginRegistry } from "../../../core/plugin_system.ts";
 import { CharacterPlugin } from "../../../plugins/core/character/plugin.ts";
 import { DetailsPlugin } from "../../../plugins/features/details/plugin.ts";
 import type { DetailField } from "../../../plugins/features/details/templates.ts";
+import type { Character } from "../../../type/v2/character.ts";
 
 /**
  * ElementCharacterCommandのオプション
@@ -59,10 +60,10 @@ export class ElementCharacterCommand extends BaseCliCommand {
       // Character要素の作成
       context.logger.info("Creating character element", { name: parsed.name });
 
-      const options: any = {
+      let character: Character = {
         id: parsed.id,
         name: parsed.name,
-        role: parsed.role,
+        role: parsed.role as CharacterRole,
         summary: parsed.summary ?? `${parsed.name}の概要（要追加）`,
         traits: parsed.traits
           ? parsed.traits.split(",").map((t) => t.trim())
@@ -84,13 +85,13 @@ export class ElementCharacterCommand extends BaseCliCommand {
         ];
         const detailResult = await service.addDetailsToElement(
           "character",
-          options,
+          character,
           allFields,
           force,
         );
 
         if (detailResult.ok) {
-          Object.assign(options, { details: detailResult.value.details });
+          character = detailResult.value;
         }
       } else if (parsed["add-details"]) {
         // 指定された詳細フィールドのみ追加
@@ -99,17 +100,17 @@ export class ElementCharacterCommand extends BaseCliCommand {
         ) as DetailField[];
         const detailResult = await service.addDetailsToElement(
           "character",
-          options,
+          character,
           fields,
           force,
         );
 
         if (detailResult.ok) {
-          Object.assign(options, { details: detailResult.value.details });
+          character = detailResult.value;
         }
       }
 
-      const result = await service.createElement("character", options);
+      const result = await service.createElement("character", character);
 
       if (result.ok) {
         context.logger.info("Character element created", {
@@ -129,7 +130,7 @@ export class ElementCharacterCommand extends BaseCliCommand {
 
           const separateResult = await service.separateFilesForElement(
             "character",
-            options as any,
+            character,
             fieldsToSeparate,
             projectRoot,
           );

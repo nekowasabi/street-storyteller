@@ -39,7 +39,10 @@ class MockWriter {
   }
 
   getOutput(): string {
-    const totalLength = this.chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const totalLength = this.chunks.reduce(
+      (sum, chunk) => sum + chunk.length,
+      0,
+    );
     const result = new Uint8Array(totalLength);
     let offset = 0;
     for (const chunk of this.chunks) {
@@ -53,7 +56,9 @@ class MockWriter {
 Deno.test("McpTransport: readMessageがJSON-RPCメッセージを正しく読み取る", async () => {
   const message = { jsonrpc: "2.0", id: 1, method: "initialize", params: {} };
   const body = JSON.stringify(message);
-  const data = `Content-Length: ${new TextEncoder().encode(body).length}\r\n\r\n${body}`;
+  const data = `Content-Length: ${
+    new TextEncoder().encode(body).length
+  }\r\n\r\n${body}`;
 
   const reader = new MockReader(data);
   const writer = new MockWriter();
@@ -86,13 +91,18 @@ Deno.test("McpTransport: writeMessageがContent-Length形式で正しく書き�
   const body = JSON.stringify(message);
   const expectedLength = new TextEncoder().encode(body).length;
 
-  assertEquals(output.startsWith(`Content-Length: ${expectedLength}\r\n\r\n`), true);
+  assertEquals(
+    output.startsWith(`Content-Length: ${expectedLength}\r\n\r\n`),
+    true,
+  );
   assertEquals(output.includes(body), true);
 });
 
 Deno.test("McpTransport: 不正なJSONでエラーを返す", async () => {
   const invalidJson = "{ invalid json }";
-  const data = `Content-Length: ${new TextEncoder().encode(invalidJson).length}\r\n\r\n${invalidJson}`;
+  const data = `Content-Length: ${
+    new TextEncoder().encode(invalidJson).length
+  }\r\n\r\n${invalidJson}`;
 
   const reader = new MockReader(data);
   const writer = new MockWriter();
@@ -112,7 +122,9 @@ Deno.test("McpTransport: 複数メッセージを順次読み取れる", async (
   const body1 = JSON.stringify(message1);
   const body2 = JSON.stringify(message2);
   const data =
-    `Content-Length: ${new TextEncoder().encode(body1).length}\r\n\r\n${body1}` +
+    `Content-Length: ${
+      new TextEncoder().encode(body1).length
+    }\r\n\r\n${body1}` +
     `Content-Length: ${new TextEncoder().encode(body2).length}\r\n\r\n${body2}`;
 
   const reader = new MockReader(data);

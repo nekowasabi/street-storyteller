@@ -1,10 +1,7 @@
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import type {
   Character,
-  CharacterDetails,
-  CharacterDevelopment,
   CharacterRole,
-  DetectionHints,
   RelationType,
 } from "../../src/type/v2/character.ts";
 import {

@@ -4,8 +4,8 @@
  */
 import { assertEquals, assertExists } from "@std/assert";
 import {
-  ToolRegistry,
   type McpToolDefinition,
+  ToolRegistry,
 } from "../../../src/mcp/tools/tool_registry.ts";
 
 /**
@@ -22,7 +22,10 @@ function createTestTool(name: string): McpToolDefinition {
       },
     },
     execute: async (args) => ({
-      content: [{ type: "text", text: `Executed ${name} with ${JSON.stringify(args)}` }],
+      content: [{
+        type: "text",
+        text: `Executed ${name} with ${JSON.stringify(args)}`,
+      }],
     }),
   };
 }

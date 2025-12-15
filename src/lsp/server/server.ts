@@ -6,36 +6,42 @@
 
 import { LspTransport } from "../protocol/transport.ts";
 import {
-  type JsonRpcMessage,
-  type JsonRpcRequest,
-  type JsonRpcNotification,
-  isJsonRpcRequest,
   isJsonRpcNotification,
+  isJsonRpcRequest,
+  type JsonRpcMessage,
+  type JsonRpcNotification,
+  type JsonRpcRequest,
 } from "../protocol/types.ts";
 import {
   createErrorResponse,
   createSuccessResponse,
   JSON_RPC_METHOD_NOT_FOUND,
 } from "../protocol/json_rpc.ts";
-import { getServerCapabilities, type ServerCapabilities } from "./capabilities.ts";
+import {
+  getServerCapabilities,
+  type ServerCapabilities,
+} from "./capabilities.ts";
 import { DocumentManager } from "../document/document_manager.ts";
 import {
-  TextDocumentSyncHandler,
-  type DidOpenTextDocumentParams,
   type DidChangeTextDocumentParams,
   type DidCloseTextDocumentParams,
+  type DidOpenTextDocumentParams,
+  TextDocumentSyncHandler,
 } from "../handlers/text_document_sync.ts";
 import {
-  PositionedDetector,
   type DetectableEntity,
   type Position,
+  PositionedDetector,
 } from "../detection/positioned_detector.ts";
 
 // 型の再エクスポート
-export type { DetectableEntity, Position } from "../detection/positioned_detector.ts";
+export type {
+  DetectableEntity,
+  Position,
+} from "../detection/positioned_detector.ts";
 export type { EntityInfo } from "../providers/hover_provider.ts";
 import { DefinitionProvider } from "../providers/definition_provider.ts";
-import { HoverProvider, type EntityInfo } from "../providers/hover_provider.ts";
+import { type EntityInfo, HoverProvider } from "../providers/hover_provider.ts";
 import { DiagnosticsGenerator } from "../diagnostics/diagnostics_generator.ts";
 import { DiagnosticsPublisher } from "../diagnostics/diagnostics_publisher.ts";
 
@@ -115,14 +121,16 @@ export class LspServer {
   constructor(
     transport: LspTransport,
     projectRoot: string,
-    options?: LspServerOptions
+    options?: LspServerOptions,
   ) {
     this.transport = transport;
     this.projectRoot = projectRoot;
 
     // ドキュメント管理の初期化
     this.documentManager = new DocumentManager();
-    this.textDocumentSyncHandler = new TextDocumentSyncHandler(this.documentManager);
+    this.textDocumentSyncHandler = new TextDocumentSyncHandler(
+      this.documentManager,
+    );
 
     // 検出器の初期化
     const entities = options?.entities ?? [];
@@ -132,14 +140,14 @@ export class LspServer {
     this.definitionProvider = new DefinitionProvider(this.detector);
     this.hoverProvider = new HoverProvider(
       this.detector,
-      options?.entityInfoMap ?? new Map()
+      options?.entityInfoMap ?? new Map(),
     );
 
     // 診断機能の初期化
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
     this.diagnosticsPublisher = new DiagnosticsPublisher(
       { write: (p) => transport.writeRaw(p) },
-      { debounceMs: options?.diagnosticsDebounceMs ?? 0 }
+      { debounceMs: options?.diagnosticsDebounceMs ?? 0 },
     );
   }
 
@@ -185,7 +193,7 @@ export class LspServer {
       const errorResponse = createErrorResponse(
         request.id,
         SERVER_NOT_INITIALIZED,
-        "Server not initialized"
+        "Server not initialized",
       );
       await this.transport.writeMessage(errorResponse);
       return;
@@ -204,34 +212,43 @@ export class LspServer {
       case "textDocument/hover":
         await this.handleHover(request);
         break;
-      default:
+      default: {
         // 未実装のメソッド
         const errorResponse = createErrorResponse(
           request.id,
           JSON_RPC_METHOD_NOT_FOUND,
-          `Method not found: ${request.method}`
+          `Method not found: ${request.method}`,
         );
         await this.transport.writeMessage(errorResponse);
         break;
+      }
     }
   }
 
   /**
    * 通知を処理
    */
-  private async handleNotification(notification: JsonRpcNotification): Promise<void> {
+  private async handleNotification(
+    notification: JsonRpcNotification,
+  ): Promise<void> {
     switch (notification.method) {
       case "initialized":
         this.handleInitialized();
         break;
       case "textDocument/didOpen":
-        await this.handleDidOpen(notification.params as DidOpenTextDocumentParams);
+        await this.handleDidOpen(
+          notification.params as DidOpenTextDocumentParams,
+        );
         break;
       case "textDocument/didChange":
-        await this.handleDidChange(notification.params as DidChangeTextDocumentParams);
+        await this.handleDidChange(
+          notification.params as DidChangeTextDocumentParams,
+        );
         break;
       case "textDocument/didClose":
-        await this.handleDidClose(notification.params as DidCloseTextDocumentParams);
+        await this.handleDidClose(
+          notification.params as DidCloseTextDocumentParams,
+        );
         break;
       case "exit":
         // サーバー終了
@@ -288,7 +305,7 @@ export class LspServer {
         params.textDocument.uri,
         document.content,
         params.position,
-        this.projectRoot
+        this.projectRoot,
       );
     }
 
@@ -309,7 +326,7 @@ export class LspServer {
         params.textDocument.uri,
         document.content,
         params.position,
-        this.projectRoot
+        this.projectRoot,
       );
     }
 
@@ -321,7 +338,9 @@ export class LspServer {
    * textDocument/didOpen を処理
    * ドキュメントを開き、診断を発行
    */
-  private async handleDidOpen(params: DidOpenTextDocumentParams): Promise<void> {
+  private async handleDidOpen(
+    params: DidOpenTextDocumentParams,
+  ): Promise<void> {
     this.textDocumentSyncHandler.handleDidOpen(params);
     await this.publishDiagnosticsForUri(params.textDocument.uri);
   }
@@ -330,7 +349,9 @@ export class LspServer {
    * textDocument/didChange を処理
    * ドキュメントを更新し、診断を発行
    */
-  private async handleDidChange(params: DidChangeTextDocumentParams): Promise<void> {
+  private async handleDidChange(
+    params: DidChangeTextDocumentParams,
+  ): Promise<void> {
     this.textDocumentSyncHandler.handleDidChange(params);
     await this.publishDiagnosticsForUri(params.textDocument.uri);
   }
@@ -339,7 +360,9 @@ export class LspServer {
    * textDocument/didClose を処理
    * ドキュメントを閉じ、診断をクリア
    */
-  private async handleDidClose(params: DidCloseTextDocumentParams): Promise<void> {
+  private async handleDidClose(
+    params: DidCloseTextDocumentParams,
+  ): Promise<void> {
     this.textDocumentSyncHandler.handleDidClose(params);
     // 診断をクリア（空の診断配列を発行）
     await this.diagnosticsPublisher.publish(params.textDocument.uri, []);
@@ -355,7 +378,7 @@ export class LspServer {
     const diagnostics = await this.diagnosticsGenerator.generate(
       uri,
       document.content,
-      this.projectRoot
+      this.projectRoot,
     );
 
     await this.diagnosticsPublisher.publish(uri, diagnostics);

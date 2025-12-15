@@ -3,10 +3,55 @@
  * LSPサーバーをCLIから起動する
  */
 import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandDescriptor, CommandOptionDescriptor } from "../../types.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+  CommandOptionDescriptor,
+} from "../../types.ts";
 import { BaseCliCommand } from "../../base_command.ts";
 import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
 import type { DetectableEntity } from "../../../lsp/detection/positioned_detector.ts";
+
+export type LspStartStarterInput = {
+  readonly projectRoot: string;
+  readonly entities: readonly DetectableEntity[];
+};
+
+export type LspStartStarter = (input: LspStartStarterInput) => Promise<void>;
+
+export type LspStartReader = {
+  read(p: Uint8Array): Promise<number | null>;
+};
+
+export type LspStartWriter = {
+  write(p: Uint8Array): Promise<number>;
+};
+
+export type LspStartDependencies = {
+  readonly loadEntities?: (projectRoot: string) => Promise<DetectableEntity[]>;
+  readonly starter?: LspStartStarter;
+  readonly stdinReader?: LspStartReader;
+  readonly stdoutWriter?: LspStartWriter;
+};
+
+function createDefaultStarter(
+  stdinReader: LspStartReader,
+  stdoutWriter: LspStartWriter,
+): LspStartStarter {
+  return async (input: LspStartStarterInput): Promise<void> => {
+    const { LspServer } = await import("../../../lsp/server/server.ts");
+    const { LspTransport } = await import("../../../lsp/protocol/transport.ts");
+
+    const transport = new LspTransport(stdinReader, stdoutWriter);
+
+    const server = new LspServer(
+      transport,
+      input.projectRoot,
+      { entities: [...input.entities] },
+    );
+    await server.start();
+  };
+}
 
 /**
  * LspStartCommandクラス
@@ -16,8 +61,18 @@ export class LspStartCommand extends BaseCliCommand {
   override readonly name = "start" as const;
   override readonly path = ["lsp", "start"] as const;
 
-  constructor() {
+  private readonly loadEntitiesFn: (
+    projectRoot: string,
+  ) => Promise<DetectableEntity[]>;
+  private readonly starterFn: LspStartStarter;
+
+  constructor(deps: LspStartDependencies = {}) {
     super([]);
+    this.loadEntitiesFn = deps.loadEntities ?? loadEntities;
+    const stdinReader = deps.stdinReader ?? createStdinReader();
+    const stdoutWriter = deps.stdoutWriter ?? createStdoutWriter();
+    this.starterFn = deps.starter ??
+      createDefaultStarter(stdinReader, stdoutWriter);
   }
 
   protected async handle(context: CommandContext) {
@@ -38,32 +93,24 @@ export class LspStartCommand extends BaseCliCommand {
     }
 
     // プロジェクトパスの解決
-    const projectRoot = typeof args.path === "string" && args.path.trim().length > 0
-      ? args.path
-      : Deno.cwd();
+    const projectRoot =
+      typeof args.path === "string" && args.path.trim().length > 0
+        ? args.path
+        : Deno.cwd();
 
     // dry-runモードの場合はサーバーを起動せずに成功を返す
     if (args["dry-run"] === true) {
-      context.presenter.showInfo(`[dry-run] LSP server would start with project root: ${projectRoot}`);
+      context.presenter.showInfo(
+        `[dry-run] LSP server would start with project root: ${projectRoot}`,
+      );
       return ok({ projectRoot, mode: "stdio" });
     }
 
     // LSPサーバーを起動
     try {
-      const { LspServer } = await import("../../../lsp/server/server.ts");
-      const { LspTransport } = await import("../../../lsp/protocol/transport.ts");
-
       // エンティティをロード
-      const entities = await loadEntities(projectRoot);
-
-      // stdin/stdoutをトランスポートに変換するアダプタを作成
-      const stdinReader = createStdinReader();
-      const stdoutWriter = createStdoutWriter();
-      const transport = new LspTransport(stdinReader, stdoutWriter);
-
-      // LSPサーバーを作成して起動
-      const server = new LspServer(transport, projectRoot, { entities });
-      await server.start();
+      const entities = await this.loadEntitiesFn(projectRoot);
+      await this.starterFn({ projectRoot, entities });
 
       return ok(undefined);
     } catch (error) {
@@ -100,7 +147,9 @@ function createStdoutWriter(): { write(p: Uint8Array): Promise<number> } {
 /**
  * プロジェクトからエンティティをロード
  */
-async function loadEntities(projectRoot: string): Promise<DetectableEntity[]> {
+export async function loadEntities(
+  projectRoot: string,
+): Promise<DetectableEntity[]> {
   const { join, toFileUrl, relative } = await import("@std/path");
   const entities: DetectableEntity[] = [];
 
@@ -115,7 +164,10 @@ async function loadEntities(projectRoot: string): Promise<DetectableEntity[]> {
         for (const [, value] of Object.entries(mod)) {
           const parsed = parseEntity(value);
           if (parsed) {
-            const relPath = relative(projectRoot, absPath).replaceAll("\\", "/");
+            const relPath = relative(projectRoot, absPath).replaceAll(
+              "\\",
+              "/",
+            );
             entities.push({
               kind: "character",
               id: parsed.id,
@@ -145,7 +197,10 @@ async function loadEntities(projectRoot: string): Promise<DetectableEntity[]> {
         for (const [, value] of Object.entries(mod)) {
           const parsed = parseEntity(value);
           if (parsed) {
-            const relPath = relative(projectRoot, absPath).replaceAll("\\", "/");
+            const relPath = relative(projectRoot, absPath).replaceAll(
+              "\\",
+              "/",
+            );
             entities.push({
               kind: "setting",
               id: parsed.id,
@@ -170,7 +225,7 @@ async function loadEntities(projectRoot: string): Promise<DetectableEntity[]> {
 /**
  * エンティティをパース
  */
-function parseEntity(value: unknown): {
+export function parseEntity(value: unknown): {
   id: string;
   name: string;
   displayNames?: string[];
@@ -204,8 +259,12 @@ function renderLspStartHelp(): string {
   lines.push("  storyteller lsp start --stdio [options]");
   lines.push("");
   lines.push("Options:");
-  lines.push("  --stdio       Start LSP server with stdio transport (required)");
-  lines.push("  --path <dir>  Project root directory (default: current directory)");
+  lines.push(
+    "  --stdio       Start LSP server with stdio transport (required)",
+  );
+  lines.push(
+    "  --path <dir>  Project root directory (default: current directory)",
+  );
   lines.push("  --dry-run     Validate options without starting server");
   lines.push("  --help, -h    Show this help message");
   lines.push("");

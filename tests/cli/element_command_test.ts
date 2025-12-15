@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { ElementCharacterCommand } from "../../src/cli/modules/element/character.ts";
 import { createCommandRegistry } from "../../src/cli/command_registry.ts";
 import { createStubLogger } from "../asserts.ts";

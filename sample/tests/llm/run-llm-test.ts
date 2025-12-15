@@ -213,7 +213,6 @@ function reportCategory(title: string, tests: any[]): void {
  * 全体スコアを計算
  */
 function calculateOverallScore(results: any[]): number {
-  const total = results.length;
   const weights = {
     error: 3,
     warning: 2,

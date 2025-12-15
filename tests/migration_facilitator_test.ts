@@ -1,9 +1,9 @@
 import { assert, assertEquals } from "./asserts.ts";
 import {
   createMigrationFacilitator,
-  CURRENT_VERSION,
   NoopMigrationFacilitator,
 } from "../src/application/migration_facilitator.ts";
+import { PROJECT_SCHEMA_VERSION } from "../src/core/version.ts";
 import type {
   FileSystemError,
   FileSystemGateway,
@@ -11,13 +11,28 @@ import type {
 import { err, ok } from "../src/shared/result.ts";
 
 class FakeFileSystem implements FileSystemGateway {
+  failEnsureDir = false;
+  failWrite = false;
+
   constructor(private readonly files: Record<string, string>) {}
 
   async ensureDir(_path: string) {
+    if (this.failEnsureDir) {
+      return err<FileSystemError>({
+        code: "permission_denied",
+        message: "deny",
+      });
+    }
     return ok(undefined);
   }
 
   async writeFile(path: string, content: string) {
+    if (this.failWrite) {
+      return err<FileSystemError>({
+        code: "io_error",
+        message: "write failed",
+      });
+    }
     this.files[path] = content;
     return ok(undefined);
   }
@@ -68,6 +83,41 @@ Deno.test("MigrationFacilitator reports outdated version", async () => {
   );
 });
 
+Deno.test("MigrationFacilitator treats invalid JSON manifest as incompatible", async () => {
+  const fs = new FakeFileSystem({
+    "demo/.storyteller.json": "{not json",
+  });
+  const facilitator = createMigrationFacilitator(fs);
+
+  const plan = await facilitator.assess("demo");
+  assertEquals(plan.status, "incompatible");
+  assertEquals(plan.actions.length, 0);
+  assert(plan.warnings.some((w) => w.includes("invalid JSON")));
+});
+
+Deno.test("MigrationFacilitator treats manifest missing version as incompatible", async () => {
+  const fs = new FakeFileSystem({
+    "demo/.storyteller.json": JSON.stringify({}),
+  });
+  const facilitator = createMigrationFacilitator(fs);
+
+  const plan = await facilitator.assess("demo");
+  assertEquals(plan.status, "incompatible");
+});
+
+Deno.test("MigrationFacilitator reports fresh when schema version matches", async () => {
+  const fs = new FakeFileSystem({
+    "demo/.storyteller.json": JSON.stringify({
+      version: PROJECT_SCHEMA_VERSION,
+    }),
+  });
+  const facilitator = createMigrationFacilitator(fs);
+
+  const plan = await facilitator.assess("demo");
+  assertEquals(plan.status, "fresh");
+  assertEquals(plan.actions.length, 0);
+});
+
 Deno.test("MigrationFacilitator writes manifest when requested", async () => {
   const fs = new FakeFileSystem({});
   const facilitator = createMigrationFacilitator(fs);
@@ -77,7 +127,31 @@ Deno.test("MigrationFacilitator writes manifest when requested", async () => {
   assert(manifest.ok, "manifest should exist");
   if (manifest.ok) {
     const json = JSON.parse(manifest.value) as { version: string };
-    assertEquals(json.version, CURRENT_VERSION);
+    assertEquals(json.version, PROJECT_SCHEMA_VERSION);
+  }
+});
+
+Deno.test("MigrationFacilitator returns error when ensureDir fails", async () => {
+  const fs = new FakeFileSystem({});
+  fs.failEnsureDir = true;
+  const facilitator = createMigrationFacilitator(fs);
+
+  const result = await facilitator.ensureManifest("demo");
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(result.error.code, "permission_denied");
+  }
+});
+
+Deno.test("MigrationFacilitator returns error when writeFile fails", async () => {
+  const fs = new FakeFileSystem({});
+  fs.failWrite = true;
+  const facilitator = createMigrationFacilitator(fs);
+
+  const result = await facilitator.ensureManifest("demo");
+  assertEquals(result.ok, false);
+  if (!result.ok) {
+    assertEquals(result.error.code, "io_error");
   }
 });
 

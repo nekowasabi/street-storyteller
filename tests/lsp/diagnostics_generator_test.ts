@@ -5,18 +5,14 @@
  * TDD Red Phase: 実装がないため、このテストは失敗する
  */
 
+import { assertEquals, assertExists } from "@std/assert";
 import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
-import {
-  DiagnosticsGenerator,
-  type Diagnostic,
   DiagnosticSeverity,
+  DiagnosticsGenerator,
 } from "../../src/lsp/diagnostics/diagnostics_generator.ts";
 import {
-  PositionedDetector,
   type DetectableEntity,
+  PositionedDetector,
 } from "../../src/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ
@@ -53,7 +49,11 @@ Deno.test("DiagnosticsGenerator - reports undefined character reference as Warni
 
   // 未定義のキャラクター「魔王」への参照
   const content = "魔王が現れた。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 未定義の参照があれば警告を出す
   // ただし、このテストでは「魔王」は定義済みエンティティにないため検出されない
@@ -67,11 +67,15 @@ Deno.test("DiagnosticsGenerator - reports low confidence match as Hint", async (
 
   // alias "主人公" での参照（confidence: 0.8）
   const content = "主人公は冒険を始めた。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 低信頼度（< 0.9）のマッチはHintとして報告
   const hintDiagnostics = diagnostics.filter(
-    (d) => d.severity === DiagnosticSeverity.Hint
+    (d) => d.severity === DiagnosticSeverity.Hint,
   );
   assertEquals(hintDiagnostics.length >= 1, true);
 });
@@ -81,7 +85,11 @@ Deno.test("DiagnosticsGenerator - includes accurate range information", async ()
   const generator = new DiagnosticsGenerator(detector);
 
   const content = "主人公は冒険を始めた。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 診断にはrange情報が含まれる
   for (const diagnostic of diagnostics) {
@@ -100,7 +108,11 @@ Deno.test("DiagnosticsGenerator - includes related information", async () => {
   const generator = new DiagnosticsGenerator(detector);
 
   const content = "主人公は冒険を始めた。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 低信頼度マッチには候補情報が含まれる
   for (const diagnostic of diagnostics) {
@@ -115,7 +127,11 @@ Deno.test("DiagnosticsGenerator - returns empty array for no issues", async () =
 
   // 高信頼度の参照のみ
   const content = "勇者は城に向かった。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 高信頼度マッチのみなので診断なし
   assertEquals(diagnostics.length, 0);
@@ -146,7 +162,11 @@ Deno.test("DiagnosticsGenerator - handles multiple diagnostics", async () => {
 
   // 両方aliasでconfidence: 0.8
   const content = "剣士と魔術師は旅に出た。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 複数の診断が生成される（両方0.8で診断対象）
   assertEquals(diagnostics.length >= 2, true);
@@ -158,7 +178,11 @@ Deno.test("DiagnosticsGenerator - handles multi-line content", async () => {
 
   // "主人公"（alias, confidence: 0.8）のみが低信頼度
   const content = "第一章\n主人公は旅に出た。\n城を目指した。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // 複数行にわたる診断
   // "主人公"は2行目（0-indexed: 1）で診断が生成される
@@ -171,7 +195,11 @@ Deno.test("DiagnosticsGenerator - provides confidence info in message", async ()
   const generator = new DiagnosticsGenerator(detector);
 
   const content = "主人公は冒険を始めた。";
-  const diagnostics = await generator.generate("file:///test.md", content, "/project");
+  const diagnostics = await generator.generate(
+    "file:///test.md",
+    content,
+    "/project",
+  );
 
   // メッセージに信頼度情報が含まれる
   for (const diagnostic of diagnostics) {

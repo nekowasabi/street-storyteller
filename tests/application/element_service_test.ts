@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { ElementService } from "../../src/application/element_service.ts";
 import { createPluginRegistry } from "../../src/core/plugin_system.ts";
 import { CharacterPlugin } from "../../src/plugins/core/character/plugin.ts";

@@ -19,9 +19,16 @@ class InMemoryFileSystem implements FileSystemGateway {
   readonly directories: string[] = [];
   readonly files = new Map<string, string>();
   failWrites = new Set<string>();
+  failDirs = new Set<string>();
 
   async ensureDir(path: string) {
     this.directories.push(path);
+    if (this.failDirs.has(path)) {
+      return err<FileSystemError>({
+        code: "permission_denied",
+        message: "nope",
+      });
+    }
     return ok(undefined);
   }
 
@@ -49,6 +56,11 @@ class InMemoryFileSystem implements FileSystemGateway {
 class StubMigrationFacilitator implements MigrationFacilitator {
   lastPath: string | undefined;
   plan: MigrationPlan = { status: "fresh", actions: [], warnings: [] };
+  ensureManifestCalls: string[] = [];
+  ensureManifestResult: ReturnType<MigrationFacilitator["ensureManifest"]> =
+    Promise.resolve(
+      ok(undefined),
+    );
 
   async assess(path: string): Promise<MigrationPlan> {
     this.lastPath = path;
@@ -56,7 +68,8 @@ class StubMigrationFacilitator implements MigrationFacilitator {
   }
 
   async ensureManifest(_projectPath: string) {
-    return ok(undefined);
+    this.ensureManifestCalls.push(_projectPath);
+    return await this.ensureManifestResult;
   }
 
   emitReport(plan: MigrationPlan): MigrationReport {
@@ -159,6 +172,120 @@ Deno.test("ProjectScaffoldingService stops when file write fails", async () => {
   const fs = new InMemoryFileSystem();
   fs.failWrites.add("demo/tests/hello.txt");
   const migrations = new StubMigrationFacilitator();
+  const docs = new StubDocumentationEmitter();
+  const service = createProjectScaffoldingService({
+    fileSystem: fs,
+    migrationFacilitator: migrations,
+    storyDomainService: new StubDomainService(ok(blueprint)),
+    documentationEmitter: docs,
+  });
+
+  const result = await service.generate({ name: "demo", template: "basic" });
+  assert(!result.ok, "service should fail");
+  if (!result.ok) {
+    assertEquals(result.error.code, "io_error");
+  }
+});
+
+Deno.test("ProjectScaffoldingService prefixes projectPath when options.path is provided", async () => {
+  const blueprint = baseBlueprint();
+  const fs = new InMemoryFileSystem();
+  const migrations = new StubMigrationFacilitator();
+  const docs = new StubDocumentationEmitter();
+  const service = createProjectScaffoldingService({
+    fileSystem: fs,
+    migrationFacilitator: migrations,
+    storyDomainService: new StubDomainService(ok(blueprint)),
+    documentationEmitter: docs,
+  });
+
+  const result = await service.generate({
+    name: "demo",
+    template: "basic",
+    path: "/tmp/root",
+  });
+
+  assert(result.ok, "service should succeed");
+  if (result.ok) {
+    assertEquals(result.value.projectPath, "/tmp/root/demo");
+  }
+  assertEquals(migrations.lastPath, "/tmp/root/demo");
+  assertEquals(fs.directories.includes("/tmp/root/demo/tests"), true);
+});
+
+Deno.test("ProjectScaffoldingService runs ensureManifest for upgrade plans with autoRunnable actions", async () => {
+  const blueprint = baseBlueprint();
+  const fs = new InMemoryFileSystem();
+  const migrations = new StubMigrationFacilitator();
+  migrations.plan = {
+    status: "upgrade",
+    actions: [{ description: "update", autoRunnable: true }],
+    warnings: [],
+  };
+  const docs = new StubDocumentationEmitter();
+  const service = createProjectScaffoldingService({
+    fileSystem: fs,
+    migrationFacilitator: migrations,
+    storyDomainService: new StubDomainService(ok(blueprint)),
+    documentationEmitter: docs,
+  });
+
+  const result = await service.generate({ name: "demo", template: "basic" });
+  assert(result.ok, "service should succeed");
+  assertEquals(migrations.ensureManifestCalls.length, 1);
+  assertEquals(migrations.ensureManifestCalls[0], "demo");
+});
+
+Deno.test("ProjectScaffoldingService does not run ensureManifest for upgrade plans without autoRunnable actions", async () => {
+  const blueprint = baseBlueprint();
+  const fs = new InMemoryFileSystem();
+  const migrations = new StubMigrationFacilitator();
+  migrations.plan = {
+    status: "upgrade",
+    actions: [{ description: "manual step", autoRunnable: false }],
+    warnings: [],
+  };
+  const docs = new StubDocumentationEmitter();
+  const service = createProjectScaffoldingService({
+    fileSystem: fs,
+    migrationFacilitator: migrations,
+    storyDomainService: new StubDomainService(ok(blueprint)),
+    documentationEmitter: docs,
+  });
+
+  const result = await service.generate({ name: "demo", template: "basic" });
+  assert(result.ok, "service should succeed");
+  assertEquals(migrations.ensureManifestCalls.length, 0);
+});
+
+Deno.test("ProjectScaffoldingService stops when ensureDir fails", async () => {
+  const blueprint = baseBlueprint();
+  const fs = new InMemoryFileSystem();
+  fs.failDirs.add("demo/tests");
+  const migrations = new StubMigrationFacilitator();
+  const docs = new StubDocumentationEmitter();
+  const service = createProjectScaffoldingService({
+    fileSystem: fs,
+    migrationFacilitator: migrations,
+    storyDomainService: new StubDomainService(ok(blueprint)),
+    documentationEmitter: docs,
+  });
+
+  const result = await service.generate({ name: "demo", template: "basic" });
+  assert(!result.ok, "service should fail");
+  if (!result.ok) {
+    assertEquals(result.error.code, "permission_denied");
+  }
+});
+
+Deno.test("ProjectScaffoldingService stops when ensureManifest fails for fresh project", async () => {
+  const blueprint = baseBlueprint();
+  const fs = new InMemoryFileSystem();
+  const migrations = new StubMigrationFacilitator();
+  migrations.plan = { status: "fresh", actions: [], warnings: [] };
+  migrations.ensureManifestResult = Promise.resolve(
+    err({ code: "io_error", message: "no write" }),
+  );
   const docs = new StubDocumentationEmitter();
   const service = createProjectScaffoldingService({
     fileSystem: fs,

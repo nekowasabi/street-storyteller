@@ -2,7 +2,12 @@
  * View Command テスト
  * TDD Step 1: Red - 失敗するテストを作成
  */
-import { assert, assertEquals, createStubLogger, createStubPresenter } from "../asserts.ts";
+import {
+  assert,
+  assertEquals,
+  createStubLogger,
+  createStubPresenter,
+} from "../asserts.ts";
 import { ViewCommand } from "../../src/cli/modules/view.ts";
 import { BaseCliCommand } from "../../src/cli/base_command.ts";
 import type { CommandContext } from "../../src/cli/types.ts";
@@ -10,7 +15,10 @@ import type { CommandContext } from "../../src/cli/types.ts";
 Deno.test("ViewCommand - 基本構造", async (t) => {
   await t.step("ViewCommandはBaseCliCommandを継承している", () => {
     const command = new ViewCommand();
-    assert(command instanceof BaseCliCommand, "ViewCommandはBaseCliCommandを継承すべき");
+    assert(
+      command instanceof BaseCliCommand,
+      "ViewCommandはBaseCliCommandを継承すべき",
+    );
   });
 
   await t.step("name = 'view' である", () => {
@@ -34,14 +42,17 @@ Deno.test("ViewCommand - オプション解析", async (t) => {
   await Deno.mkdir(`${tmpDir}/manuscripts`, { recursive: true });
 
   // キャラクターファイルを作成
-  await Deno.writeTextFile(`${tmpDir}/src/characters/hero.ts`, `
+  await Deno.writeTextFile(
+    `${tmpDir}/src/characters/hero.ts`,
+    `
 export const hero = {
   id: "hero",
   name: "勇者",
   displayNames: ["勇者"],
   role: "protagonist",
 };
-`);
+`,
+  );
 
   await t.step("デフォルトでindex.htmlにHTML出力する", async () => {
     const command = new ViewCommand();
@@ -58,7 +69,10 @@ export const hero = {
     };
 
     const result = await command.execute(context);
-    assert(result.ok, `コマンドが成功すべき: ${!result.ok ? JSON.stringify(result.error) : ""}`);
+    assert(
+      result.ok,
+      `コマンドが成功すべき: ${!result.ok ? JSON.stringify(result.error) : ""}`,
+    );
 
     // ファイルが作成されたか確認
     const content = await Deno.readTextFile(outputPath);
@@ -84,7 +98,9 @@ export const hero = {
     assert(result.ok);
 
     // ファイルが作成されたか確認
-    const exists = await Deno.stat(customOutput).then(() => true).catch(() => false);
+    const exists = await Deno.stat(customOutput).then(() => true).catch(() =>
+      false
+    );
     assert(exists, "カスタム出力先にファイルが作成されるべき");
   });
 
@@ -127,7 +143,10 @@ export const hero = {
     const result = await command.execute(context);
     assert(result.ok, "helpオプションでは成功すべき");
     assert(messages.length > 0, "ヘルプメッセージが表示されるべき");
-    assert(messages.some(m => m.includes("--output")), "ヘルプには--outputオプションが含まれるべき");
+    assert(
+      messages.some((m) => m.includes("--output")),
+      "ヘルプには--outputオプションが含まれるべき",
+    );
   });
 
   // クリーンアップ

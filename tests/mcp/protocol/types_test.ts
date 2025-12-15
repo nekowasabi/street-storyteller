@@ -6,19 +6,19 @@ import { assertEquals, assertExists } from "@std/assert";
 
 // まだ存在しない型・関数をインポート（これにより失敗する）
 import {
-  type McpTool,
-  type McpResource,
-  type McpPrompt,
-  type McpInitializeParams,
-  type McpInitializeResult,
-  type McpCallToolParams,
-  type McpCallToolResult,
-  type McpListToolsResult,
-  MCP_ERROR_CODES,
-  isMcpRequest,
   isMcpNotification,
+  isMcpRequest,
   isMcpToolCallRequest,
   isMcpToolsListRequest,
+  MCP_ERROR_CODES,
+  type McpCallToolParams,
+  type McpCallToolResult,
+  type McpInitializeParams,
+  type McpInitializeResult,
+  type McpListToolsResult,
+  type McpPrompt,
+  type McpResource,
+  type McpTool,
 } from "../../../src/mcp/protocol/types.ts";
 
 Deno.test("McpTool型が正しく定義されている", () => {

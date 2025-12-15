@@ -2,7 +2,7 @@
  * ファイル参照整合性チェックのテスト
  */
 
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { FileReferenceValidator } from "../../src/plugins/features/details/validator.ts";
 import type { Character } from "../../src/type/v2/character.ts";
 import { join } from "@std/path";

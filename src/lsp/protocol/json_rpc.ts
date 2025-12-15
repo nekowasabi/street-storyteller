@@ -36,7 +36,9 @@ export const JSON_RPC_INTERNAL_ERROR = -32603;
  * @param input JSON文字列
  * @returns パース結果のResult。成功時はJsonRpcMessage、失敗時はJsonRpcError
  */
-export function parseJsonRpc(input: string): Result<JsonRpcMessage, JsonRpcError> {
+export function parseJsonRpc(
+  input: string,
+): Result<JsonRpcMessage, JsonRpcError> {
   // JSON パース
   let parsed: unknown;
   try {
@@ -56,7 +58,9 @@ export function parseJsonRpc(input: string): Result<JsonRpcMessage, JsonRpcError
  * @param input JSON文字列（配列またはオブジェクト）
  * @returns 各メッセージのパース結果の配列
  */
-export function parseJsonRpcBatch(input: string): Result<JsonRpcMessage, JsonRpcError>[] {
+export function parseJsonRpcBatch(
+  input: string,
+): Result<JsonRpcMessage, JsonRpcError>[] {
   // JSON パース
   let parsed: unknown;
   try {
@@ -107,7 +111,9 @@ export function serializeJsonRpcBatch(messages: JsonRpcMessage[]): string {
 /**
  * パースされたオブジェクトがJSON-RPC 2.0メッセージとして有効かを検証
  */
-function validateJsonRpcMessage(parsed: unknown): Result<JsonRpcMessage, JsonRpcError> {
+function validateJsonRpcMessage(
+  parsed: unknown,
+): Result<JsonRpcMessage, JsonRpcError> {
   // オブジェクトかどうかチェック
   if (typeof parsed !== "object" || parsed === null) {
     return err({
@@ -180,7 +186,8 @@ function validateJsonRpcMessage(parsed: unknown): Result<JsonRpcMessage, JsonRpc
   // どのパターンにも該当しない
   return err({
     code: JSON_RPC_INVALID_REQUEST,
-    message: "Invalid Request: Message does not match any valid JSON-RPC 2.0 format",
+    message:
+      "Invalid Request: Message does not match any valid JSON-RPC 2.0 format",
   });
 }
 

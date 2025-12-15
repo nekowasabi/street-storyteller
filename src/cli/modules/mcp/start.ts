@@ -3,7 +3,11 @@
  * MCPサーバーをCLIから起動する
  */
 import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandDescriptor, CommandOptionDescriptor } from "../../types.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+  CommandOptionDescriptor,
+} from "../../types.ts";
 import { BaseCliCommand } from "../../base_command.ts";
 import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
 
@@ -37,25 +41,40 @@ export class McpStartCommand extends BaseCliCommand {
     }
 
     // プロジェクトパスの解決
-    const projectRoot = typeof args.path === "string" && args.path.trim().length > 0
-      ? args.path
-      : Deno.cwd();
+    const projectRoot =
+      typeof args.path === "string" && args.path.trim().length > 0
+        ? args.path
+        : Deno.cwd();
 
     // dry-runモードの場合はサーバーを起動せずに成功を返す
     if (args["dry-run"] === true) {
-      context.presenter.showInfo(`[dry-run] MCP server would start with project root: ${projectRoot}`);
+      context.presenter.showInfo(
+        `[dry-run] MCP server would start with project root: ${projectRoot}`,
+      );
       return ok({ projectRoot, mode: "stdio" });
     }
 
     // MCPサーバーを起動
     try {
       const { McpServer } = await import("../../../mcp/server/server.ts");
-      const { McpTransport } = await import("../../../mcp/protocol/transport.ts");
-      const { createDefaultToolRegistry } = await import("../../../mcp/server/handlers/tools.ts");
+      const { McpTransport } = await import(
+        "../../../mcp/protocol/transport.ts"
+      );
+      const { createDefaultToolRegistry } = await import(
+        "../../../mcp/server/handlers/tools.ts"
+      );
+      const { createDefaultPromptRegistry } = await import(
+        "../../../mcp/server/handlers/prompts.ts"
+      );
+      const { ProjectResourceProvider } = await import(
+        "../../../mcp/resources/project_resource_provider.ts"
+      );
 
       // ツールレジストリを作成
       const toolRegistry = createDefaultToolRegistry();
       const tools = toolRegistry.toMcpTools();
+      const resourceProvider = new ProjectResourceProvider(projectRoot);
+      const promptRegistry = createDefaultPromptRegistry();
 
       // stdin/stdoutをトランスポートに変換するアダプタを作成
       const stdinReader = createStdinReader();
@@ -63,7 +82,12 @@ export class McpStartCommand extends BaseCliCommand {
       const transport = new McpTransport(stdinReader, stdoutWriter);
 
       // MCPサーバーを作成して起動
-      const server = new McpServer(transport, { tools, toolRegistry });
+      const server = new McpServer(transport, {
+        tools,
+        toolRegistry,
+        resourceProvider,
+        promptRegistry,
+      });
       await server.start();
 
       return ok(undefined);
@@ -103,14 +127,20 @@ function createStdoutWriter(): { write(p: Uint8Array): Promise<number> } {
  */
 function renderMcpStartHelp(): string {
   const lines: string[] = [];
-  lines.push("mcp start - Start the MCP server for Claude Desktop integration.");
+  lines.push(
+    "mcp start - Start the MCP server for Claude Desktop integration.",
+  );
   lines.push("");
   lines.push("Usage:");
   lines.push("  storyteller mcp start --stdio [options]");
   lines.push("");
   lines.push("Options:");
-  lines.push("  --stdio       Start MCP server with stdio transport (required)");
-  lines.push("  --path <dir>  Project root directory (default: current directory)");
+  lines.push(
+    "  --stdio       Start MCP server with stdio transport (required)",
+  );
+  lines.push(
+    "  --path <dir>  Project root directory (default: current directory)",
+  );
   lines.push("  --dry-run     Validate options without starting server");
   lines.push("  --help, -h    Show this help message");
   lines.push("");
@@ -120,14 +150,14 @@ function renderMcpStartHelp(): string {
   lines.push("");
   lines.push("Claude Desktop Configuration:");
   lines.push("  Add the following to claude_desktop_config.json:");
-  lines.push('  {');
+  lines.push("  {");
   lines.push('    "mcpServers": {');
   lines.push('      "storyteller": {');
   lines.push('        "command": "storyteller",');
   lines.push('        "args": ["mcp", "start", "--stdio"]');
-  lines.push('      }');
-  lines.push('    }');
-  lines.push('  }');
+  lines.push("      }");
+  lines.push("    }");
+  lines.push("  }");
   return lines.join("\n");
 }
 

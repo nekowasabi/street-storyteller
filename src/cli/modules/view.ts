@@ -3,7 +3,11 @@
  * プロジェクトの物語要素をHTML形式で可視化する
  */
 import { err, ok } from "../../shared/result.ts";
-import type { CommandContext, CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+  CommandOptionDescriptor,
+} from "../types.ts";
 import { BaseCliCommand } from "../base_command.ts";
 import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
 import { ProjectAnalyzer } from "../../application/view/project_analyzer.ts";
@@ -36,9 +40,10 @@ export class ViewCommand extends BaseCliCommand {
     }
 
     // プロジェクトパスの解決
-    const projectRoot = typeof args.path === "string" && args.path.trim().length > 0
-      ? args.path
-      : Deno.cwd();
+    const projectRoot =
+      typeof args.path === "string" && args.path.trim().length > 0
+        ? args.path
+        : Deno.cwd();
 
     // --serve モードの場合
     if (args.serve === true) {
@@ -46,9 +51,10 @@ export class ViewCommand extends BaseCliCommand {
     }
 
     // 出力先の解決
-    const outputPath = typeof args.output === "string" && args.output.trim().length > 0
-      ? args.output
-      : `${projectRoot}/index.html`;
+    const outputPath =
+      typeof args.output === "string" && args.output.trim().length > 0
+        ? args.output
+        : `${projectRoot}/index.html`;
 
     // プロジェクトを解析
     const analysisResult = await this.analyzer.analyzeProject(projectRoot);
@@ -88,7 +94,9 @@ export class ViewCommand extends BaseCliCommand {
         `[dry-run] Server mode configuration:`,
         `  Project: ${projectRoot}`,
         `  Port: ${port} (serve on http://localhost:${port})`,
-        `  Watch: ${watchEnabled ? "enabled (watch for file changes)" : "disabled"}`,
+        `  Watch: ${
+          watchEnabled ? "enabled (watch for file changes)" : "disabled"
+        }`,
       ];
       context.presenter.showInfo(info.join("\n"));
       return ok({ mode: "serve", port, watch: watchEnabled, projectRoot });
@@ -132,7 +140,7 @@ export class ViewCommand extends BaseCliCommand {
 
     // タイムアウトが設定されている場合は指定時間後に停止
     if (timeout > 0) {
-      await new Promise(resolve => setTimeout(resolve, timeout));
+      await new Promise((resolve) => setTimeout(resolve, timeout));
       watcher?.stop();
       await server.stop();
       return ok({ mode: "serve", port, watch: watchEnabled, projectRoot });
@@ -190,11 +198,17 @@ function renderViewHelp(): string {
   lines.push("  storyteller view [options]");
   lines.push("");
   lines.push("Options:");
-  lines.push("  --path <dir>     Project root directory (default: current directory)");
+  lines.push(
+    "  --path <dir>     Project root directory (default: current directory)",
+  );
   lines.push("  --output <file>  Output HTML file (default: index.html)");
   lines.push("  --serve          Start local server instead of writing file");
-  lines.push("  --port <number>  Server port (default: 8080, requires --serve)");
-  lines.push("  --watch          Watch for file changes and live reload (requires --serve)");
+  lines.push(
+    "  --port <number>  Server port (default: 8080, requires --serve)",
+  );
+  lines.push(
+    "  --watch          Watch for file changes and live reload (requires --serve)",
+  );
   lines.push("  --help, -h       Show this help message");
   lines.push("");
   lines.push("Examples:");

@@ -9,13 +9,14 @@
  * - 大量のキャラクター参照を含むドキュメント
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import { LspServer } from "../../src/lsp/server/server.ts";
 import { LspTransport } from "../../src/lsp/protocol/transport.ts";
-import { createMockReader, createMockWriter, createLspMessage } from "./helpers.ts";
+import {
+  createLspMessage,
+  createMockReader,
+  createMockWriter,
+} from "./helpers.ts";
 import type { DetectableEntity } from "../../src/lsp/detection/positioned_detector.ts";
 import type { EntityInfo } from "../../src/lsp/providers/hover_provider.ts";
 import { PositionedDetector } from "../../src/lsp/detection/positioned_detector.ts";
@@ -90,7 +91,7 @@ const mockEntityInfoMap = new Map<string, EntityInfo>([
 async function createInitializedServer(
   additionalMessages: string[] = [],
   entities: DetectableEntity[] = mockEntities,
-  entityInfoMap: Map<string, EntityInfo> = mockEntityInfoMap
+  entityInfoMap: Map<string, EntityInfo> = mockEntityInfoMap,
 ): Promise<{
   server: LspServer;
   transport: LspTransport;
@@ -113,7 +114,11 @@ async function createInitializedServer(
     params: {},
   });
 
-  const allMessages = [initRequest, initializedNotification, ...additionalMessages];
+  const allMessages = [
+    initRequest,
+    initializedNotification,
+    ...additionalMessages,
+  ];
   const reader = createMockReader(allMessages.map(createLspMessage).join(""));
   const writer = createMockWriter();
   const transport = new LspTransport(reader, writer);
@@ -255,7 +260,10 @@ Deno.test("Edge Case - very long line: getEntityAtPosition at far position", () 
   const content = longPadding + "勇者" + "い".repeat(5000);
   detector.detectWithPositions(content);
 
-  const entity = detector.getEntityAtPosition(content, { line: 0, character: 5000 });
+  const entity = detector.getEntityAtPosition(content, {
+    line: 0,
+    character: 5000,
+  });
   assertExists(entity);
   assertEquals(entity.id, "hero");
 });
@@ -435,7 +443,11 @@ Deno.test("Edge Case - many references: performance with large document", () => 
 
   // パフォーマンス確認（1秒以内）
   const elapsed = endTime - startTime;
-  assertEquals(elapsed < 1000, true, `Detection should complete within 1s, took ${elapsed}ms`);
+  assertEquals(
+    elapsed < 1000,
+    true,
+    `Detection should complete within 1s, took ${elapsed}ms`,
+  );
 });
 
 Deno.test("Edge Case - many references: DiagnosticsGenerator handles many low-confidence matches", async () => {
@@ -452,7 +464,7 @@ Deno.test("Edge Case - many references: DiagnosticsGenerator handles many low-co
   const diagnostics = await generator.generate(
     "file:///test/many_refs.md",
     content,
-    "/test"
+    "/test",
   );
 
   // 低信頼度マッチの診断が生成される（Hintレベル）

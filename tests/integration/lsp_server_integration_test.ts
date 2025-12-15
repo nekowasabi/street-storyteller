@@ -7,13 +7,10 @@
  * - 複数ドキュメントの同時編集
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import { LspServer } from "../../src/lsp/server/server.ts";
 import { LspTransport } from "../../src/lsp/protocol/transport.ts";
-import { createMockReader, createMockWriter, createLspMessage } from "../lsp/helpers.ts";
+import { createLspMessage, createMockWriter } from "../lsp/helpers.ts";
 import type { DetectableEntity } from "../../src/lsp/detection/positioned_detector.ts";
 import type { EntityInfo } from "../../src/lsp/providers/hover_provider.ts";
 
@@ -139,15 +136,6 @@ class MessageQueue {
       },
     };
   }
-}
-
-/**
- * ヘルパー: LSPレスポンス本文を抽出
- */
-function extractResponseBody(data: string): unknown {
-  const bodyMatch = data.match(/\r\n\r\n(.+)$/s);
-  if (!bodyMatch) throw new Error("Failed to extract response body");
-  return JSON.parse(bodyMatch[1]);
 }
 
 /**
@@ -294,49 +282,50 @@ Deno.test("Integration - complete edit session: initialize -> open -> edit -> ho
 
   // initialize response (id: 1)
   const initResponse = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 1
+    (r: unknown) => (r as { id?: number }).id === 1,
   ) as { id: number; result: { capabilities: unknown } };
   assertExists(initResponse, "Initialize response should exist");
   assertExists(initResponse.result.capabilities, "Capabilities should exist");
 
   // hover response (id: 10)
   const hoverResponse = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 10
+    (r: unknown) => (r as { id?: number }).id === 10,
   ) as { id: number; result: { contents: { value: string } } | null };
   assertExists(hoverResponse, "Hover response should exist");
   assertExists(hoverResponse.result, "Hover result should exist");
   assertEquals(
     hoverResponse.result.contents.value.includes("勇者"),
     true,
-    "Hover should contain character name"
+    "Hover should contain character name",
   );
 
   // definition response (id: 11)
   const defResponse = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 11
+    (r: unknown) => (r as { id?: number }).id === 11,
   ) as { id: number; result: { uri: string } | null };
   assertExists(defResponse, "Definition response should exist");
   assertExists(defResponse.result, "Definition result should exist");
   assertEquals(
     defResponse.result.uri.includes("princess"),
     true,
-    "Definition should point to princess file"
+    "Definition should point to princess file",
   );
 
   // shutdown response (id: 100)
   const shutdownResponse = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 100
+    (r: unknown) => (r as { id?: number }).id === 100,
   );
   assertExists(shutdownResponse, "Shutdown response should exist");
 
   // publishDiagnostics notifications should exist
   const diagnosticsNotifications = allResponses.filter(
-    (r: unknown) => (r as { method?: string }).method === "textDocument/publishDiagnostics"
+    (r: unknown) =>
+      (r as { method?: string }).method === "textDocument/publishDiagnostics",
   );
   assertEquals(
     diagnosticsNotifications.length >= 1,
     true,
-    "Should have published diagnostics"
+    "Should have published diagnostics",
   );
 });
 
@@ -429,7 +418,7 @@ Deno.test("Integration - edit session with multiple changes", async () => {
 
   // Hover should work after multiple changes
   const hoverResponse = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 50
+    (r: unknown) => (r as { id?: number }).id === 50,
   ) as { result: { contents: { value: string } } | null };
   assertExists(hoverResponse, "Hover response should exist");
   assertExists(hoverResponse.result, "Hover result should exist after changes");
@@ -571,37 +560,37 @@ Deno.test("Integration - multiple documents: open and edit two documents simulta
 
   // Verify hover responses for both documents
   const hover1 = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 20
+    (r: unknown) => (r as { id?: number }).id === 20,
   ) as { result: { contents: { value: string } } | null };
   assertExists(hover1, "Hover response for chapter01 should exist");
   assertExists(hover1.result, "Hover result for chapter01 should exist");
   assertEquals(
     hover1.result.contents.value.includes("勇者"),
     true,
-    "Hover on chapter01 should show hero info"
+    "Hover on chapter01 should show hero info",
   );
 
   const hover2 = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 21
+    (r: unknown) => (r as { id?: number }).id === 21,
   ) as { result: { contents: { value: string } } | null };
   assertExists(hover2, "Hover response for chapter02 should exist");
   assertExists(hover2.result, "Hover result for chapter02 should exist");
   assertEquals(
     hover2.result.contents.value.includes("姫"),
     true,
-    "Hover on chapter02 should show princess info"
+    "Hover on chapter02 should show princess info",
   );
 
   // Verify definition for wizard
   const def1 = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 30
+    (r: unknown) => (r as { id?: number }).id === 30,
   ) as { result: { uri: string } | null };
   assertExists(def1, "Definition response should exist");
   assertExists(def1.result, "Definition result should exist");
   assertEquals(
     def1.result.uri.includes("wizard"),
     true,
-    "Definition should point to wizard file"
+    "Definition should point to wizard file",
   );
 });
 
@@ -714,14 +703,18 @@ Deno.test("Integration - multiple documents: close one while keeping other open"
 
   // Hover on closed document should return null
   const hover1 = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 40
+    (r: unknown) => (r as { id?: number }).id === 40,
   ) as { result: unknown };
   assertExists(hover1, "Response for closed document should exist");
-  assertEquals(hover1.result, null, "Hover on closed document should return null");
+  assertEquals(
+    hover1.result,
+    null,
+    "Hover on closed document should return null",
+  );
 
   // Hover on open document should work
   const hover2 = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 41
+    (r: unknown) => (r as { id?: number }).id === 41,
   ) as { result: { contents: { value: string } } | null };
   assertExists(hover2, "Response for open document should exist");
   assertExists(hover2.result, "Hover on open document should return result");
@@ -825,14 +818,14 @@ Deno.test("Integration - multiple documents: interleaved edits", async () => {
   // All three documents should have valid hover results
   for (let id = 50; id < 53; id++) {
     const hover = allResponses.find(
-      (r: unknown) => (r as { id?: number }).id === id
+      (r: unknown) => (r as { id?: number }).id === id,
     ) as { result: { contents: { value: string } } | null };
     assertExists(hover, `Hover response ${id} should exist`);
     assertExists(hover.result, `Hover result ${id} should exist`);
     assertEquals(
       hover.result.contents.value.includes("勇者"),
       true,
-      `Hover ${id} should show hero info`
+      `Hover ${id} should show hero info`,
     );
   }
 });
@@ -874,11 +867,15 @@ Deno.test("Integration - error handling: request before initialization", async (
 
   // Should return error response
   const errorResponse = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 99
+    (r: unknown) => (r as { id?: number }).id === 99,
   ) as { error?: { code: number; message: string } };
   assertExists(errorResponse, "Error response should exist");
   assertExists(errorResponse.error, "Error should be present");
-  assertEquals(errorResponse.error.code, -32002, "Error code should be ServerNotInitialized");
+  assertEquals(
+    errorResponse.error.code,
+    -32002,
+    "Error code should be ServerNotInitialized",
+  );
 });
 
 Deno.test("Integration - unknown method handling", async () => {
@@ -928,9 +925,13 @@ Deno.test("Integration - unknown method handling", async () => {
 
   // Should return method not found error
   const errorResponse = allResponses.find(
-    (r: unknown) => (r as { id?: number }).id === 200
+    (r: unknown) => (r as { id?: number }).id === 200,
   ) as { error?: { code: number } };
   assertExists(errorResponse, "Response should exist");
   assertExists(errorResponse.error, "Error should be present");
-  assertEquals(errorResponse.error.code, -32601, "Error code should be MethodNotFound");
+  assertEquals(
+    errorResponse.error.code,
+    -32601,
+    "Error code should be MethodNotFound",
+  );
 });

@@ -14,7 +14,16 @@
  * で: 場所/手段
  * へ: 方向
  */
-export const BASIC_PARTICLES = ["は", "が", "を", "に", "の", "と", "で", "へ"] as const;
+export const BASIC_PARTICLES = [
+  "は",
+  "が",
+  "を",
+  "に",
+  "の",
+  "と",
+  "で",
+  "へ",
+] as const;
 
 export type BasicParticle = (typeof BASIC_PARTICLES)[number];
 
@@ -100,7 +109,10 @@ export class JapanesePatternMatcher {
   /**
    * 信頼度付きでパターンを検索
    */
-  findMatchesWithConfidence(content: string, word: string): PatternMatchWithConfidence[] {
+  findMatchesWithConfidence(
+    content: string,
+    word: string,
+  ): PatternMatchWithConfidence[] {
     const basicMatches = this.findMatches(content, word);
 
     return basicMatches.map((match) => ({
@@ -167,7 +179,7 @@ export class JapanesePatternMatcher {
 
       const potentialExclude = content.substring(
         excludeStartPos,
-        excludeStartPos + excludePattern.length
+        excludeStartPos + excludePattern.length,
       );
 
       if (potentialExclude === excludePattern) {

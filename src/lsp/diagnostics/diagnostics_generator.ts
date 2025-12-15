@@ -36,7 +36,8 @@ export const DiagnosticSeverity = {
   Hint: 4,
 } as const;
 
-export type DiagnosticSeverityType = (typeof DiagnosticSeverity)[keyof typeof DiagnosticSeverity];
+export type DiagnosticSeverityType =
+  (typeof DiagnosticSeverity)[keyof typeof DiagnosticSeverity];
 
 /**
  * 診断情報
@@ -93,7 +94,7 @@ export class DiagnosticsGenerator {
   async generate(
     _uri: string,
     content: string,
-    _projectPath: string
+    _projectPath: string,
   ): Promise<Diagnostic[]> {
     const diagnostics: Diagnostic[] = [];
 
@@ -154,7 +155,7 @@ export class DiagnosticsGenerator {
   private createMessage(
     match: PositionedMatch,
     confidencePercent: number,
-    kindLabel: string
+    kindLabel: string,
   ): string {
     return `${kindLabel}「${match.matchedPattern}」への参照（信頼度: ${confidencePercent}%）。` +
       `定義: ${match.filePath}`;

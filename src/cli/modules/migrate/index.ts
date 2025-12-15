@@ -6,7 +6,7 @@
 import { BaseCliCommand } from "../../base_command.ts";
 import type { CommandContext } from "../../types.ts";
 import type { Result } from "../../../shared/result.ts";
-import { err, ok } from "../../../shared/result.ts";
+import { ok } from "../../../shared/result.ts";
 import type { CommandExecutionError } from "../../types.ts";
 
 /**

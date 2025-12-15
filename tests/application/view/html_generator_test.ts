@@ -2,7 +2,7 @@
  * HtmlGenerator テスト
  * TDD Step 1: Red - 失敗するテストを作成
  */
-import { assert, assertEquals } from "../../asserts.ts";
+import { assert } from "../../asserts.ts";
 import { HtmlGenerator } from "../../../src/application/view/html_generator.ts";
 import type { ProjectAnalysis } from "../../../src/application/view/project_analyzer.ts";
 
@@ -55,7 +55,10 @@ Deno.test("HtmlGenerator - 基本構造", async (t) => {
 
   await t.step("generateメソッドが存在する", () => {
     const generator = new HtmlGenerator();
-    assert(typeof generator.generate === "function", "generateメソッドが存在すべき");
+    assert(
+      typeof generator.generate === "function",
+      "generateメソッドが存在すべき",
+    );
   });
 });
 
@@ -75,7 +78,10 @@ Deno.test("HtmlGenerator - HTML生成", async (t) => {
 
     assert(html.includes("<style>"), "インラインスタイルが含まれるべき");
     // 外部CSSリンクがないことを確認
-    assert(!html.includes("stylesheet"), "外部スタイルシートへの依存がないべき");
+    assert(
+      !html.includes("stylesheet"),
+      "外部スタイルシートへの依存がないべき",
+    );
   });
 
   await t.step("キャラクター一覧セクションが含まれる", () => {

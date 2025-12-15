@@ -263,8 +263,6 @@ Deno.test("Phase 5統合テスト: 完成度分析→一括処理→検証フロ
       },
     };
 
-    const batch = new BatchOperations();
-
     // force = false（デフォルト）では既存詳細を保持
     // NOTE: BatchOperationsはDetailsPluginを使用するが、
     // DetailsPlugin自体がforce引数を持つため、

@@ -2,7 +2,7 @@
  * プロジェクト解析サービス
  * 物語プロジェクトの構造を解析し、HTML可視化用のデータを生成する
  */
-import { join, toFileUrl, relative } from "@std/path";
+import { join, relative, toFileUrl } from "@std/path";
 import { err, ok, type Result } from "../../shared/result.ts";
 
 /**
@@ -70,7 +70,9 @@ export class ProjectAnalyzer {
   /**
    * プロジェクトを解析
    */
-  async analyzeProject(projectPath: string): Promise<Result<ProjectAnalysis, AnalysisError>> {
+  async analyzeProject(
+    projectPath: string,
+  ): Promise<Result<ProjectAnalysis, AnalysisError>> {
     try {
       // キャラクターをロード
       const characters = await this.loadCharacters(projectPath);
@@ -79,7 +81,11 @@ export class ProjectAnalyzer {
       const settings = await this.loadSettings(projectPath);
 
       // 原稿を解析
-      const manuscripts = await this.analyzeManuscripts(projectPath, characters, settings);
+      const manuscripts = await this.analyzeManuscripts(
+        projectPath,
+        characters,
+        settings,
+      );
 
       return ok({
         characters,
@@ -97,7 +103,9 @@ export class ProjectAnalyzer {
   /**
    * キャラクターをロード
    */
-  private async loadCharacters(projectPath: string): Promise<CharacterSummary[]> {
+  private async loadCharacters(
+    projectPath: string,
+  ): Promise<CharacterSummary[]> {
     const charactersDir = join(projectPath, "src/characters");
     const characters: CharacterSummary[] = [];
 
@@ -111,7 +119,10 @@ export class ProjectAnalyzer {
           for (const [, value] of Object.entries(mod)) {
             const parsed = this.parseEntity(value);
             if (parsed) {
-              const relPath = relative(projectPath, absPath).replaceAll("\\", "/");
+              const relPath = relative(projectPath, absPath).replaceAll(
+                "\\",
+                "/",
+              );
               characters.push({
                 id: parsed.id,
                 name: parsed.name,
@@ -150,7 +161,10 @@ export class ProjectAnalyzer {
           for (const [, value] of Object.entries(mod)) {
             const parsed = this.parseEntity(value);
             if (parsed) {
-              const relPath = relative(projectPath, absPath).replaceAll("\\", "/");
+              const relPath = relative(projectPath, absPath).replaceAll(
+                "\\",
+                "/",
+              );
               settings.push({
                 id: parsed.id,
                 name: parsed.name,
@@ -192,7 +206,9 @@ export class ProjectAnalyzer {
       : undefined;
 
     const role = typeof record.role === "string" ? record.role : undefined;
-    const summary = typeof record.summary === "string" ? record.summary : undefined;
+    const summary = typeof record.summary === "string"
+      ? record.summary
+      : undefined;
 
     return { id, name, displayNames, role, summary };
   }
@@ -221,7 +237,11 @@ export class ProjectAnalyzer {
           const title = this.extractTitle(content);
 
           // エンティティ参照を検出
-          const referencedEntities = this.detectReferences(content, characters, settings);
+          const referencedEntities = this.detectReferences(
+            content,
+            characters,
+            settings,
+          );
 
           manuscripts.push({
             path: relPath,

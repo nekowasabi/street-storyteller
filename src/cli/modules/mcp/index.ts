@@ -45,7 +45,8 @@ export function createMcpDescriptor(
 ): CommandDescriptor {
   const handler = new McpCommand(registry);
   return createLegacyCommandDescriptor(handler, {
-    summary: "MCP (Model Context Protocol) server for Claude Desktop integration.",
+    summary:
+      "MCP (Model Context Protocol) server for Claude Desktop integration.",
     usage: "storyteller mcp <subcommand> [options]",
     children: [
       mcpStartCommandDescriptor,

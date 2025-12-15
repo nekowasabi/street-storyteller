@@ -11,7 +11,6 @@ import type {
   ProjectContext,
 } from "../../src/migrations/types.ts";
 import type { Character as CharacterV1 } from "../../src/type/character.ts";
-import type { Character as CharacterV2 } from "../../src/type/v2/character.ts";
 
 Deno.test("CharacterMigration - 基本的なマイグレーション", async () => {
   const migration = new CharacterMigration();

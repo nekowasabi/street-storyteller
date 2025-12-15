@@ -5,17 +5,13 @@
  * TDD Red Phase: 実装がないため、このテストは失敗する
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import {
   DefinitionProvider,
-  type Location,
 } from "../../src/lsp/providers/definition_provider.ts";
 import {
-  PositionedDetector,
   type DetectableEntity,
+  PositionedDetector,
 } from "../../src/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ
@@ -55,7 +51,10 @@ Deno.test("DefinitionProvider - returns location for character reference", async
   const projectPath = "/project";
 
   // "勇者"の位置（0行目、0文字目）をクリック
-  const result = await provider.getDefinition(uri, content, { line: 0, character: 0 }, projectPath);
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
 
   assertExists(result);
   assertEquals(result.uri.endsWith("src/characters/hero.ts"), true);
@@ -71,7 +70,10 @@ Deno.test("DefinitionProvider - returns location for setting reference", async (
   const projectPath = "/project";
 
   // "城"の位置（0行目、0文字目）をクリック
-  const result = await provider.getDefinition(uri, content, { line: 0, character: 0 }, projectPath);
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
 
   assertExists(result);
   assertEquals(result.uri.endsWith("src/settings/castle.ts"), true);
@@ -86,7 +88,10 @@ Deno.test("DefinitionProvider - returns null for non-entity position", async () 
   const projectPath = "/project";
 
   // "は"の位置（0行目、2文字目）- エンティティではない
-  const result = await provider.getDefinition(uri, content, { line: 0, character: 2 }, projectPath);
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 2,
+  }, projectPath);
 
   assertEquals(result, null);
 });
@@ -100,12 +105,18 @@ Deno.test("DefinitionProvider - returns correct location for multi-line content"
   const projectPath = "/project";
 
   // 2行目の "勇者" の位置（1行目、0文字目）
-  const result1 = await provider.getDefinition(uri, content, { line: 1, character: 0 }, projectPath);
+  const result1 = await provider.getDefinition(uri, content, {
+    line: 1,
+    character: 0,
+  }, projectPath);
   assertExists(result1);
   assertEquals(result1.uri.endsWith("src/characters/hero.ts"), true);
 
   // 3行目の "姫" の位置（2行目、0文字目）
-  const result2 = await provider.getDefinition(uri, content, { line: 2, character: 0 }, projectPath);
+  const result2 = await provider.getDefinition(uri, content, {
+    line: 2,
+    character: 0,
+  }, projectPath);
   assertExists(result2);
   assertEquals(result2.uri.endsWith("src/characters/princess.ts"), true);
 });
@@ -119,7 +130,10 @@ Deno.test("DefinitionProvider - works with alias references", async () => {
   const projectPath = "/project";
 
   // "主人公"（aliasで勇者にマッチ）の位置
-  const result = await provider.getDefinition(uri, content, { line: 0, character: 0 }, projectPath);
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
 
   assertExists(result);
   assertEquals(result.uri.endsWith("src/characters/hero.ts"), true);
@@ -133,7 +147,10 @@ Deno.test("DefinitionProvider - uses absolute path for location URI", async () =
   const uri = "file:///manuscripts/chapter01.md";
   const projectPath = "/home/user/project";
 
-  const result = await provider.getDefinition(uri, content, { line: 0, character: 0 }, projectPath);
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
 
   assertExists(result);
   // URI形式でプロジェクトパスが含まれている
@@ -149,7 +166,10 @@ Deno.test("DefinitionProvider - returns null for empty content", async () => {
   const uri = "file:///manuscripts/chapter01.md";
   const projectPath = "/project";
 
-  const result = await provider.getDefinition(uri, content, { line: 0, character: 0 }, projectPath);
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
 
   assertEquals(result, null);
 });
@@ -162,7 +182,10 @@ Deno.test("DefinitionProvider - location range points to start of definition", a
   const uri = "file:///manuscripts/chapter01.md";
   const projectPath = "/project";
 
-  const result = await provider.getDefinition(uri, content, { line: 0, character: 0 }, projectPath);
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
 
   assertExists(result);
   // 定義ファイルの先頭を指す

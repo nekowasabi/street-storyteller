@@ -4,7 +4,7 @@
  */
 import { assertEquals, assertExists } from "@std/assert";
 import { createMcpDescriptor } from "../../../../src/cli/modules/mcp/index.ts";
-import { createCommandRegistry, type CommandRegistry } from "../../../../src/cli/command_registry.ts";
+import { createCommandRegistry } from "../../../../src/cli/command_registry.ts";
 
 Deno.test("createMcpDescriptor: コマンドグループを返す", () => {
   const registry = createCommandRegistry();

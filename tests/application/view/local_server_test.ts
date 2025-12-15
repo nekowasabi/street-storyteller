@@ -13,7 +13,10 @@ Deno.test("LocalViewServer - 基本構造", async (t) => {
 
   await t.step("setContentメソッドが存在する", () => {
     const server = new LocalViewServer();
-    assert(typeof server.setContent === "function", "setContentメソッドが存在すべき");
+    assert(
+      typeof server.setContent === "function",
+      "setContentメソッドが存在すべき",
+    );
   });
 
   await t.step("startメソッドが存在する", () => {
@@ -60,7 +63,10 @@ Deno.test("LocalViewServer - HTTPサーバー機能", async (t) => {
       assertEquals(response.status, 200);
 
       const contentType = response.headers.get("content-type");
-      assert(contentType?.includes("text/html"), "Content-Typeがtext/htmlであるべき");
+      assert(
+        contentType?.includes("text/html"),
+        "Content-Typeがtext/htmlであるべき",
+      );
 
       const text = await response.text();
       assert(text.includes("Hello World"), "HTMLコンテンツが返されるべき");

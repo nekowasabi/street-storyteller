@@ -53,7 +53,10 @@ export class DiagnosticsPublisher {
   /** URI毎の保留中の診断 */
   private readonly pendingDiagnostics = new Map<string, Diagnostic[]>();
 
-  constructor(writer: DiagnosticsWriter, options?: DiagnosticsPublisherOptions) {
+  constructor(
+    writer: DiagnosticsWriter,
+    options?: DiagnosticsPublisherOptions,
+  ) {
     this.writer = writer;
     this.debounceMs = options?.debounceMs ?? 0;
   }

@@ -74,7 +74,10 @@ export class FileWatcher {
         if (!this.running) break;
 
         // イベントタイプに基づいて処理
-        if (event.kind === "create" || event.kind === "modify" || event.kind === "remove") {
+        if (
+          event.kind === "create" || event.kind === "modify" ||
+          event.kind === "remove"
+        ) {
           for (const path of event.paths) {
             this.pendingPaths.add(path);
           }

@@ -67,7 +67,10 @@ class MockWriter {
   }
 
   private getOutput(): string {
-    const totalLength = this.chunks.reduce((sum, chunk) => sum + chunk.length, 0);
+    const totalLength = this.chunks.reduce(
+      (sum, chunk) => sum + chunk.length,
+      0,
+    );
     const result = new Uint8Array(totalLength);
     let offset = 0;
     for (const chunk of this.chunks) {
@@ -150,7 +153,11 @@ Deno.test("MCPサーバー統合テスト: tools/list で meta_check, meta_gener
     params: {},
   };
 
-  const reader = new MockReader([initRequest, initializedNotification, toolsListRequest]);
+  const reader = new MockReader([
+    initRequest,
+    initializedNotification,
+    toolsListRequest,
+  ]);
   const writer = new MockWriter();
   const transport = new McpTransport(reader, writer);
   const toolRegistry = createDefaultToolRegistry();
@@ -204,7 +211,11 @@ Deno.test("MCPサーバー統合テスト: tools/call で meta_check が正常�
     },
   };
 
-  const reader = new MockReader([initRequest, initializedNotification, toolsCallRequest]);
+  const reader = new MockReader([
+    initRequest,
+    initializedNotification,
+    toolsCallRequest,
+  ]);
   const writer = new MockWriter();
   const transport = new McpTransport(reader, writer);
   const toolRegistry = createDefaultToolRegistry();
@@ -222,7 +233,10 @@ Deno.test("MCPサーバー統合テスト: tools/call で meta_check が正常�
   const callResponse = responses[1] as {
     jsonrpc: string;
     id: number;
-    result?: { content: Array<{ type: string; text?: string }>; isError?: boolean };
+    result?: {
+      content: Array<{ type: string; text?: string }>;
+      isError?: boolean;
+    };
     error?: { code: number; message: string };
   };
 
@@ -255,7 +269,11 @@ Deno.test("MCPサーバー統合テスト: 未知のメソッドでMethod not fo
     params: {},
   };
 
-  const reader = new MockReader([initRequest, initializedNotification, unknownRequest]);
+  const reader = new MockReader([
+    initRequest,
+    initializedNotification,
+    unknownRequest,
+  ]);
   const writer = new MockWriter();
   const transport = new McpTransport(reader, writer);
   const server = new McpServer(transport);

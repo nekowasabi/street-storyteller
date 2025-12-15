@@ -2,14 +2,20 @@
  * LSP Command Group テスト
  * TDD Step 1: Red - 失敗するテストを作成
  */
-import { assert, assertEquals, createStubLogger, createStubPresenter } from "../asserts.ts";
+import { assert, assertEquals, createStubLogger } from "../asserts.ts";
 import { createLspDescriptor } from "../../src/cli/modules/lsp/index.ts";
-import { createCommandRegistry, registerCommandDescriptor } from "../../src/cli/command_registry.ts";
+import {
+  createCommandRegistry,
+  registerCommandDescriptor,
+} from "../../src/cli/command_registry.ts";
 import type { CommandContext, CommandDescriptor } from "../../src/cli/types.ts";
 
 Deno.test("LSPコマンドグループ - 基本構造", async (t) => {
   await t.step("createLspDescriptor関数が存在する", () => {
-    assert(typeof createLspDescriptor === "function", "createLspDescriptorは関数であるべき");
+    assert(
+      typeof createLspDescriptor === "function",
+      "createLspDescriptorは関数であるべき",
+    );
   });
 
   await t.step("lspコマンドグループが正しく作成される", () => {
@@ -25,7 +31,9 @@ Deno.test("LSPコマンドグループ - 基本構造", async (t) => {
     const descriptor = createLspDescriptor(registry);
 
     assert(descriptor.children, "childrenが存在すべき");
-    const childNames = descriptor.children?.map((c: CommandDescriptor) => c.name) ?? [];
+    const childNames = descriptor.children?.map((c: CommandDescriptor) =>
+      c.name
+    ) ?? [];
     assert(childNames.includes("start"), "startサブコマンドが含まれるべき");
     assert(childNames.includes("install"), "installサブコマンドが含まれるべき");
   });
@@ -94,4 +102,38 @@ Deno.test("LSPコマンドグループ - ヘルプ日本語化", async (t) => {
     assert(descriptor.summary, "summaryが設定されているべき");
     assert(descriptor.summary.length > 0, "summaryが空でないべき");
   });
+});
+
+Deno.test("LSPコマンドグループ - ヘルプエラー時のフォールバック", async () => {
+  // Create a fresh registry without registering the lsp descriptor itself
+  // This will cause renderHelp to return an error since 'lsp' is not in snapshot
+  const registry = createCommandRegistry();
+  const descriptor = createLspDescriptor(registry);
+
+  // Do NOT register the descriptor - this simulates the scenario where
+  // renderHelp cannot find the command path
+
+  const logger = createStubLogger();
+  const errors: string[] = [];
+  const infos: string[] = [];
+  const presenter = {
+    showInfo: (msg: string) => infos.push(msg),
+    showSuccess: () => {},
+    showWarning: () => {},
+    showError: (msg: string) => errors.push(msg),
+  };
+
+  const context: CommandContext = {
+    logger,
+    presenter,
+    args: {},
+    config: undefined as never,
+  };
+
+  // Execute via handler.execute (since CommandDescriptor has handler)
+  await descriptor.handler.execute(context);
+
+  // Verify error + fallback shown
+  assert(errors.length > 0, "エラーメッセージが表示されるべき");
+  assert(infos.length > 0, "フォールバックメッセージが表示されるべき");
 });

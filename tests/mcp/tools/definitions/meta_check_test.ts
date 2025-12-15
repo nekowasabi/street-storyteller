@@ -47,9 +47,12 @@ Deno.test("metaCheckTool: inputSchemaが正しく定義されている", () => {
 Deno.test("metaCheckTool: descriptionが日本語で記述されている", () => {
   assertExists(metaCheckTool.description);
   // 日本語を含むことを確認
-  assertEquals(metaCheckTool.description.includes("原稿") ||
-               metaCheckTool.description.includes("メタデータ") ||
-               metaCheckTool.description.includes("検証"), true);
+  assertEquals(
+    metaCheckTool.description.includes("原稿") ||
+      metaCheckTool.description.includes("メタデータ") ||
+      metaCheckTool.description.includes("検証"),
+    true,
+  );
 });
 
 Deno.test("metaCheckTool: execute関数が定義されている", () => {
@@ -73,6 +76,6 @@ Deno.test("metaCheckTool: pathまたはdirが必要であることを示す", as
   // pathかdirのどちらかが必要というメッセージを含む
   assertEquals(
     textContent.text.includes("path") || textContent.text.includes("dir"),
-    true
+    true,
   );
 });

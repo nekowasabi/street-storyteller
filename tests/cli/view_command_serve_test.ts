@@ -27,7 +27,10 @@ Deno.test("ViewCommand --serve - オプション解析", async (t) => {
 
     const result = await command.execute(context);
     assert(result.ok, "--serve dry-runで成功すべき");
-    assert(messages.some(m => m.includes("serve") || m.includes("server")), "サーバーモードに関する情報が表示されるべき");
+    assert(
+      messages.some((m) => m.includes("serve") || m.includes("server")),
+      "サーバーモードに関する情報が表示されるべき",
+    );
   });
 
   await t.step("--port オプションでポート指定できる", async () => {
@@ -50,7 +53,10 @@ Deno.test("ViewCommand --serve - オプション解析", async (t) => {
 
     const result = await command.execute(context);
     assert(result.ok);
-    assert(messages.some(m => m.includes("9999")), "指定したポートが表示されるべき");
+    assert(
+      messages.some((m) => m.includes("9999")),
+      "指定したポートが表示されるべき",
+    );
   });
 
   await t.step("--watch オプションでファイル監視を有効化できる", async () => {
@@ -73,7 +79,10 @@ Deno.test("ViewCommand --serve - オプション解析", async (t) => {
 
     const result = await command.execute(context);
     assert(result.ok);
-    assert(messages.some(m => m.includes("watch")), "監視モードに関する情報が表示されるべき");
+    assert(
+      messages.some((m) => m.includes("watch")),
+      "監視モードに関する情報が表示されるべき",
+    );
   });
 
   await t.step("デフォルトポートは8080", async () => {
@@ -96,7 +105,10 @@ Deno.test("ViewCommand --serve - オプション解析", async (t) => {
 
     const result = await command.execute(context);
     assert(result.ok);
-    assert(messages.some(m => m.includes("8080")), "デフォルトポート8080が表示されるべき");
+    assert(
+      messages.some((m) => m.includes("8080")),
+      "デフォルトポート8080が表示されるべき",
+    );
   });
 });
 
@@ -108,14 +120,17 @@ Deno.test("ViewCommand --serve - 実際のサーバー起動", async (t) => {
   await Deno.mkdir(`${tmpDir}/src/characters`, { recursive: true });
   await Deno.mkdir(`${tmpDir}/manuscripts`, { recursive: true });
 
-  await Deno.writeTextFile(`${tmpDir}/src/characters/hero.ts`, `
+  await Deno.writeTextFile(
+    `${tmpDir}/src/characters/hero.ts`,
+    `
 export const hero = {
   id: "hero",
   name: "勇者",
   displayNames: ["勇者"],
   role: "protagonist",
 };
-`);
+`,
+  );
 
   await t.step("--serve でローカルサーバーが起動する", async () => {
     const command = new ViewCommand();
@@ -135,7 +150,7 @@ export const hero = {
     const resultPromise = command.execute(context);
 
     // サーバーが起動するまで待機
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     try {
       // HTTPリクエストを送信

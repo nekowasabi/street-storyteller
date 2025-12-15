@@ -59,9 +59,12 @@ Deno.test("metaGenerateTool: requiredにpathが含まれる、またはpathかdi
 Deno.test("metaGenerateTool: descriptionが日本語で記述されている", () => {
   assertExists(metaGenerateTool.description);
   // 日本語を含むことを確認
-  assertEquals(metaGenerateTool.description.includes("原稿") ||
-               metaGenerateTool.description.includes("メタデータ") ||
-               metaGenerateTool.description.includes("生成"), true);
+  assertEquals(
+    metaGenerateTool.description.includes("原稿") ||
+      metaGenerateTool.description.includes("メタデータ") ||
+      metaGenerateTool.description.includes("生成"),
+    true,
+  );
 });
 
 Deno.test("metaGenerateTool: execute関数が定義されている", () => {
@@ -85,7 +88,7 @@ Deno.test("metaGenerateTool: pathまたはdirが必要であることを示す",
   // pathかdirのどちらかが必要というメッセージを含む
   assertEquals(
     textContent.text.includes("path") || textContent.text.includes("dir"),
-    true
+    true,
   );
 });
 

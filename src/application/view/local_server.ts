@@ -34,7 +34,7 @@ export class LocalViewServer {
     }, (request) => this.handleRequest(request));
 
     // サーバーが起動するまで少し待機
-    await new Promise(resolve => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 50));
   }
 
   /**

@@ -3,13 +3,10 @@
  * Process5 Sub2: 基本助詞パターンの生成と信頼度計算のテスト
  */
 
+import { assertEquals } from "@std/assert";
 import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
-import {
-  JapanesePatternMatcher,
   BASIC_PARTICLES,
+  JapanesePatternMatcher,
 } from "../../src/lsp/detection/japanese_pattern_matcher.ts";
 
 Deno.test("BASIC_PARTICLES - contains 8 basic particles", () => {
@@ -87,7 +84,11 @@ Deno.test("JapanesePatternMatcher - calculateConfidence for object position", ()
   // "勇者を" - 目的語位置
   const content = "敵は勇者を攻撃した。";
   const confidence = matcher.calculateConfidence(content, "勇者", 2);
-  assertEquals(confidence >= 0.85 && confidence < 0.95, true, "目的語位置は中程度の信頼度");
+  assertEquals(
+    confidence >= 0.85 && confidence < 0.95,
+    true,
+    "目的語位置は中程度の信頼度",
+  );
 });
 
 Deno.test("JapanesePatternMatcher - calculateConfidence for other positions", () => {

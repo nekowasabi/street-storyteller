@@ -13,7 +13,10 @@ Deno.test("ProjectAnalyzer - 基本構造", async (t) => {
 
   await t.step("analyzeProjectメソッドが存在する", () => {
     const analyzer = new ProjectAnalyzer();
-    assert(typeof analyzer.analyzeProject === "function", "analyzeProjectメソッドが存在すべき");
+    assert(
+      typeof analyzer.analyzeProject === "function",
+      "analyzeProjectメソッドが存在すべき",
+    );
   });
 });
 
@@ -27,7 +30,9 @@ Deno.test("ProjectAnalyzer - プロジェクト解析", async (t) => {
   await Deno.mkdir(`${tmpDir}/manuscripts`, { recursive: true });
 
   // キャラクターファイルを作成
-  await Deno.writeTextFile(`${tmpDir}/src/characters/hero.ts`, `
+  await Deno.writeTextFile(
+    `${tmpDir}/src/characters/hero.ts`,
+    `
 export const hero = {
   id: "hero",
   name: "勇者",
@@ -35,9 +40,12 @@ export const hero = {
   role: "protagonist",
   summary: "物語の主人公",
 };
-`);
+`,
+  );
 
-  await Deno.writeTextFile(`${tmpDir}/src/characters/heroine.ts`, `
+  await Deno.writeTextFile(
+    `${tmpDir}/src/characters/heroine.ts`,
+    `
 export const heroine = {
   id: "heroine",
   name: "ヒロイン",
@@ -45,20 +53,26 @@ export const heroine = {
   role: "supporting",
   summary: "勇者を助ける仲間",
 };
-`);
+`,
+  );
 
   // 設定ファイルを作成
-  await Deno.writeTextFile(`${tmpDir}/src/settings/kingdom.ts`, `
+  await Deno.writeTextFile(
+    `${tmpDir}/src/settings/kingdom.ts`,
+    `
 export const kingdom = {
   id: "kingdom",
   name: "王国",
   displayNames: ["王国", "城下町"],
   summary: "物語の舞台となる王国",
 };
-`);
+`,
+  );
 
   // 原稿ファイルを作成
-  await Deno.writeTextFile(`${tmpDir}/manuscripts/chapter01.md`, `---
+  await Deno.writeTextFile(
+    `${tmpDir}/manuscripts/chapter01.md`,
+    `---
 title: 第1章 旅立ち
 characters:
   - hero
@@ -69,19 +83,27 @@ settings:
 # 第1章 旅立ち
 
 勇者は王国の城門から旅立った。ヒロインは勇者の後を追いかけた。
-`);
+`,
+  );
 
   await t.step("キャラクター一覧を取得できる", async () => {
     const analyzer = new ProjectAnalyzer();
     const result = await analyzer.analyzeProject(tmpDir);
 
-    assert(result.ok, `解析が成功すべき: ${!result.ok ? JSON.stringify(result.error) : ""}`);
+    assert(
+      result.ok,
+      `解析が成功すべき: ${!result.ok ? JSON.stringify(result.error) : ""}`,
+    );
     if (!result.ok) return;
 
     assert(result.value.characters, "charactersが存在すべき");
-    assertEquals(result.value.characters.length, 2, "2人のキャラクターが検出されるべき");
+    assertEquals(
+      result.value.characters.length,
+      2,
+      "2人のキャラクターが検出されるべき",
+    );
 
-    const heroChar = result.value.characters.find(c => c.id === "hero");
+    const heroChar = result.value.characters.find((c) => c.id === "hero");
     assert(heroChar, "heroキャラクターが見つかるべき");
     assertEquals(heroChar.name, "勇者");
   });
@@ -96,7 +118,9 @@ settings:
     assert(result.value.settings, "settingsが存在すべき");
     assertEquals(result.value.settings.length, 1, "1つの設定が検出されるべき");
 
-    const kingdomSetting = result.value.settings.find(s => s.id === "kingdom");
+    const kingdomSetting = result.value.settings.find((s) =>
+      s.id === "kingdom"
+    );
     assert(kingdomSetting, "kingdom設定が見つかるべき");
     assertEquals(kingdomSetting.name, "王国");
   });
@@ -109,9 +133,14 @@ settings:
     if (!result.ok) return;
 
     assert(result.value.manuscripts, "manuscriptsが存在すべき");
-    assert(result.value.manuscripts.length >= 1, "最低1つの原稿が検出されるべき");
+    assert(
+      result.value.manuscripts.length >= 1,
+      "最低1つの原稿が検出されるべき",
+    );
 
-    const chapter01 = result.value.manuscripts.find(m => m.path.includes("chapter01"));
+    const chapter01 = result.value.manuscripts.find((m) =>
+      m.path.includes("chapter01")
+    );
     assert(chapter01, "chapter01.mdが見つかるべき");
   });
 
@@ -122,12 +151,14 @@ settings:
     assert(result.ok);
     if (!result.ok) return;
 
-    const chapter01 = result.value.manuscripts.find(m => m.path.includes("chapter01"));
+    const chapter01 = result.value.manuscripts.find((m) =>
+      m.path.includes("chapter01")
+    );
     assert(chapter01, "chapter01.mdが見つかるべき");
     assert(chapter01.referencedEntities, "referencedEntitiesが存在すべき");
 
     // 勇者への参照があるか確認
-    const heroRef = chapter01.referencedEntities.find(r => r.id === "hero");
+    const heroRef = chapter01.referencedEntities.find((r) => r.id === "hero");
     assert(heroRef, "勇者への参照が検出されるべき");
   });
 

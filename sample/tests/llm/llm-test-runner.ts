@@ -3,7 +3,7 @@
  * 原稿の品質を自然言語で検証するテストシステム
  */
 
-import { parse } from "https://deno.land/std@0.208.0/yaml/mod.ts";
+import { parse } from "@std/yaml";
 
 // テスト定義の型
 export interface LLMTest {

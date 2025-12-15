@@ -7,17 +7,26 @@ import { FileWatcher } from "../../../src/application/view/file_watcher.ts";
 
 Deno.test("FileWatcher - 基本構造", async (t) => {
   await t.step("FileWatcherクラスが存在する", () => {
-    const watcher = new FileWatcher("/tmp", { onChange: () => {}, debounceMs: 100 });
+    const watcher = new FileWatcher("/tmp", {
+      onChange: () => {},
+      debounceMs: 100,
+    });
     assert(watcher, "FileWatcherクラスが存在すべき");
   });
 
   await t.step("startメソッドが存在する", () => {
-    const watcher = new FileWatcher("/tmp", { onChange: () => {}, debounceMs: 100 });
+    const watcher = new FileWatcher("/tmp", {
+      onChange: () => {},
+      debounceMs: 100,
+    });
     assert(typeof watcher.start === "function", "startメソッドが存在すべき");
   });
 
   await t.step("stopメソッドが存在する", () => {
-    const watcher = new FileWatcher("/tmp", { onChange: () => {}, debounceMs: 100 });
+    const watcher = new FileWatcher("/tmp", {
+      onChange: () => {},
+      debounceMs: 100,
+    });
     assert(typeof watcher.stop === "function", "stopメソッドが存在すべき");
   });
 });
@@ -40,7 +49,7 @@ Deno.test("FileWatcher - ファイル監視機能", async (t) => {
     await Deno.writeTextFile(`${tmpDir}/test.txt`, "Hello");
 
     // 変更が検出されるまで待機（デバウンス時間 + 余裕）
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     watcher.stop();
 
@@ -69,12 +78,15 @@ Deno.test("FileWatcher - ファイル監視機能", async (t) => {
     await Deno.writeTextFile(`${tmpDir}/callback-test.txt`, "Test content");
 
     // 変更が検出されるまで待機
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     watcher.stop();
 
     assert(callbackCount >= 1, "コールバックが呼び出されるべき");
-    assert(changedPaths.some(p => p.includes("callback-test.txt")), "変更されたパスが渡されるべき");
+    assert(
+      changedPaths.some((p) => p.includes("callback-test.txt")),
+      "変更されたパスが渡されるべき",
+    );
 
     // クリーンアップ
     await Deno.remove(tmpDir, { recursive: true });
@@ -99,13 +111,16 @@ Deno.test("FileWatcher - ファイル監視機能", async (t) => {
     await Deno.writeTextFile(`${tmpDir}/debounce3.txt`, "3");
 
     // デバウンス時間 + 余裕を待つ
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     watcher.stop();
 
     // デバウンスにより、複数の変更が1回のコールバックにまとめられるべき
     // ただし、タイミングによっては複数回呼ばれる可能性もある
-    assert(callbackCount >= 1 && callbackCount <= 3, `コールバック回数が適切であるべき (実際: ${callbackCount})`);
+    assert(
+      callbackCount >= 1 && callbackCount <= 3,
+      `コールバック回数が適切であるべき (実際: ${callbackCount})`,
+    );
 
     // クリーンアップ
     await Deno.remove(tmpDir, { recursive: true });
@@ -129,7 +144,7 @@ Deno.test("FileWatcher - ファイル監視機能", async (t) => {
     await Deno.writeTextFile(`${tmpDir}/after-stop.txt`, "After stop");
 
     // 待機
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     assertEquals(callbackCount, 0, "停止後はコールバックが呼び出されないべき");
 

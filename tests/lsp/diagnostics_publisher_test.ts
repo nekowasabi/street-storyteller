@@ -5,10 +5,7 @@
  * TDD Red Phase: 実装がないため、このテストは失敗する
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { assertEquals, assertExists } from "@std/assert";
 import {
   DiagnosticsPublisher,
 } from "../../src/lsp/diagnostics/diagnostics_publisher.ts";
@@ -22,7 +19,7 @@ import { createMockWriter } from "./helpers.ts";
 function createTestDiagnostic(
   line: number,
   character: number,
-  message: string
+  message: string,
 ): Diagnostic {
   return {
     range: {

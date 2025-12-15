@@ -5,7 +5,7 @@
  * 連携して正しく動作することを確認する
  */
 
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { createPluginRegistry } from "../../src/core/plugin_system.ts";
 import { CharacterPlugin } from "../../src/plugins/core/character/plugin.ts";
 import { DetailsPlugin } from "../../src/plugins/features/details/plugin.ts";

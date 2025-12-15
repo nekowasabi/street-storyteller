@@ -4,11 +4,19 @@
  */
 import { assertEquals, assertExists } from "@std/assert";
 import {
-  mcpStartCommandHandler,
   mcpStartCommandDescriptor,
+  mcpStartCommandHandler,
 } from "../../../../src/cli/modules/mcp/start.ts";
-import type { CommandContext, OutputPresenter } from "../../../../src/cli/types.ts";
-import type { Logger, LogLevel, LogMetadata, LogContext } from "../../../../src/shared/logging/types.ts";
+import type {
+  CommandContext,
+  OutputPresenter,
+} from "../../../../src/cli/types.ts";
+import type {
+  LogContext,
+  Logger,
+  LogLevel,
+  LogMetadata,
+} from "../../../../src/shared/logging/types.ts";
 import type { AppConfig } from "../../../../src/shared/config/schema.ts";
 
 /**
@@ -42,7 +50,11 @@ function createTestContext(args: Record<string, unknown> = {}): CommandContext {
 
   const mockLogger: Logger = {
     scope: "test",
-    log: (_level: LogLevel, _message: string, _metadata?: LogMetadata): void => {},
+    log: (
+      _level: LogLevel,
+      _message: string,
+      _metadata?: LogMetadata,
+    ): void => {},
     trace: (_message: string, _metadata?: LogMetadata): void => {},
     debug: (_message: string, _metadata?: LogMetadata): void => {},
     info: (_message: string, _metadata?: LogMetadata): void => {},
@@ -58,7 +70,12 @@ function createTestContext(args: Record<string, unknown> = {}): CommandContext {
     config: {
       resolve: async (): Promise<AppConfig> => ({
         runtime: { environment: "test", paths: {} },
-        logging: { level: "info", format: "human", color: true, timestamps: true },
+        logging: {
+          level: "info",
+          format: "human",
+          color: true,
+          timestamps: true,
+        },
         features: {},
         cache: { defaultTtlSeconds: 900 },
         external: { providers: [] },
@@ -120,7 +137,7 @@ Deno.test("mcpStartCommandDescriptor: 正しいサマリーを持つ", () => {
 Deno.test("mcpStartCommandDescriptor: --stdioオプションが定義されている", () => {
   assertExists(mcpStartCommandDescriptor.options);
   const stdioOption = mcpStartCommandDescriptor.options.find(
-    (o) => o.name === "--stdio"
+    (o) => o.name === "--stdio",
   );
   assertExists(stdioOption);
   assertEquals(stdioOption.type, "boolean");
@@ -129,7 +146,7 @@ Deno.test("mcpStartCommandDescriptor: --stdioオプションが定義されて�
 Deno.test("mcpStartCommandDescriptor: --pathオプションが定義されている", () => {
   assertExists(mcpStartCommandDescriptor.options);
   const pathOption = mcpStartCommandDescriptor.options.find(
-    (o) => o.name === "--path"
+    (o) => o.name === "--path",
   );
   assertExists(pathOption);
   assertEquals(pathOption.type, "string");
@@ -138,7 +155,7 @@ Deno.test("mcpStartCommandDescriptor: --pathオプションが定義されてい
 Deno.test("mcpStartCommandDescriptor: --dry-runオプションが定義されている", () => {
   assertExists(mcpStartCommandDescriptor.options);
   const dryRunOption = mcpStartCommandDescriptor.options.find(
-    (o) => o.name === "--dry-run"
+    (o) => o.name === "--dry-run",
   );
   assertExists(dryRunOption);
   assertEquals(dryRunOption.type, "boolean");

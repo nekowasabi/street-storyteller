@@ -2,7 +2,12 @@
  * LSP Install Command テスト
  * TDD Step 1: Red - 失敗するテストを作成
  */
-import { assert, assertEquals, createStubLogger, createStubPresenter } from "../asserts.ts";
+import {
+  assert,
+  assertEquals,
+  createStubLogger,
+  createStubPresenter,
+} from "../asserts.ts";
 import { LspInstallCommand } from "../../src/cli/modules/lsp/install.ts";
 import { BaseCliCommand } from "../../src/cli/base_command.ts";
 import type { CommandContext } from "../../src/cli/types.ts";
@@ -10,7 +15,10 @@ import type { CommandContext } from "../../src/cli/types.ts";
 Deno.test("LspInstallCommand - 基本構造", async (t) => {
   await t.step("LspInstallCommandはBaseCliCommandを継承している", () => {
     const command = new LspInstallCommand();
-    assert(command instanceof BaseCliCommand, "LspInstallCommandはBaseCliCommandを継承すべき");
+    assert(
+      command instanceof BaseCliCommand,
+      "LspInstallCommandはBaseCliCommandを継承すべき",
+    );
   });
 
   await t.step("name = 'install' である", () => {
@@ -20,7 +28,10 @@ Deno.test("LspInstallCommand - 基本構造", async (t) => {
 
   await t.step("path = ['lsp', 'install'] である", () => {
     const command = new LspInstallCommand();
-    assertEquals(JSON.stringify(command.path), JSON.stringify(["lsp", "install"]));
+    assertEquals(
+      JSON.stringify(command.path),
+      JSON.stringify(["lsp", "install"]),
+    );
   });
 });
 
@@ -45,7 +56,10 @@ Deno.test("LspInstallCommand - nvim設定生成", async (t) => {
 
     const result = await command.execute(context);
     assert(result.ok, "nvim引数で成功すべき");
-    assert(messages.some(m => m.includes("nvim-lspconfig")), "Lua設定が表示されるべき");
+    assert(
+      messages.some((m) => m.includes("nvim-lspconfig")),
+      "Lua設定が表示されるべき",
+    );
   });
 
   await t.step("neovim用Lua設定テンプレートを生成する", async () => {
@@ -155,6 +169,9 @@ Deno.test("LspInstallCommand - エラーハンドリング", async (t) => {
     const result = await command.execute(context);
     assert(result.ok, "helpオプションでは成功すべき");
     assert(messages.length > 0, "ヘルプメッセージが表示されるべき");
-    assert(messages.some(m => m.includes("nvim")), "ヘルプにはnvimが含まれるべき");
+    assert(
+      messages.some((m) => m.includes("nvim")),
+      "ヘルプにはnvimが含まれるべき",
+    );
   });
 });

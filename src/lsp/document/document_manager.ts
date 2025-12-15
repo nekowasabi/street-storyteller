@@ -51,7 +51,12 @@ export class DocumentManager {
   /**
    * ドキュメントを開く
    */
-  open(uri: string, content: string, version: number, languageId: string): void {
+  open(
+    uri: string,
+    content: string,
+    version: number,
+    languageId: string,
+  ): void {
     this.documents.set(uri, {
       uri,
       content,
@@ -80,7 +85,7 @@ export class DocumentManager {
   change(
     uri: string,
     changes: TextDocumentContentChangeEvent[],
-    version: number
+    version: number,
   ): void {
     const doc = this.documents.get(uri);
     if (!doc) {
@@ -92,7 +97,11 @@ export class DocumentManager {
     for (const change of changes) {
       if (change.range) {
         // 増分更新
-        content = this.applyIncrementalChange(content, change.range, change.text);
+        content = this.applyIncrementalChange(
+          content,
+          change.range,
+          change.text,
+        );
       } else {
         // 全文更新
         content = change.text;
@@ -120,13 +129,14 @@ export class DocumentManager {
   private applyIncrementalChange(
     content: string,
     range: Range,
-    newText: string
+    newText: string,
   ): string {
     const lines = content.split("\n");
     const startOffset = this.positionToOffset(lines, range.start);
     const endOffset = this.positionToOffset(lines, range.end);
 
-    return content.substring(0, startOffset) + newText + content.substring(endOffset);
+    return content.substring(0, startOffset) + newText +
+      content.substring(endOffset);
   }
 
   /**

@@ -75,7 +75,7 @@ export class PositionedDetector {
    */
   getEntityAtPosition(
     content: string,
-    position: Position
+    position: Position,
   ): PositionedMatch | undefined {
     // キャッシュされた結果がない、またはコンテンツが変わっていれば再検出
     if (this.lastContent !== content) {
@@ -100,7 +100,10 @@ export class PositionedDetector {
   /**
    * エンティティを検出
    */
-  private detectEntity(content: string, entity: DetectableEntity): PositionedMatch[] {
+  private detectEntity(
+    content: string,
+    entity: DetectableEntity,
+  ): PositionedMatch[] {
     const results: PositionedMatch[] = [];
     const patterns = this.getPatternsWithConfidence(entity);
 
@@ -126,7 +129,7 @@ export class PositionedDetector {
    * エンティティからパターンと信頼度のペアを取得
    */
   private getPatternsWithConfidence(
-    entity: DetectableEntity
+    entity: DetectableEntity,
   ): Array<{ pattern: string; confidence: number }> {
     const patterns: Array<{ pattern: string; confidence: number }> = [];
 
@@ -157,9 +160,11 @@ export class PositionedDetector {
    */
   private findAllPositions(
     content: string,
-    pattern: string
+    pattern: string,
   ): Array<{ line: number; character: number; length: number }> {
-    const positions: Array<{ line: number; character: number; length: number }> = [];
+    const positions: Array<
+      { line: number; character: number; length: number }
+    > = [];
     const lines = content.split("\n");
 
     let currentLine = 0;
@@ -194,7 +199,9 @@ export class PositionedDetector {
     if (matches.length <= 1) return matches;
 
     // 最も高い信頼度を持つマッチを基準に全ての位置をマージ
-    const allPositions: Array<{ line: number; character: number; length: number }> = [];
+    const allPositions: Array<
+      { line: number; character: number; length: number }
+    > = [];
     let bestConfidence = 0;
     let matchedPattern = "";
 
@@ -225,10 +232,11 @@ export class PositionedDetector {
    * 重複した位置を削除
    */
   private deduplicatePositions(
-    positions: Array<{ line: number; character: number; length: number }>
+    positions: Array<{ line: number; character: number; length: number }>,
   ): Array<{ line: number; character: number; length: number }> {
     const seen = new Set<string>();
-    const unique: Array<{ line: number; character: number; length: number }> = [];
+    const unique: Array<{ line: number; character: number; length: number }> =
+      [];
 
     // 位置でソート
     positions.sort((a, b) => {

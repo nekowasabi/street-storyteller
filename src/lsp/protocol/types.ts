@@ -65,25 +65,35 @@ export type JsonRpcResponse = {
  * JSON-RPC 2.0 メッセージの共用体型
  * リクエスト、通知、レスポンスのいずれか
  */
-export type JsonRpcMessage = JsonRpcRequest | JsonRpcNotification | JsonRpcResponse;
+export type JsonRpcMessage =
+  | JsonRpcRequest
+  | JsonRpcNotification
+  | JsonRpcResponse;
 
 /**
  * メッセージがリクエストかどうかを判定するType Guard
  */
-export function isJsonRpcRequest(message: JsonRpcMessage): message is JsonRpcRequest {
+export function isJsonRpcRequest(
+  message: JsonRpcMessage,
+): message is JsonRpcRequest {
   return "method" in message && "id" in message && message.id !== undefined;
 }
 
 /**
  * メッセージが通知かどうかを判定するType Guard
  */
-export function isJsonRpcNotification(message: JsonRpcMessage): message is JsonRpcNotification {
-  return "method" in message && (!("id" in message) || message.id === undefined);
+export function isJsonRpcNotification(
+  message: JsonRpcMessage,
+): message is JsonRpcNotification {
+  return "method" in message &&
+    (!("id" in message) || message.id === undefined);
 }
 
 /**
  * メッセージがレスポンスかどうかを判定するType Guard
  */
-export function isJsonRpcResponse(message: JsonRpcMessage): message is JsonRpcResponse {
+export function isJsonRpcResponse(
+  message: JsonRpcMessage,
+): message is JsonRpcResponse {
   return !("method" in message) && "id" in message;
 }

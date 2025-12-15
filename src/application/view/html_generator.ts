@@ -2,7 +2,12 @@
  * HTML生成サービス
  * プロジェクト解析結果からスタンドアロンHTMLを生成する
  */
-import type { ProjectAnalysis, CharacterSummary, SettingSummary, ManuscriptSummary } from "./project_analyzer.ts";
+import type {
+  CharacterSummary,
+  ManuscriptSummary,
+  ProjectAnalysis,
+  SettingSummary,
+} from "./project_analyzer.ts";
 
 /**
  * HTML生成クラス
@@ -65,7 +70,7 @@ ${CSS_STYLES}
       return '<p class="empty">No characters found.</p>';
     }
 
-    const cards = characters.map(char => `
+    const cards = characters.map((char) => `
         <div class="card character-card">
           <h3>${escapeHtml(char.name)}</h3>
           <div class="meta">
@@ -75,7 +80,10 @@ ${CSS_STYLES}
           <p class="summary">${escapeHtml(char.summary ?? "")}</p>
           <div class="display-names">
             <span class="label">Names:</span>
-            ${char.displayNames.map(n => `<span class="tag">${escapeHtml(n)}</span>`).join(" ")}
+            ${
+      char.displayNames.map((n) => `<span class="tag">${escapeHtml(n)}</span>`)
+        .join(" ")
+    }
           </div>
           <div class="file-path">
             <code>${escapeHtml(char.filePath)}</code>
@@ -93,7 +101,7 @@ ${CSS_STYLES}
       return '<p class="empty">No settings found.</p>';
     }
 
-    const cards = settings.map(setting => `
+    const cards = settings.map((setting) => `
         <div class="card setting-card">
           <h3>${escapeHtml(setting.name)}</h3>
           <div class="meta">
@@ -102,7 +110,11 @@ ${CSS_STYLES}
           <p class="summary">${escapeHtml(setting.summary ?? "")}</p>
           <div class="display-names">
             <span class="label">Names:</span>
-            ${setting.displayNames.map(n => `<span class="tag">${escapeHtml(n)}</span>`).join(" ")}
+            ${
+      setting.displayNames.map((n) =>
+        `<span class="tag">${escapeHtml(n)}</span>`
+      ).join(" ")
+    }
           </div>
           <div class="file-path">
             <code>${escapeHtml(setting.filePath)}</code>
@@ -120,7 +132,7 @@ ${CSS_STYLES}
       return '<p class="empty">No manuscripts found.</p>';
     }
 
-    const items = manuscripts.map(ms => `
+    const items = manuscripts.map((ms) => `
         <div class="manuscript-item">
           <div class="manuscript-header">
             <h3>${escapeHtml(ms.title ?? ms.path)}</h3>
@@ -138,13 +150,17 @@ ${CSS_STYLES}
   /**
    * エンティティ参照をレンダリング
    */
-  private renderReferences(refs: readonly { id: string; kind: string; occurrences: number }[]): string {
+  private renderReferences(
+    refs: readonly { id: string; kind: string; occurrences: number }[],
+  ): string {
     if (refs.length === 0) {
       return '<span class="no-refs">None</span>';
     }
 
-    return refs.map(ref =>
-      `<span class="ref ${escapeHtml(ref.kind)}">${escapeHtml(ref.id)} (${ref.occurrences})</span>`
+    return refs.map((ref) =>
+      `<span class="ref ${escapeHtml(ref.kind)}">${
+        escapeHtml(ref.id)
+      } (${ref.occurrences})</span>`
     ).join(" ");
   }
 }

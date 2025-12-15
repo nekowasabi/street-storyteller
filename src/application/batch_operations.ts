@@ -76,7 +76,7 @@ export class BatchOperations {
       // 各キャラクターに詳細を追加
       const updatedCharacters: Character[] = [];
       let processedCount = 0;
-      let skippedCount = 0;
+      const skippedCount = 0;
 
       for (const character of filteredCharacters) {
         const result = await this.detailsPlugin.addDetails(character, fields);

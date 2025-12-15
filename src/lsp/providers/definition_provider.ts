@@ -5,8 +5,8 @@
  */
 
 import {
-  PositionedDetector,
   type Position,
+  PositionedDetector,
 } from "../detection/positioned_detector.ts";
 
 /**
@@ -48,7 +48,7 @@ export class DefinitionProvider {
     _uri: string,
     content: string,
     position: Position,
-    projectPath: string
+    projectPath: string,
   ): Promise<Location | null> {
     // 空のコンテンツは処理しない
     if (!content) {

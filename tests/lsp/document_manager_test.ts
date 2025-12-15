@@ -3,14 +3,8 @@
  * Process4 Sub1: ドキュメント管理機能のテスト
  */
 
-import {
-  assertEquals,
-  assertExists,
-} from "https://deno.land/std@0.224.0/assert/mod.ts";
-import {
-  DocumentManager,
-  type TextDocument,
-} from "../../src/lsp/document/document_manager.ts";
+import { assertEquals, assertExists } from "@std/assert";
+import { DocumentManager } from "../../src/lsp/document/document_manager.ts";
 
 Deno.test("DocumentManager - open() saves document", () => {
   const manager = new DocumentManager();
@@ -82,7 +76,7 @@ Deno.test("DocumentManager - change() applies incremental update", () => {
         text: "Deno",
       },
     ],
-    2
+    2,
   );
 
   const doc = manager.get("file:///test.md");
@@ -110,7 +104,7 @@ Deno.test("DocumentManager - change() handles multi-line content", () => {
         text: "Modified",
       },
     ],
-    2
+    2,
   );
 
   const doc = manager.get("file:///test.md");
@@ -149,7 +143,7 @@ Deno.test("DocumentManager - handles Japanese text positions correctly", () => {
         text: "Deno",
       },
     ],
-    2
+    2,
   );
 
   const doc = manager.get("file:///test.md");
