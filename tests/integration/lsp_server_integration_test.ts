@@ -878,7 +878,7 @@ Deno.test("Integration - error handling: request before initialization", async (
   );
 });
 
-Deno.test("Integration - unknown method handling", async () => {
+Deno.test("Integration - unknown method handling returns null for coc.nvim compatibility", async () => {
   const queue = new MessageQueue();
 
   // Initialize
@@ -923,15 +923,11 @@ Deno.test("Integration - unknown method handling", async () => {
 
   const allResponses = extractAllResponses(writer.getData());
 
-  // Should return method not found error
-  const errorResponse = allResponses.find(
+  // coc.nvim互換性のため、未知のメソッドにはnullを返す（エラーではなく）
+  const response = allResponses.find(
     (r: unknown) => (r as { id?: number }).id === 200,
-  ) as { error?: { code: number } };
-  assertExists(errorResponse, "Response should exist");
-  assertExists(errorResponse.error, "Error should be present");
-  assertEquals(
-    errorResponse.error.code,
-    -32601,
-    "Error code should be MethodNotFound",
-  );
+  ) as { result?: unknown; error?: unknown };
+  assertExists(response, "Response should exist");
+  assertEquals(response.result, null, "Result should be null for unknown method");
+  assertEquals(response.error, undefined, "Error should not be present");
 });
