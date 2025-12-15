@@ -3,8 +3,27 @@ export interface ParsedArguments {
   readonly name?: string;
   readonly template?: string;
   readonly path?: string;
+  readonly json?: boolean;
   readonly [key: string]: unknown;
 }
+
+// Boolean-only flags that should never consume the next argument as a value
+const BOOLEAN_ONLY_FLAGS = new Set([
+  "json",
+  "help",
+  "h",
+  "version",
+  "v",
+  "watch",
+  "w",
+  "verbose",
+  "quiet",
+  "q",
+  "force",
+  "f",
+  "dry-run",
+  "stdio",
+]);
 
 export function parseCliArgs(args: readonly string[]): ParsedArguments {
   const positionals: string[] = [];
@@ -54,6 +73,10 @@ function parseOption(current: string, next?: string) {
     if (inlineValue !== undefined) {
       return { key: longKey, value: inlineValue, consumed: false };
     }
+    // Boolean-only flags always return true, never consume next argument
+    if (BOOLEAN_ONLY_FLAGS.has(longKey)) {
+      return { key: longKey, value: true, consumed: false };
+    }
     if (next !== undefined && !next.startsWith("-")) {
       return { key: longKey, value: next, consumed: true };
     }
@@ -61,6 +84,10 @@ function parseOption(current: string, next?: string) {
   }
 
   const shortKey = current.slice(1);
+  // Boolean-only flags always return true, never consume next argument
+  if (BOOLEAN_ONLY_FLAGS.has(shortKey)) {
+    return { key: shortKey, value: true, consumed: false };
+  }
   if (next !== undefined && !next.startsWith("-")) {
     return { key: shortKey, value: next, consumed: true };
   }
