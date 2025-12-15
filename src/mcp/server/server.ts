@@ -6,11 +6,11 @@
 
 import { McpTransport } from "../protocol/transport.ts";
 import {
-  type JsonRpcMessage,
-  type JsonRpcRequest,
-  type JsonRpcNotification,
-  isJsonRpcRequest,
   isJsonRpcNotification,
+  isJsonRpcRequest,
+  type JsonRpcMessage,
+  type JsonRpcNotification,
+  type JsonRpcRequest,
 } from "../../lsp/protocol/types.ts";
 import {
   createErrorResponse,
@@ -18,15 +18,25 @@ import {
   JSON_RPC_METHOD_NOT_FOUND,
 } from "../../lsp/protocol/json_rpc.ts";
 import { getMcpServerCapabilities } from "./capabilities.ts";
+import { MCP_ERROR_CODES } from "../protocol/types.ts";
 import type {
+  McpCallToolParams,
   McpInitializeParams,
   McpInitializeResult,
-  McpServerInfo,
+  McpListResourcesResult,
   McpListToolsResult,
+  McpReadResourceResult,
+  McpServerInfo,
   McpTool,
-  McpCallToolParams,
 } from "../protocol/types.ts";
 import { ToolRegistry } from "../tools/tool_registry.ts";
+import type { ResourceProvider } from "../resources/resource_provider.ts";
+import {
+  handleResourcesList,
+  handleResourcesRead,
+} from "./handlers/resources.ts";
+import { PromptRegistry } from "../prompts/prompt_registry.ts";
+import { handlePromptsGet, handlePromptsList } from "./handlers/prompts.ts";
 
 /** サーバー未初期化エラーコード (MCP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;
@@ -51,6 +61,10 @@ export type McpServerOptions = {
   tools?: readonly McpTool[];
   /** ツールレジストリ（ツール実行用） */
   toolRegistry?: ToolRegistry;
+  /** リソースプロバイダー（resources/list, resources/read 用） */
+  resourceProvider?: ResourceProvider;
+  /** プロンプトレジストリ（prompts/list, prompts/get 用） */
+  promptRegistry?: PromptRegistry;
 };
 
 /**
@@ -62,6 +76,8 @@ export class McpServer {
   private readonly serverInfo: McpServerInfo;
   private readonly tools: readonly McpTool[];
   private readonly toolRegistry?: ToolRegistry;
+  private readonly resourceProvider?: ResourceProvider;
+  private readonly promptRegistry?: PromptRegistry;
 
   constructor(transport: McpTransport, options?: McpServerOptions) {
     this.transport = transport;
@@ -71,6 +87,8 @@ export class McpServer {
     };
     this.tools = options?.tools ?? [];
     this.toolRegistry = options?.toolRegistry;
+    this.resourceProvider = options?.resourceProvider;
+    this.promptRegistry = options?.promptRegistry;
   }
 
   /**
@@ -115,7 +133,7 @@ export class McpServer {
       const errorResponse = createErrorResponse(
         request.id,
         SERVER_NOT_INITIALIZED,
-        "Server not initialized"
+        "Server not initialized",
       );
       await this.transport.writeMessage(errorResponse);
       return;
@@ -134,22 +152,37 @@ export class McpServer {
       case "tools/call":
         await this.handleToolsCall(request);
         break;
-      default:
+      case "resources/list":
+        await this.handleResourcesList(request);
+        break;
+      case "resources/read":
+        await this.handleResourcesRead(request);
+        break;
+      case "prompts/list":
+        await this.handlePromptsList(request);
+        break;
+      case "prompts/get":
+        await this.handlePromptsGet(request);
+        break;
+      default: {
         // 未実装のメソッド
         const errorResponse = createErrorResponse(
           request.id,
           JSON_RPC_METHOD_NOT_FOUND,
-          `Method not found: ${request.method}`
+          `Method not found: ${request.method}`,
         );
         await this.transport.writeMessage(errorResponse);
         break;
+      }
     }
   }
 
   /**
    * 通知を処理
    */
-  private async handleNotification(notification: JsonRpcNotification): Promise<void> {
+  private async handleNotification(
+    notification: JsonRpcNotification,
+  ): Promise<void> {
     switch (notification.method) {
       case "initialized":
         this.handleInitialized();
@@ -216,7 +249,7 @@ export class McpServer {
       const errorResponse = createErrorResponse(
         request.id,
         JSON_RPC_METHOD_NOT_FOUND,
-        "Tool execution not available: no tool registry configured"
+        "Tool execution not available: no tool registry configured",
       );
       await this.transport.writeMessage(errorResponse);
       return;
@@ -225,10 +258,173 @@ export class McpServer {
     const params = request.params as McpCallToolParams;
     const result = await this.toolRegistry.execute(
       params.name,
-      params.arguments ?? {}
+      params.arguments ?? {},
     );
 
     const response = createSuccessResponse(request.id, result);
     await this.transport.writeMessage(response);
+  }
+
+  /**
+   * resources/list リクエストを処理
+   */
+  private async handleResourcesList(request: JsonRpcRequest): Promise<void> {
+    if (!this.resourceProvider) {
+      const errorResponse = createErrorResponse(
+        request.id,
+        JSON_RPC_METHOD_NOT_FOUND,
+        "Resource access not available: no resource provider configured",
+      );
+      await this.transport.writeMessage(errorResponse);
+      return;
+    }
+
+    try {
+      const resources = await handleResourcesList(this.resourceProvider);
+      const result: McpListResourcesResult = { resources };
+      const response = createSuccessResponse(request.id, result);
+      await this.transport.writeMessage(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const errorResponse = createErrorResponse(
+        request.id,
+        MCP_ERROR_CODES.INTERNAL_ERROR,
+        message,
+      );
+      await this.transport.writeMessage(errorResponse);
+    }
+  }
+
+  /**
+   * resources/read リクエストを処理
+   */
+  private async handleResourcesRead(request: JsonRpcRequest): Promise<void> {
+    if (!this.resourceProvider) {
+      const errorResponse = createErrorResponse(
+        request.id,
+        JSON_RPC_METHOD_NOT_FOUND,
+        "Resource access not available: no resource provider configured",
+      );
+      await this.transport.writeMessage(errorResponse);
+      return;
+    }
+
+    const uri = (() => {
+      const params: unknown = request.params;
+      if (typeof params !== "object" || params === null) {
+        return undefined;
+      }
+      if (!("uri" in params)) {
+        return undefined;
+      }
+      const rawUri = (params as { uri?: unknown }).uri;
+      return typeof rawUri === "string" ? rawUri : undefined;
+    })();
+    if (!uri || typeof uri !== "string") {
+      const errorResponse = createErrorResponse(
+        request.id,
+        MCP_ERROR_CODES.INVALID_PARAMS,
+        "Invalid params: 'uri' is required",
+      );
+      await this.transport.writeMessage(errorResponse);
+      return;
+    }
+
+    try {
+      const text = await handleResourcesRead(this.resourceProvider, uri);
+      const result: McpReadResourceResult = {
+        contents: [
+          { uri, mimeType: "text/plain", text },
+        ],
+      };
+      const response = createSuccessResponse(request.id, result);
+      await this.transport.writeMessage(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const errorResponse = createErrorResponse(
+        request.id,
+        MCP_ERROR_CODES.INTERNAL_ERROR,
+        message,
+      );
+      await this.transport.writeMessage(errorResponse);
+    }
+  }
+
+  /**
+   * prompts/list リクエストを処理
+   */
+  private async handlePromptsList(request: JsonRpcRequest): Promise<void> {
+    if (!this.promptRegistry) {
+      const errorResponse = createErrorResponse(
+        request.id,
+        JSON_RPC_METHOD_NOT_FOUND,
+        "Prompt access not available: no prompt registry configured",
+      );
+      await this.transport.writeMessage(errorResponse);
+      return;
+    }
+
+    try {
+      const result = handlePromptsList(this.promptRegistry);
+      const response = createSuccessResponse(request.id, result);
+      await this.transport.writeMessage(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const errorResponse = createErrorResponse(
+        request.id,
+        MCP_ERROR_CODES.INTERNAL_ERROR,
+        message,
+      );
+      await this.transport.writeMessage(errorResponse);
+    }
+  }
+
+  /**
+   * prompts/get リクエストを処理
+   */
+  private async handlePromptsGet(request: JsonRpcRequest): Promise<void> {
+    if (!this.promptRegistry) {
+      const errorResponse = createErrorResponse(
+        request.id,
+        JSON_RPC_METHOD_NOT_FOUND,
+        "Prompt access not available: no prompt registry configured",
+      );
+      await this.transport.writeMessage(errorResponse);
+      return;
+    }
+
+    const params = (request.params ?? {}) as Record<string, unknown>;
+    const name = params.name;
+    if (typeof name !== "string" || name.trim().length === 0) {
+      const errorResponse = createErrorResponse(
+        request.id,
+        MCP_ERROR_CODES.INVALID_PARAMS,
+        "Invalid params: 'name' is required",
+      );
+      await this.transport.writeMessage(errorResponse);
+      return;
+    }
+
+    const argumentsRaw = params.arguments;
+    const argumentsObj = (argumentsRaw && typeof argumentsRaw === "object")
+      ? argumentsRaw as Record<string, string>
+      : undefined;
+
+    try {
+      const result = handlePromptsGet(this.promptRegistry, {
+        name,
+        arguments: argumentsObj,
+      });
+      const response = createSuccessResponse(request.id, result);
+      await this.transport.writeMessage(response);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const errorResponse = createErrorResponse(
+        request.id,
+        MCP_ERROR_CODES.INTERNAL_ERROR,
+        message,
+      );
+      await this.transport.writeMessage(errorResponse);
+    }
   }
 }

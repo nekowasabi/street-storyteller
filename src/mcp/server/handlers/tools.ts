@@ -3,15 +3,18 @@
  * tools/list, tools/call リクエストの処理
  */
 
-import { ToolRegistry, type McpToolDefinition } from "../../tools/tool_registry.ts";
+import { ToolRegistry } from "../../tools/tool_registry.ts";
 import type {
-  McpTool,
-  McpListToolsResult,
-  McpCallToolResult,
   McpCallToolParams,
+  McpCallToolResult,
+  McpListToolsResult,
 } from "../../protocol/types.ts";
 import { metaCheckTool } from "../../tools/definitions/meta_check.ts";
 import { metaGenerateTool } from "../../tools/definitions/meta_generate.ts";
+import { elementCreateTool } from "../../tools/definitions/element_create.ts";
+import { viewBrowserTool } from "../../tools/definitions/view_browser.ts";
+import { lspValidateTool } from "../../tools/definitions/lsp_validate.ts";
+import { lspFindReferencesTool } from "../../tools/definitions/lsp_find_references.ts";
 
 /**
  * tools/list リクエストを処理
@@ -50,6 +53,12 @@ export function createDefaultToolRegistry(): ToolRegistry {
   // Phase 1 のツールを登録
   registry.register(metaCheckTool);
   registry.register(metaGenerateTool);
+
+  // Phase 2 のツールを登録
+  registry.register(elementCreateTool);
+  registry.register(viewBrowserTool);
+  registry.register(lspValidateTool);
+  registry.register(lspFindReferencesTool);
 
   return registry;
 }

@@ -4,9 +4,9 @@
  */
 
 import type {
-  JsonRpcRequest,
-  JsonRpcNotification,
   JsonRpcMessage,
+  JsonRpcNotification,
+  JsonRpcRequest,
 } from "../../lsp/protocol/types.ts";
 
 // ===== MCP エラーコード =====
@@ -121,6 +121,33 @@ export type McpResource = {
   readonly description?: string;
 };
 
+/**
+ * リソース一覧取得結果
+ */
+export type McpListResourcesResult = {
+  readonly resources: readonly McpResource[];
+};
+
+/**
+ * リソース読み取りパラメータ
+ */
+export type McpReadResourceParams = {
+  readonly uri: string;
+};
+
+/**
+ * リソース読み取り結果
+ * MCP仕様では `contents` に複数のコンテンツを返せる
+ */
+export type McpReadResourceResult = {
+  readonly contents: ReadonlyArray<{
+    readonly uri: string;
+    readonly mimeType?: string;
+    readonly text?: string;
+    readonly blob?: string;
+  }>;
+};
+
 // ===== MCPプロンプト関連の型 =====
 
 /**
@@ -218,15 +245,20 @@ export type McpInitializeResult = {
 /**
  * メッセージがMCPリクエストかどうかを判定
  */
-export function isMcpRequest(message: JsonRpcMessage): message is JsonRpcRequest {
+export function isMcpRequest(
+  message: JsonRpcMessage,
+): message is JsonRpcRequest {
   return "method" in message && "id" in message && message.id !== undefined;
 }
 
 /**
  * メッセージがMCP通知かどうかを判定
  */
-export function isMcpNotification(message: JsonRpcMessage): message is JsonRpcNotification {
-  return "method" in message && (!("id" in message) || message.id === undefined);
+export function isMcpNotification(
+  message: JsonRpcMessage,
+): message is JsonRpcNotification {
+  return "method" in message &&
+    (!("id" in message) || message.id === undefined);
 }
 
 /**
