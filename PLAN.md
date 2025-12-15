@@ -1,17 +1,21 @@
-# title: Issue #8 MCPサーバー実装 - Phase 2-5 詳細実装計画
+# title: Issue #9 / Phase 5「最適化と完成（2週間）」実装計画
 
 ## 概要
-- storytellerのCLIコマンドをMCP (Model Context Protocol) サーバーとして公開し、Claude Desktop等のMCPクライアントから自然言語でコマンドを実行できるようにする
-- Phase 1（MCP基盤）は完了済み。Phase 2-5で残りの機能を実装する
+
+- Issue #9 の Phase 5（Week 11-12）で定義された「パフォーマンス最適化 /
+  テストカバレッジ80% / ドキュメント完成 / CI/CD設定 /
+  v1.0リリース」を、**根拠に基づいて実装できる粒度**まで分解した計画。
+- 既存の Phase 1-4 の機能を壊さずに「プロダクションレディ」へ到達させる。
 
 ### goal
-- `storyteller mcp start --stdio` でMCPサーバーを起動し、Claude Desktopから以下が可能になる：
-  - 全CLIコマンドの自然言語実行（element_create, view_browser等）
-  - プロジェクトリソースの参照（キャラクター一覧、設定一覧等）
-  - 創作支援プロンプトの利用（キャラクターアイデア生成等）
-  - 自然言語コマンドの解析と実行
+
+- 開発者が
+  `deno task check`（または同等）で品質ゲート（fmt/lint/test/coverage/meta-check）を一発で通せる
+- CI が Deno 2 系で安定稼働し、PR で品質ゲートが自動判定される
+- `v1.0.0` リリースのための **タグ→ビルド→成果物配布** が自動化される
 
 ## 必須のルール
+
 - 必ず `CLAUDE.md` を参照し、ルールを守ること
 - **TDD（テスト駆動開発）を厳守すること**
   - 各プロセスは必ずテストファーストで開始する（Red → Green → Refactor）
@@ -20,667 +24,449 @@
   - プロセス完了の条件：該当するすべてのテストが通過していること
 
 ## 開発のゴール
-- Phase 2: 全CLIコマンドをMCP Toolsとして公開（6ツール追加）
-- Phase 3: プロジェクト構造をMCP Resourcesとして公開
-- Phase 4: 創作支援プロンプトをMCP Promptsとして公開
-- Phase 5: 自然言語コマンド解析機能の実装
+
+- Phase 5 の完了条件（Issue #9 の定義）を満たす:
+  - [x] パフォーマンス最適化（測定可能な形で実施）
+  - [x] テストカバレッジ 80% 達成（CI で強制）
+  - [x] ドキュメント完成（README + docs/ が現仕様と一致）
+  - [x] CI/CD 設定（PR/タグで自動実行）
+  - [x] v1.0 リリース準備（タグ・Release Notes・成果物）
 
 ## 実装仕様
 
-### 技術的決定事項（Phase 1で確立済み）
+### 調査結果（根拠）
 
-| 項目 | 決定 | 理由 |
-|------|------|------|
-| SDK | `npm:@modelcontextprotocol/sdk@^1.0.1` | 公式SDK |
-| トランスポート | stdio | LSPと同方式 |
-| ツール変換 | executeCliCommand アダプター | CLI→MCP統一変換 |
-| LSP統合 | LSPサービス直接使用 | 高パフォーマンス |
+- Phase 5 の要求は `ISSUE.md` に明記されている:
+  - `ISSUE.md` の「Phase 5: 最適化と完成（Week
+    11-12）」に、仕上げ項目が列挙（パフォーマンス/カバレッジ80%/ドキュメント/CI/CD/v1.0）。
+- CI は現状 Deno 1 系で動いており、プロジェクトの Deno 2 前提とズレている:
+  - `.github/workflows/ci.yml` が `deno-version: v1.x`
+  - ローカルの `deno --version` は 2.5.1
+  - `deno.json` のタスク構成も Deno 2 系運用が自然（ただし fmt/lint/coverage
+    タスクが未整備）
+- カバレッジ取得が現状 “安定運用できない” 状態:
+  - `deno test --coverage=...` 実行時に、`test_output/.../*.ts`
+    を参照するカバレッジレポート生成で失敗し得る（実測で失敗）
+  - 原因の一つとして、テストが `test_output/` を `finally` で削除している（例:
+    `tests/application/meta/binding_loader_test.ts` の `withTestDir`）
+  - Deno 2 の `deno test --coverage` には `--coverage-raw-data-only`
+    があり、レポート生成のタイミング問題を回避可能（`deno test --help`）
+- 配布/パッケージング経路が “あるが未完成”:
+  - `.github/workflows/` は `ci.yml` のみで、Release 用 workflow がない
+  - `scripts/install.sh` は `deno compile` によるローカルインストールのみ
+  - `deno.json` の `cli:build`
+    はマニフェスト生成で、バイナリ生成（compile）自体は含まれていない（`scripts/build_cli.ts`
+    が artifacts の存在を要求）
+- バージョン表現に不整合がある:
+  - CLI で表示する storyteller バージョンが `src/cli/modules/version.ts` /
+    `src/cli/modules/update.ts` で `0.3.0`
+  - 一方でマニフェスト（スキーマ）用らしき `CURRENT_VERSION` は
+    `src/application/migration_facilitator.ts` で `1.0.0`
+  - v1.0 リリースでは “何のバージョンか” を定義し、表現を統一する必要がある
 
-### 調査結果による設計根拠
+### Phase 5 の成果物（DoD）
 
-1. **CLI→MCPツール変換パターン**（`src/mcp/tools/cli_adapter.ts`）
-   - `executeCliCommand()` でCLIコマンドをMCPツールにラップ
-   - 引数マッピングはほぼ1対1（ケバブケース→キャメルケース変換のみ）
-   - 既存パターン（meta_check, meta_generate）を踏襲
-
-2. **LSPサービス層**（`src/lsp/`）
-   - `DiagnosticsGenerator`: 診断生成（`src/lsp/diagnostics/diagnostics_generator.ts`）
-   - `PositionedDetector`: エンティティ検出（`src/lsp/detection/positioned_detector.ts`）
-   - `loadEntities()`: エンティティ動的ロード（`src/application/meta/reference_detector.ts`）
-
-3. **プロジェクトデータ取得**（`src/application/view/project_analyzer.ts`）
-   - `loadCharacters()`: キャラクター一覧取得
-   - `loadSettings()`: 設定一覧取得
-   - `analyzeManuscripts()`: 原稿解析
+- `deno task check`（新設）で以下がすべて通る:
+  - `deno fmt --check`
+  - `deno lint`
+  - `deno task test`（既存）
+  - `deno task coverage`（新設・閾値 80% を満たす）
+  - `deno task meta:check -- --dir sample/manuscripts --recursive`（既存CI相当）
+- CI（PR/Push）で `check` 相当が実行される
+- タグ（例: `v1.0.0`）で Release 用 workflow が走り、成果物が作成される
+- README / docs が “実際のコマンド/出力/インストール” と一致する
 
 ## 生成AIの学習用コンテキスト
 
-### 実装済みMCPツールの参照ファイル
-- `/home/takets/repos/street-storyteller/src/mcp/tools/definitions/meta_check.ts`
-  - MCPツール定義のパターン（inputSchema, execute関数）
-- `/home/takets/repos/street-storyteller/src/mcp/tools/definitions/meta_generate.ts`
-  - executeCliCommand()の使用方法
-- `/home/takets/repos/street-storyteller/src/mcp/tools/cli_adapter.ts`
-  - CLI→MCP変換アダプター
+### ロードマップ/要求
 
-### CLIコマンドの参照ファイル
-- `/home/takets/repos/street-storyteller/src/cli/modules/element/character.ts`
-  - ElementCharacterCommand（element_createの参照）
-- `/home/takets/repos/street-storyteller/src/cli/modules/view.ts`
-  - ViewCommand（view_browserの参照）
+- `ISSUE.md`
+  - Phase 5 の定義（パフォーマンス/80%/ドキュメント/CI/CD/v1.0）
+- `AGENTS.md`
+  - Issue #9 のロードマップ詳細（Phase 5 の目的・位置づけ）
+- `AGENT.md`
+  - ロードマップ要約（Phase 5: 仕上げ）
 
-### LSPサービスの参照ファイル
-- `/home/takets/repos/street-storyteller/src/lsp/diagnostics/diagnostics_generator.ts`
-  - 診断生成ロジック
-- `/home/takets/repos/street-storyteller/src/lsp/detection/positioned_detector.ts`
-  - エンティティ検出ロジック
+### CI/CD
 
-### MCP型定義の参照ファイル
-- `/home/takets/repos/street-storyteller/src/mcp/protocol/types.ts`
-  - McpResource, McpPrompt型定義
+- `.github/workflows/ci.yml`
+  - 現状 Deno v1.x / `deno task test` / `deno task meta:check` のみ
 
----
+### カバレッジ/テスト
+
+- `deno.json`
+  - タスク定義（coverage/check が未整備）
+- `tests/application/meta/binding_loader_test.ts`
+  - `test_output/` を削除するため coverage レポート生成に影響し得る
+- `tests/deno_tasks_test.ts`
+  - タスク定義をテストする既存パターン
+
+### パフォーマンス候補（ホットパス）
+
+- `src/application/meta/meta_generator_service.ts`
+  - `generateFromMarkdown` が `ReferenceDetector.detect()` を呼ぶ
+- `src/application/meta/reference_detector.ts`
+  - `detect()` 内で `loadEntities()` が毎回 `import(toFileUrl(...))`
+    を行う（複数章処理のボトルネック候補）
+- `src/cli/modules/meta/check.ts`
+  - 複数ファイル処理で `generateFromMarkdown(..., dryRun)` を順次呼ぶ
+
+### 配布/バージョン
+
+- `scripts/install.sh`
+- `scripts/build_cli.ts`
+- `src/cli/modules/version.ts`
+- `src/cli/modules/update.ts`
+- `src/application/migration_facilitator.ts`
 
 ## Process
 
-### process14 element_create ツールの実装
-#### sub1 キャラクター・設定作成をMCPツール化
-@target: `src/mcp/tools/definitions/element_create.ts`
-@ref: `src/cli/modules/element/character.ts`, `src/mcp/tools/definitions/meta_check.ts`
+### process1 カバレッジ計測の安定化（80%判定の前提づくり）
+
+#### sub1 `deno task coverage` を新設し、raw-data-only で収集→レポート生成する
+
+@target: `deno.json` @ref: `deno test --help`（`--coverage-raw-data-only`）,
+`deno coverage --help`, `tests/deno_tasks_test.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/tools/definitions/element_create_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - ツール定義がMCP仕様に準拠しているか
-  - inputSchemaが正しく定義されているか（type, name, role, summary等）
-  - character typeで正常実行されるか
-  - 必須パラメータ（type, name）不足でエラーを返すか
-  - setting typeも将来対応可能な設計か
+
+@test: `tests/deno_tasks_test.ts`
+
+- [x] `deno.json` に
+      `coverage`（および必要な関連タスク）が存在することを検証するテストを追加（現状は未定義のため失敗する）
+  - `coverage` が `deno test --coverage ... --coverage-raw-data-only` を含む
+  - `coverage` が `deno coverage ...` を含む（レポート生成）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/definitions/element_create.ts` を作成
-  ```typescript
-  export const elementCreateTool: McpToolDefinition = {
-    name: "element_create",
-    description: "物語要素（キャラクター、設定等）を作成します",
-    inputSchema: {
-      type: "object",
-      properties: {
-        type: { type: "string", enum: ["character", "setting"], description: "要素タイプ" },
-        name: { type: "string", description: "要素名（ID）" },
-        role: { type: "string", description: "キャラクターの役割" },
-        summary: { type: "string", description: "概要説明" },
-        traits: { type: "array", items: { type: "string" }, description: "特徴リスト" },
-        withDetails: { type: "boolean", description: "詳細情報を含めるか" },
-        force: { type: "boolean", description: "上書き許可" }
-      },
-      required: ["type", "name"]
-    },
-    execute: async (args) => {
-      // ElementCharacterCommand を使用
-    }
-  };
-  ```
-- [ ] executeCliCommand() でCLIコマンドをラップ
-- [ ] 引数変換ロジックを実装（MCP→CLI形式）
+
+- [x] `deno.json` に以下のタスクを追加
+  - `fmt:check`: `deno fmt --check`
+  - `lint`: `deno lint`
+  - `coverage`: raw-data-only で収集→ `deno coverage` でレポート生成
+  - Optional: `check`:
+    `deno task fmt:check && deno task lint && deno task coverage && deno task test && deno task meta:check ...`
+- [x] `coverage` の include/exclude 方針を固定
+  - include: `src/` のみ（例: `--include="^file:.*?/street-storyteller/src/"`）
+  - exclude: `test_output/` や `sample/` を除外（例:
+    `--exclude="test_output/|/sample/"`）
+  - 目的: テストが生成する一時 TS モジュール（`test_output/.../*.ts`）を
+    coverage レポート対象外にして安定化する
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
 
----
+- [x] `deno test --filter deno.json`
+      などで該当テストを実行し、通過することを確認
+- [x] `deno task coverage` を実行し、レポート生成まで完走することを確認
+- [x] 必要に応じてタスク名/責務を整理（例: `coverage:collect` と
+      `coverage:report` に分割）
 
-### process15 view_browser ツールの実装
-#### sub1 HTML可視化をMCPツール化
-@target: `src/mcp/tools/definitions/view_browser.ts`
-@ref: `src/cli/modules/view.ts`, `src/mcp/tools/definitions/meta_check.ts`
+#### sub2 カバレッジ閾値（80%）を機械的に判定する仕組みを追加する
+
+@target: `scripts/coverage_threshold.ts` @ref: `deno coverage --help`,
+`tests/`（既存タスクテスト方針）, `ISSUE.md`（80%要求）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/tools/definitions/view_browser_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - ツール定義がMCP仕様に準拠しているか
-  - inputSchemaが正しく定義されているか（path, port, dryRun等）
-  - dry-runモードで正常動作するか
-  - サーバー起動の検証（モック使用）
+
+@test: `tests/coverage_threshold_test.ts`
+
+- [x] `deno coverage` の出力テキスト（サンプル）から "総合カバレッジ%"
+      を抽出する関数のテストを作成（未実装のため失敗）
+  - 例: `parseCoveragePercent(output: string): number`
+  - 例外系: パースできない場合はエラー
+- [x] `80%` 未満で失敗することを検証する（閾値チェック）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/definitions/view_browser.ts` を作成
-  ```typescript
-  export const viewBrowserTool: McpToolDefinition = {
-    name: "view_browser",
-    description: "プロジェクト構造をHTML形式で可視化します",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "プロジェクトパス" },
-        port: { type: "number", description: "サーバーポート" },
-        dryRun: { type: "boolean", description: "プレビューのみ" }
-      }
-    },
-    execute: async (args) => {
-      // ViewCommand を使用
-    }
-  };
-  ```
+
+- [x] `scripts/coverage_threshold.ts` を追加
+  - `deno coverage` を `Deno.Command` で実行し、stdout から % をパース
+  - 閾値（デフォルト 80%）未満なら exit code 1
+  - include/exclude は process1 と一致させる
+- [x] `deno.json` の `coverage` タスク末尾で `scripts/coverage_threshold.ts`
+      を呼ぶ（もしくは `coverage:check` を新設）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
 
----
+- [x] `deno test --filter coverage_threshold` を実行し、通過を確認
+- [x] `deno task coverage` 実行で、閾値判定まで含めて安定動作することを確認
 
-### process16 lsp_validate ツールの実装
-#### sub1 原稿診断をMCPツール化（LSPサービス直接使用）
-@target: `src/mcp/tools/definitions/lsp_validate.ts`
-@ref: `src/lsp/diagnostics/diagnostics_generator.ts`, `src/lsp/detection/positioned_detector.ts`
+#### sub3 “カバレッジ収集時にレポート生成で落ちる” 問題の再発防止
+
+@target: `deno.json` @ref:
+`tests/application/meta/binding_loader_test.ts`（test_output削除）,
+`deno test --help`（raw-data-only）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/tools/definitions/lsp_validate_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - ツール定義がMCP仕様に準拠しているか
-  - 原稿ファイルパスで診断実行できるか
-  - 診断結果がJSON形式で返却されるか
-  - ファイル不在時にエラーを返すか
-  - ディレクトリ指定で複数ファイル診断できるか
+
+@test: `tests/coverage_smoke_test.ts`
+
+- [x] `scripts/coverage_threshold.ts` を
+      `--dry-run`（実行せずパースのみ）等で呼べるようにし、coverageレポート出力の想定形式を固定するテストを追加（未実装なら失敗）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/definitions/lsp_validate.ts` を作成
-  ```typescript
-  export const lspValidateTool: McpToolDefinition = {
-    name: "lsp_validate",
-    description: "原稿ファイルの整合性診断を実行します",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "Markdownファイルパス" },
-        dir: { type: "string", description: "ディレクトリパス" },
-        recursive: { type: "boolean", description: "再帰検索" }
-      }
-    },
-    execute: async (args) => {
-      // DiagnosticsGenerator + PositionedDetector を直接使用
-      const detector = new PositionedDetector(entities);
-      const diagnostics = diagnosticsGenerator.generate(uri, content, projectPath);
-      return { content: [{ type: "text", text: JSON.stringify(diagnostics) }] };
-    }
-  };
-  ```
-- [ ] loadEntities() でエンティティを動的ロード
-- [ ] DiagnosticsGenerator.generate() で診断実行
-- [ ] 診断結果をJSON形式でフォーマット
+
+- [x] `scripts/coverage_threshold.ts` に
+      `--input <file>`（事前に保存した出力を読む）などのモードを追加して、CI/ローカルで安定テスト可能にする
+- [x] `deno test`
+      用の一時ディレクトリ削除ポリシーは維持しつつ、coverageレポート生成が失敗しない構成（raw-data-only +
+      exclude）を固定する
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+
+- [x] `deno test --filter coverage_smoke` を実行し通過
+- [x] `deno task coverage` で完走を再確認
 
 ---
 
-### process17 lsp_find_references ツールの実装
-#### sub1 参照検索をMCPツール化（LSPサービス直接使用）
-@target: `src/mcp/tools/definitions/lsp_find_references.ts`
-@ref: `src/lsp/detection/positioned_detector.ts`
+### process2 CI を Deno 2 + 品質ゲート（fmt/lint/coverage）へ更新する
+
+#### sub1 CI workflow を Deno v2.x に統一する
+
+@target: `.github/workflows/ci.yml` @ref: `.github/workflows/ci.yml`,
+`deno.json`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/tools/definitions/lsp_find_references_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - ツール定義がMCP仕様に準拠しているか
-  - キャラクター名で参照検索できるか
-  - 設定名で参照検索できるか
-  - 位置情報（ファイル、行、列）を含む結果が返るか
-  - 参照がない場合に空配列を返すか
+
+@test: `tests/ci_workflow_test.ts`
+
+- [x] `.github/workflows/ci.yml` を読み、`deno-version` が `v2`
+      系であることを検証するテストを追加（現状 `v1.x` のため失敗）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/tools/definitions/lsp_find_references.ts` を作成
-  ```typescript
-  export const lspFindReferencesTool: McpToolDefinition = {
-    name: "lsp_find_references",
-    description: "指定エンティティへの参照箇所を検索します",
-    inputSchema: {
-      type: "object",
-      properties: {
-        path: { type: "string", description: "検索対象パス" },
-        characterName: { type: "string", description: "キャラクター名" },
-        settingName: { type: "string", description: "設定名" }
-      }
-    },
-    execute: async (args) => {
-      // PositionedDetector.detectWithPositions() を使用
-    }
-  };
-  ```
-- [ ] PositionedDetector.detectWithPositions() で全マッチ取得
-- [ ] フィルタリング（指定されたエンティティのみ）
-- [ ] Location形式で結果を返却
+
+- [x] `.github/workflows/ci.yml` の `deno-version` を `v2.x` に変更
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
 
----
+- [x] `deno test --filter ci_workflow` を実行し通過
+- [x] Optional: CI 実行ログで `deno task test` が走ることを確認（手動）
 
-### process18 ツールレジストリへの新規ツール登録
-#### sub1 Phase 2で追加したツールをレジストリに登録
-@target: `src/mcp/server/handlers/tools.ts`
-@ref: `src/mcp/tools/tool_registry.ts`
+#### sub2 CI に fmt/lint/coverage を追加し、Phase 5 の DoD を自動判定する
+
+@target: `.github/workflows/ci.yml` @ref:
+`deno.json`（process1で追加するタスク）, `.github/workflows/ci.yml`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/server/handlers/tools_test.ts` （既存テストに追加）
-- [ ] テストケースを追加
-  - createDefaultToolRegistry() が新規ツールを含むか
-  - element_create, view_browser, lsp_validate, lsp_find_references が登録されているか
+
+@test: `tests/ci_workflow_test.ts`
+
+- [x] CI workflow に `deno fmt --check` / `deno lint` / `deno task coverage`
+      が含まれることを検証するテストを追加（現状は含まれないため失敗）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/server/handlers/tools.ts` を修正
-  - elementCreateTool をインポート・登録
-  - viewBrowserTool をインポート・登録
-  - lspValidateTool をインポート・登録
-  - lspFindReferencesTool をインポート・登録
+
+- [x] `.github/workflows/ci.yml` に以下を追加
+  - `deno fmt --check`
+  - `deno lint`
+  - `deno task coverage`（80%閾値チェック込み）
+  - `deno task meta:check -- --dir sample/manuscripts --recursive`（現状維持）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+
+- [x] `deno test --filter ci_workflow` が通ることを確認
+- [x] Optional: CI 実行時間を見て、重い場合は `test` と `coverage`
+      の二重実行を避ける（`coverage` が `test` を内包する設計にする等）
 
 ---
 
-### process19 リソースプロバイダー基盤の実装
-#### sub1 ResourceProviderインターフェースとURI解析を実装
-@target: `src/mcp/resources/resource_provider.ts`, `src/mcp/resources/uri_parser.ts`
-@ref: `src/mcp/protocol/types.ts`, `src/application/view/project_analyzer.ts`
+### process3 リリース（CI/CD）と配布経路を整備する（v1.0.0）
+
+#### sub1 CLI パッケージングタスクを “ビルド込み” に整理する
+
+@target: `deno.json` @ref: `scripts/build_cli.ts`,
+`scripts/generate_completions.ts`, `tests/deno_tasks_test.ts`,
+`tests/install_script_test.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/resources/uri_parser_test.ts`, `tests/mcp/resources/resource_provider_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - URI解析が正しく動作するか
-    - `storyteller://characters` → `{ type: "characters", id: null }`
-    - `storyteller://character/hero` → `{ type: "character", id: "hero" }`
-  - ResourceProviderインターフェースの型定義が正しいか
-  - listResources() が全リソース返却するか
-  - readResource() が正確なデータを返却するか
+
+@test: `tests/deno_tasks_test.ts`
+
+- [x] `cli:package` が "compile（バイナリ生成）→ manifest → completions"
+      の順序を含むことを検証するテストを追加（現状はcompileが含まれず失敗）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/resources/uri_parser.ts` を作成
-  ```typescript
-  export type ParsedUri = {
-    type: "characters" | "character" | "settings" | "setting" | "chapters" | "manuscript" | "project";
-    id?: string;
-  };
-  export function parseResourceUri(uri: string): ParsedUri;
-  ```
-- [ ] `src/mcp/resources/resource_provider.ts` を作成
-  ```typescript
-  export interface ResourceProvider {
-    listResources(): Promise<McpResource[]>;
-    readResource(uri: string): Promise<string>;
-  }
-  ```
+
+- [x] `deno.json` を整理（例）
+  - `cli:compile`: `deno compile ... --output dist/storyteller main.ts`
+  - `cli:manifest`:
+    `deno run scripts/build_cli.ts --out dist --artifacts dist/storyteller`
+  - `cli:completions`: 現状維持（`dist/completions`）
+  - `cli:package`: `cli:compile && cli:manifest && cli:completions`
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
 
----
+- [x] `deno test --filter deno.json` 通過
+- [x] Optional: `deno task cli:package` をローカルで実行し、`dist/`
+      に成果物が揃うことを確認（手動）
 
-### process20 ProjectResourceProviderの実装
-#### sub1 プロジェクトデータをリソースとして公開
-@target: `src/mcp/resources/project_resource_provider.ts`
-@ref: `src/application/view/project_analyzer.ts`
+#### sub2 タグ push で Release を作る workflow を追加する
+
+@target: `.github/workflows/release.yml` @ref: `.github/workflows/ci.yml`,
+`deno.json`, `scripts/install.sh`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/resources/project_resource_provider_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - キャラクター一覧リソースが取得できるか
-  - 設定一覧リソースが取得できるか
-  - 個別キャラクターリソースが取得できるか
-  - プロジェクト構造リソースが取得できるか
+
+@test: `tests/release_workflow_test.ts`
+
+- [x] `.github/workflows/release.yml` が存在し、tag トリガー（例:
+      `v*.*.*`）を持つことを検証するテストを作成（未作成のため失敗）
+- [x] workflow が
+      `deno task cli:package`（または同等）を実行することを検証（未作成のため失敗）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/resources/project_resource_provider.ts` を作成
-  ```typescript
-  export class ProjectResourceProvider implements ResourceProvider {
-    constructor(private projectPath: string) {}
 
-    async listResources(): Promise<McpResource[]> {
-      // ProjectAnalyzer を使用してリソース一覧を生成
-    }
-
-    async readResource(uri: string): Promise<string> {
-      const parsed = parseResourceUri(uri);
-      // 種類に応じてデータを取得・JSON化
-    }
-  }
-  ```
-- [ ] loadCharacters(), loadSettings() でデータ取得
-- [ ] JSON形式でシリアライズ
+- [x] `.github/workflows/release.yml` を追加
+  - tag トリガー: `v*.*.*`
+  - matrix（任意）: linux/mac/windows で `deno compile` して成果物を添付
+  - `dist/storyteller-manifest.json` と `dist/completions/*` も Release に添付
+  - Release Notes は最小で良い（v1.0.0 の破壊的変更/既知の制限/移行を記載）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+
+- [x] `deno test --filter release_workflow` 通過
+- [x] Optional: GitHub 上で draft
+      リリースを手動トリガーして成果物が付くことを確認
 
 ---
 
-### process21 MCPサーバーにリソースハンドラー統合
-#### sub1 resources/list, resources/read メソッドを追加
-@target: `src/mcp/server/handlers/resources.ts`, `src/mcp/server/server.ts`
-@ref: `src/mcp/server/handlers/tools.ts`
+### process4 バージョン表現の統一（v1.0.0 リリース準備）
+
+#### sub1 “何のバージョンか” を分離し、定数を一箇所に集約する
+
+@target: `src/core/version.ts` @ref: `src/cli/modules/version.ts`,
+`src/cli/modules/update.ts`, `src/application/migration_facilitator.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/server/handlers/resources_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - handleResourcesList() が全リソースを返すか
-  - handleResourcesRead() が指定リソースを返すか
-  - 不正なURIでエラーを返すか
+
+@test: `tests/version_constants_test.ts`
+
+- [x] storyteller の "アプリバージョン" と "プロジェクトスキーマバージョン"
+      が混在しないことを検証するテストを追加（集約前は失敗する）
+  - 例: `STORYTELLER_VERSION` と `PROJECT_SCHEMA_VERSION`
+    を別名で定義し、それぞれ参照箇所が適切であること
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/server/handlers/resources.ts` を作成
-  ```typescript
-  export async function handleResourcesList(provider: ResourceProvider): Promise<McpResource[]>
-  export async function handleResourcesRead(provider: ResourceProvider, uri: string): Promise<string>
-  ```
-- [ ] `src/mcp/server/server.ts` を修正
-  - resources/list メソッドハンドラー追加
-  - resources/read メソッドハンドラー追加
-- [ ] `src/mcp/server/capabilities.ts` を修正
-  - resources 機能を追加
+
+- [x] `src/core/version.ts` を追加し、以下を定義
+  - `export const STORYTELLER_VERSION = "0.3.0"`（Phase 5 中に `1.0.0` へ）
+  - `export const PROJECT_SCHEMA_VERSION = "1.0.0"`（manifest/migration 用）
+- [x] `src/cli/modules/version.ts` / `src/cli/modules/update.ts`
+      のバージョン表示は `STORYTELLER_VERSION` を参照するよう修正
+- [x] `src/application/migration_facilitator.ts` の `CURRENT_VERSION` は
+      `PROJECT_SCHEMA_VERSION` を参照するよう修正
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
 
----
+- [x] `deno test --filter version_constants` を実行し通過
+- [x] Optional: `deno run main.ts version` で表示が期待通りか確認（手動）
 
-### process22 プロンプトレジストリ基盤の実装
-#### sub1 PromptRegistryとハンドラーを実装
-@target: `src/mcp/prompts/prompt_registry.ts`, `src/mcp/server/handlers/prompts.ts`
-@ref: `src/mcp/tools/tool_registry.ts`
+#### sub2 v1.0.0 への移行タイミングを固定する
+
+@target: `src/core/version.ts` @ref: `ISSUE.md`（Phase 5 v1.0）,
+`AGENTS.md`（Issue #9）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/prompts/prompt_registry_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - プロンプト登録ができるか
-  - プロンプト取得ができるか
-  - プロンプト一覧取得ができるか
-  - getMessages() でメッセージ生成ができるか
+
+@test: `tests/version_release_ready_test.ts`
+
+- [x] `STORYTELLER_VERSION` が `1.0.0` のとき、Release workflow / install.sh /
+      manifest が矛盾しないことを検証（未整備なら失敗）
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/prompts/prompt_registry.ts` を作成
-  ```typescript
-  export type McpPromptDefinition = {
-    name: string;
-    description: string;
-    arguments?: McpPromptArgument[];
-    getMessages: (args: Record<string, string>) => McpPromptMessage[];
-  };
 
-  export class PromptRegistry {
-    register(prompt: McpPromptDefinition): void;
-    get(name: string): McpPromptDefinition | undefined;
-    listPrompts(): McpPromptDefinition[];
-  }
-  ```
-- [ ] `src/mcp/server/handlers/prompts.ts` を作成
-  - handlePromptsList()
-  - handlePromptsGet()
+- [x] `STORYTELLER_VERSION` を `1.0.0` に更新する PR を Phase 5
+      最終日にまとめる（RC を挟むなら `1.0.0-rc.1` も検討）
+- [x] `scripts/build_cli.ts` の `--version` 引数に `STORYTELLER_VERSION`
+      を渡す経路を確立（CI/Release workflow 側で渡す）
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+
+- [x] `deno test --filter version_release_ready` 通過
+- [x] Optional: tag `v1.0.0-rc.1` で Release workflow を試走
 
 ---
 
-### process23 創作支援プロンプトの実装
-#### sub1 character_brainstorm, plot_suggestion, scene_improvement を実装
-@target: `src/mcp/prompts/definitions/`
-@ref: なし（新規）
+### process5 パフォーマンス最適化（計測→改善→退行防止）
+
+#### sub1 ベンチマークを追加し、最適化対象を可視化する
+
+@target: `bench/meta_check_bench.ts` @ref: `src/cli/modules/meta/check.ts`,
+`src/application/meta/meta_generator_service.ts`,
+`src/application/meta/reference_detector.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/prompts/definitions/creative_prompts_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - character_brainstorm がロール引数を受け取り適切なメッセージを生成するか
-  - plot_suggestion がジャンル引数を受け取り適切なメッセージを生成するか
-  - scene_improvement がシーン情報を受け取り適切なメッセージを生成するか
+
+@test: `tests/bench_task_test.ts`
+
+- [x] `deno.json` に `bench`
+      タスクが存在することを検証するテストを作成（未定義なら失敗）
+  - 例: `deno bench -A bench/` を呼ぶ
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/prompts/definitions/character_brainstorm.ts` を作成
-- [ ] `src/mcp/prompts/definitions/plot_suggestion.ts` を作成
-- [ ] `src/mcp/prompts/definitions/scene_improvement.ts` を作成
+
+- [x] `bench/` を追加し、最低 1 本のベンチを作る
+  - `MetaGeneratorService.generateFromMarkdown(..., dryRun)`
+    を複数回呼び、処理時間を測る
+  - ベンチ用の最小プロジェクト（`Deno.makeTempDir` + `src/characters` +
+    `src/settings` + manuscripts）を組み立てる
+- [x] `deno.json` に `bench` タスクを追加
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
 
----
+- [x] `deno test --filter bench_task` 通過
+- [x] `deno task bench` を実行し、ベンチが動くことを確認（手動）
 
-### process24 ワークフロープロンプトの実装
-#### sub1 project_setup_wizard, chapter_review, consistency_fix を実装
-@target: `src/mcp/prompts/definitions/`
-@ref: なし（新規）
+#### sub2 `ReferenceDetector` のエンティティロードをキャッシュし、複数章処理を高速化する
+
+@target: `src/application/meta/reference_detector.ts` @ref:
+`src/application/meta/meta_generator_service.ts`,
+`src/cli/modules/meta/check.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/prompts/definitions/workflow_prompts_test.ts`
-- [ ] テストケースを作成
-  - 各プロンプトが適切な引数を受け取りメッセージを生成するか
+
+@test: `tests/application/meta/reference_detector_cache_test.ts`
+
+- [x] 同一 `projectPath` に対して `detect()`
+      を連続実行した場合、エンティティロード（`loadEntities` 相当）が 1
+      回に抑えられることを検証するテストを追加（未実装のため失敗）
+  - 実装方針: `ReferenceDetector` に loader
+    を注入可能にし、呼び出し回数をカウントできるようにする
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/prompts/definitions/project_setup_wizard.ts` を作成
-- [ ] `src/mcp/prompts/definitions/chapter_review.ts` を作成
-- [ ] `src/mcp/prompts/definitions/consistency_fix.ts` を作成
+
+- [x] `ReferenceDetector` に `EntityLoader`（または `loadEntities`
+      の差し替え）を注入できる構造に変更
+- [x] `projectPath` + kind（character/setting）単位でロード結果をメモ化
+- [x] watch/serve/LSP
+      のように変更検知が必要な場面のために、キャッシュ無効化フック（任意）を用意
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+
+- [x] `deno test --filter reference_detector_cache` 通過
+- [x] `deno task meta:check -- --dir sample/manuscripts --recursive`
+      で体感速度が落ちていないことを確認（手動）
 
 ---
 
-### process25 インテント解析の実装
-#### sub1 自然言語からインテントを抽出
-@target: `src/mcp/nlp/intent_analyzer.ts`
-@ref: なし（新規）
+### process10 ユニットテスト（追加・統合テスト）
 
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/nlp/intent_analyzer_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - 「キャラクターを作って」→ element_create インテント
-  - 「メタデータをチェックして」→ meta_check インテント
-  - 「原稿の整合性を確認」→ lsp_validate インテント
-  - 信頼度スコアが0.0-1.0の範囲で返るか
-  - パラメータが正しく抽出されるか
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/nlp/intent_analyzer.ts` を作成
-  ```typescript
-  export type Intent = {
-    action: string;
-    params: Record<string, unknown>;
-    confidence: number;
-  };
-
-  export class IntentAnalyzer {
-    analyze(input: string): Intent;
-  }
-  ```
-- [ ] パターンマッチング（正規表現ベース）で実装
-- [ ] キーワード辞書を定義
-
-##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
-
----
-
-### process26 コマンドマッピングの実装
-#### sub1 インテントをMCPツール名にマッピング
-@target: `src/mcp/nlp/command_mapper.ts`
-@ref: `src/mcp/tools/tool_registry.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/nlp/command_mapper_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - element_create インテント → "element_create" ツール名
-  - 未知のインテント → null
-  - パラメータの正規化が正しいか
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/nlp/command_mapper.ts` を作成
-  ```typescript
-  export class CommandMapper {
-    mapToTool(intent: Intent): string | null;
-    normalizeParams(intent: Intent): Record<string, unknown>;
-  }
-  ```
-
-##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
-
----
-
-### process27 コンテキスト管理の実装
-#### sub1 セッションとプロジェクトコンテキストを管理
-@target: `src/mcp/context/session_context.ts`, `src/mcp/context/project_context.ts`
-@ref: なし（新規）
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/mcp/context/context_test.ts`
-- [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - SessionContext が履歴を保持するか
-  - ProjectContext がエンティティをキャッシュするか
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `src/mcp/context/session_context.ts` を作成
-- [ ] `src/mcp/context/project_context.ts` を作成
-
-##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
-
----
-
-### process50 フォローアップ
-- [ ] 複合操作ツールの追加検討（rename_character, analyze_consistency, export_summary）
-- [ ] リソース購読（resources/subscribe）の実装検討
-- [ ] LLM連携によるインテント解析の精度向上
-
----
-
-### process100 リファクタリング
-- [ ] LspTransportとMcpTransportの共通部分を抽出
-- [ ] ツール定義のボイラープレートを削減
-- [ ] エラーハンドリングの統一
-- [ ] リソースプロバイダーのキャッシング最適化
+- [x] coverage レポートで未カバーの "落ちやすい枝" を優先して追加
+  - CLI: 引数不正/ファイル I/O 失敗/互換性エラーの分岐
+  - meta: frontmatter エラー・unknown reference エラー
+  - view/serve: 監視/サーバーの起動停止（既存テストの補強）
+- [x] 追加テストは `coverage` の include（src/）に乗る範囲を優先
 
 ---
 
 ### process200 ドキュメンテーション
-- [ ] README.mdにMCPサーバーの使用方法を追記
-- [ ] Claude Desktop設定例を追加
-- [ ] CLAUDE.mdにMCP関連の情報を追加
-- [ ] Issue #8にMCPサーバー実装完了のコメントを追加
-- [ ] 各MCPツール/リソース/プロンプトのAPIドキュメント
 
----
-
-## ファイル作成一覧
-
-### Phase 2: MCPツール追加
-```
-src/mcp/tools/definitions/
-├── element_create.ts
-├── view_browser.ts
-├── lsp_validate.ts
-└── lsp_find_references.ts
-
-tests/mcp/tools/definitions/
-├── element_create_test.ts
-├── view_browser_test.ts
-├── lsp_validate_test.ts
-└── lsp_find_references_test.ts
-```
-
-### Phase 3: MCPリソース
-```
-src/mcp/resources/
-├── resource_provider.ts
-├── project_resource_provider.ts
-└── uri_parser.ts
-
-src/mcp/server/handlers/
-└── resources.ts
-
-tests/mcp/resources/
-├── resource_provider_test.ts
-├── project_resource_provider_test.ts
-└── uri_parser_test.ts
-
-tests/mcp/server/handlers/
-└── resources_test.ts
-```
-
-### Phase 4: MCPプロンプト
-```
-src/mcp/prompts/
-├── prompt_registry.ts
-└── definitions/
-    ├── character_brainstorm.ts
-    ├── plot_suggestion.ts
-    ├── scene_improvement.ts
-    ├── project_setup_wizard.ts
-    ├── chapter_review.ts
-    └── consistency_fix.ts
-
-src/mcp/server/handlers/
-└── prompts.ts
-
-tests/mcp/prompts/
-├── prompt_registry_test.ts
-└── definitions/
-    ├── creative_prompts_test.ts
-    └── workflow_prompts_test.ts
-```
-
-### Phase 5: NLP
-```
-src/mcp/nlp/
-├── intent_analyzer.ts
-├── command_mapper.ts
-└── param_extractor.ts
-
-src/mcp/context/
-├── session_context.ts
-└── project_context.ts
-
-tests/mcp/nlp/
-├── intent_analyzer_test.ts
-├── command_mapper_test.ts
-└── param_extractor_test.ts
-
-tests/mcp/context/
-└── context_test.ts
-```
-
-### 修正対象
-```
-src/mcp/server/server.ts          - リソース/プロンプトハンドラー追加
-src/mcp/server/capabilities.ts    - resources, prompts機能追加
-src/mcp/server/handlers/tools.ts  - 新規ツール登録
-```
-
----
-
-## 成功指標
-
-- [ ] 全新規ツール（4つ）がClaude Desktopから実行可能
-- [ ] 全リソースがMCPクライアントで参照可能
-- [ ] 全プロンプト（6つ）が利用可能
-- [ ] 自然言語解析の基本動作確認
-- [ ] 全テストがパス
-- [ ] Issue #8のチェックボックスが全て更新される
-
+- [x] `README.md` を "現状のインストール/コマンド" に一致させる
+  - `scripts/install.sh` の使い方
+  - `deno task build` / `deno task cli:package` の推奨手順
+  - `storyteller meta check` / `meta generate` / `view` / `lsp` / `update` /
+    `version`
+- [x] `docs/` の更新
+  - `docs/meta-generate.md`: `--preset` / `--update` / `--force`
+    などの現仕様と差分がないか確認
+  - `docs/lsp-implementation.md`: install 生成物/起動方法が現実と一致するか確認
+  - `docs/mcp.md`: exposed tools/resources と CLI の整合
+- [x] Release Notes テンプレの作成（`docs/release-notes.md` など）
