@@ -70,8 +70,9 @@ export class McpStartCommand extends BaseCliCommand {
         "../../../mcp/resources/project_resource_provider.ts"
       );
 
-      // ツールレジストリを作成
+      // ツールレジストリを作成してプロジェクトルートを設定
       const toolRegistry = createDefaultToolRegistry();
+      toolRegistry.setProjectRoot(projectRoot);
       const tools = toolRegistry.toMcpTools();
       const resourceProvider = new ProjectResourceProvider(projectRoot);
       const promptRegistry = createDefaultPromptRegistry();

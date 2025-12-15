@@ -9,6 +9,7 @@ import { renderHelp } from "../../help/renderer.ts";
 import type { CommandRegistry } from "../../command_registry.ts";
 import type { CommandContext, CommandDescriptor } from "../../types.ts";
 import { mcpStartCommandDescriptor } from "./start.ts";
+import { mcpInitCommandDescriptor } from "./init.ts";
 
 /**
  * McpCommand クラス
@@ -46,12 +47,17 @@ export function createMcpDescriptor(
   const handler = new McpCommand(registry);
   return createLegacyCommandDescriptor(handler, {
     summary:
-      "MCP (Model Context Protocol) server for Claude Desktop integration.",
+      "MCP (Model Context Protocol) server for Claude Desktop/Code integration.",
     usage: "storyteller mcp <subcommand> [options]",
     children: [
+      mcpInitCommandDescriptor,
       mcpStartCommandDescriptor,
     ],
     examples: [
+      {
+        summary: "Initialize MCP configuration for Claude Code",
+        command: "storyteller mcp init",
+      },
       {
         summary: "Start the MCP server with stdio transport",
         command: "storyteller mcp start --stdio",
