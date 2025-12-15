@@ -15,7 +15,6 @@ import {
 import {
   createErrorResponse,
   createSuccessResponse,
-  JSON_RPC_METHOD_NOT_FOUND,
 } from "../protocol/json_rpc.ts";
 import {
   getServerCapabilities,

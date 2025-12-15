@@ -18,6 +18,7 @@ import { timelineBrainstormPrompt } from "../../prompts/definitions/timeline_bra
 import { eventDetailSuggestPrompt } from "../../prompts/definitions/event_detail_suggest.ts";
 import { causalityAnalysisPrompt } from "../../prompts/definitions/causality_analysis.ts";
 import { timelineConsistencyCheckPrompt } from "../../prompts/definitions/timeline_consistency_check.ts";
+import { storyDirectorPrompt } from "../../prompts/definitions/story_director.ts";
 
 export type McpListPromptsResult = {
   readonly prompts: readonly McpPrompt[];
@@ -69,6 +70,9 @@ export function createDefaultPromptRegistry(): PromptRegistry {
   registry.register(eventDetailSuggestPrompt);
   registry.register(causalityAnalysisPrompt);
   registry.register(timelineConsistencyCheckPrompt);
+
+  // Director prompt
+  registry.register(storyDirectorPrompt);
 
   return registry;
 }

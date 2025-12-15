@@ -10,7 +10,6 @@ import type {
   LLMCallOptions,
   LLMError,
   LLMMessage,
-  LLMProvider,
   LLMResponse,
   StreamingLLMProvider,
 } from "./provider.ts";

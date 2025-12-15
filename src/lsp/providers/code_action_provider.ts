@@ -5,7 +5,6 @@
  */
 
 import {
-  type Position,
   PositionedDetector,
   type PositionedMatch,
 } from "../detection/positioned_detector.ts";

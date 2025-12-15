@@ -63,3 +63,57 @@ Deno.test("createDefaultPromptRegistry: 既定の創作支援プロンプトが�
   assertEquals(names.includes("chapter_review"), true);
   assertEquals(names.includes("consistency_fix"), true);
 });
+
+// ===== story_director 統合テスト =====
+
+Deno.test("createDefaultPromptRegistry: story_directorプロンプトが登録されている", () => {
+  const registry = createDefaultPromptRegistry();
+  const prompts = registry.toMcpPrompts();
+  const names = prompts.map((p) => p.name);
+  assertEquals(names.includes("story_director"), true);
+});
+
+Deno.test("handlePromptsGet: story_directorプロンプトのメッセージを取得できる", () => {
+  const registry = createDefaultPromptRegistry();
+
+  const result = handlePromptsGet(registry, {
+    name: "story_director",
+    arguments: {
+      question: "キャラクター構成を評価してください",
+      focus: "character",
+    },
+  });
+
+  assertExists(result.messages);
+  assertEquals(result.messages.length >= 2, true);
+
+  // systemメッセージにディレクター役割が含まれる
+  const systemMsg = result.messages.find((m) => m.role === "system");
+  assertExists(systemMsg);
+
+  // userメッセージに質問内容が含まれる
+  const userMsg = result.messages.find((m) => m.role === "user");
+  assertExists(userMsg);
+  assertEquals(userMsg.content.includes("キャラクター構成"), true);
+  assertEquals(userMsg.content.includes("character"), true);
+});
+
+Deno.test("handlePromptsList: story_directorプロンプトが一覧に含まれる", () => {
+  const registry = createDefaultPromptRegistry();
+  const result = handlePromptsList(registry);
+
+  const storyDirector = result.prompts.find((p) => p.name === "story_director");
+  assertExists(storyDirector);
+  assertExists(storyDirector.description);
+  assertExists(storyDirector.arguments);
+
+  // 必須引数と任意引数が定義されている
+  const questionArg = storyDirector.arguments!.find((a) =>
+    a.name === "question"
+  );
+  const focusArg = storyDirector.arguments!.find((a) => a.name === "focus");
+  assertExists(questionArg);
+  assertExists(focusArg);
+  assertEquals(questionArg.required, true);
+  assertEquals(focusArg.required, false);
+});
