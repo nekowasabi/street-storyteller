@@ -19,6 +19,37 @@ export type RetryConfig = {
 };
 
 /**
+ * 安全設定（過剰実行防止）
+ */
+export type SafetyConfig = {
+  /**
+   * セッション（コマンド実行）あたりの最大API呼び出し回数
+   * 0 の場合は無制限
+   * @default 10
+   */
+  readonly maxCallsPerSession: number;
+
+  /**
+   * 時間窓あたりの最大呼び出し回数（レートリミット）
+   * 0 の場合は無制限
+   * @default 0 (無制限)
+   */
+  readonly maxCallsPerWindow?: number;
+
+  /**
+   * 時間窓の長さ（ミリ秒）
+   * @default 60000 (1分)
+   */
+  readonly windowMs?: number;
+
+  /**
+   * 警告を表示する残り呼び出し回数
+   * @default 2
+   */
+  readonly warningThreshold?: number;
+};
+
+/**
  * LLM設定
  */
 export type LLMConfig = {
@@ -36,6 +67,18 @@ export type LLMConfig = {
   readonly apiKey?: string;
   /** ベースURL（オプション） */
   readonly baseUrl?: string;
+  /** 安全設定（過剰実行防止） */
+  readonly safety?: Partial<SafetyConfig>;
+};
+
+/**
+ * デフォルト安全設定
+ */
+export const DEFAULT_SAFETY_CONFIG: SafetyConfig = {
+  maxCallsPerSession: 10,
+  maxCallsPerWindow: 0, // 無制限
+  windowMs: 60000,
+  warningThreshold: 2,
 };
 
 /**
@@ -51,6 +94,7 @@ export const DEFAULT_LLM_CONFIG: LLMConfig = {
     maxDelay: 10000,
     backoff: "exponential",
   },
+  safety: DEFAULT_SAFETY_CONFIG,
 };
 
 /**
@@ -65,6 +109,10 @@ export function mergeWithDefaults(
     retry: {
       ...DEFAULT_LLM_CONFIG.retry,
       ...config.retry,
+    },
+    safety: {
+      ...DEFAULT_SAFETY_CONFIG,
+      ...config.safety,
     },
   };
 }

@@ -7,9 +7,12 @@
 import type { Result } from "../../shared/result.ts";
 import { err, ok } from "../../shared/result.ts";
 import type { LLMConfig } from "../config/llm_config.ts";
+import { DEFAULT_SAFETY_CONFIG } from "../config/llm_config.ts";
 import type { LLMProvider } from "./provider.ts";
 import { OpenRouterProvider } from "./openrouter.ts";
 import { MockLLMProvider } from "./mock.ts";
+import { wrapWithSafety, type SafeLLMProvider } from "../safety/safe_provider.ts";
+import type { CallLimitError } from "../safety/call_limiter.ts";
 
 /**
  * ファクトリーエラー
@@ -17,6 +20,14 @@ import { MockLLMProvider } from "./mock.ts";
 export type ProviderFactoryError = {
   readonly code: "unknown_provider" | "provider_init_failed";
   readonly message: string;
+};
+
+/**
+ * 安全プロバイダー作成時のコールバック
+ */
+export type SafeProviderCallbacks = {
+  readonly onWarning?: (remainingCalls: number, message: string) => void;
+  readonly onLimitReached?: (error: CallLimitError) => void;
 };
 
 /**
@@ -48,4 +59,31 @@ export function createProvider(
       message: error instanceof Error ? error.message : String(error),
     });
   }
+}
+
+/**
+ * 安全機能付きLLMプロバイダーを作成
+ *
+ * @param config LLM設定
+ * @param callbacks コールバック関数
+ * @returns 安全機能付きLLMプロバイダー
+ */
+export function createSafeProvider(
+  config: LLMConfig,
+  callbacks?: SafeProviderCallbacks,
+): Result<SafeLLMProvider, ProviderFactoryError> {
+  const providerResult = createProvider(config);
+
+  if (!providerResult.ok) {
+    return providerResult;
+  }
+
+  const safety = {
+    ...DEFAULT_SAFETY_CONFIG,
+    ...config.safety,
+  };
+
+  const safeProvider = wrapWithSafety(providerResult.value, safety, callbacks);
+
+  return ok(safeProvider);
 }
