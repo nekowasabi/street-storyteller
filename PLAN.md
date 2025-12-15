@@ -24,7 +24,7 @@
 
 ## 実装仕様
 
-### CLI実装状況（2025-12-15確認）
+### CLI実装状況（2025-12-15更新）
 
 **実装済みコマンド:**
 - `storyteller generate` - プロジェクトスキャフォールド生成
@@ -33,23 +33,27 @@
 - `storyteller meta watch` - ファイル監視と自動更新
 - `storyteller lsp start` - LSPサーバー起動
 - `storyteller lsp install` - エディタ設定生成
+- `storyteller lsp validate` - ✅ 原稿ファイルの検証（Issue #12で実装）
 - `storyteller view` - HTML可視化
 - `storyteller mcp start` - MCPサーバー起動
+- `storyteller element character` - ✅ キャラクター要素作成（Issue #11で実装）
+- `storyteller element setting` - ✅ 設定要素作成（Issue #11で実装）
 
-**未実装コマンド（ドキュメントに記載あるが未実装）:**
-- `storyteller element character` - ❌ 未実装
-- `storyteller element setting` - ❌ 未実装
-- `storyteller lsp validate` - ❌ 未実装（lsp startのみ）
+**LLM機能（Issue #13で実装）:**
+- OpenRouterプロバイダー（`src/llm/providers/openrouter.ts`）
+- 設定ファイル形式（`storyteller.llm.json`）
+- API呼び出し制限機能（SafeLLMProvider）
 
 ### テスト対象機能
 | 機能 | コマンド/方法 | 確認項目 |
 |-----|--------------|---------|
 | プロジェクト生成 | `storyteller generate` | ディレクトリ構造、設定ファイル |
-| キャラクター作成 | 手動作成（sample/参照） | Character型準拠、detectionHints |
-| 設定作成 | 手動作成（sample/参照） | Setting型準拠 |
+| キャラクター作成 | `storyteller element character` | Character型準拠、ファイル生成 |
+| 設定作成 | `storyteller element setting` | Setting型準拠、ファイル生成 |
 | 原稿執筆 | 手動作成（sample/参照） | frontmatter形式、LSPコメント |
 | メタデータ検証 | `storyteller meta check` | 参照検出 |
 | メタデータ生成 | `storyteller meta generate` | .meta.ts生成 |
+| LSP検証 | `storyteller lsp validate` | 診断結果出力 |
 | LSP起動 | `storyteller lsp start --stdio` | サーバー起動確認 |
 | View生成 | `storyteller view` | HTML生成、サーバー起動 |
 | MCP起動 | `storyteller mcp start` | サーバー起動、ツール応答 |
@@ -122,97 +126,103 @@
 ---
 
 ### process3 キャラクター作成（7名）
-**方法**: 手動作成（`sample/src/characters/hero.ts` を参照）
-**注意**: `storyteller element character` コマンドは未実装のため、手動でファイルを作成する
+**方法**: `storyteller element character` コマンド使用（Issue #11で実装済み）
+
+#### コマンド形式
+```bash
+deno run -A main.ts element character \
+  --name "<名前>" \
+  --role "<protagonist|antagonist|supporting|guest>" \
+  --summary "<概要>" \
+  --traits "<特性1,特性2,...>" \
+  --projectRoot samples/cinderella
+```
 
 #### sub1 シンデレラ（protagonist）
-@target: `samples/cinderella/src/characters/cinderella.ts`
-@ref: `/home/takets/repos/street-storyteller/sample/src/characters/hero.ts`
-
 ##### 検証 Step 1: 期待結果の定義
 - [ ] `src/characters/cinderella.ts` が作成される
 - [ ] Character型に準拠した形式であること
-- [ ] displayNames, aliases, detectionHintsが含まれること
 
-##### 検証 Step 2: ファイル作成
-- [ ] 以下の内容でファイルを作成:
-  ```typescript
-  import type { Character } from "../types/character.ts";
-
-  export const cinderella: Character = {
-    id: "cinderella",
-    name: "シンデレラ",
-    displayNames: ["シンデレラ", "エラ"],
-    aliases: ["灰かぶり姫", "お嬢様"],
-    role: "protagonist",
-    traits: ["優しい", "忍耐強い", "美しい", "夢見がち"],
-    relationships: {
-      "prince": "romantic",
-      "stepmother": "conflict",
-      "fairy_godmother": "support",
-    },
-    appearingChapters: ["chapter01", "chapter02", "chapter03", "chapter04"],
-    summary: "継母にいじめられながらも優しさを失わない少女",
-    detectionHints: {
-      commonPatterns: ["シンデレラは", "シンデレラが", "エラは"],
-      excludePatterns: ["シンデレラストーリー"],
-      requiresContext: false,
-      confidence: 0.9,
-    },
-  };
-  ```
+##### 検証 Step 2: コマンド実行
+```bash
+deno run -A main.ts element character \
+  --id cinderella \
+  --name "シンデレラ" \
+  --role protagonist \
+  --summary "継母にいじめられながらも優しさを失わない少女" \
+  --traits "優しい,忍耐強い,美しい,夢見がち" \
+  --projectRoot samples/cinderella
+```
 
 ##### 検証 Step 3: 結果確認
 - [ ] ファイルが正しく作成されたことを確認
 - [ ] log.mdに記録
 
 #### sub2 王子（protagonist）
-@target: `samples/cinderella/src/characters/prince.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] prince.ts を作成（id: prince, role: protagonist）
-- [ ] summary: "真実の愛を求める王国の王子"
-- [ ] traits: ["誠実", "優雅", "ロマンチスト"]
+```bash
+deno run -A main.ts element character \
+  --id prince \
+  --name "王子" \
+  --role protagonist \
+  --summary "真実の愛を求める王国の王子" \
+  --traits "誠実,優雅,ロマンチスト" \
+  --projectRoot samples/cinderella
+```
 
 #### sub3 継母（antagonist）
-@target: `samples/cinderella/src/characters/stepmother.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] stepmother.ts を作成（id: stepmother, role: antagonist）
-- [ ] summary: "シンデレラを虐げる冷酷な継母"
-- [ ] traits: ["冷酷", "虚栄心が強い", "計算高い"]
+```bash
+deno run -A main.ts element character \
+  --id stepmother \
+  --name "継母" \
+  --role antagonist \
+  --summary "シンデレラを虐げる冷酷な継母" \
+  --traits "冷酷,虚栄心が強い,計算高い" \
+  --projectRoot samples/cinderella
+```
 
 #### sub4 姉義姉ドリゼラ（supporting）
-@target: `samples/cinderella/src/characters/stepsister_elder.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] stepsister_elder.ts を作成（id: stepsister_elder, role: supporting）
-- [ ] summary: "傲慢な姉義姉"
-- [ ] traits: ["傲慢", "嫉妬深い"]
+```bash
+deno run -A main.ts element character \
+  --id stepsister_elder \
+  --name "ドリゼラ" \
+  --role supporting \
+  --summary "傲慢な姉義姉" \
+  --traits "傲慢,嫉妬深い" \
+  --projectRoot samples/cinderella
+```
 
 #### sub5 妹義姉アナスタシア（supporting）
-@target: `samples/cinderella/src/characters/stepsister_younger.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] stepsister_younger.ts を作成（id: stepsister_younger, role: supporting）
-- [ ] summary: "わがままな妹義姉"
-- [ ] traits: ["わがまま", "短気"]
+```bash
+deno run -A main.ts element character \
+  --id stepsister_younger \
+  --name "アナスタシア" \
+  --role supporting \
+  --summary "わがままな妹義姉" \
+  --traits "わがまま,短気" \
+  --projectRoot samples/cinderella
+```
 
 #### sub6 妖精のおばあさん（supporting）
-@target: `samples/cinderella/src/characters/fairy_godmother.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] fairy_godmother.ts を作成（id: fairy_godmother, role: supporting）
-- [ ] summary: "シンデレラを助ける魔法使い"
-- [ ] traits: ["慈愛深い", "魔法使い", "神秘的"]
+```bash
+deno run -A main.ts element character \
+  --id fairy_godmother \
+  --name "妖精のおばあさん" \
+  --role supporting \
+  --summary "シンデレラを助ける魔法使い" \
+  --traits "慈愛深い,魔法使い,神秘的" \
+  --projectRoot samples/cinderella
+```
 
 #### sub7 国王（guest）
-@target: `samples/cinderella/src/characters/king.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] king.ts を作成（id: king, role: guest）
-- [ ] summary: "王子の父、威厳ある国王"
-- [ ] traits: ["威厳がある", "息子思い"]
+```bash
+deno run -A main.ts element character \
+  --id king \
+  --name "国王" \
+  --role guest \
+  --summary "王子の父、威厳ある国王" \
+  --traits "威厳がある,息子思い" \
+  --projectRoot samples/cinderella
+```
 
 ##### process3 完了検証
 - [ ] 7つのキャラクターファイルが作成されていることを確認
@@ -223,73 +233,79 @@
 ---
 
 ### process4 設定作成（5箇所）
-**方法**: 手動作成（`sample/src/settings/kingdom.ts` を参照）
-**注意**: `storyteller element setting` コマンドは未実装のため、手動でファイルを作成する
+**方法**: `storyteller element setting` コマンド使用（Issue #11で実装済み）
+
+#### コマンド形式
+```bash
+deno run -A main.ts element setting \
+  --name "<名前>" \
+  --type "<location|world|culture|organization>" \
+  --summary "<概要>" \
+  --displayNames "<表示名1,表示名2,...>" \
+  --relatedSettings "<関連設定1,関連設定2,...>" \
+  --projectRoot samples/cinderella
+```
 
 #### sub1 王国設定
-@target: `samples/cinderella/src/settings/kingdom.ts`
-@ref: `/home/takets/repos/street-storyteller/sample/src/settings/kingdom.ts`
-
 ##### 検証 Step 1: 期待結果の定義
-- [ ] 型エラーなく.tsファイルが作成される
+- [ ] `src/settings/kingdom.ts` が作成される
 - [ ] Setting型に準拠した形式であること
 
-##### 検証 Step 2: ファイル作成
-- [ ] 以下の内容でファイルを作成:
-  ```typescript
-  import type { Setting } from "../types/setting.ts";
-
-  export const kingdom: Setting = {
-    id: "kingdom",
-    name: "フェアリーテイル王国",
-    displayNames: ["王国", "フェアリーテイル", "王都"],
-    type: "location",
-    appearingChapters: ["chapter03", "chapter04"],
-    summary: "古き良き伝統と魔法が共存する王国。王子と姫の物語が生まれる舞台。",
-    relatedSettings: ["castle", "mansion"],
-    detectionHints: {
-      commonPatterns: ["王国", "王都", "フェアリーテイル"],
-      excludePatterns: ["隣国", "他国"],
-      confidence: 0.85,
-    },
-  };
-  ```
+##### 検証 Step 2: コマンド実行
+```bash
+deno run -A main.ts element setting \
+  --id kingdom \
+  --name "フェアリーテイル王国" \
+  --type location \
+  --summary "古き良き伝統と魔法が共存する王国。王子と姫の物語が生まれる舞台。" \
+  --displayNames "王国,フェアリーテイル,王都" \
+  --relatedSettings "castle,mansion" \
+  --projectRoot samples/cinderella
+```
 
 #### sub2 王城設定
-@target: `samples/cinderella/src/settings/castle.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] castle.ts を作成:
-  - id: "castle", type: "location"
-  - displayNames: ["城", "王城", "お城"]
-  - summary: "王族が住む壮麗な城。舞踏会の会場。"
+```bash
+deno run -A main.ts element setting \
+  --id castle \
+  --name "王城" \
+  --type location \
+  --summary "王族が住む壮麗な城。舞踏会の会場。" \
+  --displayNames "城,王城,お城" \
+  --projectRoot samples/cinderella
+```
 
 #### sub3 シンデレラの屋敷設定
-@target: `samples/cinderella/src/settings/mansion.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] mansion.ts を作成:
-  - id: "mansion", type: "location"
-  - displayNames: ["屋敷", "邸宅", "お屋敷"]
-  - summary: "シンデレラが継母と暮らす屋敷。"
+```bash
+deno run -A main.ts element setting \
+  --id mansion \
+  --name "屋敷" \
+  --type location \
+  --summary "シンデレラが継母と暮らす屋敷。" \
+  --displayNames "屋敷,邸宅,お屋敷" \
+  --projectRoot samples/cinderella
+```
 
 #### sub4 妖精魔法システム設定
-@target: `samples/cinderella/src/settings/magic_system.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] magic_system.ts を作成:
-  - id: "magic_system", type: "world"
-  - displayNames: ["魔法", "妖精魔法"]
-  - summary: "妖精が使う魔法のシステム。真夜中に解ける制約がある。"
+```bash
+deno run -A main.ts element setting \
+  --id magic_system \
+  --name "妖精魔法" \
+  --type world \
+  --summary "妖精が使う魔法のシステム。真夜中に解ける制約がある。" \
+  --displayNames "魔法,妖精魔法" \
+  --projectRoot samples/cinderella
+```
 
 #### sub5 ガラスの靴設定
-@target: `samples/cinderella/src/settings/glass_slipper.ts`
-
-##### 検証 Step 2: ファイル作成
-- [ ] glass_slipper.ts を作成:
-  - id: "glass_slipper", type: "culture"
-  - displayNames: ["ガラスの靴", "靴"]
-  - summary: "妖精の魔法で作られた特別な靴。持ち主を証明する鍵。"
+```bash
+deno run -A main.ts element setting \
+  --id glass_slipper \
+  --name "ガラスの靴" \
+  --type culture \
+  --summary "妖精の魔法で作られた特別な靴。持ち主を証明する鍵。" \
+  --displayNames "ガラスの靴,靴" \
+  --projectRoot samples/cinderella
+```
 
 ##### process4 完了検証
 - [ ] 5つの設定ファイルが作成されていることを確認
@@ -399,38 +415,58 @@
 ---
 
 ### process7 LSP機能検証
-**注意**: `storyteller lsp validate` コマンドは未実装。LSP機能はサーバー起動のみテスト可能。
+**方法**: `storyteller lsp validate` コマンド使用（Issue #12で実装済み）
 
-#### sub1 lsp startコマンド検証
-@target: なし（サーバー起動確認）
+#### sub1 lsp validateコマンド検証
 @ref: `/home/takets/repos/street-storyteller/docs/lsp.md`
 
+##### 検証 Step 1: 期待結果の定義
+- [ ] 原稿ファイルの診断結果が出力される
+- [ ] キャラクター・設定への参照が検出される
+
+##### 検証 Step 2: 実行
+```bash
+# 単一ファイルの検証
+deno run -A main.ts lsp validate \
+  --file manuscripts/chapter01.md \
+  --path samples/cinderella
+
+# JSON出力で検証
+deno run -A main.ts lsp validate \
+  --file manuscripts/chapter01.md \
+  --path samples/cinderella \
+  --json
+```
+
+##### 検証 Step 3: 結果確認
+- [ ] 診断結果が出力されることを確認
+- [ ] エンティティ参照が検出されることを確認
+- [ ] 結果をlog.mdに記録
+
+#### sub2 lsp startコマンド検証
 ##### 検証 Step 1: 期待結果の定義
 - [ ] LSPサーバーが起動すること
 - [ ] stdioモードでJSON-RPCプロトコルが動作すること
 
 ##### 検証 Step 2: 実行
-- [ ] LSPサーバー起動テスト:
-  ```bash
-  # タイムアウト付きで起動確認（5秒後に終了）
-  timeout 5 deno run -A main.ts lsp start --stdio 2>&1 || true
-  ```
+```bash
+# タイムアウト付きで起動確認（5秒後に終了）
+timeout 5 deno run -A main.ts lsp start --stdio 2>&1 || true
+```
 
-#### sub2 lsp installコマンド検証
+#### sub3 lsp installコマンド検証
 ##### 検証 Step 2: 実行
-- [ ] Neovim設定生成:
-  ```bash
-  deno run -A main.ts lsp install nvim
-  ```
-- [ ] VSCode設定生成:
-  ```bash
-  deno run -A main.ts lsp install vscode
-  ```
+```bash
+# Neovim設定生成
+deno run -A main.ts lsp install nvim
+
+# VSCode設定生成
+deno run -A main.ts lsp install vscode
+```
 
 ##### 検証 Step 3: 結果確認
 - [ ] 設定ファイルが出力されることを確認
 - [ ] 結果をlog.mdに記録
-- [ ] **エラー記録**: `lsp validate` コマンド未実装をエラーログに記録
 
 ---
 
@@ -464,265 +500,57 @@
 
 ---
 
-### process9 LLMプロバイダー実装（OpenRouter統合）
+### process9 LLMプロバイダー検証（実装済み - Issue #13）
+**状態**: ✅ 実装済み（Issue #13で完了）
 
-#### 調査結果（根拠）
-> geminitranslate プロジェクト (`~/repos/geminitranslate`) の実装を参考に、
-> 設定ファイルでLLM/プロバイダーを指定可能にする。
-> APIキーは環境変数から読み込み、セキュリティを確保する。
+#### 実装済み機能
+- `src/llm/config/llm_config.ts` - LLMConfig型、SafetyConfig型
+- `src/llm/config/loader.ts` - 設定ファイルローダー
+- `src/llm/providers/provider.ts` - LLMProviderインターフェース
+- `src/llm/providers/openrouter.ts` - OpenRouterProvider実装
+- `src/llm/providers/mock.ts` - MockLLMProvider（テスト用）
+- `src/llm/providers/factory.ts` - createProvider、createSafeProvider
+- `src/llm/safety/call_limiter.ts` - API呼び出し制限
+- `src/llm/safety/safe_provider.ts` - SafeLLMProvider
 
-#### sub1 LLM設定ファイル形式の定義
-@target: `src/llm/config/llm-config.ts`
-@ref: `/home/takets/repos/geminitranslate/src/shared/constants/config.ts`
-
+#### sub1 LLM機能の動作検証
 ##### 検証 Step 1: 期待結果の定義
-- [ ] LLMConfig型が定義される
-- [ ] 設定ファイル（storyteller.llm.json）のスキーマが定義される
+- [ ] LLMConfig型でエラーなくコンパイルできる
+- [ ] MockLLMProviderが正常に動作する
+- [ ] SafeLLMProviderが呼び出し制限を適用する
 
-##### 検証 Step 2: 実行
-- [ ] 設定型を作成:
-  ```typescript
-  // src/llm/config/llm-config.ts
-  export interface LLMConfig {
-    provider: "openrouter" | "anthropic" | "openai" | "mock";
-    model: string;
-    providerOrder?: string[];  // OpenRouter固有: プロバイダー優先順
-    timeout?: number;          // ミリ秒
-    retry?: RetryConfig;
-  }
+##### 検証 Step 2: テスト実行
+```bash
+# LLM関連テストを実行
+deno test tests/llm/ --allow-all
 
-  export interface RetryConfig {
-    maxRetries: number;        // デフォルト: 3
-    initialDelay: number;      // デフォルト: 1000ms
-    maxDelay: number;          // デフォルト: 10000ms
-    backoff: "exponential" | "linear";
-  }
-
-  export const DEFAULT_LLM_CONFIG: LLMConfig = {
-    provider: "mock",
-    model: "",
-    timeout: 30000,
-    retry: {
-      maxRetries: 3,
-      initialDelay: 1000,
-      maxDelay: 10000,
-      backoff: "exponential"
-    }
-  };
-
-  // 推奨設定（Cerebras + OpenRouter）
-  export const RECOMMENDED_LLM_CONFIG: LLMConfig = {
-    provider: "openrouter",
-    model: "openai/gpt-oss-120b",
-    providerOrder: ["Cerebras"],
-    timeout: 30000,
-    retry: {
-      maxRetries: 3,
-      initialDelay: 1000,
-      maxDelay: 10000,
-      backoff: "exponential"
-    }
-  };
-  ```
+# 型チェック
+deno check src/llm/index.ts
+```
 
 ##### 検証 Step 3: 結果確認
-- [ ] 型定義ファイルが作成される
-- [ ] deno checkでエラーがないこと
+- [ ] 全テストがパスする
+- [ ] 結果をlog.mdに記録
 
-#### sub2 LLMプロバイダーインターフェース定義
-@target: `src/llm/providers/provider.ts`
-@ref: `/home/takets/repos/street-storyteller/sample/tests/llm/mock-llm-provider.ts`
-
-##### 検証 Step 2: 実行
-- [ ] プロバイダーインターフェースを作成:
-  ```typescript
-  // src/llm/providers/provider.ts
-  export interface LLMProvider {
-    analyze(prompt: string): Promise<LLMResponse>;
-    testConnection?(): Promise<boolean>;
+#### sub2 設定ファイル形式確認
+##### storyteller.llm.json 形式
+```json
+{
+  "provider": "openrouter",
+  "model": "anthropic/claude-3-haiku",
+  "timeout": 30000,
+  "retry": {
+    "maxRetries": 3,
+    "initialDelay": 1000,
+    "maxDelay": 10000,
+    "backoff": "exponential"
+  },
+  "safety": {
+    "maxCallsPerSession": 10,
+    "warningThreshold": 2
   }
-
-  export interface LLMResponse {
-    verdict: boolean;
-    confidence: number;
-    reasoning: string;
-    suggestions?: string[];
-    score?: number;
-  }
-  ```
-
-#### sub3 OpenRouterプロバイダー実装
-@target: `src/llm/providers/openrouter-provider.ts`
-@ref: `/home/takets/repos/geminitranslate/src/background/apiClient.ts`
-
-##### 検証 Step 1: 期待結果の定義
-- [ ] OpenRouterProvider クラスが実装される
-- [ ] 環境変数 `OPENROUTER_API_KEY` からAPIキーを読み込む
-- [ ] リトライロジックが実装される
-
-##### 検証 Step 2: 実行
-- [ ] OpenRouterプロバイダーを実装:
-  ```typescript
-  // src/llm/providers/openrouter-provider.ts
-  export class OpenRouterProvider implements LLMProvider {
-    private config: LLMConfig;
-    private apiKey: string;
-
-    constructor(config: LLMConfig) {
-      this.config = config;
-      // 環境変数からAPIキーを読み込み（セキュア）
-      this.apiKey = Deno.env.get("OPENROUTER_API_KEY") || "";
-      if (!this.apiKey) {
-        throw new Error("OPENROUTER_API_KEY environment variable is required");
-      }
-    }
-
-    async analyze(prompt: string): Promise<LLMResponse> {
-      const requestBody: Record<string, unknown> = {
-        model: this.config.model,
-        messages: [{ role: "user", content: prompt }]
-      };
-
-      // プロバイダー優先順指定（geminitranslateパターン）
-      if (this.config.providerOrder) {
-        requestBody.provider = { order: this.config.providerOrder };
-      }
-
-      return await this.fetchWithRetry(requestBody);
-    }
-
-    private async fetchWithRetry(body: Record<string, unknown>): Promise<LLMResponse> {
-      const { retry } = this.config;
-      let lastError: Error | null = null;
-
-      for (let attempt = 0; attempt <= (retry?.maxRetries ?? 3); attempt++) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(
-            () => controller.abort(),
-            this.config.timeout ?? 30000
-          );
-
-          const response = await fetch(
-            "https://openrouter.ai/api/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                "Authorization": `Bearer ${this.apiKey}`,
-                "HTTP-Referer": "https://github.com/nekowasabi/street-storyteller",
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(body),
-              signal: controller.signal
-            }
-          );
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            if (response.status === 429) {
-              throw new Error("Rate limit exceeded");
-            }
-            throw new Error(`API error: ${response.status}`);
-          }
-
-          const data = await response.json();
-          return this.parseResponse(data);
-        } catch (error) {
-          lastError = error as Error;
-          if (attempt < (retry?.maxRetries ?? 3)) {
-            const delay = this.calculateDelay(attempt, retry);
-            await new Promise(resolve => setTimeout(resolve, delay));
-          }
-        }
-      }
-
-      throw lastError ?? new Error("Unknown error");
-    }
-
-    private calculateDelay(attempt: number, retry?: RetryConfig): number {
-      const initial = retry?.initialDelay ?? 1000;
-      const max = retry?.maxDelay ?? 10000;
-      const delay = retry?.backoff === "exponential"
-        ? initial * Math.pow(2, attempt)
-        : initial * (attempt + 1);
-      return Math.min(delay, max);
-    }
-
-    private parseResponse(data: unknown): LLMResponse {
-      // OpenRouter APIレスポンスをLLMResponse形式にパース
-      // ...実装
-    }
-
-    async testConnection(): Promise<boolean> {
-      try {
-        await this.analyze("Hello");
-        return true;
-      } catch {
-        return false;
-      }
-    }
-  }
-  ```
-
-##### 検証 Step 3: 結果確認
-- [ ] OpenRouterプロバイダーファイルが作成される
-- [ ] テスト接続が成功すること
-
-#### sub4 プロバイダーファクトリー実装
-@target: `src/llm/providers/factory.ts`
-
-##### 検証 Step 2: 実行
-- [ ] プロバイダーファクトリーを作成:
-  ```typescript
-  // src/llm/providers/factory.ts
-  import { LLMConfig } from "../config/llm-config.ts";
-  import { LLMProvider } from "./provider.ts";
-  import { OpenRouterProvider } from "./openrouter-provider.ts";
-  import { MockLLMProvider } from "./mock-provider.ts";
-
-  export function createLLMProvider(config: LLMConfig): LLMProvider {
-    switch (config.provider) {
-      case "openrouter":
-        return new OpenRouterProvider(config);
-      case "mock":
-        return new MockLLMProvider();
-      default:
-        throw new Error(`Unknown provider: ${config.provider}`);
-    }
-  }
-  ```
-
-#### sub5 設定ファイルローダー実装
-@target: `src/llm/config/loader.ts`
-
-##### 検証 Step 2: 実行
-- [ ] 設定ローダーを作成:
-  ```typescript
-  // src/llm/config/loader.ts
-  import { LLMConfig, DEFAULT_LLM_CONFIG } from "./llm-config.ts";
-
-  export async function loadLLMConfig(
-    projectPath: string = "."
-  ): Promise<LLMConfig> {
-    const configPaths = [
-      `${projectPath}/storyteller.llm.json`,
-      `${projectPath}/.storyteller/llm.json`
-    ];
-
-    for (const path of configPaths) {
-      try {
-        const content = await Deno.readTextFile(path);
-        const config = JSON.parse(content) as Partial<LLMConfig>;
-        return { ...DEFAULT_LLM_CONFIG, ...config };
-      } catch {
-        continue;
-      }
-    }
-
-    return DEFAULT_LLM_CONFIG;
-  }
-  ```
+}
+```
 
 ---
 
@@ -914,17 +742,17 @@
 ##### 検証項目一覧
 | Phase | 基準 | 結果 |
 |-------|------|------|
-| 1 | プロジェクト構造が生成される | [ ] |
-| 2 | 7キャラクターの.tsファイルが作成される | [ ] |
-| 3 | 5設定の.tsファイルが有効（型エラーなし） | [ ] |
+| 1 | プロジェクト構造が `storyteller generate` で生成される | [ ] |
+| 2 | 7キャラクターの.tsファイルが `element character` で作成される | [ ] |
+| 3 | 5設定の.tsファイルが `element setting` で作成される（型エラーなし） | [ ] |
 | 4 | 4章の.mdファイルがfrontmatter付きで作成 | [ ] |
-| 5 | meta checkでOK、meta generateでmeta.ts生成 | [ ] |
-| 6 | lsp validateで診断結果が返る | [ ] |
-| 7 | HTMLが生成され表示可能 | [ ] |
-| 8 | LLMConfig型とOpenRouterプロバイダーが実装される | [ ] |
+| 5 | `meta check` でOK、`meta generate` で.meta.ts生成 | [ ] |
+| 6 | `lsp validate` で診断結果が返る | [ ] |
+| 7 | `view` でHTMLが生成され表示可能 | [ ] |
+| 8 | LLM機能テストがパスする（実装済み: Issue #13） | [ ] |
 | 9 | Claude Desktop/Claude Code設定が作成される | [ ] |
 | 10 | MCPサーバーが起動し、ツール呼び出しが成功 | [ ] |
-| 11 | OpenRouterでLLMテストが実行可能 | [ ] |
+| 11 | 全体の統合テストが成功 | [ ] |
 
 ---
 
