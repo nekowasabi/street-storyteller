@@ -42,6 +42,10 @@ export type {
 export type { EntityInfo } from "../providers/hover_provider.ts";
 import { DefinitionProvider } from "../providers/definition_provider.ts";
 import { type EntityInfo, HoverProvider } from "../providers/hover_provider.ts";
+import {
+  CodeActionProvider,
+  type Range,
+} from "../providers/code_action_provider.ts";
 import { DiagnosticsGenerator } from "../diagnostics/diagnostics_generator.ts";
 import { DiagnosticsPublisher } from "../diagnostics/diagnostics_publisher.ts";
 
@@ -98,6 +102,24 @@ type TextDocumentPositionParams = {
 };
 
 /**
+ * textDocument/codeAction のパラメータ
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#codeActionParams
+ */
+type CodeActionParams = {
+  textDocument: {
+    uri: string;
+  };
+  range: Range;
+  context: {
+    diagnostics: Array<{
+      range: Range;
+      message: string;
+      severity?: number;
+    }>;
+  };
+};
+
+/**
  * LSPサーバークラス
  */
 export class LspServer {
@@ -113,6 +135,7 @@ export class LspServer {
   private readonly detector: PositionedDetector;
   private readonly definitionProvider: DefinitionProvider;
   private readonly hoverProvider: HoverProvider;
+  private readonly codeActionProvider: CodeActionProvider;
 
   // 診断
   private readonly diagnosticsGenerator: DiagnosticsGenerator;
@@ -142,6 +165,7 @@ export class LspServer {
       this.detector,
       options?.entityInfoMap ?? new Map(),
     );
+    this.codeActionProvider = new CodeActionProvider(this.detector);
 
     // 診断機能の初期化
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
@@ -211,6 +235,9 @@ export class LspServer {
         break;
       case "textDocument/hover":
         await this.handleHover(request);
+        break;
+      case "textDocument/codeAction":
+        await this.handleCodeAction(request);
         break;
       default: {
         // 未実装のメソッド
@@ -326,6 +353,28 @@ export class LspServer {
         params.textDocument.uri,
         document.content,
         params.position,
+        this.projectRoot,
+      );
+    }
+
+    const response = createSuccessResponse(request.id, result);
+    await this.transport.writeMessage(response);
+  }
+
+  /**
+   * textDocument/codeAction リクエストを処理
+   */
+  private async handleCodeAction(request: JsonRpcRequest): Promise<void> {
+    const params = request.params as CodeActionParams;
+    const document = this.documentManager.get(params.textDocument.uri);
+
+    let result: unknown[] = [];
+    if (document) {
+      result = await this.codeActionProvider.getCodeActions(
+        params.textDocument.uri,
+        document.content,
+        params.range,
+        params.context.diagnostics,
         this.projectRoot,
       );
     }

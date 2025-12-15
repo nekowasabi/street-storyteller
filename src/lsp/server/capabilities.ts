@@ -38,16 +38,23 @@ export type ServerCapabilities = {
    * ホバー情報機能のサポート
    */
   readonly hoverProvider: boolean;
+
+  /**
+   * Code Action機能のサポート
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_codeAction
+   */
+  readonly codeActionProvider: boolean;
 };
 
 /**
  * サーバーキャパビリティを取得する
- * MVPではFull同期、定義ジャンプ、ホバーをサポート
+ * MVPではFull同期、定義ジャンプ、ホバー、Code Actionをサポート
  */
 export function getServerCapabilities(): ServerCapabilities {
   return {
     textDocumentSync: TextDocumentSyncKind.Full,
     definitionProvider: true,
     hoverProvider: true,
+    codeActionProvider: true,
   };
 }
