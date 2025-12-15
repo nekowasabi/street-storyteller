@@ -10,6 +10,8 @@ import type { CommandRegistry } from "../../command_registry.ts";
 import type { CommandContext, CommandDescriptor } from "../../types.ts";
 import { ElementCharacterCommand } from "./character.ts";
 import { ElementSettingCommand } from "./setting.ts";
+import { ElementTimelineCommand } from "./timeline.ts";
+import { ElementEventCommand } from "./event.ts";
 
 /**
  * ElementCommand クラス
@@ -175,6 +177,159 @@ export const elementSettingCommandDescriptor: CommandDescriptor =
   });
 
 /**
+ * element timeline サブコマンドの Descriptor
+ */
+const elementTimelineHandler = new ElementTimelineCommand();
+export const elementTimelineCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementTimelineHandler, {
+    summary: "Create a new timeline element.",
+    usage: "storyteller element timeline --name <name> --scope <scope> [options]",
+    path: ["element", "timeline"],
+    options: [
+      {
+        name: "--name",
+        summary: "Timeline name (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--scope",
+        summary: "Timeline scope: story, world, character, arc (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--id",
+        summary: "Timeline ID (defaults to generated from name)",
+        type: "string",
+      },
+      {
+        name: "--summary",
+        summary: "Short summary description",
+        type: "string",
+      },
+      {
+        name: "--parent-timeline",
+        summary: "Parent timeline ID",
+        type: "string",
+      },
+      {
+        name: "--related-character",
+        summary: "Related character ID (for character-scoped timelines)",
+        type: "string",
+      },
+      {
+        name: "--display-names",
+        summary: "Comma-separated display name variations",
+        type: "string",
+      },
+      {
+        name: "--force",
+        summary: "Overwrite existing timeline",
+        type: "boolean",
+      },
+    ],
+    examples: [
+      {
+        summary: "Create a story timeline",
+        command:
+          'storyteller element timeline --name "Main Story" --scope "story" --summary "The main narrative timeline"',
+      },
+      {
+        summary: "Create a character timeline",
+        command:
+          'storyteller element timeline --name "Hero Journey" --scope "character" --related-character "hero"',
+      },
+    ],
+  });
+
+/**
+ * element event サブコマンドの Descriptor
+ */
+const elementEventHandler = new ElementEventCommand();
+export const elementEventCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementEventHandler, {
+    summary: "Add an event to an existing timeline.",
+    usage:
+      "storyteller element event --timeline <id> --title <title> --category <category> --order <order> [options]",
+    path: ["element", "event"],
+    options: [
+      {
+        name: "--timeline",
+        summary: "Timeline ID to add event to (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--title",
+        summary: "Event title (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--category",
+        summary:
+          "Event category: plot_point, character_event, world_event, backstory, foreshadow, climax, resolution (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--order",
+        summary: "Event order in timeline (required)",
+        type: "number",
+        required: true,
+      },
+      {
+        name: "--id",
+        summary: "Event ID (defaults to generated from title)",
+        type: "string",
+      },
+      {
+        name: "--summary",
+        summary: "Short summary description",
+        type: "string",
+      },
+      {
+        name: "--characters",
+        summary: "Comma-separated character IDs",
+        type: "string",
+      },
+      {
+        name: "--settings",
+        summary: "Comma-separated setting IDs",
+        type: "string",
+      },
+      {
+        name: "--chapters",
+        summary: "Comma-separated chapter IDs",
+        type: "string",
+      },
+      {
+        name: "--caused-by",
+        summary: "Comma-separated event IDs that caused this event",
+        type: "string",
+      },
+      {
+        name: "--causes",
+        summary: "Comma-separated event IDs caused by this event",
+        type: "string",
+      },
+    ],
+    examples: [
+      {
+        summary: "Add a plot point event",
+        command:
+          'storyteller element event --timeline "main_story" --title "Ball Invitation" --category "plot_point" --order 1 --characters "cinderella"',
+      },
+      {
+        summary: "Add an event with causality",
+        command:
+          'storyteller element event --timeline "main_story" --title "Midnight Escape" --category "climax" --order 5 --caused-by "ball_dance" --causes "glass_slipper_left"',
+      },
+    ],
+  });
+
+/**
  * ElementコマンドグループのDescriptorを作成
  */
 export function createElementDescriptor(
@@ -182,11 +337,13 @@ export function createElementDescriptor(
 ): CommandDescriptor {
   const handler = new ElementCommand(registry);
   return createLegacyCommandDescriptor(handler, {
-    summary: "Create and manage story elements (characters, settings, etc.).",
+    summary: "Create and manage story elements (characters, settings, timelines, events).",
     usage: "storyteller element <subcommand> [options]",
     children: [
       elementCharacterCommandDescriptor,
       elementSettingCommandDescriptor,
+      elementTimelineCommandDescriptor,
+      elementEventCommandDescriptor,
     ],
     examples: [
       {
@@ -198,6 +355,16 @@ export function createElementDescriptor(
         summary: "Create a setting element",
         command:
           'storyteller element setting --name "Castle" --type "location"',
+      },
+      {
+        summary: "Create a timeline element",
+        command:
+          'storyteller element timeline --name "Main Story" --scope "story"',
+      },
+      {
+        summary: "Add an event to a timeline",
+        command:
+          'storyteller element event --timeline "main_story" --title "Opening" --category "plot_point" --order 1',
       },
     ],
   });
