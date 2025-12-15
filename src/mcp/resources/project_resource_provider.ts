@@ -48,7 +48,7 @@ export class ProjectResourceProvider implements ResourceProvider {
         name: "Project",
         mimeType: "application/json",
         description:
-          "プロジェクト全体の解析結果（characters/settings/manuscripts）",
+          "プロジェクト全体の解析結果（characters/settings/timelines/manuscripts）",
       },
       {
         uri: "storyteller://project/structure",
@@ -68,6 +68,12 @@ export class ProjectResourceProvider implements ResourceProvider {
         mimeType: "application/json",
         description: "設定一覧",
       },
+      {
+        uri: "storyteller://timelines",
+        name: "Timelines",
+        mimeType: "application/json",
+        description: "タイムライン一覧",
+      },
     ];
 
     for (const character of analysis.characters) {
@@ -85,6 +91,15 @@ export class ProjectResourceProvider implements ResourceProvider {
         name: `Setting: ${setting.id}`,
         mimeType: "application/json",
         description: setting.summary ?? setting.name,
+      });
+    }
+
+    for (const timeline of analysis.timelines) {
+      resources.push({
+        uri: `storyteller://timeline/${encodeURIComponent(timeline.id)}`,
+        name: `Timeline: ${timeline.id}`,
+        mimeType: "application/json",
+        description: timeline.summary ?? timeline.name,
       });
     }
 
@@ -123,6 +138,18 @@ export class ProjectResourceProvider implements ResourceProvider {
         const found = analysis.settings.find((s) => s.id === parsed.id);
         if (!found) {
           throw new Error(`Setting not found: ${parsed.id}`);
+        }
+        return JSON.stringify(found);
+      }
+      case "timelines":
+        return JSON.stringify(analysis.timelines);
+      case "timeline": {
+        if (!parsed.id) {
+          throw new Error("Missing timeline id");
+        }
+        const found = analysis.timelines.find((t) => t.id === parsed.id);
+        if (!found) {
+          throw new Error(`Timeline not found: ${parsed.id}`);
         }
         return JSON.stringify(found);
       }

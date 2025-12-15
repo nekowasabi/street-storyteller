@@ -15,6 +15,11 @@ import { elementCreateTool } from "../../tools/definitions/element_create.ts";
 import { viewBrowserTool } from "../../tools/definitions/view_browser.ts";
 import { lspValidateTool } from "../../tools/definitions/lsp_validate.ts";
 import { lspFindReferencesTool } from "../../tools/definitions/lsp_find_references.ts";
+import { timelineCreateTool } from "../../tools/definitions/timeline_create.ts";
+import { eventCreateTool } from "../../tools/definitions/event_create.ts";
+import { eventUpdateTool } from "../../tools/definitions/event_update.ts";
+import { timelineViewTool } from "../../tools/definitions/timeline_view.ts";
+import { timelineAnalyzeTool } from "../../tools/definitions/timeline_analyze.ts";
 
 /**
  * tools/list リクエストを処理
@@ -59,6 +64,13 @@ export function createDefaultToolRegistry(): ToolRegistry {
   registry.register(viewBrowserTool);
   registry.register(lspValidateTool);
   registry.register(lspFindReferencesTool);
+
+  // Timeline ツールを登録
+  registry.register(timelineCreateTool);
+  registry.register(eventCreateTool);
+  registry.register(eventUpdateTool);
+  registry.register(timelineViewTool);
+  registry.register(timelineAnalyzeTool);
 
   return registry;
 }

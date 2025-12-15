@@ -103,6 +103,7 @@ Deno.test("ProjectResourceProvider: analyzeProject結果をキャッシュでき
           filePath: "src/characters/hero.ts",
         }],
         settings: [],
+        timelines: [],
         manuscripts: [],
       });
     },

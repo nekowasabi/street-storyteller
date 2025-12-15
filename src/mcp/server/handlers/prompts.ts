@@ -14,6 +14,10 @@ import { sceneImprovementPrompt } from "../../prompts/definitions/scene_improvem
 import { projectSetupWizardPrompt } from "../../prompts/definitions/project_setup_wizard.ts";
 import { chapterReviewPrompt } from "../../prompts/definitions/chapter_review.ts";
 import { consistencyFixPrompt } from "../../prompts/definitions/consistency_fix.ts";
+import { timelineBrainstormPrompt } from "../../prompts/definitions/timeline_brainstorm.ts";
+import { eventDetailSuggestPrompt } from "../../prompts/definitions/event_detail_suggest.ts";
+import { causalityAnalysisPrompt } from "../../prompts/definitions/causality_analysis.ts";
+import { timelineConsistencyCheckPrompt } from "../../prompts/definitions/timeline_consistency_check.ts";
 
 export type McpListPromptsResult = {
   readonly prompts: readonly McpPrompt[];
@@ -59,6 +63,12 @@ export function createDefaultPromptRegistry(): PromptRegistry {
   registry.register(projectSetupWizardPrompt);
   registry.register(chapterReviewPrompt);
   registry.register(consistencyFixPrompt);
+
+  // Timeline prompts
+  registry.register(timelineBrainstormPrompt);
+  registry.register(eventDetailSuggestPrompt);
+  registry.register(causalityAnalysisPrompt);
+  registry.register(timelineConsistencyCheckPrompt);
 
   return registry;
 }

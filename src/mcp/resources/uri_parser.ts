@@ -9,6 +9,8 @@ export type ParsedUri = {
     | "character"
     | "settings"
     | "setting"
+    | "timelines"
+    | "timeline"
     | "chapters"
     | "manuscript"
     | "project";
@@ -20,6 +22,8 @@ const VALID_TYPES: ReadonlySet<string> = new Set([
   "character",
   "settings",
   "setting",
+  "timelines",
+  "timeline",
   "chapters",
   "manuscript",
   "project",
