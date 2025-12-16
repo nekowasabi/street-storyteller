@@ -12,6 +12,7 @@ import { ElementCharacterCommand } from "./character.ts";
 import { ElementSettingCommand } from "./setting.ts";
 import { ElementTimelineCommand } from "./timeline.ts";
 import { ElementEventCommand } from "./event.ts";
+import { ElementForeshadowingCommand } from "./foreshadowing.ts";
 
 /**
  * ElementCommand クラス
@@ -245,6 +246,97 @@ export const elementTimelineCommandDescriptor: CommandDescriptor =
   });
 
 /**
+ * element foreshadowing サブコマンドの Descriptor
+ */
+const elementForeshadowingHandler = new ElementForeshadowingCommand();
+export const elementForeshadowingCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementForeshadowingHandler, {
+    summary: "Create a new foreshadowing element.",
+    usage:
+      "storyteller element foreshadowing --name <name> --type <type> --planting-chapter <chapter> --planting-description <description> [options]",
+    path: ["element", "foreshadowing"],
+    options: [
+      {
+        name: "--name",
+        summary: "Foreshadowing name (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--type",
+        summary:
+          "Foreshadowing type: hint, prophecy, mystery, symbol, chekhov, red_herring (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--planting-chapter",
+        summary: "Chapter where foreshadowing is planted (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--planting-description",
+        summary: "Description of how foreshadowing is planted (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--id",
+        summary: "Foreshadowing ID (defaults to generated from name)",
+        type: "string",
+      },
+      {
+        name: "--summary",
+        summary: "Short summary description",
+        type: "string",
+      },
+      {
+        name: "--importance",
+        summary: "Importance level: major, minor, subtle",
+        type: "string",
+      },
+      {
+        name: "--planned-resolution-chapter",
+        summary: "Planned chapter for resolution",
+        type: "string",
+      },
+      {
+        name: "--characters",
+        summary: "Comma-separated related character IDs",
+        type: "string",
+      },
+      {
+        name: "--settings",
+        summary: "Comma-separated related setting IDs",
+        type: "string",
+      },
+      {
+        name: "--display-names",
+        summary: "Comma-separated display name variations",
+        type: "string",
+      },
+      {
+        name: "--force",
+        summary: "Overwrite existing foreshadowing",
+        type: "boolean",
+      },
+    ],
+    examples: [
+      {
+        summary: "Create a chekhov's gun type foreshadowing",
+        command:
+          'storyteller element foreshadowing --name "Ancient Sword" --type "chekhov" --planting-chapter "chapter_01" --planting-description "Hero finds an old sword under the floorboards"',
+      },
+      {
+        summary: "Create a prophecy with importance",
+        command:
+          'storyteller element foreshadowing --name "Hero Prophecy" --type "prophecy" --planting-chapter "chapter_01" --planting-description "Old woman tells a prophecy" --importance "major"',
+      },
+    ],
+  });
+
+/**
  * element event サブコマンドの Descriptor
  */
 const elementEventHandler = new ElementEventCommand();
@@ -346,6 +438,7 @@ export function createElementDescriptor(
       elementSettingCommandDescriptor,
       elementTimelineCommandDescriptor,
       elementEventCommandDescriptor,
+      elementForeshadowingCommandDescriptor,
     ],
     examples: [
       {
@@ -367,6 +460,11 @@ export function createElementDescriptor(
         summary: "Add an event to a timeline",
         command:
           'storyteller element event --timeline "main_story" --title "Opening" --category "plot_point" --order 1',
+      },
+      {
+        summary: "Create a foreshadowing element",
+        command:
+          'storyteller element foreshadowing --name "Mystery" --type "hint" --planting-chapter "chapter_01" --planting-description "A hint is dropped"',
       },
     ],
   });
