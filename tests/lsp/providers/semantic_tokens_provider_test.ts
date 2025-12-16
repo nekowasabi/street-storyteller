@@ -278,8 +278,8 @@ Deno.test("SemanticTokensProvider - getSemanticTokensRange excludes out-of-range
 
   // 範囲内（1行目）のトークンのみ = 城のみ
   assertEquals(result.data.length, 5);
-  // 1行目のトークンなのでline_deltaは0（範囲の開始行を基準）
-  assertEquals(result.data[0], 0);
+  // LSP仕様: 絶対位置を維持。1行目のトークンなのでline_deltaは1（0行目からの差分）
+  assertEquals(result.data[0], 1);
 });
 
 // ===== 日本語（マルチバイト）テスト =====

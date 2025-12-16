@@ -280,10 +280,13 @@ export class LspServer {
         await this.handleSemanticTokensRange(request);
         break;
       default: {
-        // 未実装のメソッドにはnullを返す（エラーの代わりに）
-        // これによりcoc.nvimとの互換性を向上
-        const nullResponse = createSuccessResponse(request.id, null);
-        await this.transport.writeMessage(nullResponse);
+        // 未実装のメソッドにはMethodNotFoundエラーを返す（LSP仕様準拠）
+        const errorResponse = createErrorResponse(
+          request.id,
+          -32601, // MethodNotFound
+          `Method not found: ${request.method}`,
+        );
+        await this.transport.writeMessage(errorResponse);
         break;
       }
     }
@@ -395,7 +398,11 @@ export class LspServer {
       );
     }
 
-    const response = createSuccessResponse(request.id, result);
+    // coc.nvim互換性のため、nullの場合は空のホバーを返す
+    const response = createSuccessResponse(
+      request.id,
+      result ?? { contents: [] },
+    );
     await this.transport.writeMessage(response);
   }
 

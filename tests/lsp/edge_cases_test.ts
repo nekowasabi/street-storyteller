@@ -237,7 +237,12 @@ Deno.test("Edge Case - empty document: LspServer handles hover on empty document
   };
 
   assertEquals(response.id, 100);
-  assertEquals(response.result, null, "Should return null for empty document");
+  // coc.nvim互換性のため、空のホバーを返す（nullの代わりに）
+  assertEquals(
+    response.result,
+    { contents: [] },
+    "Should return empty hover for empty document (coc.nvim compatibility)",
+  );
 });
 
 // ===== 非常に長い行の処理テスト =====

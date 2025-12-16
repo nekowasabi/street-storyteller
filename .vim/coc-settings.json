@@ -1,6 +1,9 @@
 {
-  "tsserver.enable": false,
   "deno.enable": true,
-  "deno.lint": true,
-  "deno.unstable": true
+  "deno.enablePaths": ["./src", "./tests", "./main.ts"],
+  "deno.disablePaths": [
+    "./samples",
+    "./manuscripts"
+  ],
+  "tsserver.enable": false
 }

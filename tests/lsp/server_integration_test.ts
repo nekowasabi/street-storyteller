@@ -404,10 +404,11 @@ Deno.test("LspServer integration - textDocument/hover returns null for non-entit
   };
 
   assertEquals(response.id, 21);
+  // coc.nvim互換性のため、空のホバーを返す（nullの代わりに）
   assertEquals(
     response.result,
-    null,
-    "Should return null for non-entity position",
+    { contents: [] },
+    "Should return empty hover for non-entity position (coc.nvim compatibility)",
   );
 });
 
@@ -669,6 +670,6 @@ Deno.test("LspServer integration - handles hover request for unopened document",
   };
 
   assertEquals(response.id, 31);
-  // ドキュメントが開かれていない場合はnullを返す
-  assertEquals(response.result, null);
+  // coc.nvim互換性のため、空のホバーを返す（nullの代わりに）
+  assertEquals(response.result, { contents: [] });
 });
