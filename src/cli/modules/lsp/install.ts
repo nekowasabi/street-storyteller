@@ -153,6 +153,19 @@ lspconfig.storyteller.setup({
     vim.keymap.set('n', '<leader>rn', vim.lsp.buf.rename, opts)
   end,
 })
+
+-- [Optional] coc.nvim競合回避（coc-tsserverを使用している場合）
+-- storytellerプロジェクト内のキャラクター/設定定義ファイルでcocを無効化
+-- 定義ジャンプ時に "Plugin not ready" エラーが発生する場合は有効化してください
+vim.api.nvim_create_autocmd("BufReadPost", {
+  pattern = { "*/src/characters/*.ts", "*/src/settings/*.ts" },
+  callback = function()
+    -- coc.nvimが存在する場合のみ無効化
+    if vim.g.coc_global_extensions ~= nil then
+      vim.b.coc_enabled = 0
+    end
+  end,
+})
 `;
 }
 

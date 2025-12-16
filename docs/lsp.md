@@ -259,6 +259,51 @@ storyteller config show
 - `@`付きの明示的参照には表示されません
 - エディタがCode Actionをサポートしているか確認
 
+### coc.nvimとの競合（定義ジャンプ時エラー）
+
+Neovim組み込みLSPでstoryteller
+LSPを使用し、TypeScriptファイルにcoc.nvimを使用している場合、
+定義ジャンプ（`textDocument/definition`）で`.ts`ファイルを開く際にエラーが発生することがあります。
+
+**エラー例:**
+
+```
+Plugin not ready
+```
+
+**原因:**
+
+storyteller LSPがキャラクター定義ファイル（`.ts`）へのジャンプを返した際、
+coc.nvimがそのファイルにアタッチしようとしますが、初期化が完了していない状態で失敗します。
+
+**解決策1: storytellerプロジェクト内の.tsファイルでcocを無効化**
+
+```lua
+-- ~/.config/nvim/lua/storyteller.lua に追加
+vim.api.nvim_create_autocmd("BufReadPost", {
+  pattern = { "*/src/characters/*.ts", "*/src/settings/*.ts" },
+  callback = function()
+    vim.b.coc_enabled = 0
+  end,
+})
+```
+
+**解決策2: プロジェクトルートでcocを無効化**
+
+プロジェクトルートに`.vim/coc-settings.json`を作成:
+
+```json
+{
+  "coc.preferences.enableMessageDialog": false,
+  "typescript.enable": false
+}
+```
+
+**解決策3: TypeScriptもNeovim組み込みLSPに移行**
+
+coc-tsserverの代わりに`typescript-language-server`をNeovim組み込みLSPで使用することで、
+競合を完全に回避できます。
+
 ## 関連ドキュメント
 
 - [lsp-implementation.md](./lsp-implementation.md) - 実装詳細
