@@ -74,6 +74,12 @@ export class ProjectResourceProvider implements ResourceProvider {
         mimeType: "application/json",
         description: "タイムライン一覧",
       },
+      {
+        uri: "storyteller://foreshadowings",
+        name: "Foreshadowings",
+        mimeType: "application/json",
+        description: "伏線一覧",
+      },
     ];
 
     for (const character of analysis.characters) {
@@ -100,6 +106,17 @@ export class ProjectResourceProvider implements ResourceProvider {
         name: `Timeline: ${timeline.id}`,
         mimeType: "application/json",
         description: timeline.summary ?? timeline.name,
+      });
+    }
+
+    for (const foreshadowing of analysis.foreshadowings) {
+      resources.push({
+        uri: `storyteller://foreshadowing/${
+          encodeURIComponent(foreshadowing.id)
+        }`,
+        name: `Foreshadowing: ${foreshadowing.id}`,
+        mimeType: "application/json",
+        description: foreshadowing.summary ?? foreshadowing.name,
       });
     }
 
@@ -150,6 +167,18 @@ export class ProjectResourceProvider implements ResourceProvider {
         const found = analysis.timelines.find((t) => t.id === parsed.id);
         if (!found) {
           throw new Error(`Timeline not found: ${parsed.id}`);
+        }
+        return JSON.stringify(found);
+      }
+      case "foreshadowings":
+        return JSON.stringify(analysis.foreshadowings);
+      case "foreshadowing": {
+        if (!parsed.id) {
+          throw new Error("Missing foreshadowing id");
+        }
+        const found = analysis.foreshadowings.find((f) => f.id === parsed.id);
+        if (!found) {
+          throw new Error(`Foreshadowing not found: ${parsed.id}`);
         }
         return JSON.stringify(found);
       }
