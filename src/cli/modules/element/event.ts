@@ -198,12 +198,19 @@ export class ElementEventCommand extends BaseCliCommand {
       };
     }
 
-    if (args.order === undefined || typeof args.order !== "number") {
+    // orderの検証（文字列から数値に変換）
+    const orderRaw = typeof args.order === "string"
+      ? parseInt(args.order, 10)
+      : args.order;
+    if (
+      orderRaw === undefined || typeof orderRaw !== "number" || isNaN(orderRaw)
+    ) {
       return {
         code: "invalid_arguments",
         message: "Event order is required (--order)",
       };
     }
+    const orderValue: number = orderRaw;
 
     // summaryのデフォルト値
     const summary = typeof args.summary === "string"
@@ -220,7 +227,7 @@ export class ElementEventCommand extends BaseCliCommand {
       id,
       title: args.title,
       category: args.category,
-      order: args.order,
+      order: orderValue,
       summary,
       characters: typeof args.characters === "string"
         ? args.characters

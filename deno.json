@@ -33,8 +33,9 @@
   "fmt": {
     "exclude": ["coverage/", "dist/", "output/", "test_output/"]
   },
+  "exclude": ["samples/", "src/characters/", "src/settings/", "src/timelines/"],
   "lint": {
-    "exclude": ["coverage/", "dist/", "output/", "test_output/"],
+    "exclude": ["coverage/", "dist/", "output/", "test_output/", "samples/"],
     "rules": {
       "tags": ["recommended"],
       "exclude": ["no-explicit-any", "require-await"]
