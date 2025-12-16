@@ -5,8 +5,10 @@
 import type {
   CharacterSummary,
   EventSummary,
+  ForeshadowingSummary,
   ManuscriptSummary,
   ProjectAnalysis,
+  ResolutionSummary,
   SettingSummary,
   TimelineSummary,
 } from "./project_analyzer.ts";
@@ -22,6 +24,9 @@ export class HtmlGenerator {
     const charactersSection = this.renderCharacters(analysis.characters);
     const settingsSection = this.renderSettings(analysis.settings);
     const timelinesSection = this.renderTimelines(analysis.timelines);
+    const foreshadowingsSection = this.renderForeshadowings(
+      analysis.foreshadowings,
+    );
     const manuscriptsSection = this.renderManuscripts(analysis.manuscripts);
 
     return `<!DOCTYPE html>
@@ -54,6 +59,11 @@ ${CSS_STYLES}
       <section class="timelines">
         <h2>Timelines</h2>
         ${timelinesSection}
+      </section>
+
+      <section class="foreshadowings">
+        <h2>Foreshadowings</h2>
+        ${foreshadowingsSection}
       </section>
 
       <section class="manuscripts">
@@ -238,6 +248,157 @@ ${CSS_STYLES}
       </div>`).join("\n");
 
     return `<div class="timeline-events event-list">${eventItems}</div>`;
+  }
+
+  /**
+   * 伏線セクションをレンダリング
+   */
+  private renderForeshadowings(
+    foreshadowings: readonly ForeshadowingSummary[],
+  ): string {
+    if (foreshadowings.length === 0) {
+      return '<p class="empty">No foreshadowings found.</p>';
+    }
+
+    // 統計情報
+    const stats = this.calculateForeshadowingStats(foreshadowings);
+    const statsSection = `
+        <div class="foreshadowing-stats">
+          <span class="stat">Total: <strong>${stats.total}</strong></span>
+          <span class="stat">Planted: <strong>${stats.planted}</strong></span>
+          <span class="stat">Resolved: <strong>${stats.resolved}</strong></span>
+          <span class="stat">Resolution Rate: <strong>${
+      stats.resolutionRate.toFixed(0)
+    }%</strong></span>
+        </div>`;
+
+    // 伏線カード
+    const cards = foreshadowings.map((f) => {
+      const resolutionsHtml = this.renderResolutions(f.resolutions);
+      const relatedHtml = this.renderRelatedEntities(
+        f.relatedCharacters,
+        f.relatedSettings,
+      );
+
+      return `
+        <div class="card foreshadowing-card status-${escapeHtml(f.status)}">
+          <h3>${escapeHtml(f.name)}</h3>
+          <div class="meta">
+            <span class="type">${escapeHtml(f.type)}</span>
+            <span class="status">${escapeHtml(f.status)}</span>
+            ${
+        f.importance
+          ? `<span class="importance">${escapeHtml(f.importance)}</span>`
+          : ""
+      }
+            <span class="id">${escapeHtml(f.id)}</span>
+          </div>
+          <p class="summary">${escapeHtml(f.summary ?? "")}</p>
+          <div class="planting-info">
+            <span class="label">Planted:</span> ${escapeHtml(f.plantingChapter)}
+          </div>
+          ${resolutionsHtml}
+          ${relatedHtml}
+          <div class="file-path">
+            <code>${escapeHtml(f.filePath)}</code>
+          </div>
+        </div>`;
+    }).join("\n");
+
+    return `${statsSection}<div class="card-grid">${cards}</div>`;
+  }
+
+  /**
+   * 伏線の統計情報を計算
+   */
+  private calculateForeshadowingStats(
+    foreshadowings: readonly ForeshadowingSummary[],
+  ) {
+    const stats = {
+      total: foreshadowings.length,
+      planted: 0,
+      partiallyResolved: 0,
+      resolved: 0,
+      abandoned: 0,
+      resolutionRate: 0,
+    };
+
+    for (const f of foreshadowings) {
+      switch (f.status) {
+        case "planted":
+          stats.planted++;
+          break;
+        case "partially_resolved":
+          stats.partiallyResolved++;
+          break;
+        case "resolved":
+          stats.resolved++;
+          break;
+        case "abandoned":
+          stats.abandoned++;
+          break;
+      }
+    }
+
+    if (stats.total > 0) {
+      stats.resolutionRate =
+        ((stats.resolved + stats.partiallyResolved * 0.5) / stats.total) * 100;
+    }
+
+    return stats;
+  }
+
+  /**
+   * 回収情報をレンダリング
+   */
+  private renderResolutions(
+    resolutions: readonly ResolutionSummary[],
+  ): string {
+    if (resolutions.length === 0) {
+      return "";
+    }
+
+    const items = resolutions.map((r) => `
+      <div class="resolution-item">
+        <span class="chapter">${escapeHtml(r.chapter)}</span>
+        <span class="description">${escapeHtml(r.description)}</span>
+        <span class="completeness">${(r.completeness * 100).toFixed(0)}%</span>
+      </div>`).join("");
+
+    return `<div class="resolution-info">${items}</div>`;
+  }
+
+  /**
+   * 関連エンティティをレンダリング
+   */
+  private renderRelatedEntities(
+    characters: readonly string[],
+    settings: readonly string[],
+  ): string {
+    if (characters.length === 0 && settings.length === 0) {
+      return "";
+    }
+
+    const charRefs = characters.map((c) =>
+      `<span class="ref character">${escapeHtml(c)}</span>`
+    ).join(" ");
+    const settingRefs = settings.map((s) =>
+      `<span class="ref setting">${escapeHtml(s)}</span>`
+    ).join(" ");
+
+    return `
+      <div class="related-entities">
+        ${
+      characters.length > 0
+        ? `<div class="related-characters"><span class="label">Characters:</span> ${charRefs}</div>`
+        : ""
+    }
+        ${
+      settings.length > 0
+        ? `<div class="related-settings"><span class="label">Settings:</span> ${settingRefs}</div>`
+        : ""
+    }
+      </div>`;
   }
 
   /**
@@ -603,6 +764,124 @@ const CSS_STYLES = `
     .no-refs {
       color: #999;
       font-style: italic;
+    }
+
+    /* Foreshadowing styles */
+    .foreshadowing-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--card-background);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .foreshadowing-stats .stat {
+      font-size: 0.9rem;
+    }
+
+    .foreshadowing-card .type {
+      background: #9b59b6;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card .status {
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card .importance {
+      background: #f39c12;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card.status-planted {
+      border-left: 4px solid #e67e22;
+    }
+
+    .foreshadowing-card.status-planted .status {
+      background: #e67e22;
+      color: white;
+    }
+
+    .foreshadowing-card.status-partially_resolved {
+      border-left: 4px solid #f1c40f;
+    }
+
+    .foreshadowing-card.status-partially_resolved .status {
+      background: #f1c40f;
+      color: #333;
+    }
+
+    .foreshadowing-card.status-resolved {
+      border-left: 4px solid #27ae60;
+    }
+
+    .foreshadowing-card.status-resolved .status {
+      background: #27ae60;
+      color: white;
+    }
+
+    .foreshadowing-card.status-abandoned {
+      border-left: 4px solid #95a5a6;
+    }
+
+    .foreshadowing-card.status-abandoned .status {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .planting-info {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .resolution-info {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background: var(--background-color);
+      border-radius: 4px;
+    }
+
+    .resolution-item {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.25rem;
+      font-size: 0.85rem;
+    }
+
+    .resolution-item .chapter {
+      background: #fff3e0;
+      color: #e65100;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+    }
+
+    .resolution-item .completeness {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .related-entities {
+      margin: 0.5rem 0;
+      font-size: 0.85rem;
+    }
+
+    .related-characters,
+    .related-settings {
+      margin-bottom: 0.25rem;
     }
 
     footer {

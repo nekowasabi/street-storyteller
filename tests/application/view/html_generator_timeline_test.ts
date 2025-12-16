@@ -25,6 +25,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
           filePath: "src/timelines/main_story.ts",
         },
       ],
+      foreshadowings: [],
       manuscripts: [],
     };
 
@@ -49,6 +50,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
           filePath: "src/timelines/test.ts",
         },
       ],
+      foreshadowings: [],
       manuscripts: [],
     };
 
@@ -94,6 +96,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
           filePath: "src/timelines/main_story.ts",
         },
       ],
+      foreshadowings: [],
       manuscripts: [],
     };
 
@@ -134,6 +137,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
           filePath: "test.ts",
         },
       ],
+      foreshadowings: [],
       manuscripts: [],
     };
 
@@ -185,6 +189,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
           filePath: "test.ts",
         },
       ],
+      foreshadowings: [],
       manuscripts: [],
     };
 
@@ -204,6 +209,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
       characters: [],
       settings: [],
       timelines: [],
+      foreshadowings: [],
       manuscripts: [],
     };
 
@@ -237,6 +243,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
           filePath: "test.ts",
         },
       ],
+      foreshadowings: [],
       manuscripts: [],
     };
 
@@ -264,6 +271,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
           filePath: "src/timelines/sub_story.ts",
         },
       ],
+      foreshadowings: [],
       manuscripts: [],
     };
 

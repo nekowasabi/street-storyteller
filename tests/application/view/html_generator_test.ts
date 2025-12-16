@@ -36,6 +36,7 @@ const mockAnalysis: ProjectAnalysis = {
     },
   ],
   timelines: [],
+  foreshadowings: [],
   manuscripts: [
     {
       path: "manuscripts/chapter01.md",
@@ -118,6 +119,7 @@ Deno.test("HtmlGenerator - 空のデータ対応", async (t) => {
       characters: [],
       settings: [],
       timelines: [],
+      foreshadowings: [],
       manuscripts: [],
     };
 

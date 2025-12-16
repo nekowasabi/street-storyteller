@@ -60,6 +60,35 @@ export interface TimelineSummary {
 }
 
 /**
+ * 回収情報サマリー
+ */
+export interface ResolutionSummary {
+  readonly chapter: string;
+  readonly description: string;
+  readonly completeness: number;
+}
+
+/**
+ * 伏線サマリー
+ */
+export interface ForeshadowingSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly type: string;
+  readonly status: string;
+  readonly summary?: string;
+  readonly importance?: string;
+  readonly plantingChapter: string;
+  readonly plantingDescription: string;
+  readonly resolutions: readonly ResolutionSummary[];
+  readonly plannedResolutionChapter?: string;
+  readonly relatedCharacters: readonly string[];
+  readonly relatedSettings: readonly string[];
+  readonly displayNames: readonly string[];
+  readonly filePath: string;
+}
+
+/**
  * エンティティ参照
  */
 export interface EntityReference {
@@ -84,6 +113,7 @@ export interface ProjectAnalysis {
   readonly characters: readonly CharacterSummary[];
   readonly settings: readonly SettingSummary[];
   readonly timelines: readonly TimelineSummary[];
+  readonly foreshadowings: readonly ForeshadowingSummary[];
   readonly manuscripts: readonly ManuscriptSummary[];
 }
 
@@ -115,6 +145,9 @@ export class ProjectAnalyzer {
       // タイムラインをロード
       const timelines = await this.loadTimelines(projectPath);
 
+      // 伏線をロード
+      const foreshadowings = await this.loadForeshadowings(projectPath);
+
       // 原稿を解析
       const manuscripts = await this.analyzeManuscripts(
         projectPath,
@@ -126,6 +159,7 @@ export class ProjectAnalyzer {
         characters,
         settings,
         timelines,
+        foreshadowings,
         manuscripts,
       });
     } catch (error) {
@@ -259,6 +293,167 @@ export class ProjectAnalyzer {
     }
 
     return timelines;
+  }
+
+  /**
+   * 伏線をロード
+   */
+  private async loadForeshadowings(
+    projectPath: string,
+  ): Promise<ForeshadowingSummary[]> {
+    const foreshadowingsDir = join(projectPath, "src/foreshadowings");
+    const foreshadowings: ForeshadowingSummary[] = [];
+
+    try {
+      for await (const entry of Deno.readDir(foreshadowingsDir)) {
+        if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+
+        const absPath = join(foreshadowingsDir, entry.name);
+        try {
+          const mod = await import(toFileUrl(absPath).href);
+          for (const [, value] of Object.entries(mod)) {
+            const parsed = this.parseForeshadowing(value);
+            if (parsed) {
+              const relPath = relative(projectPath, absPath).replaceAll(
+                "\\",
+                "/",
+              );
+              foreshadowings.push({
+                ...parsed,
+                filePath: relPath,
+              });
+            }
+          }
+        } catch {
+          // スキップ
+        }
+      }
+    } catch {
+      // ディレクトリが存在しない場合はスキップ
+    }
+
+    return foreshadowings;
+  }
+
+  /**
+   * 伏線をパース
+   */
+  private parseForeshadowing(
+    value: unknown,
+  ): Omit<ForeshadowingSummary, "filePath"> | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+
+    const id = record.id;
+    const name = record.name;
+    const type = record.type;
+    const status = record.status;
+    const planting = record.planting;
+
+    if (
+      typeof id !== "string" ||
+      typeof name !== "string" ||
+      typeof type !== "string" ||
+      typeof status !== "string" ||
+      !planting || typeof planting !== "object"
+    ) {
+      return null;
+    }
+
+    const plantingRecord = planting as Record<string, unknown>;
+    const plantingChapter = typeof plantingRecord.chapter === "string"
+      ? plantingRecord.chapter
+      : "";
+    const plantingDescription = typeof plantingRecord.description === "string"
+      ? plantingRecord.description
+      : "";
+
+    const summary = typeof record.summary === "string"
+      ? record.summary
+      : undefined;
+
+    const importance = typeof record.importance === "string"
+      ? record.importance
+      : undefined;
+
+    const plannedResolutionChapter =
+      typeof record.plannedResolutionChapter === "string"
+        ? record.plannedResolutionChapter
+        : undefined;
+
+    // 回収情報をパース
+    const resolutions: ResolutionSummary[] = [];
+    if (Array.isArray(record.resolutions)) {
+      for (const res of record.resolutions) {
+        const parsed = this.parseResolution(res);
+        if (parsed) {
+          resolutions.push(parsed);
+        }
+      }
+    }
+
+    // 関連エンティティをパース
+    let relatedCharacters: string[] = [];
+    let relatedSettings: string[] = [];
+    if (record.relations && typeof record.relations === "object") {
+      const relations = record.relations as Record<string, unknown>;
+      if (Array.isArray(relations.characters)) {
+        relatedCharacters = relations.characters.filter(
+          (v): v is string => typeof v === "string",
+        );
+      }
+      if (Array.isArray(relations.settings)) {
+        relatedSettings = relations.settings.filter(
+          (v): v is string => typeof v === "string",
+        );
+      }
+    }
+
+    const displayNames = Array.isArray(record.displayNames)
+      ? record.displayNames.filter((v): v is string => typeof v === "string")
+      : [];
+
+    return {
+      id,
+      name,
+      type,
+      status,
+      summary,
+      importance,
+      plantingChapter,
+      plantingDescription,
+      resolutions,
+      plannedResolutionChapter,
+      relatedCharacters,
+      relatedSettings,
+      displayNames,
+    };
+  }
+
+  /**
+   * 回収情報をパース
+   */
+  private parseResolution(value: unknown): ResolutionSummary | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+
+    const chapter = record.chapter;
+    const description = record.description;
+    const completeness = record.completeness;
+
+    if (
+      typeof chapter !== "string" ||
+      typeof description !== "string" ||
+      typeof completeness !== "number"
+    ) {
+      return null;
+    }
+
+    return {
+      chapter,
+      description,
+      completeness,
+    };
   }
 
   /**
