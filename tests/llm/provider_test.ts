@@ -1,7 +1,7 @@
 /**
  * LLM Provider テスト
  */
-import { assert, assertEquals, assertExists } from "@std/assert";
+import { assert, assertEquals } from "@std/assert";
 import {
   createProvider,
   isStreamingProvider,

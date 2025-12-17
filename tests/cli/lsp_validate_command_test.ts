@@ -2,12 +2,7 @@
  * LSP Validate Command テスト
  * TDD: ワンショット検証コマンドのテスト
  */
-import {
-  assert,
-  assertEquals,
-  createStubLogger,
-  createStubPresenter,
-} from "../asserts.ts";
+import { assert, assertEquals, createStubLogger } from "../asserts.ts";
 import { assertExists } from "@std/assert";
 import type { CommandContext } from "../../src/cli/types.ts";
 import { LspValidateCommand } from "../../src/cli/modules/lsp/validate.ts";

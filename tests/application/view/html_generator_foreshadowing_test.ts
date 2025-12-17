@@ -4,7 +4,7 @@
  * HtmlGeneratorがForeshadowingセクションを正しく生成することを検証
  */
 
-import { assertEquals, assertStringIncludes } from "@std/assert";
+import { assertStringIncludes } from "@std/assert";
 import { HtmlGenerator } from "../../../src/application/view/html_generator.ts";
 import type { ProjectAnalysis } from "../../../src/application/view/project_analyzer.ts";
 

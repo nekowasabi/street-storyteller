@@ -8,10 +8,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import {
-  type CodeAction,
-  CodeActionProvider,
-} from "../../../src/lsp/providers/code_action_provider.ts";
+import { CodeActionProvider } from "../../../src/lsp/providers/code_action_provider.ts";
 import {
   type DetectableEntity,
   PositionedDetector,

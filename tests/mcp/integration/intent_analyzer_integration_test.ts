@@ -13,11 +13,8 @@
  * 8. IntentAnalyzerとCommandMapperの連携
  */
 
-import { assertEquals, assertExists } from "@std/assert";
-import {
-  type Intent,
-  IntentAnalyzer,
-} from "../../../src/mcp/nlp/intent_analyzer.ts";
+import { assertEquals } from "@std/assert";
+import { IntentAnalyzer } from "../../../src/mcp/nlp/intent_analyzer.ts";
 import { CommandMapper } from "../../../src/mcp/nlp/command_mapper.ts";
 
 // ===== キャラクター作成関連テスト =====

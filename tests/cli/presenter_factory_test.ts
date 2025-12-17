@@ -6,7 +6,6 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import type { OutputPresenter } from "../../src/cli/types.ts";
 
 // ===== ファクトリ関数テスト =====
 

@@ -1,4 +1,4 @@
-import { assertEquals, assertMatch } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { createJsonOutputPresenter } from "../../src/cli/output_presenter.ts";
 
 Deno.test("JsonOutputPresenter - showInfo outputs valid JSON with type info", () => {

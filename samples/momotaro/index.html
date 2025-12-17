@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Project Overview</title>
+  <style>
+
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2ecc71;
+      --background-color: #f5f6fa;
+      --card-background: #ffffff;
+      --text-color: #2c3e50;
+      --border-color: #dfe6e9;
+      --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    header h1 {
+      color: var(--primary-color);
+      font-size: 2rem;
+    }
+
+    section {
+      margin-bottom: 2rem;
+    }
+
+    section h2 {
+      color: var(--text-color);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+    }
+
+    .card h3 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .card .meta {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card .role {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .card .id {
+      background: var(--border-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .card .summary {
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .display-names {
+      margin-bottom: 0.5rem;
+    }
+
+    .display-names .label,
+    .references .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .tag {
+      background: var(--background-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-right: 0.25rem;
+    }
+
+    .file-path {
+      margin-top: 0.5rem;
+    }
+
+    .file-path code {
+      background: var(--background-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .timeline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .timeline-card {
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .timeline-card .scope {
+      background: #9b59b6;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .timeline-card .parent-timeline,
+    .timeline-card .related-character {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .timeline-events {
+      margin: 1rem 0;
+      padding: 1rem;
+      background: var(--background-color);
+      border-radius: 8px;
+    }
+
+    .timeline-events.empty {
+      color: #999;
+      font-style: italic;
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .event-item {
+      background: var(--card-background);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--secondary-color);
+    }
+
+    .event-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-order {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: bold;
+      min-width: 1.5rem;
+      text-align: center;
+    }
+
+    .event-title {
+      font-weight: bold;
+      color: var(--text-color);
+    }
+
+    .event-category {
+      background: var(--border-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-left: auto;
+    }
+
+    .event-summary {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-refs {
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .event-refs .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .event-causality {
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .event-causality .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .ref.chapter {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .ref.causality {
+      background: #fce4ec;
+      color: #c2185b;
+    }
+
+    .manuscript-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .manuscript-item {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .manuscript-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .manuscript-header h3 {
+      color: var(--primary-color);
+    }
+
+    .manuscript-header .path {
+      background: var(--background-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .ref {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-right: 0.25rem;
+    }
+
+    .ref.character {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .ref.setting {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .ref.foreshadowing {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .ref.foreshadowing.planted {
+      background: #fff3e0;
+      color: #e65100;
+      border-left: 3px solid #e67e22;
+    }
+
+    .ref.foreshadowing.partially_resolved {
+      background: #fffde7;
+      color: #f9a825;
+      border-left: 3px solid #f1c40f;
+    }
+
+    .ref.foreshadowing.resolved {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-left: 3px solid #27ae60;
+    }
+
+    .ref.foreshadowing.abandoned {
+      background: #eceff1;
+      color: #607d8b;
+      border-left: 3px solid #95a5a6;
+    }
+
+    .empty {
+      color: #999;
+      font-style: italic;
+    }
+
+    .no-refs {
+      color: #999;
+      font-style: italic;
+    }
+
+    /* Foreshadowing styles */
+    .foreshadowing-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--card-background);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .foreshadowing-stats .stat {
+      font-size: 0.9rem;
+    }
+
+    .foreshadowing-card .type {
+      background: #9b59b6;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card .status {
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card .importance {
+      background: #f39c12;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card.status-planted {
+      border-left: 4px solid #e67e22;
+    }
+
+    .foreshadowing-card.status-planted .status {
+      background: #e67e22;
+      color: white;
+    }
+
+    .foreshadowing-card.status-partially_resolved {
+      border-left: 4px solid #f1c40f;
+    }
+
+    .foreshadowing-card.status-partially_resolved .status {
+      background: #f1c40f;
+      color: #333;
+    }
+
+    .foreshadowing-card.status-resolved {
+      border-left: 4px solid #27ae60;
+    }
+
+    .foreshadowing-card.status-resolved .status {
+      background: #27ae60;
+      color: white;
+    }
+
+    .foreshadowing-card.status-abandoned {
+      border-left: 4px solid #95a5a6;
+    }
+
+    .foreshadowing-card.status-abandoned .status {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .planting-info {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .resolution-info {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background: var(--background-color);
+      border-radius: 4px;
+    }
+
+    .resolution-item {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.25rem;
+      font-size: 0.85rem;
+    }
+
+    .resolution-item .chapter {
+      background: #fff3e0;
+      color: #e65100;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+    }
+
+    .resolution-item .completeness {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .related-entities {
+      margin: 0.5rem 0;
+      font-size: 0.85rem;
+    }
+
+    .related-characters,
+    .related-settings {
+      margin-bottom: 0.25rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Story Project Overview</h1>
+    </header>
+
+    <main>
+      <section class="characters">
+        <h2>Characters</h2>
+        <div class="card-grid">
+        <div class="card character-card">
+          <h3>猿</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">猿</span>
+          </div>
+          <p class="summary">桃太郎の家来。きびだんごをもらい仲間になる賢い猿</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">猿</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/猿.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>雉</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">雉</span>
+          </div>
+          <p class="summary">桃太郎の家来。きびだんごをもらい仲間になる勇敢な雉</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">雉</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/雉.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>犬</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">犬</span>
+          </div>
+          <p class="summary">桃太郎の家来。きびだんごをもらい仲間になる忠実な犬</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">犬</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/犬.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>鬼の大将</h3>
+          <div class="meta">
+            <span class="role">antagonist</span>
+            <span class="id">鬼の大将</span>
+          </div>
+          <p class="summary">鬼ヶ島を支配する恐ろしい鬼。村々から宝を略奪していた</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">鬼の大将</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/鬼の大将.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>おじいさん</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">おじいさん</span>
+          </div>
+          <p class="summary">山で柴刈りをする老人。桃太郎を我が子のように育てる</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">おじいさん</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/おじいさん.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>桃太郎</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">桃太郎</span>
+          </div>
+          <p class="summary">桃から生まれた少年。正義感が強く、鬼退治に向かう</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">桃太郎</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/桃太郎.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>桃太郎</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">main_character</span>
+          </div>
+          <p class="summary">桃から生まれた少年。正義感が強く、鬼退治に向かう</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">桃太郎</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/main_character.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>おばあさん</h3>
+          <div class="meta">
+            <span class="role">supporting</span>
+            <span class="id">おばあさん</span>
+          </div>
+          <p class="summary">川で洗濯をする老婆。桃を見つけ、桃太郎を育てる</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">おばあさん</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/おばあさん.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="settings">
+        <h2>Settings</h2>
+        <div class="card-grid">
+        <div class="card setting-card">
+          <h3>おじいさんの家</h3>
+          <div class="meta">
+            <span class="id">おじいさんの家</span>
+          </div>
+          <p class="summary">山の麓にある古びた茅葺き屋根の家。桃太郎が育った場所</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">おじいさんの家</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/おじいさんの家.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>山道</h3>
+          <div class="meta">
+            <span class="id">山道</span>
+          </div>
+          <p class="summary">村から鬼ヶ島へ向かう山道。犬、猿、雉と出会う場所</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">山道</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/山道.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>川</h3>
+          <div class="meta">
+            <span class="id">川</span>
+          </div>
+          <p class="summary">おばあさんが洗濯をする清らかな川。桃が流れてきた場所</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">川</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/川.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>鬼ヶ島</h3>
+          <div class="meta">
+            <span class="id">鬼ヶ島</span>
+          </div>
+          <p class="summary">海に浮かぶ恐ろしい島。鬼たちが住み、宝物を隠している</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">鬼ヶ島</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/鬼ヶ島.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="timelines">
+        <h2>Timelines</h2>
+        <div class="timeline-list">
+        <div class="card timeline-card">
+          <h3>桃太郎物語</h3>
+          <div class="meta">
+            <span class="scope">story</span>
+            <span class="id">momotaro_story</span>
+          </div>
+          
+          
+          <p class="summary">桃から生まれた少年が仲間と共に鬼退治する物語</p>
+          <div class="timeline-events event-list">
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">1</span>
+          <span class="event-title">桃が流れてくる</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">おばあさんが川で洗濯中に大きな桃が流れてくる</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">おばあさん</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">川</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_01</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">2</span>
+          <span class="event-title">桃太郎誕生</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">桃を割ると中から元気な男の子が生まれる</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">おじいさん</span> <span class="ref character">おばあさん</span> <span class="ref character">桃太郎</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">おじいさんの家</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_01</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">3</span>
+          <span class="event-title">桃太郎成長</span>
+          <span class="event-category">character_event</span>
+        </div>
+        <div class="event-summary">桃太郎はすくすくと育ち、立派な若者になる</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">おじいさん</span> <span class="ref character">おばあさん</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">おじいさんの家</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_01</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">4</span>
+          <span class="event-title">鬼退治を決意</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">村を襲う鬼の話を聞き、桃太郎は鬼退治を決意する</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">おじいさん</span> <span class="ref character">おばあさん</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">おじいさんの家</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_02</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">5</span>
+          <span class="event-title">旅立ち</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">きびだんごを持って桃太郎は旅に出る</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">おじいさん</span> <span class="ref character">おばあさん</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">おじいさんの家</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_02</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">6</span>
+          <span class="event-title">犬との出会い</span>
+          <span class="event-category">character_event</span>
+        </div>
+        <div class="event-summary">山道で犬と出会い、きびだんごを与えて家来にする</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">犬</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">山道</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_02</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">7</span>
+          <span class="event-title">猿との出会い</span>
+          <span class="event-category">character_event</span>
+        </div>
+        <div class="event-summary">山道で猿と出会い、きびだんごを与えて家来にする</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">犬</span> <span class="ref character">猿</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">山道</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_02</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">8</span>
+          <span class="event-title">雉との出会い</span>
+          <span class="event-category">character_event</span>
+        </div>
+        <div class="event-summary">山道で雉と出会い、きびだんごを与えて家来にする</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">犬</span> <span class="ref character">猿</span> <span class="ref character">雉</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">山道</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_02</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">9</span>
+          <span class="event-title">鬼ヶ島到着</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">船で海を渡り、鬼ヶ島に上陸する</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">犬</span> <span class="ref character">猿</span> <span class="ref character">雉</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">鬼ヶ島</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_03</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">10</span>
+          <span class="event-title">鬼との戦い</span>
+          <span class="event-category">climax</span>
+        </div>
+        <div class="event-summary">桃太郎と仲間たちが鬼たちと激しく戦う</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">犬</span> <span class="ref character">猿</span> <span class="ref character">雉</span> <span class="ref character">鬼の大将</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">鬼ヶ島</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_03</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">11</span>
+          <span class="event-title">勝利</span>
+          <span class="event-category">climax</span>
+        </div>
+        <div class="event-summary">鬼の大将が降参し、宝物を差し出す</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">犬</span> <span class="ref character">猿</span> <span class="ref character">雉</span> <span class="ref character">鬼の大将</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">鬼ヶ島</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_03</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">12</span>
+          <span class="event-title">凱旋帰郷</span>
+          <span class="event-category">resolution</span>
+        </div>
+        <div class="event-summary">宝物を持って村に帰り、幸せに暮らす</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">桃太郎</span> <span class="ref character">犬</span> <span class="ref character">猿</span> <span class="ref character">雉</span> <span class="ref character">おじいさん</span> <span class="ref character">おばあさん</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">おじいさんの家</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_04</span></div>
+        
+        
+      </div></div>
+          <div class="file-path">
+            <code>src/timelines/桃太郎物語.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="foreshadowings">
+        <h2>Foreshadowings</h2>
+        
+        <div class="foreshadowing-stats">
+          <span class="stat">Total: <strong>3</strong></span>
+          <span class="stat">Planted: <strong>3</strong></span>
+          <span class="stat">Resolved: <strong>0</strong></span>
+          <span class="stat">Resolution Rate: <strong>0%</strong></span>
+        </div><div class="card-grid">
+        <div class="card foreshadowing-card status-planted">
+          <h3>桃の不思議な力</h3>
+          <div class="meta">
+            <span class="type">mystery</span>
+            <span class="status">planted</span>
+            <span class="importance">major</span>
+            <span class="id">桃の不思議な力</span>
+          </div>
+          <p class="summary">桃の不思議な力の概要（要追加）</p>
+          <div class="planting-info">
+            <span class="label">Planted:</span> chapter_01
+          </div>
+          
+          
+          <div class="file-path">
+            <code>src/foreshadowings/桃の不思議な力.ts</code>
+          </div>
+        </div>
+
+        <div class="card foreshadowing-card status-planted">
+          <h3>きびだんご</h3>
+          <div class="meta">
+            <span class="type">chekhov</span>
+            <span class="status">planted</span>
+            <span class="importance">major</span>
+            <span class="id">きびだんご</span>
+          </div>
+          <p class="summary">きびだんごの概要（要追加）</p>
+          <div class="planting-info">
+            <span class="label">Planted:</span> chapter_02
+          </div>
+          
+          
+          <div class="file-path">
+            <code>src/foreshadowings/きびだんご.ts</code>
+          </div>
+        </div>
+
+        <div class="card foreshadowing-card status-planted">
+          <h3>鬼の宝物</h3>
+          <div class="meta">
+            <span class="type">hint</span>
+            <span class="status">planted</span>
+            <span class="importance">minor</span>
+            <span class="id">鬼の宝物</span>
+          </div>
+          <p class="summary">鬼の宝物の概要（要追加）</p>
+          <div class="planting-info">
+            <span class="label">Planted:</span> chapter_02
+          </div>
+          
+          
+          <div class="file-path">
+            <code>src/foreshadowings/鬼の宝物.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="manuscripts">
+        <h2>Manuscripts</h2>
+        <div class="manuscript-list">
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;旅立ちと仲間たち&quot;</h3>
+            <code class="path">manuscripts/chapter_02.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">猿 (6)</span> <span class="ref character">雉 (6)</span> <span class="ref character">犬 (6)</span> <span class="ref character">おじいさん (4)</span> <span class="ref character">桃太郎 (22)</span> <span class="ref character">main_character (22)</span> <span class="ref character">おばあさん (6)</span> <span class="ref setting">山道 (2)</span> <span class="ref setting">鬼ヶ島 (12)</span> <span class="ref foreshadowing planted">きびだんご (5)</span>
+          </div>
+        </div>
+
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;鬼ヶ島の戦い&quot;</h3>
+            <code class="path">manuscripts/chapter_03.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">猿 (4)</span> <span class="ref character">雉 (4)</span> <span class="ref character">犬 (4)</span> <span class="ref character">鬼の大将 (6)</span> <span class="ref character">桃太郎 (16)</span> <span class="ref character">main_character (16)</span> <span class="ref setting">鬼ヶ島 (6)</span>
+          </div>
+        </div>
+
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;凱旋&quot;</h3>
+            <code class="path">manuscripts/chapter_04.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">猿 (4)</span> <span class="ref character">雉 (4)</span> <span class="ref character">犬 (4)</span> <span class="ref character">おじいさん (6)</span> <span class="ref character">桃太郎 (18)</span> <span class="ref character">main_character (18)</span> <span class="ref character">おばあさん (8)</span> <span class="ref foreshadowing planted">きびだんご (1)</span>
+          </div>
+        </div>
+
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;桃太郎の誕生&quot;</h3>
+            <code class="path">manuscripts/chapter_01.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">おじいさん (10)</span> <span class="ref character">桃太郎 (6)</span> <span class="ref character">main_character (6)</span> <span class="ref character">おばあさん (10)</span> <span class="ref setting">川 (8)</span>
+          </div>
+        </div>
+
+        <div class="manuscript-item">
+          <div class="manuscript-header">
+            <h3>&quot;序章&quot;</h3>
+            <code class="path">manuscripts/chapter01.md</code>
+          </div>
+          <div class="references">
+            <span class="label">References:</span>
+            <span class="ref character">桃太郎 (2)</span> <span class="ref character">main_character (2)</span>
+          </div>
+        </div></div>
+      </section>
+    </main>
+
+    <footer>
+      <p>Generated by storyteller</p>
+    </footer>
+  </div>
+</body>
+</html>

@@ -5,14 +5,13 @@
  * リソースのテスト
  */
 
-import { assertEquals, assertRejects } from "@std/assert";
-import { beforeEach, describe, it } from "@std/testing/bdd";
-import { ProjectResourceProvider } from "../../../src/mcp/resources/project_resource_provider.ts";
+import { assertEquals } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
 import { parseResourceUri } from "../../../src/mcp/resources/uri_parser.ts";
 import type { Character } from "../../../src/type/v2/character.ts";
 
-// テスト用のキャラクター
-const testCharacter: Character = {
+// テスト用のキャラクター（将来の統合テスト用）
+const _testCharacter: Character = {
   id: "hero",
   name: "勇者",
   role: "protagonist",

@@ -4,7 +4,7 @@
  *
  * このテストはプロンプトドキュメントの存在と必須セクションを検証します。
  */
-import { assert, assertEquals, assertStringIncludes } from "@std/assert";
+import { assert, assertStringIncludes } from "@std/assert";
 
 const DOCS_PROMPTS_DIR = "./docs/prompts";
 

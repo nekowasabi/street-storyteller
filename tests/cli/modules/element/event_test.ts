@@ -4,13 +4,9 @@
  * storyteller element event コマンドの動作を検証
  */
 
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { ElementEventCommand } from "../../../../src/cli/modules/element/event.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
-import type {
-  Timeline,
-  TimelineEvent,
-} from "../../../../src/type/v2/timeline.ts";
 
 Deno.test("ElementEventCommand", async (t) => {
   await t.step("コマンド名とパスが正しいこと", () => {

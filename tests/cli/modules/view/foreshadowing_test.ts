@@ -4,7 +4,7 @@
  * storyteller view foreshadowing コマンドの動作を検証
  */
 
-import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { ViewForeshadowingCommand } from "../../../../src/cli/modules/view/foreshadowing.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
 import type { Foreshadowing } from "../../../../src/type/v2/foreshadowing.ts";

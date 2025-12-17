@@ -6,7 +6,6 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import { ElementTimelineCommand } from "../../../../src/cli/modules/element/timeline.ts";
-import type { CommandContext } from "../../../../src/cli/types.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
 
 Deno.test("ElementTimelineCommand", async (t) => {

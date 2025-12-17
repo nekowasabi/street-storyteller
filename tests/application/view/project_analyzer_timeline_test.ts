@@ -6,10 +6,6 @@
 
 import { assertEquals, assertExists } from "@std/assert";
 import { ProjectAnalyzer } from "../../../src/application/view/project_analyzer.ts";
-import type {
-  EventSummary,
-  TimelineSummary,
-} from "../../../src/application/view/project_analyzer.ts";
 
 Deno.test("ProjectAnalyzer Timeline機能", async (t) => {
   await t.step("loadTimelines()でタイムラインを読み込めること", async () => {
