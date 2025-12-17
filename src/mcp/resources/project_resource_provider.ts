@@ -151,7 +151,7 @@ export class ProjectResourceProvider implements ResourceProvider {
       });
     }
 
-    for (const foreshadowing of analysis.foreshadowings) {
+    for (const foreshadowing of analysis.foreshadowings ?? []) {
       resources.push({
         uri: `storyteller://foreshadowing/${
           encodeURIComponent(foreshadowing.id)
