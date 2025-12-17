@@ -87,13 +87,11 @@ export class SemanticTokensProvider {
       this.isTokenInRange(token, range)
     );
 
-    // 範囲の開始行を基準にline_deltaを再計算
-    const adjustedTokens = filteredTokens.map((token) => ({
-      ...token,
-      line: token.line - range.start.line,
-    }));
-
-    const data = this.encodeTokens(adjustedTokens);
+    // LSP仕様: semanticTokens/range のレスポンスは semanticTokens/full と
+    // 同一フォーマット。位置はドキュメントの絶対位置を維持し、
+    // 相対エンコーディングは encodeTokens 内で行われる。
+    // @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens
+    const data = this.encodeTokens(filteredTokens);
 
     return { data };
   }
