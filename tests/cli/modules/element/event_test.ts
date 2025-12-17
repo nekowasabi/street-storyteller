@@ -7,6 +7,7 @@
 import { assertEquals } from "@std/assert";
 import { ElementEventCommand } from "../../../../src/cli/modules/element/event.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
+import type { Timeline } from "../../../../src/type/v2/timeline.ts";
 
 Deno.test("ElementEventCommand", async (t) => {
   await t.step("コマンド名とパスが正しいこと", () => {

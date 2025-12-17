@@ -229,7 +229,6 @@ export class CharacterPhaseResolver {
         triggerEventId: phase.triggerEventId,
         keyChanges,
       });
-      previousPhaseId = phase.id;
     }
 
     return timeline;
