@@ -10,7 +10,8 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
     const server = new LocalViewServer();
     server.setContent("<html></html>");
 
-    const port = 49000 + Math.floor(Math.random() * 1000);
+    // より広いポート範囲でランダム選択（衝突回避）
+    const port = 50000 + Math.floor(Math.random() * 10000);
     await server.start(port);
 
     try {
@@ -42,7 +43,8 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
     const server = new LocalViewServer();
     server.setContent("<html></html>");
 
-    const port = 49000 + Math.floor(Math.random() * 1000);
+    // より広いポート範囲でランダム選択（衝突回避）
+    const port = 51000 + Math.floor(Math.random() * 10000);
     await server.start(port);
 
     try {
@@ -103,7 +105,8 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
     const server = new LocalViewServer();
     server.setContent("<html></html>");
 
-    const port = 49000 + Math.floor(Math.random() * 1000);
+    // より広いポート範囲でランダム選択（衝突回避）
+    const port = 52000 + Math.floor(Math.random() * 10000);
     await server.start(port);
 
     try {
