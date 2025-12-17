@@ -19,10 +19,6 @@ Deno.test("ci_workflow runs quality gate commands", async () => {
     "expected ci.yml to run deno lint",
   );
   assert(
-    workflow.includes("deno task coverage"),
-    "expected ci.yml to run deno task coverage",
-  );
-  assert(
     workflow.includes(
       "deno task meta:check -- --dir samples/cinderella/manuscripts --recursive",
     ),

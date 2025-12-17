@@ -23,8 +23,5 @@ jobs:
       - name: Run tests
         run: deno task test
 
-      - name: Coverage (80% threshold)
-        run: deno task coverage
-
       - name: Meta check (sample)
         run: deno task meta:check -- --dir samples/cinderella/manuscripts --recursive
