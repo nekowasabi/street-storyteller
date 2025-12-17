@@ -108,7 +108,7 @@ Specification
 
 @test: `tests/lsp/providers/semantic_tokens_provider_test.ts`
 
-- [ ] `getSemanticTokensRange excludes out-of-range tokens`テストの期待値を修正
+- [x] `getSemanticTokensRange excludes out-of-range tokens`テストの期待値を修正
   - 現在: `assertEquals(result.data[0], 0)` （範囲の開始行を基準）
   - 修正後: `assertEquals(result.data[0], 1)` （ドキュメントの絶対位置）
   - この時点でテストは失敗する（現在の実装はLSP仕様違反のため）
@@ -119,9 +119,9 @@ Specification
 
 ##### TDD Step 3: Refactor & Verify
 
-- [ ] テスト実行コマンド:
+- [x] テスト実行コマンド:
       `deno test tests/lsp/providers/semantic_tokens_provider_test.ts --filter "getSemanticTokensRange"`
-- [ ] テストが失敗することを確認（Red状態）
+- [x] テストが失敗することを確認（Red状態）
 
 ---
 
@@ -138,7 +138,7 @@ Specification
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `getSemanticTokensRange()`メソッドの修正（行90-96）
+- [x] `getSemanticTokensRange()`メソッドの修正（行90-96）
   - 現在のコード:
     ```typescript
     const adjustedTokens = filteredTokens.map((token) => ({
@@ -153,16 +153,16 @@ Specification
     // 相対エンコーディングは encodeTokens 内で行われる
     const data = this.encodeTokens(filteredTokens);
     ```
-  - `adjustedTokens`変数の削除
-  - `filteredTokens`を直接`encodeTokens`に渡す
+  - [x] `adjustedTokens`変数の削除
+  - [x] `filteredTokens`を直接`encodeTokens`に渡す
 
 ##### TDD Step 3: Refactor & Verify
 
-- [ ] テスト実行:
+- [x] テスト実行:
       `deno test tests/lsp/providers/semantic_tokens_provider_test.ts`
-- [ ] すべてのテストが通過することを確認（Green状態）
+- [x] すべてのテストが通過することを確認（Green状態）
   - **テストが失敗した場合**: 修正 → テスト実行を繰り返す
-- [ ] コードレビュー: 不要なコメントや変数がないか確認
+- [x] コードレビュー: 不要なコメントや変数がないか確認
 
 ---
 
@@ -176,7 +176,7 @@ Specification
 
 @test: `tests/lsp/providers/semantic_tokens_provider_test.ts`
 
-- [ ] テストケース: `getSemanticTokensRange maintains absolute positions`
+- [x] テストケース: `getSemanticTokensRange maintains absolute positions`
   - 3行目にトークンがある場合、行2-3を要求すると行2（絶対位置）が返される
   ```typescript
   Deno.test("SemanticTokensProvider - getSemanticTokensRange maintains absolute positions", async () => {
@@ -199,12 +199,12 @@ Specification
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] process2の実装で既にGreen状態になっているはず
+- [x] process2の実装で既にGreen状態になっているはず
 
 ##### TDD Step 3: Refactor & Verify
 
-- [ ] テスト実行し、通過することを確認
-- [ ] 必要に応じてテストケースを追加
+- [x] テスト実行し、通過することを確認
+- [x] 必要に応じてテストケースを追加
 
 #### sub2 複数トークンの相対エンコーディングテスト
 
@@ -214,7 +214,7 @@ Specification
 
 @test: `tests/lsp/providers/semantic_tokens_provider_test.ts`
 
-- [ ] テストケース:
+- [x] テストケース:
       `getSemanticTokensRange with multiple tokens preserves relative encoding`
   - 複数行に複数トークンがある場合、相対エンコーディングが正しいか確認
   ```typescript
@@ -241,11 +241,11 @@ Specification
 
 ##### TDD Step 2: Green
 
-- [ ] process2の実装で既にGreen状態になっているはず
+- [x] process2の実装で既にGreen状態になっているはず
 
 ##### TDD Step 3: Refactor & Verify
 
-- [ ] テスト実行し、通過することを確認
+- [x] テスト実行し、通過することを確認
 
 ---
 
@@ -257,17 +257,19 @@ Specification
 
 ### process100 リファクタリング
 
-- [ ] `getSemanticTokensRange`メソッドのコメント更新
+- [x] `getSemanticTokensRange`メソッドのコメント更新
   - LSP仕様準拠であることを明記
-- [ ] 不要なコード（adjustedTokens関連）が完全に削除されていることを確認
-- [ ] 全テスト実行: `deno test tests/lsp/`
+- [x] 不要なコード（adjustedTokens関連）が完全に削除されていることを確認
+- [x] 全テスト実行: `deno test tests/lsp/`
 
 ---
 
 ### process200 ドキュメンテーション
 
-- [ ] `docs/lsp.md`に修正内容を追記（必要に応じて）
-- [ ] `CLAUDE.md`の関連セクションに問題と解決策を記録（必要に応じて）
+- [x] `docs/lsp.md`に修正内容を追記（必要に応じて）
+  - 既存ドキュメントで十分に説明されているため追記不要
+- [x] `CLAUDE.md`の関連セクションに問題と解決策を記録（必要に応じて）
+  - 既存ドキュメントで十分に説明されているため追記不要
 
 ---
 
