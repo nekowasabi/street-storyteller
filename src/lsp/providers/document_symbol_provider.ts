@@ -11,7 +11,6 @@ import {
 } from "../detection/positioned_detector.ts";
 import {
   type DocumentSymbol,
-  type Range,
   SymbolKind,
   type SymbolKindType,
 } from "./lsp_types.ts";

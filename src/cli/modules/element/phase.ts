@@ -15,7 +15,7 @@ import type {
   RelationshipsDelta,
   TransitionType,
 } from "../../../type/v2/character_phase.ts";
-import type { Character, RelationType } from "../../../type/v2/character.ts";
+import type { RelationType } from "../../../type/v2/character.ts";
 import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
 import type { CommandDescriptor } from "../../types.ts";
 

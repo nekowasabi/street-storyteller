@@ -65,9 +65,8 @@ export const phaseViewTool: McpToolDefinition = {
       const projectRoot = context?.projectRoot || Deno.cwd();
       const characterFilePath = `${projectRoot}/src/characters/${character}.ts`;
 
-      let characterContent: string;
       try {
-        characterContent = await Deno.readTextFile(characterFilePath);
+        await Deno.readTextFile(characterFilePath);
       } catch {
         return {
           content: [
@@ -186,7 +185,7 @@ async function loadCharacterFromFile(
     const module = await import(filePath);
 
     // exportされているキャラクターオブジェクトを探す
-    for (const [key, value] of Object.entries(module)) {
+    for (const [_key, value] of Object.entries(module)) {
       if (
         value &&
         typeof value === "object" &&

@@ -216,7 +216,6 @@ export class CharacterPhaseResolver {
       a.order - b.order
     );
 
-    let previousPhaseId: string | null = null;
     for (const phase of sortedPhases) {
       const keyChanges = this.extractKeyChanges(phase.delta);
       timeline.push({
