@@ -19,6 +19,8 @@ import { eventDetailSuggestPrompt } from "../../prompts/definitions/event_detail
 import { causalityAnalysisPrompt } from "../../prompts/definitions/causality_analysis.ts";
 import { timelineConsistencyCheckPrompt } from "../../prompts/definitions/timeline_consistency_check.ts";
 import { storyDirectorPrompt } from "../../prompts/definitions/story_director.ts";
+import { characterArcSuggestPrompt } from "../../prompts/definitions/character_arc_suggest.ts";
+import { phaseTransitionCheckPrompt } from "../../prompts/definitions/phase_transition_check.ts";
 
 export type McpListPromptsResult = {
   readonly prompts: readonly McpPrompt[];
@@ -73,6 +75,10 @@ export function createDefaultPromptRegistry(): PromptRegistry {
 
   // Director prompt
   registry.register(storyDirectorPrompt);
+
+  // Character phase prompts
+  registry.register(characterArcSuggestPrompt);
+  registry.register(phaseTransitionCheckPrompt);
 
   return registry;
 }

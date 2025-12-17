@@ -14,10 +14,19 @@ export type Position = {
 };
 
 /**
+ * 伏線のステータス型（foreshadowing用）
+ */
+export type ForeshadowingStatus =
+  | "planted"
+  | "partially_resolved"
+  | "resolved"
+  | "abandoned";
+
+/**
  * 位置情報付きマッチ結果
  */
 export type PositionedMatch = {
-  readonly kind: "character" | "setting";
+  readonly kind: "character" | "setting" | "foreshadowing";
   readonly id: string;
   readonly filePath: string;
   readonly matchedPattern: string;
@@ -27,18 +36,22 @@ export type PositionedMatch = {
     readonly length: number;
   }>;
   readonly confidence: number;
+  /** 伏線の場合のみ: ステータス */
+  readonly status?: ForeshadowingStatus;
 };
 
 /**
  * エンティティ情報（検出対象）
  */
 export type DetectableEntity = {
-  readonly kind: "character" | "setting";
+  readonly kind: "character" | "setting" | "foreshadowing";
   readonly id: string;
   readonly name: string;
   readonly displayNames?: readonly string[];
   readonly aliases?: readonly string[];
   readonly filePath: string;
+  /** 伏線の場合のみ: ステータス */
+  readonly status?: ForeshadowingStatus;
 };
 
 /**
@@ -117,6 +130,7 @@ export class PositionedDetector {
           matchedPattern: pattern,
           positions,
           confidence,
+          status: entity.status,
         });
       }
     }
@@ -132,6 +146,16 @@ export class PositionedDetector {
     entity: DetectableEntity,
   ): Array<{ pattern: string; confidence: number }> {
     const patterns: Array<{ pattern: string; confidence: number }> = [];
+
+    // @id: confidence 1.0 (明示的参照 - 最優先)
+    if (entity.id) {
+      patterns.push({ pattern: `@${entity.id}`, confidence: 1.0 });
+    }
+
+    // @name: confidence 1.0 (明示的参照)
+    if (entity.name && entity.name !== entity.id) {
+      patterns.push({ pattern: `@${entity.name}`, confidence: 1.0 });
+    }
 
     // id: confidence 1.0 (Frontmatter内のID参照用)
     if (entity.id) {
@@ -231,6 +255,7 @@ export class PositionedDetector {
         matchedPattern,
         positions: uniquePositions,
         confidence: bestConfidence,
+        status: matches[0].status,
       },
     ];
   }

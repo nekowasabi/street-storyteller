@@ -383,3 +383,122 @@ Deno.test("SemanticTokensProvider - Japanese: multiple entities in Japanese text
   assertEquals(result.data[12], 1); // length
   assertEquals(result.data[13], 1); // type (setting)
 });
+
+// ========================================
+// process3: foreshadowingセマンティックトークンテスト
+// ========================================
+
+// 伏線を含むモックエンティティ
+const mockEntitiesWithForeshadowing: DetectableEntity[] = [
+  ...mockEntities,
+  {
+    kind: "foreshadowing" as const,
+    id: "glass_slipper",
+    name: "ガラスの靴の伏線",
+    displayNames: ["ガラスの靴", "ガラスの靴の伏線"],
+    aliases: ["輝く靴"],
+    filePath: "src/foreshadowings/glass_slipper.ts",
+    status: "planted" as const,
+  },
+  {
+    kind: "foreshadowing" as const,
+    id: "midnight_deadline",
+    name: "真夜中の期限",
+    displayNames: ["真夜中", "真夜中の期限"],
+    aliases: ["12時"],
+    filePath: "src/foreshadowings/midnight_deadline.ts",
+    status: "resolved" as const,
+  },
+];
+
+Deno.test("SemanticTokensProvider - detects foreshadowing token", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new SemanticTokensProvider(detector);
+
+  const content = "ガラスの靴が光っていた。";
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
+
+  assertEquals(result.data.length >= 5, true);
+  assertEquals(result.data[2], 5); // length ("ガラスの靴" = 5文字)
+  assertEquals(result.data[3], 2); // token_type (foreshadowing = 2)
+});
+
+Deno.test("SemanticTokensProvider - foreshadowing planted status modifier", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new SemanticTokensProvider(detector);
+
+  // ガラスの靴は planted ステータス
+  const content = "ガラスの靴";
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
+
+  assertEquals(result.data.length >= 5, true);
+  // planted modifier bit (bit 3 = 8)
+  assertEquals((result.data[4] & 8) !== 0, true);
+});
+
+Deno.test("SemanticTokensProvider - foreshadowing resolved status modifier", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new SemanticTokensProvider(detector);
+
+  // 真夜中 は resolved ステータス
+  const content = "真夜中";
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
+
+  assertEquals(result.data.length >= 5, true);
+  // resolved modifier bit (bit 4 = 16)
+  assertEquals((result.data[4] & 16) !== 0, true);
+});
+
+Deno.test("SemanticTokensProvider - mixed entities including foreshadowing", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new SemanticTokensProvider(detector);
+
+  // "勇者はガラスの靴を城で見つけた"
+  // 勇者(character=0), ガラスの靴(foreshadowing=2), 城(setting=1)
+  const content = "勇者はガラスの靴を城で見つけた";
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
+
+  // 3つのトークン = 15要素
+  assertEquals(result.data.length, 15);
+
+  // 勇者 (character = 0)
+  assertEquals(result.data[3], 0);
+
+  // ガラスの靴 (foreshadowing = 2)
+  assertEquals(result.data[8], 2);
+
+  // 城 (setting = 1)
+  assertEquals(result.data[13], 1);
+});

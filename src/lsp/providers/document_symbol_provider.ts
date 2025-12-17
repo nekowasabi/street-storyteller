@@ -120,13 +120,15 @@ export class DocumentSymbolProvider {
    * エンティティ種別に応じたSymbolKindを返す
    */
   private getSymbolKindForEntity(
-    kind: "character" | "setting",
+    kind: "character" | "setting" | "foreshadowing",
   ): SymbolKindType {
     switch (kind) {
       case "character":
         return SymbolKind.Variable;
       case "setting":
         return SymbolKind.Object;
+      case "foreshadowing":
+        return SymbolKind.Event;
       default:
         return SymbolKind.Variable;
     }

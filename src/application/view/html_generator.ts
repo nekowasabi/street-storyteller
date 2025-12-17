@@ -428,17 +428,26 @@ ${CSS_STYLES}
    * エンティティ参照をレンダリング
    */
   private renderReferences(
-    refs: readonly { id: string; kind: string; occurrences: number }[],
+    refs: readonly {
+      id: string;
+      kind: string;
+      occurrences: number;
+      status?: string;
+    }[],
   ): string {
     if (refs.length === 0) {
       return '<span class="no-refs">None</span>';
     }
 
-    return refs.map((ref) =>
-      `<span class="ref ${escapeHtml(ref.kind)}">${
+    return refs.map((ref) => {
+      // 伏線の場合はステータスクラスを追加
+      const statusClass = ref.kind === "foreshadowing" && ref.status
+        ? ` ${escapeHtml(ref.status)}`
+        : "";
+      return `<span class="ref ${escapeHtml(ref.kind)}${statusClass}">${
         escapeHtml(ref.id)
-      } (${ref.occurrences})</span>`
-    ).join(" ");
+      } (${ref.occurrences})</span>`;
+    }).join(" ");
   }
 }
 
@@ -754,6 +763,35 @@ const CSS_STYLES = `
     .ref.setting {
       background: #e8f5e9;
       color: #2e7d32;
+    }
+
+    .ref.foreshadowing {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .ref.foreshadowing.planted {
+      background: #fff3e0;
+      color: #e65100;
+      border-left: 3px solid #e67e22;
+    }
+
+    .ref.foreshadowing.partially_resolved {
+      background: #fffde7;
+      color: #f9a825;
+      border-left: 3px solid #f1c40f;
+    }
+
+    .ref.foreshadowing.resolved {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-left: 3px solid #27ae60;
+    }
+
+    .ref.foreshadowing.abandoned {
+      background: #eceff1;
+      color: #607d8b;
+      border-left: 3px solid #95a5a6;
     }
 
     .empty {

@@ -19,13 +19,22 @@ import {
 export type { Hover, MarkupContent, Range };
 
 /**
+ * 回収情報型（foreshadowing用）
+ */
+export type ResolutionInfo = {
+  readonly chapter: string;
+  readonly description: string;
+  readonly completeness: number;
+};
+
+/**
  * エンティティの詳細情報
  * ホバー表示用に使用
  */
 export type EntityInfo = {
   readonly id: string;
   readonly name: string;
-  readonly kind: "character" | "setting";
+  readonly kind: "character" | "setting" | "foreshadowing";
   /** キャラクターの役割（characterの場合のみ） */
   readonly role?: string;
   /** 概要 */
@@ -34,6 +43,21 @@ export type EntityInfo = {
   readonly traits?: readonly string[];
   /** 関係性マップ（characterの場合のみ） */
   readonly relationships?: Record<string, string>;
+  // --- foreshadowing用フィールド ---
+  /** 伏線のタイプ（foreshadowingの場合のみ） */
+  readonly type?: string;
+  /** 伏線のステータス（foreshadowingの場合のみ） */
+  readonly status?: string;
+  /** 設置章（foreshadowingの場合のみ） */
+  readonly plantingChapter?: string;
+  /** 設置の説明（foreshadowingの場合のみ） */
+  readonly plantingDescription?: string;
+  /** 回収情報リスト（foreshadowingの場合のみ） */
+  readonly resolutions?: readonly ResolutionInfo[];
+  /** 関連キャラクター（foreshadowingの場合のみ） */
+  readonly relatedCharacters?: readonly string[];
+  /** 関連設定（foreshadowingの場合のみ） */
+  readonly relatedSettings?: readonly string[];
 };
 
 /**
@@ -112,7 +136,7 @@ export class HoverProvider {
     entityInfo?: EntityInfo,
   ): string {
     const lines: string[] = [];
-    const kindLabel = match.kind === "character" ? "キャラクター" : "設定";
+    const kindLabel = this.getKindLabel(match.kind);
 
     // ヘッダー
     lines.push(`## ${match.matchedPattern}`);
@@ -124,6 +148,7 @@ export class HoverProvider {
 
     // 詳細情報がある場合
     if (entityInfo) {
+      // character/setting共通
       if (entityInfo.role) {
         lines.push(`**役割**: ${entityInfo.role}`);
       }
@@ -150,6 +175,14 @@ export class HoverProvider {
           lines.push(`- ${target}: ${relation}`);
         }
       }
+
+      // foreshadowing固有の情報
+      if (match.kind === "foreshadowing") {
+        this.appendForeshadowingInfo(lines, match, entityInfo);
+      }
+    } else if (match.kind === "foreshadowing" && match.status) {
+      // entityInfoがなくてもmatchからステータスは取得可能
+      lines.push(`**ステータス**: ${this.getStatusLabel(match.status)}`);
     }
 
     // ファイルパス
@@ -157,6 +190,124 @@ export class HoverProvider {
     lines.push(`*定義: ${match.filePath}*`);
 
     return lines.join("\n");
+  }
+
+  /**
+   * kindのラベルを取得
+   */
+  private getKindLabel(
+    kind: "character" | "setting" | "foreshadowing",
+  ): string {
+    switch (kind) {
+      case "character":
+        return "キャラクター";
+      case "setting":
+        return "設定";
+      case "foreshadowing":
+        return "伏線";
+    }
+  }
+
+  /**
+   * ステータスのラベルを取得
+   */
+  private getStatusLabel(status: string): string {
+    switch (status) {
+      case "planted":
+        return "未回収 (planted)";
+      case "partially_resolved":
+        return "部分回収 (partially_resolved)";
+      case "resolved":
+        return "回収済み (resolved)";
+      case "abandoned":
+        return "破棄 (abandoned)";
+      default:
+        return status;
+    }
+  }
+
+  /**
+   * 伏線タイプのラベルを取得
+   */
+  private getForeshadowingTypeLabel(type: string): string {
+    switch (type) {
+      case "hint":
+        return "ヒント (hint)";
+      case "prophecy":
+        return "予言 (prophecy)";
+      case "mystery":
+        return "謎 (mystery)";
+      case "symbol":
+        return "象徴 (symbol)";
+      case "chekhov":
+        return "チェーホフの銃 (chekhov)";
+      case "red_herring":
+        return "ミスリード (red_herring)";
+      default:
+        return type;
+    }
+  }
+
+  /**
+   * 伏線固有の情報を追加
+   */
+  private appendForeshadowingInfo(
+    lines: string[],
+    match: PositionedMatch,
+    entityInfo: EntityInfo,
+  ): void {
+    // ステータス（entityInfo優先、なければmatchから）
+    const status = entityInfo.status || match.status;
+    if (status) {
+      lines.push("");
+      lines.push(`**ステータス**: ${this.getStatusLabel(status)}`);
+    }
+
+    // タイプ
+    if (entityInfo.type) {
+      lines.push(
+        `**タイプ**: ${this.getForeshadowingTypeLabel(entityInfo.type)}`,
+      );
+    }
+
+    // 設置情報
+    if (entityInfo.plantingChapter || entityInfo.plantingDescription) {
+      lines.push("");
+      lines.push("**設置**:");
+      if (entityInfo.plantingChapter) {
+        lines.push(`- 章: ${entityInfo.plantingChapter}`);
+      }
+      if (entityInfo.plantingDescription) {
+        lines.push(`- 説明: ${entityInfo.plantingDescription}`);
+      }
+    }
+
+    // 回収情報
+    if (entityInfo.resolutions && entityInfo.resolutions.length > 0) {
+      lines.push("");
+      lines.push("**回収**:");
+      for (const res of entityInfo.resolutions) {
+        const completenessPercent = Math.round(res.completeness * 100);
+        lines.push(
+          `- ${res.chapter}: ${res.description} (${completenessPercent}%)`,
+        );
+      }
+    }
+
+    // 関連キャラクター
+    if (
+      entityInfo.relatedCharacters && entityInfo.relatedCharacters.length > 0
+    ) {
+      lines.push("");
+      lines.push(
+        `**関連キャラクター**: ${entityInfo.relatedCharacters.join(", ")}`,
+      );
+    }
+
+    // 関連設定
+    if (entityInfo.relatedSettings && entityInfo.relatedSettings.length > 0) {
+      lines.push(`**関連設定**: ${entityInfo.relatedSettings.join(", ")}`);
+    }
   }
 
   /**

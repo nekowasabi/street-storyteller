@@ -222,7 +222,73 @@ export async function loadEntities(
     // ディレクトリが存在しない場合はスキップ
   }
 
+  // 伏線をロード
+  try {
+    const foreshadowingsDir = join(absoluteProjectRoot, "src/foreshadowings");
+    for await (const entry of Deno.readDir(foreshadowingsDir)) {
+      if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+      const absPath = join(foreshadowingsDir, entry.name);
+      try {
+        const mod = await import(toFileUrl(absPath).href);
+        for (const [, value] of Object.entries(mod)) {
+          const parsed = parseForeshadowingEntity(value);
+          if (parsed) {
+            const relPath = relative(absoluteProjectRoot, absPath).replaceAll(
+              "\\",
+              "/",
+            );
+            entities.push({
+              kind: "foreshadowing",
+              id: parsed.id,
+              name: parsed.name,
+              displayNames: parsed.displayNames,
+              filePath: relPath,
+              status: parsed.status,
+            });
+          }
+        }
+      } catch {
+        // スキップ
+      }
+    }
+  } catch {
+    // ディレクトリが存在しない場合はスキップ
+  }
+
   return entities;
+}
+
+/**
+ * 伏線エンティティをパース
+ */
+export function parseForeshadowingEntity(value: unknown): {
+  id: string;
+  name: string;
+  displayNames?: string[];
+  status?: "planted" | "partially_resolved" | "resolved" | "abandoned";
+} | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const id = record.id;
+  const name = record.name;
+  if (typeof id !== "string" || typeof name !== "string") return null;
+
+  const displayNames = Array.isArray(record.displayNames)
+    ? record.displayNames.filter((v): v is string => typeof v === "string")
+    : undefined;
+
+  const status = typeof record.status === "string" &&
+      ["planted", "partially_resolved", "resolved", "abandoned"].includes(
+        record.status,
+      )
+    ? (record.status as
+      | "planted"
+      | "partially_resolved"
+      | "resolved"
+      | "abandoned")
+    : undefined;
+
+  return { id, name, displayNames, status };
 }
 
 /**
@@ -240,9 +306,34 @@ export function parseEntity(value: unknown): {
   const name = record.name;
   if (typeof id !== "string" || typeof name !== "string") return null;
 
-  const displayNames = Array.isArray(record.displayNames)
+  // 基本のdisplayNames
+  const baseDisplayNames = Array.isArray(record.displayNames)
     ? record.displayNames.filter((v): v is string => typeof v === "string")
-    : undefined;
+    : [];
+
+  // フェーズ固有のdisplayNamesを収集
+  const phaseDisplayNames: string[] = [];
+  if (Array.isArray(record.phases)) {
+    for (const phase of record.phases) {
+      if (phase && typeof phase === "object") {
+        const phaseRecord = phase as Record<string, unknown>;
+        if (Array.isArray(phaseRecord.displayNames)) {
+          for (const displayName of phaseRecord.displayNames) {
+            if (
+              typeof displayName === "string" &&
+              !phaseDisplayNames.includes(displayName)
+            ) {
+              phaseDisplayNames.push(displayName);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 基本とフェーズのdisplayNamesをマージ
+  const allDisplayNames = [...baseDisplayNames, ...phaseDisplayNames];
+  const displayNames = allDisplayNames.length > 0 ? allDisplayNames : undefined;
 
   const aliases = Array.isArray(record.aliases)
     ? record.aliases.filter((v): v is string => typeof v === "string")

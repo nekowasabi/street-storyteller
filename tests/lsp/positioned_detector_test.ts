@@ -238,3 +238,104 @@ storyteller:
   assertEquals(entity.id, "hero");
   assertEquals(entity.kind, "character");
 });
+
+// ========================================
+// process2: foreshadowing検出のテスト
+// ========================================
+
+// 伏線のモックエンティティ
+const mockForeshadowingEntities = [
+  ...mockEntities,
+  {
+    kind: "foreshadowing" as const,
+    id: "glass_slipper",
+    name: "ガラスの靴の伏線",
+    displayNames: ["ガラスの靴", "ガラスの靴の伏線"],
+    aliases: ["輝く靴"],
+    filePath: "src/foreshadowings/glass_slipper.ts",
+    status: "planted" as const,
+  },
+  {
+    kind: "foreshadowing" as const,
+    id: "midnight_deadline",
+    name: "真夜中の期限",
+    displayNames: ["真夜中", "真夜中の期限"],
+    aliases: ["12時"],
+    filePath: "src/foreshadowings/midnight_deadline.ts",
+    status: "resolved" as const,
+  },
+];
+
+Deno.test("PositionedDetector - detects foreshadowing by id", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = `---
+storyteller:
+  foreshadowings:
+    - glass_slipper
+---`;
+  const results = detector.detectWithPositions(content);
+
+  const foreshadowingResult = results.find((r) =>
+    r.kind === "foreshadowing" && r.id === "glass_slipper"
+  );
+  assertExists(foreshadowingResult);
+  assertEquals(foreshadowingResult.confidence, 1.0);
+});
+
+Deno.test("PositionedDetector - detects foreshadowing by displayName in body", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = "シンデレラはガラスの靴を見つめた。";
+  const results = detector.detectWithPositions(content);
+
+  const foreshadowingResult = results.find((r) =>
+    r.kind === "foreshadowing" && r.id === "glass_slipper"
+  );
+  assertExists(foreshadowingResult);
+  assertEquals(foreshadowingResult.positions.length, 1);
+  assertEquals(foreshadowingResult.confidence >= 0.9, true);
+});
+
+Deno.test("PositionedDetector - detects foreshadowing by explicit @reference", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = "妖精は@真夜中の期限について警告した。";
+  const results = detector.detectWithPositions(content);
+
+  const foreshadowingResult = results.find((r) =>
+    r.kind === "foreshadowing" && r.id === "midnight_deadline"
+  );
+  assertExists(foreshadowingResult);
+});
+
+Deno.test("PositionedDetector - includes status in foreshadowing match", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = "ガラスの靴と真夜中の期限が物語を動かす。";
+  const results = detector.detectWithPositions(content);
+
+  const plantedResult = results.find((r) => r.id === "glass_slipper");
+  assertExists(plantedResult);
+  assertEquals(plantedResult.status, "planted");
+
+  const resolvedResult = results.find((r) => r.id === "midnight_deadline");
+  assertExists(resolvedResult);
+  assertEquals(resolvedResult.status, "resolved");
+});
+
+Deno.test("PositionedDetector - getEntityAtPosition returns foreshadowing", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = "ガラスの靴を見つけた。";
+  detector.detectWithPositions(content);
+
+  // "ガラスの靴" は位置0から
+  const entity = detector.getEntityAtPosition(content, {
+    line: 0,
+    character: 0,
+  });
+  assertExists(entity);
+  assertEquals(entity.id, "glass_slipper");
+  assertEquals(entity.kind, "foreshadowing");
+});

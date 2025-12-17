@@ -10,6 +10,8 @@ import {
   type ProjectAnalysis,
   ProjectAnalyzer,
 } from "../../application/view/project_analyzer.ts";
+import { CharacterPhaseResolver } from "../../application/character_phase_resolver.ts";
+import type { CharacterSummary } from "../../application/view/project_analyzer.ts";
 
 export class ProjectResourceProvider implements ResourceProvider {
   private cachedAnalysis?: {
@@ -17,11 +19,14 @@ export class ProjectResourceProvider implements ResourceProvider {
     readonly value: ProjectAnalysis;
   };
   private readonly cacheTtlMs = 3_000;
+  private readonly phaseResolver: CharacterPhaseResolver;
 
   constructor(
     private readonly projectPath: string,
     private readonly analyzer: ProjectAnalyzer = new ProjectAnalyzer(),
-  ) {}
+  ) {
+    this.phaseResolver = new CharacterPhaseResolver();
+  }
 
   private async getAnalysis(): Promise<ProjectAnalysis> {
     const now = Date.now();
@@ -89,6 +94,43 @@ export class ProjectResourceProvider implements ResourceProvider {
         mimeType: "application/json",
         description: character.summary ?? character.name,
       });
+
+      // フェーズがあるキャラクターには追加リソースを提供
+      if (character.phases && character.phases.length > 0) {
+        // フェーズ一覧リソース
+        resources.push({
+          uri: `storyteller://character/${
+            encodeURIComponent(character.id)
+          }/phases`,
+          name: `Character Phases: ${character.id}`,
+          mimeType: "application/json",
+          description:
+            `${character.name}の成長フェーズ一覧（${character.phases.length}フェーズ）`,
+        });
+
+        // 各フェーズのリソース
+        for (const phase of character.phases) {
+          resources.push({
+            uri: `storyteller://character/${
+              encodeURIComponent(character.id)
+            }/phase/${encodeURIComponent(phase.id)}`,
+            name: `Phase: ${character.id}/${phase.id}`,
+            mimeType: "application/json",
+            description: `${phase.name}: ${phase.summary}`,
+          });
+
+          // スナップショットリソース
+          resources.push({
+            uri: `storyteller://character/${
+              encodeURIComponent(character.id)
+            }/snapshot/${encodeURIComponent(phase.id)}`,
+            name: `Snapshot: ${character.id}@${phase.id}`,
+            mimeType: "application/json",
+            description:
+              `${character.name}の${phase.name}時点のスナップショット`,
+          });
+        }
+      }
     }
 
     for (const setting of analysis.settings) {
@@ -146,6 +188,16 @@ export class ProjectResourceProvider implements ResourceProvider {
         if (!found) {
           throw new Error(`Character not found: ${parsed.id}`);
         }
+
+        // サブリソースの処理
+        if (parsed.subResource) {
+          return this.handleCharacterSubResource(
+            found,
+            parsed.subResource,
+            parsed.subId,
+          );
+        }
+
         return JSON.stringify(found);
       }
       case "setting": {
@@ -185,5 +237,98 @@ export class ProjectResourceProvider implements ResourceProvider {
       default:
         throw new Error(`Unsupported resource type: ${parsed.type}`);
     }
+  }
+
+  /**
+   * キャラクターのサブリソースを処理
+   */
+  private handleCharacterSubResource(
+    character: CharacterSummary,
+    subResource: string,
+    subId?: string,
+  ): string {
+    switch (subResource) {
+      case "phases": {
+        // フェーズ一覧
+        if (!character.phases || character.phases.length === 0) {
+          return JSON.stringify({
+            characterId: character.id,
+            phases: [],
+            timeline: [],
+          });
+        }
+        // CharacterSummaryをCharacter互換オブジェクトに変換
+        const characterForResolver = this.toCharacterForResolver(character);
+        const timeline = this.phaseResolver.getPhaseTimeline(
+          characterForResolver,
+        );
+        return JSON.stringify({
+          characterId: character.id,
+          phases: character.phases,
+          timeline,
+        });
+      }
+
+      case "phase": {
+        // 特定フェーズ
+        if (!subId) {
+          throw new Error("Missing phase id");
+        }
+        if (!character.phases || character.phases.length === 0) {
+          throw new Error(`Character '${character.id}' has no phases`);
+        }
+        const phase = character.phases.find((p) => p.id === subId);
+        if (!phase) {
+          throw new Error(`Phase not found: ${subId}`);
+        }
+        return JSON.stringify({
+          characterId: character.id,
+          characterName: character.name,
+          phase,
+        });
+      }
+
+      case "snapshot": {
+        // 特定フェーズ時点のスナップショット
+        if (!subId) {
+          throw new Error("Missing phase id");
+        }
+        if (!character.phases || character.phases.length === 0) {
+          throw new Error(`Character '${character.id}' has no phases`);
+        }
+        // CharacterSummaryをCharacter互換オブジェクトに変換
+        const characterForResolver = this.toCharacterForResolver(character);
+        const snapshot = this.phaseResolver.resolveAtPhase(
+          characterForResolver,
+          subId,
+        );
+        return JSON.stringify(snapshot);
+      }
+
+      default:
+        throw new Error(`Unsupported character sub-resource: ${subResource}`);
+    }
+  }
+
+  /**
+   * CharacterSummaryをCharacterPhaseResolver互換のオブジェクトに変換
+   */
+  private toCharacterForResolver(
+    summary: CharacterSummary,
+  ): import("../../type/v2/character.ts").Character {
+    return {
+      id: summary.id,
+      name: summary.name,
+      role: (summary.role ??
+        "supporting") as import("../../type/v2/character.ts").CharacterRole,
+      traits: [...(summary.traits ?? [])],
+      relationships: { ...(summary.relationships ?? {}) },
+      appearingChapters: [],
+      summary: summary.summary ?? "",
+      displayNames: [...summary.displayNames],
+      phases: summary.phases ? [...summary.phases] : undefined,
+      initialState: summary.initialState,
+      currentPhaseId: summary.currentPhaseId,
+    };
   }
 }

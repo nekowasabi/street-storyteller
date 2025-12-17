@@ -3,6 +3,14 @@
  * storyteller://... 形式のURIを解析する
  */
 
+/**
+ * サブリソースの種類
+ * - phases: キャラクターのフェーズ一覧
+ * - phase: 特定のフェーズ情報
+ * - snapshot: 特定フェーズ時点のスナップショット
+ */
+export type SubResourceType = "phases" | "phase" | "snapshot";
+
 export type ParsedUri = {
   readonly type:
     | "characters"
@@ -17,6 +25,10 @@ export type ParsedUri = {
     | "manuscript"
     | "project";
   readonly id?: string;
+  /** サブリソースの種類（例: phases, phase, snapshot） */
+  readonly subResource?: SubResourceType;
+  /** サブリソースのID（例: フェーズID） */
+  readonly subId?: string;
 };
 
 const VALID_TYPES: ReadonlySet<string> = new Set([
@@ -31,6 +43,12 @@ const VALID_TYPES: ReadonlySet<string> = new Set([
   "chapters",
   "manuscript",
   "project",
+]);
+
+const VALID_SUB_RESOURCES: ReadonlySet<string> = new Set([
+  "phases",
+  "phase",
+  "snapshot",
 ]);
 
 export function parseResourceUri(uri: string): ParsedUri {
@@ -53,8 +71,25 @@ export function parseResourceUri(uri: string): ParsedUri {
   const parts = url.pathname.split("/").filter((p) => p.length > 0);
   const id = parts[0] ? decodeURIComponent(parts[0]) : undefined;
 
-  return {
+  // サブリソースの解析
+  // 例: storyteller://character/hero/phases
+  //     storyteller://character/hero/phase/awakening
+  //     storyteller://character/hero/snapshot/awakening
+  const subResourceRaw = parts[1] ? decodeURIComponent(parts[1]) : undefined;
+  const subId = parts[2] ? decodeURIComponent(parts[2]) : undefined;
+
+  const result: ParsedUri = {
     type: typeRaw as ParsedUri["type"],
     ...(id ? { id } : {}),
   };
+
+  if (subResourceRaw && VALID_SUB_RESOURCES.has(subResourceRaw)) {
+    return {
+      ...result,
+      subResource: subResourceRaw as SubResourceType,
+      ...(subId ? { subId } : {}),
+    };
+  }
+
+  return result;
 }

@@ -25,6 +25,7 @@ export type TextDocumentSyncKind =
 export const SEMANTIC_TOKEN_TYPES = [
   "character", // 0: キャラクター名
   "setting", // 1: 設定名（場所・世界観）
+  "foreshadowing", // 2: 伏線
 ] as const;
 
 export type SemanticTokenType = (typeof SEMANTIC_TOKEN_TYPES)[number];
@@ -34,9 +35,11 @@ export type SemanticTokenType = (typeof SEMANTIC_TOKEN_TYPES)[number];
  * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokenModifiers
  */
 export const SEMANTIC_TOKEN_MODIFIERS = [
-  "highConfidence", // 0: 信頼度90%以上
-  "mediumConfidence", // 1: 信頼度70-90%
-  "lowConfidence", // 2: 信頼度70%未満
+  "highConfidence", // 0: 信頼度90%以上 (bit 0 = 1)
+  "mediumConfidence", // 1: 信頼度70-90% (bit 1 = 2)
+  "lowConfidence", // 2: 信頼度70%未満 (bit 2 = 4)
+  "planted", // 3: 伏線 - 未回収 (bit 3 = 8)
+  "resolved", // 4: 伏線 - 回収済み (bit 4 = 16)
 ] as const;
 
 export type SemanticTokenModifier = (typeof SEMANTIC_TOKEN_MODIFIERS)[number];
@@ -69,6 +72,17 @@ export function getSemanticTokensLegend(): SemanticTokensLegend {
     tokenModifiers: SEMANTIC_TOKEN_MODIFIERS,
   };
 }
+
+/**
+ * 補完プロバイダーオプション型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionOptions
+ */
+export type CompletionOptions = {
+  /** トリガー文字 */
+  readonly triggerCharacters?: readonly string[];
+  /** 補完アイテムの解決をサポートするか */
+  readonly resolveProvider?: boolean;
+};
 
 /**
  * サーバーキャパビリティ
@@ -108,11 +122,17 @@ export type ServerCapabilities = {
    * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_semanticTokens
    */
   readonly semanticTokensProvider?: SemanticTokensOptions;
+
+  /**
+   * 補完機能のサポート
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion
+   */
+  readonly completionProvider?: CompletionOptions;
 };
 
 /**
  * サーバーキャパビリティを取得する
- * Full同期、定義ジャンプ、ホバー、Code Action、ドキュメントシンボル、セマンティックトークンをサポート
+ * Full同期、定義ジャンプ、ホバー、Code Action、ドキュメントシンボル、セマンティックトークン、補完をサポート
  */
 export function getServerCapabilities(): ServerCapabilities {
   return {
@@ -125,6 +145,10 @@ export function getServerCapabilities(): ServerCapabilities {
       legend: getSemanticTokensLegend(),
       full: true,
       range: true,
+    },
+    completionProvider: {
+      triggerCharacters: ["@"],
+      resolveProvider: false,
     },
   };
 }

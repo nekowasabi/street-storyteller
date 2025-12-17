@@ -272,3 +272,206 @@ Deno.test("HoverProvider - handles entity without info map entry", async () => {
   assertExists(result);
   assertEquals(result.contents.value.includes("勇者"), true);
 });
+
+// ========================================
+// process3: foreshadowingホバーのテスト
+// ========================================
+
+// 伏線を含むモックエンティティ
+const mockEntitiesWithForeshadowing: DetectableEntity[] = [
+  ...mockEntities,
+  {
+    kind: "foreshadowing" as const,
+    id: "glass_slipper",
+    name: "ガラスの靴の伏線",
+    displayNames: ["ガラスの靴", "ガラスの靴の伏線"],
+    aliases: ["輝く靴"],
+    filePath: "src/foreshadowings/glass_slipper.ts",
+    status: "planted" as const,
+  },
+  {
+    kind: "foreshadowing" as const,
+    id: "midnight_deadline",
+    name: "真夜中の期限",
+    displayNames: ["真夜中", "真夜中の期限"],
+    aliases: ["12時"],
+    filePath: "src/foreshadowings/midnight_deadline.ts",
+    status: "resolved" as const,
+  },
+];
+
+// 伏線用のEntityInfo
+const mockEntityInfoMapWithForeshadowing = new Map<string, EntityInfo>([
+  ...mockEntityInfoMap,
+  [
+    "glass_slipper",
+    {
+      id: "glass_slipper",
+      name: "ガラスの靴の伏線",
+      kind: "foreshadowing" as const,
+      type: "chekhov",
+      status: "planted",
+      summary: "シンデレラが落としたガラスの靴",
+      plantingChapter: "chapter_01",
+      plantingDescription: "舞踏会の帰り道に落とす",
+      relatedCharacters: ["cinderella", "prince"],
+    },
+  ],
+  [
+    "midnight_deadline",
+    {
+      id: "midnight_deadline",
+      name: "真夜中の期限",
+      kind: "foreshadowing" as const,
+      type: "prophecy",
+      status: "resolved",
+      summary: "魔法が解ける期限",
+      plantingChapter: "chapter_02",
+      plantingDescription: "妖精が警告を与える",
+      resolutions: [
+        {
+          chapter: "chapter_05",
+          description: "シンデレラが真夜中に走り去る",
+          completeness: 1.0,
+        },
+      ],
+      relatedCharacters: ["cinderella", "fairy_godmother"],
+    },
+  ],
+]);
+
+Deno.test("HoverProvider - returns hover with foreshadowing info (planted)", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new HoverProvider(
+    detector,
+    mockEntityInfoMapWithForeshadowing,
+  );
+
+  const content = "シンデレラはガラスの靴を見つめた。";
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 6, // "ガラスの靴" の位置
+  }, projectPath);
+
+  assertExists(result);
+  assertExists(result.contents);
+  assertEquals(result.contents.kind, "markdown");
+
+  // 伏線情報が含まれている
+  assertEquals(result.contents.value.includes("伏線"), true);
+  // ステータスが含まれている
+  assertEquals(
+    result.contents.value.includes("planted") ||
+      result.contents.value.includes("未回収"),
+    true,
+  );
+  // 概要が含まれている
+  assertEquals(
+    result.contents.value.includes("シンデレラが落としたガラスの靴"),
+    true,
+  );
+});
+
+Deno.test("HoverProvider - displays foreshadowing status (resolved)", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new HoverProvider(
+    detector,
+    mockEntityInfoMapWithForeshadowing,
+  );
+
+  const content = "妖精は真夜中の期限について警告した。";
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 3, // "真夜中" の位置
+  }, projectPath);
+
+  assertExists(result);
+  // 回収済みステータスが表示される
+  assertEquals(
+    result.contents.value.includes("resolved") ||
+      result.contents.value.includes("回収済み"),
+    true,
+  );
+});
+
+Deno.test("HoverProvider - displays foreshadowing type", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new HoverProvider(
+    detector,
+    mockEntityInfoMapWithForeshadowing,
+  );
+
+  const content = "ガラスの靴が光っていた。";
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
+
+  assertExists(result);
+  // 伏線タイプが含まれている
+  assertEquals(
+    result.contents.value.includes("chekhov") ||
+      result.contents.value.includes("チェーホフの銃"),
+    true,
+  );
+});
+
+Deno.test("HoverProvider - displays foreshadowing planting info", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new HoverProvider(
+    detector,
+    mockEntityInfoMapWithForeshadowing,
+  );
+
+  const content = "ガラスの靴を手に取った。";
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
+
+  assertExists(result);
+  // 設置章の情報が含まれている
+  assertEquals(
+    result.contents.value.includes("chapter_01") ||
+      result.contents.value.includes("設置"),
+    true,
+  );
+});
+
+Deno.test("HoverProvider - displays foreshadowing related characters", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new HoverProvider(
+    detector,
+    mockEntityInfoMapWithForeshadowing,
+  );
+
+  const content = "ガラスの靴が残っていた。";
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
+
+  assertExists(result);
+  // 関連キャラクターが含まれている
+  assertEquals(
+    result.contents.value.includes("cinderella") ||
+      result.contents.value.includes("prince") ||
+      result.contents.value.includes("関連"),
+    true,
+  );
+});

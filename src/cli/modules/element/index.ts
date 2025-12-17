@@ -13,6 +13,7 @@ import { ElementSettingCommand } from "./setting.ts";
 import { ElementTimelineCommand } from "./timeline.ts";
 import { ElementEventCommand } from "./event.ts";
 import { ElementForeshadowingCommand } from "./foreshadowing.ts";
+import { elementPhaseCommandDescriptor } from "./phase.ts";
 
 /**
  * ElementCommand クラス
@@ -439,6 +440,7 @@ export function createElementDescriptor(
       elementTimelineCommandDescriptor,
       elementEventCommandDescriptor,
       elementForeshadowingCommandDescriptor,
+      elementPhaseCommandDescriptor,
     ],
     examples: [
       {

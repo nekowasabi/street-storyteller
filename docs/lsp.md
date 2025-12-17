@@ -1,7 +1,7 @@
 # LSP (Language Server Protocol) ドキュメント
 
 Street Storytellerは、エディタ統合のためのLSPサーバーを提供します。
-原稿（Markdown）内のキャラクター・設定参照をリアルタイムで検出し、診断情報・ナビゲーション機能を提供します。
+原稿（Markdown）内のキャラクター・設定・伏線参照をリアルタイムで検出し、診断情報・ナビゲーション機能を提供します。
 
 ## クイックスタート
 
@@ -129,10 +129,11 @@ export const hero: Character = {
 
 #### トークンタイプ
 
-| トークンタイプ | 対象                                          | 例                 |
-| -------------- | --------------------------------------------- | ------------------ |
-| `character`    | キャラクター名（name, displayNames, aliases） | 勇者、姫、主人公   |
-| `setting`      | 設定名（name, displayNames）                  | 城、王都、魔法の森 |
+| トークンタイプ  | 対象                                          | 例                 |
+| --------------- | --------------------------------------------- | ------------------ |
+| `character`     | キャラクター名（name, displayNames, aliases） | 勇者、姫、主人公   |
+| `setting`       | 設定名（name, displayNames）                  | 城、王都、魔法の森 |
+| `foreshadowing` | 伏線名（name, displayNames）                  | ガラスの靴、予言   |
 
 #### 信頼度モディファイア
 
@@ -141,6 +142,13 @@ export const hero: Character = {
 | `highConfidence`   | 信頼度 >= 90%       | 通常色       |
 | `mediumConfidence` | 70% <= 信頼度 < 90% | 薄め         |
 | `lowConfidence`    | 信頼度 < 70%        | 点線下線     |
+
+#### 伏線ステータスモディファイア（v1.2新機能）
+
+| モディファイア | 条件           | 推奨スタイル       |
+| -------------- | -------------- | ------------------ |
+| `planted`      | 未回収の伏線   | オレンジ (#e67e22) |
+| `resolved`     | 回収済みの伏線 | グリーン (#27ae60) |
 
 #### サポートするメソッド
 
@@ -155,11 +163,16 @@ export const hero: Character = {
 -- セマンティックトークンのハイライトグループを設定
 vim.api.nvim_set_hl(0, "@lsp.type.character", { fg = "#61afef", bold = true })
 vim.api.nvim_set_hl(0, "@lsp.type.setting", { fg = "#98c379", italic = true })
+vim.api.nvim_set_hl(0, "@lsp.type.foreshadowing", { fg = "#e67e22", italic = true })
 
 -- 信頼度によるスタイル分け
 vim.api.nvim_set_hl(0, "@lsp.mod.highConfidence", {})
 vim.api.nvim_set_hl(0, "@lsp.mod.mediumConfidence", { fg = "#abb2bf" })
 vim.api.nvim_set_hl(0, "@lsp.mod.lowConfidence", { underdotted = true })
+
+-- 伏線ステータスによるスタイル分け
+vim.api.nvim_set_hl(0, "@lsp.mod.planted", { fg = "#e67e22" })  -- オレンジ（未回収）
+vim.api.nvim_set_hl(0, "@lsp.mod.resolved", { fg = "#27ae60" }) -- グリーン（回収済み）
 ```
 
 #### VSCode設定例
@@ -173,7 +186,10 @@ vim.api.nvim_set_hl(0, "@lsp.mod.lowConfidence", { underdotted = true })
       "rules": {
         "character": { "foreground": "#61afef", "bold": true },
         "setting": { "foreground": "#98c379", "italic": true },
-        "*.lowConfidence": { "fontStyle": "underline" }
+        "foreshadowing": { "foreground": "#e67e22", "italic": true },
+        "*.lowConfidence": { "fontStyle": "underline" },
+        "*.planted": { "foreground": "#e67e22" },
+        "*.resolved": { "foreground": "#27ae60" }
       }
     }
   }
@@ -312,4 +328,4 @@ coc-tsserverの代わりに`typescript-language-server`をNeovim組み込みLSP�
 
 ---
 
-_Last updated: 2025-12-15 (v1.0)_
+_Last updated: 2025-12-17 (v1.2 - 伏線対応追加)_

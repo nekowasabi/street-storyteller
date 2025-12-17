@@ -192,3 +192,96 @@ Deno.test("DefinitionProvider - location range points to start of definition", a
   assertEquals(result.range.start.line, 0);
   assertEquals(result.range.start.character, 0);
 });
+
+// ========================================
+// process3: foreshadowing定義ジャンプのテスト
+// ========================================
+
+// 伏線を含むモックエンティティ
+const mockEntitiesWithForeshadowing: DetectableEntity[] = [
+  ...mockEntities,
+  {
+    kind: "foreshadowing" as const,
+    id: "glass_slipper",
+    name: "ガラスの靴の伏線",
+    displayNames: ["ガラスの靴", "ガラスの靴の伏線"],
+    aliases: ["輝く靴"],
+    filePath: "src/foreshadowings/glass_slipper.ts",
+    status: "planted" as const,
+  },
+  {
+    kind: "foreshadowing" as const,
+    id: "midnight_deadline",
+    name: "真夜中の期限",
+    displayNames: ["真夜中", "真夜中の期限"],
+    aliases: ["12時"],
+    filePath: "src/foreshadowings/midnight_deadline.ts",
+    status: "resolved" as const,
+  },
+];
+
+Deno.test("DefinitionProvider - returns location for foreshadowing reference", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new DefinitionProvider(detector);
+
+  const content = "ガラスの靴が光っていた。";
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
+
+  assertExists(result);
+  assertEquals(
+    result.uri.endsWith("src/foreshadowings/glass_slipper.ts"),
+    true,
+  );
+  assertExists(result.range);
+});
+
+Deno.test("DefinitionProvider - returns location for foreshadowing in frontmatter", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new DefinitionProvider(detector);
+
+  const content = `---
+storyteller:
+  foreshadowings:
+    - glass_slipper
+---`;
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  // "glass_slipper" は行3、位置6から
+  const result = await provider.getDefinition(uri, content, {
+    line: 3,
+    character: 6,
+  }, projectPath);
+
+  assertExists(result);
+  assertEquals(
+    result.uri.endsWith("src/foreshadowings/glass_slipper.ts"),
+    true,
+  );
+});
+
+Deno.test("DefinitionProvider - works with foreshadowing alias", async () => {
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new DefinitionProvider(detector);
+
+  const content = "輝く靴を見つけた。";
+  const uri = "file:///manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
+
+  assertExists(result);
+  assertEquals(
+    result.uri.endsWith("src/foreshadowings/glass_slipper.ts"),
+    true,
+  );
+});

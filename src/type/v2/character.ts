@@ -121,4 +121,17 @@ export type Character = {
 
   /** LSP用の検出ヒント */
   detectionHints?: DetectionHints;
+
+  // ========================================
+  // 成長・変化表現フィールド
+  // ========================================
+
+  /** 初期状態（差分計算のベースライン） */
+  initialState?: import("./character_phase.ts").CharacterInitialState;
+
+  /** 成長フェーズのリスト */
+  phases?: import("./character_phase.ts").CharacterPhase[];
+
+  /** 現在のフェーズID */
+  currentPhaseId?: string;
 };

@@ -47,6 +47,7 @@ import {
 } from "../providers/code_action_provider.ts";
 import { SemanticTokensProvider } from "../providers/semantic_tokens_provider.ts";
 import { DocumentSymbolProvider } from "../providers/document_symbol_provider.ts";
+import { CompletionProvider } from "../providers/completion_provider.ts";
 import type {
   SemanticTokensParams,
   SemanticTokensRangeParams,
@@ -143,6 +144,7 @@ export class LspServer {
   private readonly codeActionProvider: CodeActionProvider;
   private readonly semanticTokensProvider: SemanticTokensProvider;
   private readonly documentSymbolProvider: DocumentSymbolProvider;
+  private readonly completionProvider: CompletionProvider;
 
   // 診断
   private readonly diagnosticsGenerator: DiagnosticsGenerator;
@@ -175,6 +177,7 @@ export class LspServer {
     this.codeActionProvider = new CodeActionProvider(this.detector);
     this.semanticTokensProvider = new SemanticTokensProvider(this.detector);
     this.documentSymbolProvider = new DocumentSymbolProvider(this.detector);
+    this.completionProvider = new CompletionProvider(entities);
 
     // 診断機能の初期化
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
@@ -250,6 +253,9 @@ export class LspServer {
         break;
       case "textDocument/documentSymbol":
         await this.handleDocumentSymbol(request);
+        break;
+      case "textDocument/completion":
+        await this.handleCompletion(request);
         break;
       // coc.nvim互換性のため、未実装の機能には空配列を返す
       case "textDocument/references":
@@ -485,6 +491,30 @@ export class LspServer {
         document.content,
         params.range,
         this.projectRoot,
+      );
+    }
+
+    const response = createSuccessResponse(request.id, result);
+    await this.transport.writeMessage(response);
+  }
+
+  /**
+   * textDocument/completion リクエストを処理
+   */
+  private async handleCompletion(request: JsonRpcRequest): Promise<void> {
+    const params = request.params as TextDocumentPositionParams;
+    const document = this.documentManager.get(params.textDocument.uri);
+
+    let result: { isIncomplete: boolean; items: readonly unknown[] } = {
+      isIncomplete: false,
+      items: [],
+    };
+    if (document) {
+      result = this.completionProvider.getCompletions(
+        params.textDocument.uri,
+        document.content,
+        params.position.line,
+        params.position.character,
       );
     }
 

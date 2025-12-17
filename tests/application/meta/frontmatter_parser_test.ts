@@ -203,4 +203,79 @@ storyteller:
       }
     }
   });
+
+  // ========================================
+  // process1: foreshadowings フィールドのテスト
+  // ========================================
+
+  await t.step("foreshadowingsフィールドをパースできる", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter01
+  title: "灰かぶり姫の日常"
+  order: 1
+  characters:
+    - cinderella
+  settings:
+    - mansion
+  foreshadowings:
+    - glass_slipper
+    - midnight_deadline
+---
+
+# 第1章
+本文がここに続く...
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.chapter_id, "chapter01");
+      assertEquals(result.value.title, "灰かぶり姫の日常");
+      assertEquals(result.value.foreshadowings, [
+        "glass_slipper",
+        "midnight_deadline",
+      ]);
+    }
+  });
+
+  await t.step("foreshadowingsが空配列の場合は空配列を返す", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter02
+  title: "舞踏会"
+  order: 2
+  foreshadowings: []
+---
+
+# 第2章
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.foreshadowings, []);
+    }
+  });
+
+  await t.step("foreshadowingsがない場合はundefinedを返す", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter03
+  title: "間章"
+  order: 3
+---
+
+# 間章
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.foreshadowings, undefined);
+    }
+  });
 });

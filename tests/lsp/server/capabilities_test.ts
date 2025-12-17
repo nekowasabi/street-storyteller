@@ -43,12 +43,13 @@ Deno.test("Capabilities - SEMANTIC_TOKEN_MODIFIERS is exported", async () => {
   assertExists(SEMANTIC_TOKEN_MODIFIERS);
 });
 
-Deno.test("Capabilities - SEMANTIC_TOKEN_MODIFIERS has 3 modifiers", async () => {
+Deno.test("Capabilities - SEMANTIC_TOKEN_MODIFIERS has 5 modifiers", async () => {
   const { SEMANTIC_TOKEN_MODIFIERS } = await import(
     "../../../src/lsp/server/capabilities.ts"
   );
 
-  assertEquals(SEMANTIC_TOKEN_MODIFIERS.length, 3);
+  // 3 confidence modifiers + planted + resolved = 5
+  assertEquals(SEMANTIC_TOKEN_MODIFIERS.length, 5);
 });
 
 Deno.test("Capabilities - SEMANTIC_TOKEN_MODIFIERS has correct modifier names", async () => {
@@ -80,8 +81,10 @@ Deno.test("Capabilities - getSemanticTokensLegend returns tokenTypes and tokenMo
 
   assertExists(legend.tokenTypes);
   assertExists(legend.tokenModifiers);
-  assertEquals(legend.tokenTypes.length, 2);
-  assertEquals(legend.tokenModifiers.length, 3);
+  // character, setting, foreshadowing = 3 types
+  assertEquals(legend.tokenTypes.length, 3);
+  // 3 confidence modifiers + planted + resolved = 5 modifiers
+  assertEquals(legend.tokenModifiers.length, 5);
 });
 
 // ===== ServerCapabilities拡張テスト =====

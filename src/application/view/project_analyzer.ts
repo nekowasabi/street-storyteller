@@ -15,6 +15,21 @@ export interface CharacterSummary {
   readonly role?: string;
   readonly summary?: string;
   readonly filePath: string;
+  /** キャラクターの成長フェーズ（存在する場合） */
+  readonly phases?:
+    readonly import("../../type/v2/character_phase.ts").CharacterPhase[];
+  /** 初期状態（存在する場合） */
+  readonly initialState?:
+    import("../../type/v2/character_phase.ts").CharacterInitialState;
+  /** 現在のフェーズID */
+  readonly currentPhaseId?: string;
+  /** traits（フェーズ解決用） */
+  readonly traits?: readonly string[];
+  /** relationships（フェーズ解決用） */
+  readonly relationships?: Record<
+    string,
+    import("../../type/v2/character.ts").RelationType
+  >;
 }
 
 /**
@@ -93,8 +108,10 @@ export interface ForeshadowingSummary {
  */
 export interface EntityReference {
   readonly id: string;
-  readonly kind: "character" | "setting";
+  readonly kind: "character" | "setting" | "foreshadowing";
   readonly occurrences: number;
+  /** 伏線のステータス（foreshadowingの場合のみ） */
+  readonly status?: "planted" | "partially_resolved" | "resolved" | "abandoned";
 }
 
 /**
@@ -153,6 +170,7 @@ export class ProjectAnalyzer {
         projectPath,
         characters,
         settings,
+        foreshadowings,
       );
 
       return ok({
@@ -200,6 +218,12 @@ export class ProjectAnalyzer {
                 role: parsed.role,
                 summary: parsed.summary,
                 filePath: relPath,
+                // フェーズ関連フィールド
+                phases: parsed.phases,
+                initialState: parsed.initialState,
+                currentPhaseId: parsed.currentPhaseId,
+                traits: parsed.traits,
+                relationships: parsed.relationships,
               });
             }
           }
@@ -465,6 +489,11 @@ export class ProjectAnalyzer {
     displayNames?: string[];
     role?: string;
     summary?: string;
+    phases?: CharacterSummary["phases"];
+    initialState?: CharacterSummary["initialState"];
+    currentPhaseId?: string;
+    traits?: readonly string[];
+    relationships?: CharacterSummary["relationships"];
   } | null {
     if (!value || typeof value !== "object") return null;
     const record = value as Record<string, unknown>;
@@ -481,7 +510,36 @@ export class ProjectAnalyzer {
       ? record.summary
       : undefined;
 
-    return { id, name, displayNames, role, summary };
+    // フェーズ関連フィールド
+    const phases = Array.isArray(record.phases)
+      ? record.phases as CharacterSummary["phases"]
+      : undefined;
+    const initialState = record.initialState
+      ? record.initialState as CharacterSummary["initialState"]
+      : undefined;
+    const currentPhaseId = typeof record.currentPhaseId === "string"
+      ? record.currentPhaseId
+      : undefined;
+    const traits = Array.isArray(record.traits)
+      ? record.traits.filter((v): v is string => typeof v === "string")
+      : undefined;
+    const relationships =
+      record.relationships && typeof record.relationships === "object"
+        ? record.relationships as CharacterSummary["relationships"]
+        : undefined;
+
+    return {
+      id,
+      name,
+      displayNames,
+      role,
+      summary,
+      phases,
+      initialState,
+      currentPhaseId,
+      traits,
+      relationships,
+    };
   }
 
   /**
@@ -611,6 +669,7 @@ export class ProjectAnalyzer {
     projectPath: string,
     characters: readonly CharacterSummary[],
     settings: readonly SettingSummary[],
+    foreshadowings: readonly ForeshadowingSummary[],
   ): Promise<ManuscriptSummary[]> {
     const manuscriptsDir = join(projectPath, "manuscripts");
     const manuscripts: ManuscriptSummary[] = [];
@@ -632,6 +691,7 @@ export class ProjectAnalyzer {
             content,
             characters,
             settings,
+            foreshadowings,
           );
 
           manuscripts.push({
@@ -668,6 +728,7 @@ export class ProjectAnalyzer {
     content: string,
     characters: readonly CharacterSummary[],
     settings: readonly SettingSummary[],
+    foreshadowings: readonly ForeshadowingSummary[],
   ): EntityReference[] {
     const references: EntityReference[] = [];
 
@@ -708,6 +769,26 @@ export class ProjectAnalyzer {
           id: setting.id,
           kind: "setting",
           occurrences: totalOccurrences,
+        });
+      }
+    }
+
+    // 伏線参照を検出
+    for (const foreshadowing of foreshadowings) {
+      const patterns = [foreshadowing.name, ...foreshadowing.displayNames];
+      let totalOccurrences = 0;
+
+      for (const pattern of patterns) {
+        if (!pattern) continue;
+        totalOccurrences += this.countOccurrences(body, pattern);
+      }
+
+      if (totalOccurrences > 0) {
+        references.push({
+          id: foreshadowing.id,
+          kind: "foreshadowing",
+          occurrences: totalOccurrences,
+          status: foreshadowing.status as EntityReference["status"],
         });
       }
     }

@@ -56,6 +56,21 @@ export type TimelineEventDetails = {
 };
 
 /**
+ * イベントによるキャラクターフェーズ変化
+ * このイベントをきっかけにキャラクターがフェーズ遷移する情報
+ */
+export type PhaseChangeInfo = {
+  /** キャラクターID */
+  characterId: string;
+  /** 遷移先フェーズID */
+  toPhaseId: string;
+  /** 遷移元フェーズID（オプション） */
+  fromPhaseId?: string;
+  /** 説明（オプション） */
+  description?: string;
+};
+
+/**
  * LSP用の検出ヒント（イベント用）
  */
 export type TimelineEventDetectionHints = {
@@ -125,6 +140,12 @@ export type TimelineEvent = {
 
   /** LSP用の検出ヒント */
   detectionHints?: TimelineEventDetectionHints;
+
+  /**
+   * このイベントによるキャラクターフェーズ変化
+   * イベントをフェーズ遷移のトリガーとしてリンクする
+   */
+  phaseChanges?: PhaseChangeInfo[];
 };
 
 /**

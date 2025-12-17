@@ -261,4 +261,96 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
 
     assertStringIncludes(html, "No foreshadowings found");
   });
+
+  // ========================================
+  // process4 sub2: 原稿内伏線ハイライトテスト
+  // ========================================
+
+  await t.step("原稿の伏線参照がステータス付きで表示されること", () => {
+    const generator = new HtmlGenerator();
+    const analysis: ProjectAnalysis = {
+      characters: [],
+      settings: [],
+      timelines: [],
+      foreshadowings: [
+        {
+          id: "glass_slipper",
+          name: "ガラスの靴",
+          type: "chekhov",
+          status: "planted",
+          summary: "シンデレラの靴",
+          plantingChapter: "chapter_01",
+          plantingDescription: "舞踏会で落とす",
+          resolutions: [],
+          relatedCharacters: [],
+          relatedSettings: [],
+          displayNames: [],
+          filePath: "src/foreshadowings/glass_slipper.ts",
+        },
+        {
+          id: "midnight_deadline",
+          name: "真夜中の期限",
+          type: "prophecy",
+          status: "resolved",
+          summary: "魔法が解ける時間",
+          plantingChapter: "chapter_01",
+          plantingDescription: "妖精の警告",
+          resolutions: [
+            {
+              chapter: "chapter_05",
+              description: "魔法が解けた",
+              completeness: 1.0,
+            },
+          ],
+          relatedCharacters: [],
+          relatedSettings: [],
+          displayNames: [],
+          filePath: "src/foreshadowings/midnight_deadline.ts",
+        },
+      ],
+      manuscripts: [
+        {
+          path: "manuscripts/chapter_01.md",
+          title: "舞踏会",
+          referencedEntities: [
+            {
+              id: "glass_slipper",
+              kind: "foreshadowing",
+              occurrences: 2,
+              status: "planted",
+            },
+            {
+              id: "midnight_deadline",
+              kind: "foreshadowing",
+              occurrences: 1,
+              status: "resolved",
+            },
+          ],
+        },
+      ],
+    };
+
+    const html = generator.generate(analysis);
+
+    // 伏線参照にステータスクラスが適用されること
+    assertStringIncludes(html, "foreshadowing");
+    assertStringIncludes(html, "glass_slipper");
+    assertStringIncludes(html, "midnight_deadline");
+  });
+
+  await t.step("伏線参照CSSにステータス別の色定義があること", () => {
+    const generator = new HtmlGenerator();
+    const analysis: ProjectAnalysis = {
+      characters: [],
+      settings: [],
+      timelines: [],
+      foreshadowings: [],
+      manuscripts: [],
+    };
+
+    const html = generator.generate(analysis);
+
+    // 伏線参照用のCSS定義が含まれること
+    assertStringIncludes(html, ".ref.foreshadowing");
+  });
 });

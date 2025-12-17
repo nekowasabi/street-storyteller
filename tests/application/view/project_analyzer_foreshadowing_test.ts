@@ -262,4 +262,78 @@ export const prophecy: Foreshadowing = ${
       }
     },
   );
+
+  // ========================================
+  // process4: 原稿での伏線参照検出テスト
+  // ========================================
+
+  await t.step(
+    "原稿内の伏線参照を検出できること",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
+
+      try {
+        // 伏線定義を作成
+        const foreshadowingsDir = `${tempDir}/src/foreshadowings`;
+        await Deno.mkdir(foreshadowingsDir, { recursive: true });
+
+        const foreshadowing: Foreshadowing = {
+          id: "glass_slipper",
+          name: "ガラスの靴",
+          type: "chekhov",
+          summary: "シンデレラが落としたガラスの靴",
+          planting: {
+            chapter: "chapter_01",
+            description: "舞踏会の帰り道に落とす",
+          },
+          status: "planted",
+          displayNames: ["ガラスの靴", "輝く靴"],
+        };
+
+        await Deno.writeTextFile(
+          `${foreshadowingsDir}/glass_slipper.ts`,
+          `import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
+export const glass_slipper: Foreshadowing = ${
+            JSON.stringify(foreshadowing, null, 2)
+          };`,
+        );
+
+        // 原稿を作成
+        const manuscriptsDir = `${tempDir}/manuscripts`;
+        await Deno.mkdir(manuscriptsDir, { recursive: true });
+
+        await Deno.writeTextFile(
+          `${manuscriptsDir}/chapter_01.md`,
+          `---
+storyteller:
+  chapter_id: chapter_01
+  title: "灰かぶり姫の日常"
+  order: 1
+---
+
+シンデレラはガラスの靴を見つめた。
+輝く靴が光を放っていた。
+`,
+        );
+
+        const analyzer = new ProjectAnalyzer();
+        const result = await analyzer.analyzeProject(tempDir);
+
+        assertEquals(result.ok, true);
+        if (result.ok) {
+          assertEquals(result.value.manuscripts.length, 1);
+          const manuscript = result.value.manuscripts[0];
+
+          // 伏線参照が検出されること
+          const foreshadowingRef = manuscript.referencedEntities.find(
+            (e) => e.kind === "foreshadowing" && e.id === "glass_slipper",
+          );
+          assertExists(foreshadowingRef);
+          assertEquals(foreshadowingRef.occurrences >= 1, true);
+        }
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
 });

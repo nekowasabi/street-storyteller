@@ -14,6 +14,7 @@ import { ProjectAnalyzer } from "../../application/view/project_analyzer.ts";
 import { HtmlGenerator } from "../../application/view/html_generator.ts";
 import { LocalViewServer } from "../../application/view/local_server.ts";
 import { FileWatcher } from "../../application/view/file_watcher.ts";
+import { ViewForeshadowingCommand } from "./view/foreshadowing.ts";
 
 /**
  * ViewCommandクラス
@@ -222,6 +223,60 @@ function renderViewHelp(): string {
 
 export const viewCommandHandler = new ViewCommand();
 
+/**
+ * view foreshadowing サブコマンドの Descriptor
+ */
+const viewForeshadowingHandler = new ViewForeshadowingCommand();
+export const viewForeshadowingCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(viewForeshadowingHandler, {
+    summary: "Display foreshadowing information.",
+    usage: "storyteller view foreshadowing [--list | --id <id>] [options]",
+    path: ["view", "foreshadowing"],
+    options: [
+      {
+        name: "--list",
+        summary: "List all foreshadowings",
+        type: "boolean",
+      },
+      {
+        name: "--id",
+        summary: "Foreshadowing ID to display",
+        type: "string",
+      },
+      {
+        name: "--status",
+        summary:
+          "Filter by status: planted, partially_resolved, resolved, abandoned",
+        type: "string",
+      },
+      {
+        name: "--json",
+        summary: "Output in JSON format",
+        type: "boolean",
+      },
+      {
+        name: "--path",
+        summary: "Project root directory (default: current directory)",
+        type: "string",
+      },
+    ],
+    examples: [
+      {
+        summary: "List all foreshadowings",
+        command: "storyteller view foreshadowing --list",
+      },
+      {
+        summary: "Show specific foreshadowing",
+        command: 'storyteller view foreshadowing --id "ancient_sword"',
+      },
+      {
+        summary: "List planted foreshadowings in JSON",
+        command:
+          "storyteller view foreshadowing --list --status planted --json",
+      },
+    ],
+  });
+
 const VIEW_OPTIONS: readonly CommandOptionDescriptor[] = [
   {
     name: "--path",
@@ -263,6 +318,7 @@ export const viewCommandDescriptor: CommandDescriptor =
       summary: "Generate HTML visualization of the story project.",
       usage: "storyteller view [options]",
       options: VIEW_OPTIONS,
+      children: [viewForeshadowingCommandDescriptor],
       examples: [
         {
           summary: "Generate HTML in current directory",
@@ -275,6 +331,10 @@ export const viewCommandDescriptor: CommandDescriptor =
         {
           summary: "Specify output file",
           command: "storyteller view --output my-story.html",
+        },
+        {
+          summary: "List all foreshadowings",
+          command: "storyteller view foreshadowing --list",
         },
       ],
     },

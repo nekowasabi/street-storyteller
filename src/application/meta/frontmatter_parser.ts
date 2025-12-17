@@ -19,6 +19,8 @@ export interface FrontmatterData {
   characters?: string[];
   /** 使用設定ID一覧（オプション） */
   settings?: string[];
+  /** 伏線ID一覧（オプション） */
+  foreshadowings?: string[];
   /** 章の概要（オプション） */
   summary?: string;
 }
@@ -42,6 +44,7 @@ interface StorytellerYaml {
     order?: number;
     characters?: string[];
     settings?: string[];
+    foreshadowings?: string[];
     summary?: string;
   };
 }
@@ -201,6 +204,7 @@ export class FrontmatterParser {
       order: data.order,
       characters: data.characters,
       settings: data.settings,
+      foreshadowings: data.foreshadowings,
       summary: data.summary,
     });
   }

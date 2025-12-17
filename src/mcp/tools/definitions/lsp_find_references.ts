@@ -15,7 +15,7 @@ import {
 } from "../lsp_shared.ts";
 
 export type ReferenceLocation = {
-  readonly kind: "character" | "setting";
+  readonly kind: "character" | "setting" | "foreshadowing";
   readonly id: string;
   readonly matchedPattern: string;
   readonly confidence: number;

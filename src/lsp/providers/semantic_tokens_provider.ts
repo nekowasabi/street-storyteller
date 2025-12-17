@@ -106,7 +106,12 @@ export class SemanticTokensProvider {
 
     for (const match of matches) {
       const tokenType = this.getTokenTypeIndex(match.kind);
-      const modifierMask = this.getModifierMask(match.confidence);
+      let modifierMask = this.getModifierMask(match.confidence);
+
+      // foreshadowingの場合、ステータスモディファイアを追加
+      if (match.kind === "foreshadowing" && match.status) {
+        modifierMask |= this.getStatusModifierMask(match.status);
+      }
 
       for (const pos of match.positions) {
         tokens.push({
@@ -162,7 +167,9 @@ export class SemanticTokensProvider {
   /**
    * エンティティ種別からトークンタイプインデックスを取得
    */
-  private getTokenTypeIndex(kind: "character" | "setting"): number {
+  private getTokenTypeIndex(
+    kind: "character" | "setting" | "foreshadowing",
+  ): number {
     const index = SEMANTIC_TOKEN_TYPES.indexOf(kind);
     return index >= 0 ? index : 0;
   }
@@ -181,6 +188,26 @@ export class SemanticTokensProvider {
       return 2; // bit 1
     } else {
       return 4; // bit 2
+    }
+  }
+
+  /**
+   * 伏線ステータスからモディファイアビットマスクを取得
+   */
+  private getStatusModifierMask(status: string): number {
+    // planted: bit 3 = 8
+    // resolved: bit 4 = 16
+    switch (status) {
+      case "planted":
+        return 8; // bit 3
+      case "partially_resolved":
+        return 8; // bit 3 (未完了として扱う)
+      case "resolved":
+        return 16; // bit 4
+      case "abandoned":
+        return 0; // 特別なモディファイアなし
+      default:
+        return 0;
     }
   }
 

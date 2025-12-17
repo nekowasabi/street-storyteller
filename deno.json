@@ -24,6 +24,8 @@
     "test:domain": "deno test --allow-read --allow-write tests/story_domain_service_test.ts tests/template_catalog_test.ts",
     "test:application": "deno test --allow-read --allow-write tests/project_scaffolding_service_test.ts tests/migration_facilitator_test.ts",
     "test:scaffold": "deno test --allow-read --allow-write tests/generate_test.ts",
+    "test:scenario": "deno test --allow-read --allow-write --allow-run tests/scenario/",
+    "test:scenario:foreshadowing": "deno test --allow-read --allow-write --allow-run tests/scenario/cinderella_foreshadowing_test.ts",
     "cli:compile": "deno compile --allow-read --allow-write --allow-net --allow-env --output dist/storyteller main.ts",
     "cli:manifest": "deno run --allow-read --allow-write scripts/build_cli.ts --out dist --artifacts dist/storyteller",
     "cli:build": "deno task cli:manifest",

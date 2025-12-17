@@ -29,7 +29,8 @@ export class ViewForeshadowingCommand extends BaseCliCommand {
 
     // プロジェクトルートを取得
     const config = await context.config.resolve();
-    const projectRoot = (args.projectRoot as string) ||
+    const projectRoot = (args.path as string) ||
+      (args.projectRoot as string) ||
       config.runtime.projectRoot || Deno.cwd();
 
     const foreshadowingsDir = `${projectRoot}/src/foreshadowings`;
@@ -126,8 +127,9 @@ export class ViewForeshadowingCommand extends BaseCliCommand {
    */
   private parseForeshadowingFromFile(content: string): Foreshadowing | null {
     try {
+      // 日本語変数名にも対応するため、[^\s:]+ を使用
       const match = content.match(
-        /export\s+const\s+\w+\s*:\s*Foreshadowing\s*=\s*(\{[\s\S]*?\});?\s*$/,
+        /export\s+const\s+[^\s:]+\s*:\s*Foreshadowing\s*=\s*(\{[\s\S]*?\});?\s*$/,
       );
       if (!match) {
         return null;
