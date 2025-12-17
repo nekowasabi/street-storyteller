@@ -502,3 +502,105 @@ Deno.test("SemanticTokensProvider - mixed entities including foreshadowing", asy
   // 城 (setting = 1)
   assertEquals(result.data[13], 1);
 });
+
+// ========================================
+// process10: 絶対位置維持と相対エンコーディングのテスト
+// ========================================
+
+Deno.test("SemanticTokensProvider - getSemanticTokensRange maintains absolute positions", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new SemanticTokensProvider(detector);
+
+  // 3行目（0-indexed: 行2）に「城」がある
+  const content = "あいう\nかきく\n城に行った\nたちつ";
+  const range = {
+    start: { line: 2, character: 0 },
+    end: { line: 3, character: 100 },
+  };
+  const result = provider.getSemanticTokensRange(
+    "file:///test.md",
+    content,
+    range,
+    "/project",
+  );
+
+  // LSP仕様: 「城」は絶対行番号2。最初のトークンなので0行目からの差分 = 2
+  assertEquals(result.data[0], 2); // line_delta = 2
+  assertEquals(result.data[1], 0); // character = 0 (行頭)
+  assertEquals(result.data[2], 1); // length = 1
+  assertEquals(result.data[3], 1); // token_type = setting
+});
+
+Deno.test("SemanticTokensProvider - getSemanticTokensRange with multiple tokens preserves relative encoding", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new SemanticTokensProvider(detector);
+
+  // 勇者は行1、城は行2
+  const content = "はじめに\n勇者が登場\n城に到着\n終わり";
+  const range = {
+    start: { line: 1, character: 0 },
+    end: { line: 2, character: 100 },
+  };
+  const result = provider.getSemanticTokensRange(
+    "file:///test.md",
+    content,
+    range,
+    "/project",
+  );
+
+  // 2つのトークン = 10要素
+  assertEquals(result.data.length, 10);
+
+  // 1つ目のトークン: 勇者（絶対行1、最初のトークンなので0行目からの差分 = 1）
+  assertEquals(result.data[0], 1); // line_delta from 0
+  assertEquals(result.data[1], 0); // character = 0 (行頭)
+  assertEquals(result.data[2], 2); // length = 2
+  assertEquals(result.data[3], 0); // token_type = character
+
+  // 2つ目のトークン: 城（絶対行2、前のトークン行1からの差分 = 1）
+  assertEquals(result.data[5], 1); // line_delta from previous
+  assertEquals(result.data[6], 0); // character = 0 (行頭)
+  assertEquals(result.data[7], 1); // length = 1
+  assertEquals(result.data[8], 1); // token_type = setting
+});
+
+Deno.test("SemanticTokensProvider - getSemanticTokensRange with large line offset", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new SemanticTokensProvider(detector);
+
+  // 行100にトークンがあるケース（スクロール時の典型的なシナリオ）
+  const lines = Array(100).fill("空行").join("\n") +
+    "\n勇者が現れた\n城が見えた";
+  const range = {
+    start: { line: 100, character: 0 },
+    end: { line: 101, character: 100 },
+  };
+  const result = provider.getSemanticTokensRange(
+    "file:///test.md",
+    lines,
+    range,
+    "/project",
+  );
+
+  // 2つのトークン
+  assertEquals(result.data.length, 10);
+
+  // 勇者（絶対行100）
+  assertEquals(result.data[0], 100); // line_delta = 100
+  assertEquals(result.data[1], 0); // character
+
+  // 城（絶対行101、前のトークンから1行下）
+  assertEquals(result.data[5], 1); // line_delta from previous (101 - 100)
+});
