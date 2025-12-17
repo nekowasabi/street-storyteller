@@ -701,15 +701,15 @@ Deno.test("Integration - multiple documents: close one while keeping other open"
 
   const allResponses = extractAllResponses(writer.getData());
 
-  // Hover on closed document should return null
+  // Hover on closed document should return empty contents (coc.nvim compatibility)
   const hover1 = allResponses.find(
     (r: unknown) => (r as { id?: number }).id === 40,
   ) as { result: unknown };
   assertExists(hover1, "Response for closed document should exist");
   assertEquals(
     hover1.result,
-    null,
-    "Hover on closed document should return null",
+    { contents: [] },
+    "Hover on closed document should return empty contents",
   );
 
   // Hover on open document should work
@@ -878,7 +878,7 @@ Deno.test("Integration - error handling: request before initialization", async (
   );
 });
 
-Deno.test("Integration - unknown method handling returns null for coc.nvim compatibility", async () => {
+Deno.test("Integration - unknown method handling returns MethodNotFound error", async () => {
   const queue = new MessageQueue();
 
   // Initialize
@@ -923,15 +923,15 @@ Deno.test("Integration - unknown method handling returns null for coc.nvim compa
 
   const allResponses = extractAllResponses(writer.getData());
 
-  // coc.nvim互換性のため、未知のメソッドにはnullを返す（エラーではなく）
+  // LSP仕様準拠: 未知のメソッドにはMethodNotFoundエラーを返す
   const response = allResponses.find(
     (r: unknown) => (r as { id?: number }).id === 200,
-  ) as { result?: unknown; error?: unknown };
+  ) as { result?: unknown; error?: { code: number; message: string } };
   assertExists(response, "Response should exist");
+  assertExists(response.error, "Error should be present for unknown method");
   assertEquals(
-    response.result,
-    null,
-    "Result should be null for unknown method",
+    response.error.code,
+    -32601,
+    "Error code should be MethodNotFound (-32601)",
   );
-  assertEquals(response.error, undefined, "Error should not be present");
 });
