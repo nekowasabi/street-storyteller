@@ -24,7 +24,7 @@ Deno.test("ci_workflow runs quality gate commands", async () => {
   );
   assert(
     workflow.includes(
-      "deno task meta:check -- --dir sample/manuscripts --recursive",
+      "deno task meta:check -- --dir samples/cinderella/manuscripts --recursive",
     ),
     "expected ci.yml to run meta check for sample manuscripts",
   );
