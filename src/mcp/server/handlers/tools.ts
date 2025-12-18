@@ -22,6 +22,7 @@ import { timelineViewTool } from "../../tools/definitions/timeline_view.ts";
 import { timelineAnalyzeTool } from "../../tools/definitions/timeline_analyze.ts";
 import { phaseCreateTool } from "../../tools/definitions/phase_create.ts";
 import { phaseViewTool } from "../../tools/definitions/phase_view.ts";
+import { manuscriptBindingTool } from "../../tools/definitions/manuscript_binding.ts";
 
 /**
  * tools/list リクエストを処理
@@ -77,6 +78,9 @@ export function createDefaultToolRegistry(): ToolRegistry {
   // Phase（キャラクター成長）ツールを登録
   registry.register(phaseCreateTool);
   registry.register(phaseViewTool);
+
+  // Manuscript（原稿）ツールを登録
+  registry.register(manuscriptBindingTool);
 
   return registry;
 }
