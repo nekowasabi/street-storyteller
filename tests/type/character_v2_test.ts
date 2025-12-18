@@ -56,6 +56,59 @@ Deno.test("Character型v2 - 詳細情報を含む場合", () => {
   assertEquals(character.details.development?.goal, "世界を救う");
 });
 
+Deno.test("CharacterDetails - descriptionフィールド（インライン文字列）", () => {
+  const character: Character = {
+    id: "hero",
+    name: "勇者",
+    role: "protagonist",
+    traits: ["brave"],
+    relationships: {},
+    appearingChapters: ["chapter01"],
+    summary: "勇者の概要",
+    details: {
+      description:
+        "世界を救う使命を持つ若き英雄。強い正義感と勇気を持ち、仲間を大切にする。",
+    },
+  };
+
+  assertExists(character.details);
+  assertEquals(
+    character.details.description,
+    "世界を救う使命を持つ若き英雄。強い正義感と勇気を持ち、仲間を大切にする。",
+  );
+});
+
+Deno.test("CharacterDetails - descriptionフィールド（ファイル参照）", () => {
+  const character: Character = {
+    id: "hero",
+    name: "勇者",
+    role: "protagonist",
+    traits: ["brave"],
+    relationships: {},
+    appearingChapters: ["chapter01"],
+    summary: "勇者の概要",
+    details: {
+      description: { file: "details/hero/description.md" },
+    },
+  };
+
+  assertExists(character.details);
+  assertEquals(
+    typeof character.details.description === "object" &&
+      "file" in character.details.description,
+    true,
+  );
+  if (
+    typeof character.details.description === "object" &&
+    "file" in character.details.description
+  ) {
+    assertEquals(
+      character.details.description.file,
+      "details/hero/description.md",
+    );
+  }
+});
+
 Deno.test("Character型v2 - ファイル参照を含む詳細情報", () => {
   const character: Character = {
     id: "hero",

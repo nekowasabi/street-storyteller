@@ -189,3 +189,67 @@ Deno.test("FileReferenceValidator: 循環参照の検出", async () => {
 
   await Deno.remove(tempDir, { recursive: true });
 });
+
+Deno.test("FileReferenceValidator: descriptionフィールドのファイル参照が存在する場合", async () => {
+  const tempDir = await Deno.makeTempDir();
+  const characterDir = join(tempDir, "characters", "hero");
+  await Deno.mkdir(characterDir, { recursive: true });
+  await Deno.writeTextFile(
+    join(characterDir, "description.md"),
+    "キャラクター説明文",
+  );
+
+  const character: Character = {
+    id: "hero",
+    name: "勇者",
+    role: "protagonist",
+    traits: [],
+    relationships: {},
+    appearingChapters: [],
+    summary: "概要",
+    details: {
+      description: { file: "characters/hero/description.md" },
+    },
+  };
+
+  const validator = new FileReferenceValidator();
+  const result = await validator.validate(character, tempDir);
+
+  assertEquals(result.ok, true);
+  if (!result.ok) return;
+
+  assertEquals(result.value.valid, true);
+  assertEquals(result.value.errors.length, 0);
+
+  await Deno.remove(tempDir, { recursive: true });
+});
+
+Deno.test("FileReferenceValidator: descriptionフィールドのファイル参照が存在しない場合", async () => {
+  const tempDir = await Deno.makeTempDir();
+
+  const character: Character = {
+    id: "hero",
+    name: "勇者",
+    role: "protagonist",
+    traits: [],
+    relationships: {},
+    appearingChapters: [],
+    summary: "概要",
+    details: {
+      description: { file: "characters/hero/description.md" },
+    },
+  };
+
+  const validator = new FileReferenceValidator();
+  const result = await validator.validate(character, tempDir);
+
+  assertEquals(result.ok, true);
+  if (!result.ok) return;
+
+  assertEquals(result.value.valid, false);
+  assertEquals(result.value.errors.length, 1);
+  assertEquals(result.value.errors[0].type, "file_not_found");
+  assertEquals(result.value.errors[0].field, "description");
+
+  await Deno.remove(tempDir, { recursive: true });
+});

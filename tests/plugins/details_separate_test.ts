@@ -195,3 +195,51 @@ Deno.test("DetailsPlugin - separateFiles: 'all'で全フィールドを分離", 
   // 文字列フィールド3つが分離される
   assertEquals(result.value.filesToCreate.length, 3);
 });
+
+Deno.test("DetailsPlugin - separateFiles: descriptionをファイル参照に変換", async () => {
+  const plugin = new DetailsPlugin();
+
+  const character: Character = {
+    id: "hero",
+    name: "勇者",
+    role: "protagonist",
+    traits: ["brave", "kind"],
+    relationships: {},
+    appearingChapters: [],
+    summary: "勇者の概要",
+    details: {
+      description:
+        "これはdescriptionフィールドの詳細説明です。\nsummaryよりも長い詳細情報を記載します。",
+    },
+  };
+
+  const result = await plugin.separateFiles(
+    character,
+    ["description"],
+    "/tmp/test-project",
+  );
+
+  assertEquals(result.ok, true);
+  if (!result.ok) return;
+
+  const updated = result.value.character;
+  assertExists(updated.details);
+  assertEquals(typeof updated.details.description, "object");
+  assertEquals(
+    (updated.details.description as { file: string }).file,
+    "characters/hero/description.md",
+  );
+
+  // 生成されるファイルの確認
+  assertEquals(result.value.filesToCreate.length, 1);
+  assertEquals(
+    result.value.filesToCreate[0].path,
+    "characters/hero/description.md",
+  );
+  assertEquals(
+    result.value.filesToCreate[0].content.includes(
+      "これはdescriptionフィールドの詳細説明です",
+    ),
+    true,
+  );
+});
