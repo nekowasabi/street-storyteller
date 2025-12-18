@@ -96,3 +96,41 @@ Deno.test("parseResourceUri: サポートされていないリソースタイプ
   }
   assertEquals(threw, true, "expected to throw");
 });
+
+// =====================================================
+// expand クエリパラメータのテスト
+// =====================================================
+
+Deno.test("parseResourceUri: expand=detailsクエリパラメータを解析できる", () => {
+  const parsed = parseResourceUri(
+    "storyteller://character/hero?expand=details",
+  );
+  assertEquals(parsed.type, "character");
+  assertEquals(parsed.id, "hero");
+  assertEquals(parsed.expand, "details");
+});
+
+Deno.test("parseResourceUri: expand=detailsをsetting URIでも解析できる", () => {
+  const parsed = parseResourceUri(
+    "storyteller://setting/kingdom?expand=details",
+  );
+  assertEquals(parsed.type, "setting");
+  assertEquals(parsed.id, "kingdom");
+  assertEquals(parsed.expand, "details");
+});
+
+Deno.test("parseResourceUri: クエリパラメータがない場合expandはundefined", () => {
+  const parsed = parseResourceUri("storyteller://character/hero");
+  assertEquals(parsed.type, "character");
+  assertEquals(parsed.id, "hero");
+  assertEquals(parsed.expand, undefined);
+});
+
+Deno.test("parseResourceUri: 無効なexpand値は無視される", () => {
+  const parsed = parseResourceUri(
+    "storyteller://character/hero?expand=invalid",
+  );
+  assertEquals(parsed.type, "character");
+  assertEquals(parsed.id, "hero");
+  assertEquals(parsed.expand, undefined);
+});
