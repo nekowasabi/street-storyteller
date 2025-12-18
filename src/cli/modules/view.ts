@@ -15,6 +15,7 @@ import { HtmlGenerator } from "../../application/view/html_generator.ts";
 import { LocalViewServer } from "../../application/view/local_server.ts";
 import { FileWatcher } from "../../application/view/file_watcher.ts";
 import { ViewForeshadowingCommand } from "./view/foreshadowing.ts";
+import { viewSettingCommandDescriptor } from "./view/setting.ts";
 
 /**
  * ViewCommandクラス
@@ -318,7 +319,10 @@ export const viewCommandDescriptor: CommandDescriptor =
       summary: "Generate HTML visualization of the story project.",
       usage: "storyteller view [options]",
       options: VIEW_OPTIONS,
-      children: [viewForeshadowingCommandDescriptor],
+      children: [
+        viewForeshadowingCommandDescriptor,
+        viewSettingCommandDescriptor,
+      ],
       examples: [
         {
           summary: "Generate HTML in current directory",
@@ -335,6 +339,10 @@ export const viewCommandDescriptor: CommandDescriptor =
         {
           summary: "List all foreshadowings",
           command: "storyteller view foreshadowing --list",
+        },
+        {
+          summary: "List all settings",
+          command: "storyteller view setting --list",
         },
       ],
     },
