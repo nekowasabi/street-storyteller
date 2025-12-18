@@ -83,6 +83,8 @@ export class DetailsPlugin implements FeaturePlugin {
           newDetails.relationships_detail = template as string;
         } else if (field === "goals") {
           newDetails.goals = template as string;
+        } else if (field === "description") {
+          newDetails.description = template as string;
         }
       }
 
@@ -203,6 +205,8 @@ export class DetailsPlugin implements FeaturePlugin {
           newDetails.relationships_detail = { file: relativePath };
         } else if (field === "goals") {
           newDetails.goals = { file: relativePath };
+        } else if (field === "description") {
+          newDetails.description = { file: relativePath };
         }
 
         filesToCreate.push({

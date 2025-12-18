@@ -74,6 +74,7 @@ function getFieldLabel(field: DetailField): string {
     relationships_detail: "人間関係の詳細",
     goals: "目標・動機",
     development: "キャラクター発展",
+    description: "詳細説明",
   };
 
   return labels[field];

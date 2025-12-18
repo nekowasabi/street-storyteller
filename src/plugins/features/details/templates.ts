@@ -13,7 +13,8 @@ export type DetailField =
   | "backstory"
   | "relationships_detail"
   | "goals"
-  | "development";
+  | "development"
+  | "description";
 
 /**
  * 詳細フィールドのテンプレート定義
@@ -38,6 +39,8 @@ export const DETAIL_TEMPLATES: Record<
     obstacle: "（障害を記述）",
     resolution: "（解決方法を記述・オプショナル）",
   }),
+  description:
+    "（詳細な説明を記述してください。summaryよりも長い、詳細な情報を記載します）",
 };
 
 /**

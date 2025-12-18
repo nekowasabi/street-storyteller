@@ -63,6 +63,7 @@ export class FileReferenceValidator {
 
       // 各フィールドをチェック
       const fieldsToCheck: Array<keyof CharacterDetails> = [
+        "description",
         "appearance",
         "personality",
         "backstory",
