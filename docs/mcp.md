@@ -61,6 +61,56 @@ LSPスタイルの診断を実行します。
   `recursive?: boolean`, `characterName?: string`, `settingName?: string`
 - Returns: JSON text (`ReferenceLocation[]`)
 
+### `manuscript_binding`
+
+原稿ファイルのFrontMatterにエンティティを紐付け・編集・削除します。
+
+- Args:
+  - `manuscript: string` - 原稿ファイルパス（必須）
+  - `action: "add"|"remove"|"set"` - 操作タイプ（必須）
+  - `entityType: "characters"|"settings"|"foreshadowings"|"timeline_events"|"phases"|"timelines"` -
+    エンティティタイプ（必須）
+  - `ids: string[]` - エンティティIDリスト（必須）
+  - `validate?: boolean` - ID存在確認（デフォルト: true）
+- Returns: 成功メッセージまたはエラー
+
+#### 操作説明
+
+| action   | 動作                                     |
+| -------- | ---------------------------------------- |
+| `add`    | 既存リストに追加（重複無視）             |
+| `remove` | 既存リストから削除（存在しないIDは無視） |
+| `set`    | リストを完全置換                         |
+
+#### 使用例
+
+```json
+// キャラクター追加
+{
+  "manuscript": "manuscripts/chapter01.md",
+  "action": "add",
+  "entityType": "characters",
+  "ids": ["hero", "heroine"]
+}
+
+// 伏線削除
+{
+  "manuscript": "manuscripts/chapter02.md",
+  "action": "remove",
+  "entityType": "foreshadowings",
+  "ids": ["old_foreshadow"]
+}
+
+// タイムラインイベント置換
+{
+  "manuscript": "manuscripts/chapter03.md",
+  "action": "set",
+  "entityType": "timeline_events",
+  "ids": ["event_001", "event_002"],
+  "validate": false
+}
+```
+
 ## Resources
 
 `storyteller://`スキームでリソースを提供します。
