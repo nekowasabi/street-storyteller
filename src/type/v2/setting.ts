@@ -14,6 +14,8 @@ export type SettingType = "location" | "world" | "culture" | "organization";
  * 各フィールドは短文インラインまたはファイル参照を選択可能
  */
 export type SettingDetails = {
+  /** 設定の説明（概要より詳細な説明） */
+  description?: string | { file: string };
   /** 地理情報 */
   geography?: string | { file: string };
   /** 歴史 */

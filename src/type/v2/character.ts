@@ -46,6 +46,8 @@ export type CharacterDevelopment = {
  * 各フィールドは短文インラインまたはファイル参照を選択可能
  */
 export type CharacterDetails = {
+  /** キャラクターの説明（総合的な紹介文） */
+  description?: string | { file: string };
   /** 外見描写 */
   appearance?: string | { file: string };
   /** 性格 */
