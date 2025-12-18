@@ -115,13 +115,49 @@ LSPスタイルの診断を実行します。
 
 `storyteller://`スキームでリソースを提供します。
 
-| URI                            | 説明                 |
-| ------------------------------ | -------------------- |
-| `storyteller://project`        | プロジェクト分析JSON |
-| `storyteller://characters`     | キャラクター一覧JSON |
-| `storyteller://character/<id>` | 単一キャラクターJSON |
-| `storyteller://settings`       | 設定一覧JSON         |
-| `storyteller://setting/<id>`   | 単一設定JSON         |
+| URI                                | 説明                 |
+| ---------------------------------- | -------------------- |
+| `storyteller://project`            | プロジェクト分析JSON |
+| `storyteller://characters`         | キャラクター一覧JSON |
+| `storyteller://character/<id>`     | 単一キャラクターJSON |
+| `storyteller://settings`           | 設定一覧JSON         |
+| `storyteller://setting/<id>`       | 単一設定JSON         |
+| `storyteller://timelines`          | タイムライン一覧JSON |
+| `storyteller://timeline/<id>`      | 単一タイムラインJSON |
+| `storyteller://foreshadowings`     | 伏線一覧JSON         |
+| `storyteller://foreshadowing/<id>` | 単一伏線JSON         |
+
+### クエリパラメータ
+
+#### `?expand=details`
+
+キャラクターまたは設定リソースで使用可能です。
+詳細情報（`details`フィールド）内のファイル参照を解決し、実際の内容を展開して返します。
+
+```
+# キャラクター詳細を展開
+storyteller://character/hero?expand=details
+
+# 設定詳細を展開
+storyteller://setting/royal_capital?expand=details
+```
+
+**動作説明：**
+
+- `details`フィールド内の各項目について、`{ file: "path/to/file.md" }`
+  形式の参照を実際のファイル内容に置き換えます
+- ファイルにFrontMatterがある場合は自動的に除去されます
+- ファイルが見つからない場合は`undefined`として返されます
+- インライン文字列はそのまま返されます
+
+**使用例（Claude Desktop）：**
+
+```
+ユーザー: heroキャラクターの詳細情報を教えて
+
+Claude: storyteller://character/hero?expand=details リソースを読み込みます...
+        [展開された詳細情報を表示]
+```
 
 ## Prompts
 
@@ -219,4 +255,4 @@ Claude: element_createツールを呼び出しています...
 
 ---
 
-_Last updated: 2025-12-15 (v1.0)_
+_Last updated: 2025-12-18 (v1.1)_

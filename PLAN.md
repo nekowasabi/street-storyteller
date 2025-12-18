@@ -1,13 +1,16 @@
-# title: manuscript_binding MCPツール（FrontMatterエンティティ紐付け）
+# title: details.description フィールド追加 & ファイル参照読み込み機能
 
 ## 概要
 
-- 原稿ファイル（Markdown）のFrontMatterにエンティティ（キャラクター、伏線、設定など）を紐付け・編集・削除するMCPツールを追加する
+- CharacterDetailsとSettingDetailsに`description`フィールドを追加し、長文説明をMarkdownで記述できるようにする
+- ファイル参照（`{ file: string }`）の内容を実際に読み込んで表示する機能を実装する
 
 ### goal
 
-- MCP経由で原稿ファイルのFrontMatterを操作し、物語要素との関連付けを管理できる
-- `manuscript_binding` ツールで add/remove/set 操作を統一的に実行できる
+- summaryに収まらない詳細な説明をMarkdownファイルで管理できる
+- `storyteller view character --id hero --details`
+  でファイル内容を展開表示できる
+- MCPリソースで`?expand=details`を指定するとファイル内容が解決される
 
 ## 必須のルール
 
@@ -20,315 +23,272 @@
 
 ## 開発のゴール
 
-- 統一ツール `manuscript_binding`
-  で6種類のエンティティをFrontMatterに紐付け可能にする
-- 存在しないIDはエラーで中断するバリデーション機能を実装する
+- Character/Settingの`details.description`フィールドでMarkdown長文をサポート
+- ファイル参照の内容読み込み機能の実装
+- CLI viewコマンドとMCPリソースでの詳細展開表示
 
 ## 実装仕様
 
-### ツール入力スキーマ
+### 型定義の変更
 
 ```typescript
-{
-  manuscript: string;      // 原稿ファイルパス（必須）
-  action: "add" | "remove" | "set";  // 操作タイプ（必須）
-  entityType: "characters" | "settings" | "foreshadowings"
-            | "timeline_events" | "phases" | "timelines";  // エンティティタイプ（必須）
-  ids: string[];           // エンティティIDリスト（必須）
-  validate?: boolean;      // ID存在確認（デフォルト: true）
-}
+// CharacterDetails型に追加
+description?: string | { file: string };
+
+// SettingDetails型に追加
+description?: string | { file: string };
 ```
 
-### 操作定義
+### FileContentReaderの仕様
 
-| action | 動作                                     |
-| ------ | ---------------------------------------- |
-| add    | 既存リストに追加（重複無視）             |
-| remove | 既存リストから削除（存在しないIDは無視） |
-| set    | リストを完全置換                         |
+- `resolveHybridField(value)`:
+  文字列ならそのまま、`{ file: string }`なら読み込んで返す
+- `readFileContent(relativePath)`: ファイル読み込み、フロントマター除去
+- エラー時: `Result<T, FileContentError>`で適切なエラーを返す
 
-### 対象エンティティ（6種類）
+### CLIコマンドの仕様
 
-1. `characters` - キャラクターID
-2. `settings` - 設定ID
-3. `foreshadowings` - 伏線ID
-4. `timeline_events` - タイムラインイベントID（新規）
-5. `phases` - キャラクターフェーズID（新規）
-6. `timelines` - タイムラインID（新規）
+```bash
+# --detailsオプションでファイル参照を解決して表示
+storyteller view character --id hero --details
+storyteller view setting --id royal_capital --details
+```
 
-### バリデーション戦略
+### MCPリソースの仕様
 
-| エンティティタイプ | 確認方法                                | 参照コード                             |
-| ------------------ | --------------------------------------- | -------------------------------------- |
-| characters         | `src/characters/{id}.ts` の存在確認     | `ProjectAnalyzer.loadCharacters()`     |
-| settings           | `src/settings/{id}.ts` の存在確認       | `ProjectAnalyzer.loadSettings()`       |
-| foreshadowings     | `src/foreshadowings/{id}.ts` の存在確認 | `ProjectAnalyzer.loadForeshadowings()` |
-| timelines          | `src/timelines/{id}.ts` の存在確認      | `ProjectAnalyzer.loadTimelines()`      |
-| timeline_events    | 全タイムラインをロードしevent.idを検索  | `TimelineSummary.events[].id`          |
-| phases             | 全キャラクターをロードしphase.idを検索  | `CharacterSummary.phases[].id`         |
+```
+storyteller://character/{id}?expand=details
+storyteller://setting/{id}?expand=details
+```
 
 ## 生成AIの学習用コンテキスト
 
-### 既存FrontMatter実装
+### 型定義（変更対象）
 
-- `src/application/meta/frontmatter_parser.ts`
-  - `FrontmatterParser` クラス: パース機能（読み取り専用）
-  - `FrontmatterData` インターフェース: 拡張対象
-  - `StorytellerYaml` 型: 内部型、同様に拡張
+- `src/type/v2/character.ts`
+  - CharacterDetails型を確認（現在のフィールド: appearance, personality,
+    backstory, relationships_detail, goals, development）
+- `src/type/v2/setting.ts`
+  - SettingDetails型を確認（現在のフィールド: geography, history, culture,
+    politics, economy, inhabitants, landmarks）
 
-### MCPツール実装パターン
+### 既存のハイブリッド方式の実装パターン
 
-- `src/mcp/tools/tool_registry.ts`
-  - `McpToolDefinition` 型: ツール定義の型
-  - `ToolExecutionContext` 型: 実行コンテキスト
-- `src/mcp/tools/definitions/element_create.ts`
-  - 既存ツールの実装パターン参照
-  - パラメータバリデーション
-  - CLIアダプター連携
-- `src/mcp/tools/cli_adapter.ts`
-  - `executeCliCommand()`: CLIコマンド実行
-- `src/mcp/server/handlers/tools.ts`
-  - `createDefaultToolRegistry()`: ツール登録
+- `src/plugins/features/details/validator.ts`
+  - FileReferenceValidatorクラス: ファイル参照の存在確認ロジック
+  - `fieldsToCheck`配列でチェック対象フィールドを定義
+- `src/plugins/features/details/plugin.ts`
+  - DetailsPluginクラス: 詳細追加・ファイル分離処理
+  - `separateFiles()`メソッドでファイル分離を実装
+- `src/plugins/features/details/templates.ts`
+  - DetailField型: 利用可能な詳細フィールドの定義
+  - DETAIL_TEMPLATES: 各フィールドのテンプレート
+- `src/plugins/features/details/markdown.ts`
+  - Markdown生成処理、フィールドラベル定義
 
-### エンティティローダー
+### CLI表示の実装パターン
 
-- `src/application/view/project_analyzer.ts`
-  - `loadCharacters()`: キャラクターロード（L194-238）
-  - `loadSettings()`: 設定ロード（L244-）
-  - `loadTimelines()`: タイムラインロード
-  - `loadForeshadowings()`: 伏線ロード
-  - `CharacterSummary.phases`: フェーズ情報（L19-20）
-  - `TimelineSummary.events`: イベント情報（L71）
+- `src/cli/modules/view/character.ts`
+  - ViewCharacterCommandクラス: キャラクター表示コマンド
+  - DefaultCharacterLoader: ファイルからキャラクター読み込み
+  - formatCharacterBasic(): 基本情報のフォーマット
+- `src/cli/modules/view/foreshadowing.ts`
+  - view settingの実装パターン参考
 
-### YAMLライブラリ
+### MCPリソースの実装パターン
 
-- `@std/yaml`: Deno標準ライブラリ
-  - `parse`: YAML→オブジェクト
-  - `stringify`: オブジェクト→YAML
+- `src/mcp/resources/project_resource_provider.ts`
+  - ProjectResourceProviderクラス: リソース提供
 
-### サンプルFrontMatter
+### テストパターン
 
-- `samples/cinderella/manuscripts/chapter02.md`
-  - 既存形式の参照（characters, settings, foreshadowings）
-
----
+- `tests/plugins/details_validator_test.ts`
+  - FileReferenceValidatorのテスト例
+- `tests/cli/modules/view/foreshadowing_test.ts`
+  - viewコマンドのテスト例
 
 ## Process
 
-### process1 FrontmatterData型の拡張
+### process1 型定義の拡張
 
-#### sub1 FrontmatterData, StorytellerYaml型に新規フィールド追加
+#### sub1 CharacterDetails型にdescriptionフィールドを追加
 
-@target: `src/application/meta/frontmatter_parser.ts` @ref:
-`samples/cinderella/manuscripts/chapter02.md`
+@target: `src/type/v2/character.ts` @ref:
+既存のCharacterDetails型定義（50-61行目）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/application/meta/frontmatter_parser_test.ts`
+@test: `tests/type/character_v2_test.ts`
 
-- [ ] テストケースを作成（この時点で型定義がないため失敗する）
-  - `timeline_events` フィールドを含むFrontMatterをパースできる
-  - `phases` フィールドを含むFrontMatterをパースできる
-  - `timelines` フィールドを含むFrontMatterをパースできる
+- [ ] `description`フィールドを持つCharacterDetailsのテストケースを作成
+  - インライン文字列: `description: "詳細な説明"`
+  - ファイル参照: `description: { file: "characters/hero/description.md" }`
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `FrontmatterData` インターフェースに3フィールド追加
-  ```typescript
-  timeline_events?: string[];
-  phases?: string[];
-  timelines?: string[];
-  ```
-- [ ] `StorytellerYaml` 型に同様の3フィールド追加
-- [ ] `validateRequiredFields()` メソッドで新フィールドを返却に含める
+- [ ] CharacterDetails型に`description?: string | { file: string };`を追加
+  - JSDocコメント: `/** 長文説明（summaryを超える詳細な説明） */`
 
 ##### TDD Step 3: Refactor & Verify
 
-- [ ] `deno test tests/application/meta/frontmatter_parser_test.ts`
-      を実行し、通過することを確認
+- [ ] `deno test tests/type/character_v2_test.ts`を実行し、通過することを確認
+- [ ] 必要に応じてリファクタリング
+- [ ] 再度テストを実行し、通過を確認
+
+#### sub2 SettingDetails型にdescriptionフィールドを追加
+
+@target: `src/type/v2/setting.ts` @ref: 既存のSettingDetails型定義（16-31行目）
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/type/setting_v2_test.ts`（新規作成）
+
+- [ ] `description`フィールドを持つSettingDetailsのテストケースを作成
+  - インライン文字列とファイル参照の両方をテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] SettingDetails型に`description?: string | { file: string };`を追加
+  - JSDocコメント: `/** 長文説明（summaryを超える詳細な説明） */`
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+- [ ] 再度テストを実行し、通過を確認
+
+---
+
+### process2 FileContentReaderの実装
+
+#### sub1 FileContentReaderクラスの新規作成
+
+@target: `src/plugins/features/details/file_content_reader.ts`（新規） @ref:
+`src/plugins/features/details/validator.ts`（ファイル読み込みパターン参考）
+@ref: `src/shared/result.ts`（Result型参考）
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/plugins/file_content_reader_test.ts`（新規）
+
+- [ ] インライン文字列の解決テスト
+  - 入力: `"詳細な説明"` → 出力: `ok("詳細な説明")`
+- [ ] ファイル参照の解決テスト（成功ケース）
+  - 入力: `{ file: "test.md" }` → 出力: `ok("ファイル内容")`
+- [ ] ファイル参照の解決テスト（ファイル不存在）
+  - 入力: `{ file: "nonexistent.md" }` → 出力:
+    `err({ type: "file_not_found", ... })`
+- [ ] undefinedの処理テスト
+  - 入力: `undefined` → 出力: `ok(undefined)`
+- [ ] フロントマター除去テスト
+  - 入力: `---\ntitle: test\n---\n本文` → 出力: `ok("本文")`
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] FileContentReader クラスを作成
+  - コンストラクタ: `constructor(private readonly projectRoot: string)`
+- [ ] `resolveHybridField(value: string | { file: string } | undefined)`
+      メソッド実装
+  - 文字列: そのまま返す
+  - `{ file: string }`: `readFileContent()`を呼び出す
+  - undefined: `ok(undefined)`を返す
+- [ ] `readFileContent(relativePath: string)` メソッド実装
+  - `join(projectRoot, relativePath)`で絶対パス生成
+  - `Deno.readTextFile()`でファイル読み込み
+  - `stripFrontmatter()`でフロントマター除去
+  - エラーハンドリング: `Deno.errors.NotFound`を捕捉
+- [ ] `stripFrontmatter(content: string)` privateメソッド実装
+  - `---`で始まるフロントマターを検出・除去
+  - 本文のみを返す
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] `deno test tests/plugins/file_content_reader_test.ts`を実行し、通過することを確認
 - [ ] 必要に応じてリファクタリング
 - [ ] 再度テストを実行し、通過を確認
 
 ---
 
-### process2 EntityValidatorクラスの実装
+### process3 既存コードの更新（templates, markdown, validator, plugin）
 
-#### sub1 基本構造とcharacters/settings/foreshadowings/timelinesバリデーション
+#### sub1 templates.tsの更新
 
-@target: `src/application/meta/entity_validator.ts`（新規作成） @ref:
-`src/application/view/project_analyzer.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/application/meta/entity_validator_test.ts`（新規作成）
-
-- [ ] テストケースを作成
-  - 存在するcharacter IDはvalidを返す
-  - 存在しないcharacter IDはinvalidを返す
-  - 存在するsetting IDはvalidを返す
-  - 存在するforeshadowing IDはvalidを返す
-  - 存在するtimeline IDはvalidを返す
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] `EntityValidator` クラスを作成
-- [ ] `ValidationResult` 型を定義
-  ```typescript
-  interface ValidationResult {
-    valid: boolean;
-    invalidIds: string[];
-    validIds: string[];
-  }
-  ```
-- [ ] `validateIds(entityType, ids)` メソッドを実装
-- [ ] `validateCharacterIds()` - `src/characters/{id}.ts` 存在確認
-- [ ] `validateSettingIds()` - `src/settings/{id}.ts` 存在確認
-- [ ] `validateForeshadowingIds()` - `src/foreshadowings/{id}.ts` 存在確認
-- [ ] `validateTimelineIds()` - `src/timelines/{id}.ts` 存在確認
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-
-#### sub2 timeline_eventsとphasesバリデーション
-
-@target: `src/application/meta/entity_validator.ts` @ref:
-`src/application/view/project_analyzer.ts`
+@target: `src/plugins/features/details/templates.ts` @ref:
+既存のDetailField型定義（10-16行目）、DETAIL_TEMPLATES（21-41行目）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/application/meta/entity_validator_test.ts`
+@test: `tests/plugins/details_templates_test.ts`（新規または既存）
 
-- [ ] テストケースを追加
-  - 存在するtimeline_event IDはvalidを返す
-  - 存在しないtimeline_event IDはinvalidを返す
-  - 存在するphase IDはvalidを返す
-  - 存在しないphase IDはinvalidを返す
+- [ ] `isValidField("description")`が`true`を返すテスト
+- [ ] `getTemplate("description")`が適切なテンプレートを返すテスト
+- [ ] `getAvailableFields()`に`"description"`が含まれるテスト
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `validateTimelineEventIds()` を実装
-  - `ProjectAnalyzer.loadTimelines()` を利用してタイムライン一覧取得
-  - `timeline.events[].id` を全て収集
-  - 指定IDの存在確認
-- [ ] `validatePhaseIds()` を実装
-  - `ProjectAnalyzer.loadCharacters()` を利用してキャラクター一覧取得
-  - `character.phases[].id` を全て収集
-  - 指定IDの存在確認
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] テストを実行し、通過することを確認
-- [ ] `ProjectAnalyzer` への依存注入を検討
-- [ ] 再度テストを実行し、通過を確認
-
----
-
-### process3 FrontmatterEditorクラスの実装
-
-#### sub1 基本構造とaddEntities操作
-
-@target: `src/application/meta/frontmatter_editor.ts`（新規作成） @ref:
-`src/application/meta/frontmatter_parser.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/application/meta/frontmatter_editor_test.ts`（新規作成）
-
-- [ ] テストケースを作成
-  - 空の配列にキャラクターを追加できる
-  - 既存の配列にキャラクターを追加できる（重複無視）
-  - Frontmatterがない場合エラーを返す
-  - storytellerキーがない場合エラーを返す
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] `BindableEntityType` 型を定義（6種類）
-- [ ] `EditResult` 型を定義
-  ```typescript
-  type EditResult = {
-    content: string;
-    changedFields: BindableEntityType[];
-    addedIds: string[];
-    removedIds: string[];
-  };
-  ```
-- [ ] `EditError` 型を定義
-- [ ] `FrontmatterEditor` クラスを作成
-- [ ] `addEntities(content, entityType, ids)` メソッドを実装
-  - FrontMatter抽出
-  - YAMLパース
-  - 配列に追加（重複除去）
-  - YAML再構築
-  - 本文と結合
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] テストを実行し、通過することを確認
-- [ ] YAMLインデント（スペース2つ）を確認
-
-#### sub2 removeEntities操作
-
-@target: `src/application/meta/frontmatter_editor.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/application/meta/frontmatter_editor_test.ts`
-
-- [ ] テストケースを追加
-  - 存在するIDを削除できる
-  - 存在しないIDは無視される
-  - 削除後に空配列になった場合の処理
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] `removeEntities(content, entityType, ids)` メソッドを実装
-  - 配列からIDを除去
-  - 空配列の場合はフィールドを削除または空配列を維持
+- [ ] DetailField型に`| "description"`を追加
+- [ ] DETAIL_TEMPLATESに`description`エントリを追加
+  - テンプレート:
+    `"（詳細な説明を記述してください。summaryよりも長い、詳細な情報を記載します）"`
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
 
-#### sub3 setEntities操作
+#### sub2 markdown.tsの更新
 
-@target: `src/application/meta/frontmatter_editor.ts`
+@target: `src/plugins/features/details/markdown.ts` @ref:
+`getFieldLabel`関数の既存ラベル定義
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/application/meta/frontmatter_editor_test.ts`
+@test: `tests/plugins/details_markdown_test.ts`（新規または既存）
 
-- [ ] テストケースを追加
-  - リストを完全置換できる
-  - 空配列でsetした場合フィールドが削除/空になる
+- [ ] `description`フィールドの日本語ラベル「詳細説明」が返されるテスト
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `setEntities(content, entityType, ids)` メソッドを実装
-  - 既存配列を完全置換
+- [ ] `getFieldLabel`関数内の`labels`オブジェクトに`description: "詳細説明"`を追加
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
 
-#### sub4 新規フィールド（timeline_events, phases, timelines）対応
+#### sub3 validator.tsの更新
 
-@target: `src/application/meta/frontmatter_editor.ts`
+@target: `src/plugins/features/details/validator.ts` @ref:
+`fieldsToCheck`配列の定義
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/application/meta/frontmatter_editor_test.ts`
+@test: `tests/plugins/details_validator_test.ts`
 
-- [ ] テストケースを追加
-  - timeline_eventsフィールドをadd/remove/setできる
-  - phasesフィールドをadd/remove/setできる
-  - timelinesフィールドをadd/remove/setできる
+- [ ] `description`フィールドのファイル参照が検証されるテスト
+  - 存在するファイル: エラーなし
+  - 存在しないファイル: エラーあり
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] 既存実装で6種類のフィールドすべてに対応していることを確認
-  - `BindableEntityType` に含まれていれば動作するはず
+- [ ] `fieldsToCheck`配列に`"description"`を追加
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] `deno test tests/plugins/details_validator_test.ts`を実行し、通過することを確認
+
+#### sub4 plugin.tsの更新
+
+@target: `src/plugins/features/details/plugin.ts` @ref:
+`separateFiles`メソッドの既存実装
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/plugins/details_plugin_test.ts`（新規または既存）
+
+- [ ] `separateFiles`で`description`フィールドがファイル分離されるテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `separateFiles`メソッド内で`description`フィールドの処理を追加
+  - `if (field === "description") { newDetails.description = { file: relativePath }; }`
 
 ##### TDD Step 3: Refactor & Verify
 
@@ -336,144 +296,115 @@
 
 ---
 
-### process4 manuscript_binding MCPツールの実装
+### process4 CLI viewコマンドの拡張
 
-#### sub1 ツール定義と基本パラメータバリデーション
+#### sub1 view characterに--detailsオプションを追加
 
-@target: `src/mcp/tools/definitions/manuscript_binding.ts`（新規作成） @ref:
-`src/mcp/tools/definitions/element_create.ts`
+@target: `src/cli/modules/view/character.ts` @ref:
+FileContentReader（process2で作成） @ref:
+既存のformatCharacterBasic()メソッド（231-267行目）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/mcp/tools/definitions/manuscript_binding_test.ts`（新規作成）
+@test: `tests/cli/modules/view/character_details_test.ts`（新規）
 
-- [ ] テストケースを作成
-  - 必須パラメータ（manuscript, action, entityType, ids）欠落時にエラー
-  - 不正なaction値でエラー
-  - 不正なentityType値でエラー
+- [ ] `--details`オプション指定時にdetailsフィールドが展開表示されるテスト
+  - インライン文字列の表示
+  - ファイル参照の内容読み込み・表示
+- [ ] `--details`未指定時は従来通りの動作を確認するテスト
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `manuscriptBindingTool` 定義を作成
-  - `name: "manuscript_binding"`
-  - `description`: ツール説明
-  - `inputSchema`: 入力スキーマ定義
-- [ ] `execute` 関数の骨格を実装
-  - パラメータ抽出
-  - 必須パラメータバリデーション
-  - enum値バリデーション
+- [ ] コマンドオプションに`--details`を追加
+  - `{ name: "--details", summary: "Expand detail fields (resolves file references)", type: "boolean" }`
+- [ ] `handle`メソッド内で`--details`フラグの処理を追加
+  - FileContentReaderをインスタンス化
+  - `character.details`の各フィールドを解決
+- [ ] `formatCharacterWithDetails(character, resolvedDetails)`メソッドを追加
+  - 基本情報 + 詳細情報を展開表示
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
+- [ ] ヘルプメッセージの更新
 
-#### sub2 ファイル読み込みとバリデーション連携
+#### sub2 view settingコマンドの新規作成
 
-@target: `src/mcp/tools/definitions/manuscript_binding.ts` @ref:
-`src/application/meta/entity_validator.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/mcp/tools/definitions/manuscript_binding_test.ts`
-
-- [ ] テストケースを追加
-  - 存在しない原稿ファイルでエラー
-  - validate=trueで存在しないIDでエラー
-  - validate=falseで存在しないIDでも成功
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] 原稿ファイルパス解決（相対/絶対）
-- [ ] ファイル存在確認
-- [ ] `EntityValidator` でID存在確認
-- [ ] バリデーションエラー時のエラーレスポンス
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] テストを実行し、通過することを確認
-
-#### sub3 FrontmatterEditor連携とファイル書き込み
-
-@target: `src/mcp/tools/definitions/manuscript_binding.ts` @ref:
-`src/application/meta/frontmatter_editor.ts`
+@target: `src/cli/modules/view/setting.ts`（新規） @ref:
+`src/cli/modules/view/foreshadowing.ts`（実装パターン参考） @ref:
+`src/cli/modules/view/character.ts`（実装パターン参考）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/mcp/tools/definitions/manuscript_binding_test.ts`
+@test: `tests/cli/modules/view/setting_test.ts`（新規）
 
-- [ ] テストケースを追加（統合テスト）
-  - add操作でキャラクターを追加できる
-  - remove操作で伏線を削除できる
-  - set操作でtimeline_eventsを置換できる
-  - 成功時に変更内容がレスポンスに含まれる
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] `FrontmatterEditor` でFrontMatter編集
-- [ ] 編集後のファイル書き込み
-- [ ] 成功レスポンスの構築
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] テストを実行し、通過することを確認
-
-#### sub4 ツール登録
-
-@target: `src/mcp/server/handlers/tools.ts`
+- [ ] `--list`オプションで設定一覧が表示されるテスト
+- [ ] `--id`オプションで特定設定が表示されるテスト
+- [ ] `--details`オプションでファイル参照が解決されるテスト
+- [ ] `--json`オプションでJSON形式出力されるテスト
+- [ ] 存在しない設定IDでエラーが返されるテスト
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `manuscript_binding.ts` からインポート追加
-- [ ] `createDefaultToolRegistry()` に
-      `registry.register(manuscriptBindingTool)` 追加
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] MCPサーバー起動確認
-- [ ] ツール一覧に `manuscript_binding` が含まれることを確認
-
----
-
-### process5 CLIコマンドの実装（オプション）
-
-#### sub1 manuscriptモジュールとbindingコマンド
-
-@target: `src/cli/modules/manuscript/binding.ts`（新規作成） @ref:
-`src/cli/modules/element/character.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/cli/modules/manuscript/binding_test.ts`（新規作成）
-
-- [ ] テストケースを作成
-  - 基本的なコマンド実行が成功する
-  - `--json` オプションでJSON出力
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] `ManuscriptBindingCommand` クラスを作成
-- [ ] コマンドオプション定義
-  - `--file`: 原稿ファイルパス
-  - `--action`: add/remove/set
-  - `--type`: エンティティタイプ
-  - `--ids`: IDリスト（カンマ区切り）
-  - `--no-validate`: バリデーションスキップ
+- [ ] ViewSettingCommandクラスを作成
+  - `name: "view_setting"`
+  - `path: ["view", "setting"]`
+- [ ] DefaultSettingLoaderクラスを作成
+  - `src/settings/`からSettingを読み込む
+- [ ] `handle`メソッドを実装
+  - `--list`: 全設定一覧
+  - `--id`: 特定設定表示
+  - `--details`: FileContentReaderで解決
   - `--json`: JSON出力
+- [ ] フォーマットメソッドを実装
+  - `formatSettingBasic(setting)`
+  - `formatSettingWithDetails(setting, resolvedDetails)`
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
+- [ ] CommandRegistryへの登録を確認
+
+---
+
+### process5 MCPリソースプロバイダーの更新
+
+#### sub1 `?expand=details`クエリパラメータの対応
+
+@target: `src/mcp/resources/project_resource_provider.ts` @ref:
+FileContentReader（process2で作成） @ref: 既存のcharacter/settingリソース実装
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/mcp/resources/project_resource_provider_test.ts`（新規または既存）
+
+- [ ] `storyteller://character/hero?expand=details`でdetailsが展開されるテスト
+- [ ] `storyteller://setting/royal_capital?expand=details`でdetailsが展開されるテスト
+- [ ] クエリパラメータなしでは従来通りの動作を確認するテスト
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] URIパース処理にクエリパラメータ解析を追加
+  - `new URL(uri)`でパース
+  - `url.searchParams.get("expand")`でクエリ取得
+- [ ] `expand=details`の場合、FileContentReaderで各フィールドを解決
+- [ ] 解決後のオブジェクトをJSON化して返す
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+- [ ] エラーケース（ファイル不存在）の動作確認
 
 ---
 
 ### process10 ユニットテスト（追加・統合テスト）
 
-- [ ] 全テストファイルを実行: `deno test`
+- [ ] 全テストスイートの実行: `deno test`
 - [ ] カバレッジ確認: `deno test --coverage`
-- [ ] エッジケースの追加テスト
-  - 日本語ID
-  - 特殊文字を含むID
-  - 大量のID（パフォーマンス）
+- [ ] 統合テスト: CLI全体の動作確認
+  - `storyteller view character --id hero --details`
+  - `storyteller view setting --list`
+  - `storyteller view setting --id royal_capital --details`
 
 ---
 
@@ -485,18 +416,20 @@
 
 ### process100 リファクタリング
 
-- [ ] 重複コードの抽出
+- [ ] 重複コードの抽出（フロントマター除去など）
 - [ ] エラーメッセージの統一
-- [ ] 型安全性の強化
+- [ ] 型定義の整理
 
 ---
 
 ### process200 ドキュメンテーション
 
-- [ ] `CLAUDE.md` の更新
-  - MCPツール一覧に `manuscript_binding` 追加
-  - FrontMatterの新規フィールド（timeline_events, phases, timelines）の説明追加
-- [ ] `docs/mcp.md` の更新
-  - `manuscript_binding` ツールの使用例追加
-- [ ] `docs/cli.md` の更新（CLIコマンド実装時）
-  - `storyteller manuscript binding` コマンドの説明追加
+- [ ] `CLAUDE.md`の更新
+  - CharacterDetails/SettingDetailsに`description`フィールドが追加されたことを記載
+  - `--details`オプションの使用方法を追加
+  - MCPリソースの`?expand=details`パラメータについて記載
+- [ ] `docs/cli.md`の更新
+  - `view character --details`オプションの説明追加
+  - `view setting`コマンドの追加
+- [ ] `docs/mcp.md`の更新
+  - リソースURIの`?expand=details`パラメータについて記載

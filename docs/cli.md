@@ -199,6 +199,75 @@ storyteller view --serve --watch
 | `--timeout` | タイムアウト（秒）     |
 | `--dry-run` | プレビューのみ         |
 
+#### `storyteller view character`
+
+キャラクター情報を表示します。
+
+```bash
+# 基本情報を表示
+storyteller view character --id hero
+
+# 詳細情報を展開表示（ファイル参照を解決）
+storyteller view character --id hero --details
+
+# 特定フェーズのスナップショット
+storyteller view character --id hero --phase awakening
+
+# 全フェーズタイムライン
+storyteller view character --id hero --all-phases
+
+# フェーズ間差分
+storyteller view character --id hero --diff --to awakening
+storyteller view character --id hero --diff --from initial --to awakening
+
+# JSON形式で出力
+storyteller view character --id hero --json
+```
+
+| オプション     | 説明                                   |
+| -------------- | -------------------------------------- |
+| `--id`         | キャラクターID（必須）                 |
+| `--details`    | 詳細情報を展開（ファイル参照を解決）   |
+| `--phase`      | 特定フェーズのスナップショット表示     |
+| `--all-phases` | 全フェーズのタイムライン表示           |
+| `--diff`       | フェーズ間の差分表示                   |
+| `--from`       | 差分の開始フェーズ（省略時: 初期状態） |
+| `--to`         | 差分の終了フェーズ（`--diff`時に必須） |
+| `--json`       | JSON形式で出力                         |
+
+#### `storyteller view setting`
+
+設定情報を表示します。
+
+```bash
+# 設定一覧を表示
+storyteller view setting --list
+
+# タイプでフィルタリング
+storyteller view setting --list --type location
+storyteller view setting --list --type world
+storyteller view setting --list --type culture
+storyteller view setting --list --type organization
+
+# 特定設定を表示
+storyteller view setting --id royal_capital
+
+# 詳細情報を展開表示（ファイル参照を解決）
+storyteller view setting --id royal_capital --details
+
+# JSON形式で出力
+storyteller view setting --list --json
+storyteller view setting --id royal_capital --json
+```
+
+| オプション  | 説明                                                    |
+| ----------- | ------------------------------------------------------- |
+| `--list`    | 設定一覧を表示                                          |
+| `--id`      | 設定IDを指定して詳細表示                                |
+| `--type`    | タイプでフィルタ（location/world/culture/organization） |
+| `--details` | 詳細情報を展開（ファイル参照を解決）                    |
+| `--json`    | JSON形式で出力                                          |
+
 ### `storyteller mcp`
 
 MCPサーバー関連のサブコマンドを提供します。
@@ -258,4 +327,4 @@ storyteller version
 
 ---
 
-_Last updated: 2025-12-15 (v1.0)_
+_Last updated: 2025-12-18 (v1.1)_
