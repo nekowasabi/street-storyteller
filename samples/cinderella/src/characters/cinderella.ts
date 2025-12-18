@@ -1,4 +1,4 @@
-import type { Character } from "../../../../src/type/v2/character.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 /**
  * シンデレラ
@@ -17,4 +17,7 @@ export const cinderella: Character = {
   "relationships": {},
   "appearingChapters": [],
   "summary": "継母にいじめられながらも優しさを失わない少女",
+  "details": {
+    "description": { "file": "src/characters/cinderella_description.md" },
+  },
 };
