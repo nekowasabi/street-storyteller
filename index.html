@@ -1,240 +1,603 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Story Project Overview</title>
-    <style>
-      :root {
-        --primary-color: #3498db;
-        --secondary-color: #2ecc71;
-        --background-color: #f5f6fa;
-        --card-background: #ffffff;
-        --text-color: #2c3e50;
-        --border-color: #dfe6e9;
-        --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-      }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Story Project Overview</title>
+  <style>
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
+    :root {
+      --primary-color: #3498db;
+      --secondary-color: #2ecc71;
+      --background-color: #f5f6fa;
+      --card-background: #ffffff;
+      --text-color: #2c3e50;
+      --border-color: #dfe6e9;
+      --shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
 
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
-          Ubuntu, sans-serif;
-        background-color: var(--background-color);
-        color: var(--text-color);
-        line-height: 1.6;
-      }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-      .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 2rem;
-      }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
 
-      header {
-        text-align: center;
-        margin-bottom: 2rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid var(--primary-color);
-      }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
 
-      header h1 {
-        color: var(--primary-color);
-        font-size: 2rem;
-      }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--primary-color);
+    }
 
-      section {
-        margin-bottom: 2rem;
-      }
+    header h1 {
+      color: var(--primary-color);
+      font-size: 2rem;
+    }
 
-      section h2 {
-        color: var(--text-color);
-        font-size: 1.5rem;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 1px solid var(--border-color);
-      }
+    section {
+      margin-bottom: 2rem;
+    }
 
-      .card-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1rem;
-      }
+    section h2 {
+      color: var(--text-color);
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
 
-      .card {
-        background: var(--card-background);
-        border-radius: 8px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow);
-        transition: transform 0.2s;
-      }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
 
-      .card:hover {
-        transform: translateY(-2px);
-      }
+    .card {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s;
+    }
 
-      .card h3 {
-        color: var(--primary-color);
-        margin-bottom: 0.5rem;
-      }
+    .card:hover {
+      transform: translateY(-2px);
+    }
 
-      .card .meta {
-        display: flex;
-        gap: 0.5rem;
-        margin-bottom: 0.5rem;
-      }
+    .card h3 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+    }
 
-      .card .role {
-        background: var(--secondary-color);
-        color: white;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-      }
+    .card .meta {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
 
-      .card .id {
-        background: var(--border-color);
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-      }
+    .card .role {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
 
-      .card .summary {
-        color: #666;
-        margin-bottom: 0.5rem;
-      }
+    .card .id {
+      background: var(--border-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
 
-      .display-names {
-        margin-bottom: 0.5rem;
-      }
+    .card .summary {
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
 
-      .display-names .label,
-      .references .label {
-        font-weight: bold;
-        margin-right: 0.5rem;
-      }
+    .display-names {
+      margin-bottom: 0.5rem;
+    }
 
-      .tag {
-        background: var(--background-color);
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        margin-right: 0.25rem;
-      }
+    .display-names .label,
+    .references .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
 
-      .file-path {
-        margin-top: 0.5rem;
-      }
+    .tag {
+      background: var(--background-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-right: 0.25rem;
+    }
 
-      .file-path code {
-        background: var(--background-color);
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-      }
+    .file-path {
+      margin-top: 0.5rem;
+    }
 
-      .manuscript-list {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-      }
+    .file-path code {
+      background: var(--background-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
 
-      .manuscript-item {
-        background: var(--card-background);
-        border-radius: 8px;
-        padding: 1.5rem;
-        box-shadow: var(--shadow);
-      }
+    .timeline-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
 
-      .manuscript-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-      }
+    .timeline-card {
+      border-left: 4px solid var(--primary-color);
+    }
 
-      .manuscript-header h3 {
-        color: var(--primary-color);
-      }
+    .timeline-card .scope {
+      background: #9b59b6;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
 
-      .manuscript-header .path {
-        background: var(--background-color);
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-      }
+    .timeline-card .parent-timeline,
+    .timeline-card .related-character {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
 
-      .ref {
-        display: inline-block;
-        padding: 0.2rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        margin-right: 0.25rem;
-      }
+    .timeline-events {
+      margin: 1rem 0;
+      padding: 1rem;
+      background: var(--background-color);
+      border-radius: 8px;
+    }
 
-      .ref.character {
-        background: #e3f2fd;
-        color: #1565c0;
-      }
+    .timeline-events.empty {
+      color: #999;
+      font-style: italic;
+    }
 
-      .ref.setting {
-        background: #e8f5e9;
-        color: #2e7d32;
-      }
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
 
-      .empty {
-        color: #999;
-        font-style: italic;
-      }
+    .event-item {
+      background: var(--card-background);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 3px solid var(--secondary-color);
+    }
 
-      .no-refs {
-        color: #999;
-        font-style: italic;
-      }
+    .event-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
 
-      footer {
-        text-align: center;
-        margin-top: 2rem;
-        padding-top: 1rem;
-        border-top: 1px solid var(--border-color);
-        color: #999;
-        font-size: 0.9rem;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <header>
-        <h1>Story Project Overview</h1>
-      </header>
+    .event-order {
+      background: var(--primary-color);
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: bold;
+      min-width: 1.5rem;
+      text-align: center;
+    }
 
-      <main>
-        <section class="characters">
-          <h2>Characters</h2>
-          <p class="empty">No characters found.</p>
-        </section>
+    .event-title {
+      font-weight: bold;
+      color: var(--text-color);
+    }
 
-        <section class="settings">
-          <h2>Settings</h2>
-          <p class="empty">No settings found.</p>
-        </section>
+    .event-category {
+      background: var(--border-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      margin-left: auto;
+    }
 
-        <section class="manuscripts">
-          <h2>Manuscripts</h2>
-          <p class="empty">No manuscripts found.</p>
-        </section>
-      </main>
+    .event-summary {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
 
-      <footer>
-        <p>Generated by storyteller</p>
-      </footer>
-    </div>
-  </body>
+    .event-refs {
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .event-refs .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .event-causality {
+      margin: 0.25rem 0;
+      font-size: 0.85rem;
+    }
+
+    .event-causality .label {
+      font-weight: bold;
+      margin-right: 0.5rem;
+    }
+
+    .ref.chapter {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .ref.causality {
+      background: #fce4ec;
+      color: #c2185b;
+    }
+
+    .manuscript-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .manuscript-item {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+    }
+
+    .manuscript-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .manuscript-header h3 {
+      color: var(--primary-color);
+    }
+
+    .manuscript-header .path {
+      background: var(--background-color);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .ref {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      margin-right: 0.25rem;
+    }
+
+    .ref.character {
+      background: #e3f2fd;
+      color: #1565c0;
+    }
+
+    .ref.setting {
+      background: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    .ref.foreshadowing {
+      background: #fff3e0;
+      color: #e65100;
+    }
+
+    .ref.foreshadowing.planted {
+      background: #fff3e0;
+      color: #e65100;
+      border-left: 3px solid #e67e22;
+    }
+
+    .ref.foreshadowing.partially_resolved {
+      background: #fffde7;
+      color: #f9a825;
+      border-left: 3px solid #f1c40f;
+    }
+
+    .ref.foreshadowing.resolved {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border-left: 3px solid #27ae60;
+    }
+
+    .ref.foreshadowing.abandoned {
+      background: #eceff1;
+      color: #607d8b;
+      border-left: 3px solid #95a5a6;
+    }
+
+    .empty {
+      color: #999;
+      font-style: italic;
+    }
+
+    .no-refs {
+      color: #999;
+      font-style: italic;
+    }
+
+    /* Foreshadowing styles */
+    .foreshadowing-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--card-background);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .foreshadowing-stats .stat {
+      font-size: 0.9rem;
+    }
+
+    .foreshadowing-card .type {
+      background: #9b59b6;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card .status {
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card .importance {
+      background: #f39c12;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .foreshadowing-card.status-planted {
+      border-left: 4px solid #e67e22;
+    }
+
+    .foreshadowing-card.status-planted .status {
+      background: #e67e22;
+      color: white;
+    }
+
+    .foreshadowing-card.status-partially_resolved {
+      border-left: 4px solid #f1c40f;
+    }
+
+    .foreshadowing-card.status-partially_resolved .status {
+      background: #f1c40f;
+      color: #333;
+    }
+
+    .foreshadowing-card.status-resolved {
+      border-left: 4px solid #27ae60;
+    }
+
+    .foreshadowing-card.status-resolved .status {
+      background: #27ae60;
+      color: white;
+    }
+
+    .foreshadowing-card.status-abandoned {
+      border-left: 4px solid #95a5a6;
+    }
+
+    .foreshadowing-card.status-abandoned .status {
+      background: #95a5a6;
+      color: white;
+    }
+
+    .planting-info {
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    .resolution-info {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      background: var(--background-color);
+      border-radius: 4px;
+    }
+
+    .resolution-item {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.25rem;
+      font-size: 0.85rem;
+    }
+
+    .resolution-item .chapter {
+      background: #fff3e0;
+      color: #e65100;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+    }
+
+    .resolution-item .completeness {
+      background: var(--secondary-color);
+      color: white;
+      padding: 0.1rem 0.3rem;
+      border-radius: 3px;
+      font-weight: bold;
+    }
+
+    .related-entities {
+      margin: 0.5rem 0;
+      font-size: 0.85rem;
+    }
+
+    .related-characters,
+    .related-settings {
+      margin-bottom: 0.25rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-color);
+      color: #999;
+      font-size: 0.9rem;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Story Project Overview</h1>
+    </header>
+
+    <main>
+      <section class="characters">
+        <h2>Characters</h2>
+        <div class="card-grid">
+        <div class="card character-card">
+          <h3>yamashita_ryusuke</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">yamashita_ryusuke</span>
+          </div>
+          <p class="summary">大学教授で歴史家。矢島家の手紙消失事件を調査する</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">yamashita_ryusuke</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/yamashita_ryusuke.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>テスト勇者</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">test_hero</span>
+          </div>
+          <p class="summary">テスト用</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">テスト勇者</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/test_hero.ts</code>
+          </div>
+        </div>
+
+        <div class="card character-card">
+          <h3>hero</h3>
+          <div class="meta">
+            <span class="role">protagonist</span>
+            <span class="id">hero</span>
+          </div>
+          <p class="summary">heroの概要（要追加）</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">hero</span>
+          </div>
+          <div class="file-path">
+            <code>src/characters/hero.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="settings">
+        <h2>Settings</h2>
+        <div class="card-grid">
+        <div class="card setting-card">
+          <h3>yamashita_house</h3>
+          <div class="meta">
+            <span class="id">yamashita_house</span>
+          </div>
+          <p class="summary">江戸時代から続く郷士の家。南部藩領内</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">yamashita_house</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/yamashita_house.ts</code>
+          </div>
+        </div>
+
+        <div class="card setting-card">
+          <h3>royal_capital</h3>
+          <div class="meta">
+            <span class="id">royal_capital</span>
+          </div>
+          <p class="summary">王国の中心地</p>
+          <div class="display-names">
+            <span class="label">Names:</span>
+            <span class="tag">王都</span> <span class="tag">首都</span>
+          </div>
+          <div class="file-path">
+            <code>src/settings/royal_capital.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="timelines">
+        <h2>Timelines</h2>
+        <div class="timeline-list">
+        <div class="card timeline-card">
+          <h3>letter_incident_timeline</h3>
+          <div class="meta">
+            <span class="scope">story</span>
+            <span class="id">letter_incident_timeline</span>
+          </div>
+          
+          
+          <p class="summary">現代での調査から過去への遡行</p>
+          <div class="timeline-events empty">No events.</div>
+          <div class="file-path">
+            <code>src/timelines/letter_incident_timeline.ts</code>
+          </div>
+        </div></div>
+      </section>
+
+      <section class="foreshadowings">
+        <h2>Foreshadowings</h2>
+        <p class="empty">No foreshadowings found.</p>
+      </section>
+
+      <section class="manuscripts">
+        <h2>Manuscripts</h2>
+        <p class="empty">No manuscripts found.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Generated by storyteller</p>
+    </footer>
+  </div>
+</body>
 </html>
