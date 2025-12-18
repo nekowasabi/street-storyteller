@@ -11,6 +11,11 @@
  */
 export type SubResourceType = "phases" | "phase" | "snapshot";
 
+/**
+ * クエリパラメータのexpand値
+ */
+export type ExpandType = "details";
+
 export type ParsedUri = {
   readonly type:
     | "characters"
@@ -29,6 +34,8 @@ export type ParsedUri = {
   readonly subResource?: SubResourceType;
   /** サブリソースのID（例: フェーズID） */
   readonly subId?: string;
+  /** クエリパラメータ: expand（例: details） */
+  readonly expand?: ExpandType;
 };
 
 const VALID_TYPES: ReadonlySet<string> = new Set([
@@ -50,6 +57,8 @@ const VALID_SUB_RESOURCES: ReadonlySet<string> = new Set([
   "phase",
   "snapshot",
 ]);
+
+const VALID_EXPAND_VALUES: ReadonlySet<string> = new Set(["details"]);
 
 export function parseResourceUri(uri: string): ParsedUri {
   let url: URL;
@@ -78,9 +87,17 @@ export function parseResourceUri(uri: string): ParsedUri {
   const subResourceRaw = parts[1] ? decodeURIComponent(parts[1]) : undefined;
   const subId = parts[2] ? decodeURIComponent(parts[2]) : undefined;
 
+  // クエリパラメータの解析
+  // 例: storyteller://character/hero?expand=details
+  const expandRaw = url.searchParams.get("expand");
+  const expand = expandRaw && VALID_EXPAND_VALUES.has(expandRaw)
+    ? (expandRaw as ExpandType)
+    : undefined;
+
   const result: ParsedUri = {
     type: typeRaw as ParsedUri["type"],
     ...(id ? { id } : {}),
+    ...(expand ? { expand } : {}),
   };
 
   if (subResourceRaw && VALID_SUB_RESOURCES.has(subResourceRaw)) {

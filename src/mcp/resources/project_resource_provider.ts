@@ -12,6 +12,7 @@ import {
 } from "../../application/view/project_analyzer.ts";
 import { CharacterPhaseResolver } from "../../application/character_phase_resolver.ts";
 import type { CharacterSummary } from "../../application/view/project_analyzer.ts";
+import { EntityDetailsExpander } from "../../plugins/features/details/entity_details_expander.ts";
 
 export class ProjectResourceProvider implements ResourceProvider {
   private cachedAnalysis?: {
@@ -198,6 +199,11 @@ export class ProjectResourceProvider implements ResourceProvider {
           );
         }
 
+        // expand=detailsの場合、detailsを展開
+        if (parsed.expand === "details") {
+          return await this.expandCharacterDetails(found);
+        }
+
         return JSON.stringify(found);
       }
       case "setting": {
@@ -208,6 +214,12 @@ export class ProjectResourceProvider implements ResourceProvider {
         if (!found) {
           throw new Error(`Setting not found: ${parsed.id}`);
         }
+
+        // expand=detailsの場合、detailsを展開
+        if (parsed.expand === "details") {
+          return await this.expandSettingDetails(found);
+        }
+
         return JSON.stringify(found);
       }
       case "timelines":
@@ -330,5 +342,38 @@ export class ProjectResourceProvider implements ResourceProvider {
       initialState: summary.initialState,
       currentPhaseId: summary.currentPhaseId,
     };
+  }
+
+  /**
+   * キャラクターのdetailsを展開して返す
+   * EntityDetailsExpanderを使用してファイル参照を解決する
+   */
+  private async expandCharacterDetails(
+    summary: CharacterSummary,
+  ): Promise<string> {
+    const expander = new EntityDetailsExpander(this.projectPath);
+    const expanded = await expander.expandEntityDetails(
+      summary,
+      summary.filePath,
+      summary.id,
+    );
+    return JSON.stringify(expanded);
+  }
+
+  /**
+   * 設定のdetailsを展開して返す
+   * EntityDetailsExpanderを使用してファイル参照を解決する
+   */
+  private async expandSettingDetails(
+    summary:
+      import("../../application/view/project_analyzer.ts").SettingSummary,
+  ): Promise<string> {
+    const expander = new EntityDetailsExpander(this.projectPath);
+    const expanded = await expander.expandEntityDetails(
+      summary,
+      summary.filePath,
+      summary.id,
+    );
+    return JSON.stringify(expanded);
   }
 }
