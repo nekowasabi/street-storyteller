@@ -21,6 +21,12 @@ export interface FrontmatterData {
   settings?: string[];
   /** 伏線ID一覧（オプション） */
   foreshadowings?: string[];
+  /** タイムラインイベントID一覧（オプション） */
+  timeline_events?: string[];
+  /** キャラクターフェーズID一覧（オプション） */
+  phases?: string[];
+  /** タイムラインID一覧（オプション） */
+  timelines?: string[];
   /** 章の概要（オプション） */
   summary?: string;
 }
@@ -45,6 +51,9 @@ interface StorytellerYaml {
     characters?: string[];
     settings?: string[];
     foreshadowings?: string[];
+    timeline_events?: string[];
+    phases?: string[];
+    timelines?: string[];
     summary?: string;
   };
 }
@@ -205,6 +214,9 @@ export class FrontmatterParser {
       characters: data.characters,
       settings: data.settings,
       foreshadowings: data.foreshadowings,
+      timeline_events: data.timeline_events,
+      phases: data.phases,
+      timelines: data.timelines,
       summary: data.summary,
     });
   }

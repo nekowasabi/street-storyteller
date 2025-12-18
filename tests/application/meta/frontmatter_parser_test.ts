@@ -278,4 +278,164 @@ storyteller:
       assertEquals(result.value.foreshadowings, undefined);
     }
   });
+
+  // ========================================
+  // process1: 新規フィールドのテスト
+  // timeline_events, phases, timelines
+  // ========================================
+
+  await t.step("timeline_eventsフィールドをパースできる", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter01
+  title: "物語の始まり"
+  order: 1
+  timeline_events:
+    - event_001
+    - event_002
+---
+
+# 第1章
+本文がここに続く...
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.timeline_events, ["event_001", "event_002"]);
+    }
+  });
+
+  await t.step("phasesフィールドをパースできる", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter02
+  title: "成長の章"
+  order: 2
+  phases:
+    - hero_phase_01
+    - heroine_phase_02
+---
+
+# 第2章
+本文がここに続く...
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.phases, ["hero_phase_01", "heroine_phase_02"]);
+    }
+  });
+
+  await t.step("timelinesフィールドをパースできる", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter03
+  title: "時間軸の章"
+  order: 3
+  timelines:
+    - main_story
+    - hero_journey
+---
+
+# 第3章
+本文がここに続く...
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.timelines, ["main_story", "hero_journey"]);
+    }
+  });
+
+  await t.step(
+    "新規3フィールドがすべて含まれるFrontmatterをパースできる",
+    () => {
+      const markdown = `---
+storyteller:
+  chapter_id: chapter04
+  title: "総合テスト"
+  order: 4
+  characters:
+    - hero
+  settings:
+    - kingdom
+  foreshadowings:
+    - prophecy
+  timeline_events:
+    - event_opening
+  phases:
+    - hero_awakening
+  timelines:
+    - main_timeline
+---
+
+# 第4章
+本文がここに続く...
+`;
+
+      const result = parser.parse(markdown);
+
+      assertEquals(result.ok, true);
+      if (result.ok) {
+        assertEquals(result.value.chapter_id, "chapter04");
+        assertEquals(result.value.characters, ["hero"]);
+        assertEquals(result.value.settings, ["kingdom"]);
+        assertEquals(result.value.foreshadowings, ["prophecy"]);
+        assertEquals(result.value.timeline_events, ["event_opening"]);
+        assertEquals(result.value.phases, ["hero_awakening"]);
+        assertEquals(result.value.timelines, ["main_timeline"]);
+      }
+    },
+  );
+
+  await t.step("新規フィールドがない場合はundefinedを返す", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter05
+  title: "最小構成"
+  order: 5
+---
+
+# 第5章
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.timeline_events, undefined);
+      assertEquals(result.value.phases, undefined);
+      assertEquals(result.value.timelines, undefined);
+    }
+  });
+
+  await t.step("新規フィールドが空配列の場合は空配列を返す", () => {
+    const markdown = `---
+storyteller:
+  chapter_id: chapter06
+  title: "空配列テスト"
+  order: 6
+  timeline_events: []
+  phases: []
+  timelines: []
+---
+
+# 第6章
+`;
+
+    const result = parser.parse(markdown);
+
+    assertEquals(result.ok, true);
+    if (result.ok) {
+      assertEquals(result.value.timeline_events, []);
+      assertEquals(result.value.phases, []);
+      assertEquals(result.value.timelines, []);
+    }
+  });
 });
