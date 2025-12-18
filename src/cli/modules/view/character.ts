@@ -9,13 +9,21 @@ import { err, ok } from "../../../shared/result.ts";
 import type { CommandContext, CommandDescriptor } from "../../types.ts";
 import { BaseCliCommand } from "../../base_command.ts";
 import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import type { Character } from "../../../type/v2/character.ts";
+import type {
+  Character,
+  CharacterDetails,
+  CharacterDevelopment,
+} from "../../../type/v2/character.ts";
 import type {
   CharacterStateSnapshot,
   PhaseDiffResult,
   PhaseTimelineEntry,
 } from "../../../type/v2/character_state.ts";
 import { CharacterPhaseResolver } from "../../../application/character_phase_resolver.ts";
+import {
+  FileContentReader,
+  type HybridFieldValue,
+} from "../../../plugins/features/details/file_content_reader.ts";
 
 /**
  * キャラクターローダーインターフェース
@@ -68,6 +76,19 @@ export class DefaultCharacterLoader implements CharacterLoader {
 }
 
 /**
+ * 解決された詳細情報（ファイル参照が内容に展開済み）
+ */
+export interface ResolvedDetails {
+  description?: string;
+  appearance?: string;
+  personality?: string;
+  backstory?: string;
+  relationships_detail?: string;
+  goals?: string;
+  development?: CharacterDevelopment;
+}
+
+/**
  * view character コマンドの結果型
  */
 export interface ViewCharacterResult {
@@ -76,6 +97,7 @@ export interface ViewCharacterResult {
   snapshot?: CharacterStateSnapshot;
   timeline?: PhaseTimelineEntry[];
   diff?: PhaseDiffResult;
+  resolvedDetails?: ResolvedDetails;
 }
 
 /**
@@ -214,15 +236,82 @@ export class ViewCharacterCommand extends BaseCliCommand {
       }
     }
 
+    // --details: 詳細情報を展開表示
+    const showDetails = args.details === true;
+    let resolvedDetails: ResolvedDetails | undefined;
+
+    if (showDetails && character.details) {
+      resolvedDetails = await this.resolveDetails(
+        character.details,
+        projectRoot,
+      );
+      result.resolvedDetails = resolvedDetails;
+    }
+
     // フェーズ指定なし: 基本キャラクター情報を表示
     if (jsonOutput) {
-      context.presenter.showInfo(JSON.stringify({ character }, null, 2));
+      if (showDetails && resolvedDetails) {
+        context.presenter.showInfo(
+          JSON.stringify({ character, resolvedDetails }, null, 2),
+        );
+      } else {
+        context.presenter.showInfo(JSON.stringify({ character }, null, 2));
+      }
     } else {
-      const output = this.formatCharacterBasic(character);
-      context.presenter.showInfo(output);
+      if (showDetails && resolvedDetails) {
+        const output = this.formatCharacterWithDetails(
+          character,
+          resolvedDetails,
+        );
+        context.presenter.showInfo(output);
+      } else {
+        const output = this.formatCharacterBasic(character);
+        context.presenter.showInfo(output);
+      }
     }
 
     return ok(result);
+  }
+
+  /**
+   * キャラクターのdetailsフィールドを解決する
+   */
+  private async resolveDetails(
+    details: CharacterDetails,
+    projectRoot: string,
+  ): Promise<ResolvedDetails> {
+    const reader = new FileContentReader(projectRoot);
+    const resolved: ResolvedDetails = {};
+
+    // 各フィールドを解決
+    const fieldNames: (keyof Omit<CharacterDetails, "development">)[] = [
+      "description",
+      "appearance",
+      "personality",
+      "backstory",
+      "relationships_detail",
+      "goals",
+    ];
+
+    for (const fieldName of fieldNames) {
+      const value = details[fieldName] as HybridFieldValue;
+      if (value !== undefined) {
+        const result = await reader.resolveHybridField(value);
+        if (result.ok) {
+          resolved[fieldName] = result.value;
+        } else {
+          // エラー時はプレースホルダーを設定
+          resolved[fieldName] = `[File not found: ${result.error.filePath}]`;
+        }
+      }
+    }
+
+    // developmentフィールドはそのままコピー
+    if (details.development) {
+      resolved.development = details.development;
+    }
+
+    return resolved;
   }
 
   /**
@@ -260,6 +349,95 @@ export class ViewCharacterCommand extends BaseCliCommand {
           ? " [current]"
           : "";
         lines.push(`- ${phase.order}. ${phase.name} (${phase.id})${marker}`);
+      }
+    }
+
+    return lines.join("\n");
+  }
+
+  /**
+   * 詳細情報付きでキャラクター情報をフォーマット
+   */
+  private formatCharacterWithDetails(
+    character: Character,
+    resolvedDetails: ResolvedDetails,
+  ): string {
+    // 基本情報
+    const lines: string[] = [
+      `# ${character.name}`,
+      "",
+      `**ID:** ${character.id}`,
+      `**Role:** ${character.role}`,
+      `**Summary:** ${character.summary}`,
+    ];
+
+    if (character.traits.length > 0) {
+      lines.push(`**Traits:** ${character.traits.join(", ")}`);
+    }
+
+    if (Object.keys(character.relationships).length > 0) {
+      const rels = Object.entries(character.relationships)
+        .map(([id, type]) => `${id}(${type})`)
+        .join(", ");
+      lines.push(`**Relationships:** ${rels}`);
+    }
+
+    if (character.displayNames && character.displayNames.length > 0) {
+      lines.push(`**Display Names:** ${character.displayNames.join(", ")}`);
+    }
+
+    if (character.phases && character.phases.length > 0) {
+      lines.push("");
+      lines.push(`## Phases (${character.phases.length})`);
+      for (const phase of character.phases) {
+        const marker = phase.id === character.currentPhaseId
+          ? " [current]"
+          : "";
+        lines.push(`- ${phase.order}. ${phase.name} (${phase.id})${marker}`);
+      }
+    }
+
+    // 詳細情報セクション
+    lines.push("");
+    lines.push("## Details");
+
+    // フィールドラベルマッピング
+    const fieldLabels: Record<
+      keyof Omit<ResolvedDetails, "development">,
+      string
+    > = {
+      description: "Description",
+      appearance: "Appearance",
+      personality: "Personality",
+      backstory: "Backstory",
+      relationships_detail: "Relationships Detail",
+      goals: "Goals",
+    };
+
+    for (
+      const [field, label] of Object.entries(fieldLabels) as [
+        keyof Omit<ResolvedDetails, "development">,
+        string,
+      ][]
+    ) {
+      const value = resolvedDetails[field];
+      if (value !== undefined) {
+        lines.push("");
+        lines.push(`### ${label}`);
+        lines.push(value);
+      }
+    }
+
+    // Developmentセクション
+    if (resolvedDetails.development) {
+      const dev = resolvedDetails.development;
+      lines.push("");
+      lines.push("### Development");
+      lines.push(`**Initial:** ${dev.initial}`);
+      lines.push(`**Goal:** ${dev.goal}`);
+      lines.push(`**Obstacle:** ${dev.obstacle}`);
+      if (dev.resolution) {
+        lines.push(`**Resolution:** ${dev.resolution}`);
       }
     }
 
@@ -568,6 +746,9 @@ export class ViewCharacterCommand extends BaseCliCommand {
       "  --to <phase-id>     Ending phase for diff (required with --diff)",
     );
     lines.push("  --json              Output in JSON format");
+    lines.push(
+      "  --details           Expand detail fields (resolves file refs)",
+    );
     return lines.join("\n");
   }
 }
@@ -621,6 +802,11 @@ export const viewCharacterCommandDescriptor: CommandDescriptor =
       {
         name: "--json",
         summary: "Output in JSON format",
+        type: "boolean",
+      },
+      {
+        name: "--details",
+        summary: "Expand detail fields (resolves file references)",
         type: "boolean",
       },
     ],
