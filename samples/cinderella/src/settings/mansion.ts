@@ -1,4 +1,4 @@
-import type { Setting } from "../../../../src/type/v2/setting.ts";
+import type { Setting } from "@storyteller/types/v2/setting.ts";
 
 /**
  * 屋敷

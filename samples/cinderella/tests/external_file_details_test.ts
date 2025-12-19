@@ -6,8 +6,8 @@
  */
 
 import { assertEquals, assertExists, assertStringIncludes } from "@std/assert";
-import { FileContentReader } from "../../../src/plugins/features/details/file_content_reader.ts";
-import { EntityDetailsExpander } from "../../../src/plugins/features/details/entity_details_expander.ts";
+import { FileContentReader } from "@storyteller/plugins/features/details/file_content_reader.ts";
+import { EntityDetailsExpander } from "@storyteller/plugins/features/details/entity_details_expander.ts";
 import { cinderella } from "../src/characters/cinderella.ts";
 
 /**
