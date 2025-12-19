@@ -673,3 +673,140 @@ Deno.test("LspServer integration - handles hover request for unopened document",
   // coc.nvim互換性のため、空のホバーを返す（nullの代わりに）
   assertEquals(response.result, { contents: [] });
 });
+
+// ===== TypeScriptリテラル型ホバーテスト =====
+
+Deno.test("LspServer integration - handles literal type hover for TypeScript files", async () => {
+  const didOpenNotification = JSON.stringify({
+    jsonrpc: "2.0",
+    method: "textDocument/didOpen",
+    params: {
+      textDocument: {
+        uri: "file:///test/project/src/characters/hero.ts",
+        languageId: "typescript",
+        version: 1,
+        text: `const char: Character = {
+  role: "protagonist"
+};`,
+      },
+    },
+  });
+
+  const hoverRequest = JSON.stringify({
+    jsonrpc: "2.0",
+    id: 40,
+    method: "textDocument/hover",
+    params: {
+      textDocument: {
+        uri: "file:///test/project/src/characters/hero.ts",
+      },
+      position: {
+        line: 1,
+        character: 9, // "protagonist" の位置
+      },
+    },
+  });
+
+  const { server, transport, writer } = await createInitializedServer([
+    didOpenNotification,
+    hoverRequest,
+  ]);
+
+  // didOpen を処理
+  const msg1 = await transport.readMessage();
+  if (!msg1.ok) throw new Error("Failed to read didOpen");
+  await server.handleMessage(msg1.value);
+  writer.clear();
+
+  // textDocument/hover を処理
+  const msg2 = await transport.readMessage();
+  if (!msg2.ok) throw new Error("Failed to read hover request");
+  await server.handleMessage(msg2.value);
+
+  const responseData = writer.getData();
+  assertExists(responseData, "Response should be written");
+
+  const response = extractResponseBody(responseData) as {
+    jsonrpc: string;
+    id: number;
+    result:
+      | { contents: { kind: string; value: string }; range?: unknown }
+      | null;
+  };
+
+  assertEquals(response.jsonrpc, "2.0");
+  assertEquals(response.id, 40);
+  assertExists(response.result, "Hover result should exist");
+  assertEquals(response.result.contents.kind, "markdown");
+  assertEquals(
+    response.result.contents.value.includes("主人公"),
+    true,
+    "Hover should include CharacterRole documentation",
+  );
+});
+
+Deno.test("LspServer integration - markdown hover still works for markdown files", async () => {
+  const didOpenNotification = JSON.stringify({
+    jsonrpc: "2.0",
+    method: "textDocument/didOpen",
+    params: {
+      textDocument: {
+        uri: "file:///test/project/manuscripts/chapter01.md",
+        languageId: "markdown",
+        version: 1,
+        text: "勇者は剣を抜いた。",
+      },
+    },
+  });
+
+  const hoverRequest = JSON.stringify({
+    jsonrpc: "2.0",
+    id: 41,
+    method: "textDocument/hover",
+    params: {
+      textDocument: {
+        uri: "file:///test/project/manuscripts/chapter01.md",
+      },
+      position: {
+        line: 0,
+        character: 0, // "勇者"の位置
+      },
+    },
+  });
+
+  const { server, transport, writer } = await createInitializedServer([
+    didOpenNotification,
+    hoverRequest,
+  ]);
+
+  // didOpen を処理
+  const msg1 = await transport.readMessage();
+  if (!msg1.ok) throw new Error("Failed to read didOpen");
+  await server.handleMessage(msg1.value);
+  writer.clear();
+
+  // textDocument/hover を処理
+  const msg2 = await transport.readMessage();
+  if (!msg2.ok) throw new Error("Failed to read hover request");
+  await server.handleMessage(msg2.value);
+
+  const responseData = writer.getData();
+  assertExists(responseData, "Response should be written");
+
+  const response = extractResponseBody(responseData) as {
+    jsonrpc: string;
+    id: number;
+    result:
+      | { contents: { kind: string; value: string }; range?: unknown }
+      | null;
+  };
+
+  assertEquals(response.jsonrpc, "2.0");
+  assertEquals(response.id, 41);
+  assertExists(response.result, "Hover result should exist");
+  assertEquals(
+    response.result.contents.value.includes("勇者"),
+    true,
+    "Hover should include entity name for markdown files",
+  );
+});

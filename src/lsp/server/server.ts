@@ -57,6 +57,7 @@ import type {
 } from "@storyteller/lsp/providers/lsp_types.ts";
 import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import { DiagnosticsPublisher } from "@storyteller/lsp/diagnostics/diagnostics_publisher.ts";
+import { LiteralTypeHoverProvider } from "@storyteller/lsp/providers/literal_type_hover_provider.ts";
 
 /** サーバー未初期化エラーコード (LSP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;
@@ -144,6 +145,7 @@ export class LspServer {
   private readonly detector: PositionedDetector;
   private readonly definitionProvider: DefinitionProvider;
   private readonly hoverProvider: HoverProvider;
+  private readonly literalTypeHoverProvider: LiteralTypeHoverProvider;
   private readonly codeActionProvider: CodeActionProvider;
   private readonly semanticTokensProvider: SemanticTokensProvider;
   private readonly documentSymbolProvider: DocumentSymbolProvider;
@@ -177,6 +179,7 @@ export class LspServer {
       this.detector,
       options?.entityInfoMap ?? new Map(),
     );
+    this.literalTypeHoverProvider = new LiteralTypeHoverProvider();
     this.codeActionProvider = new CodeActionProvider(this.detector);
     this.semanticTokensProvider = new SemanticTokensProvider(this.detector);
     this.documentSymbolProvider = new DocumentSymbolProvider(this.detector);
@@ -399,12 +402,27 @@ export class LspServer {
 
     let result = null;
     if (document) {
-      result = await this.hoverProvider.getHover(
-        params.textDocument.uri,
-        document.content,
-        params.position,
-        this.projectRoot,
-      );
+      const uri = params.textDocument.uri;
+      const lowerUri = uri.toLowerCase();
+
+      // TypeScriptファイルの場合、まずリテラル型ホバーを試行
+      if (lowerUri.endsWith(".ts") || lowerUri.endsWith(".tsx")) {
+        result = this.literalTypeHoverProvider.getHover(
+          uri,
+          document.content,
+          params.position,
+        );
+      }
+
+      // リテラル型ホバーが見つからない場合、既存のホバープロバイダーにフォールバック
+      if (!result) {
+        result = await this.hoverProvider.getHover(
+          uri,
+          document.content,
+          params.position,
+          this.projectRoot,
+        );
+      }
     }
 
     // coc.nvim互換性のため、nullの場合は空のホバーを返す
