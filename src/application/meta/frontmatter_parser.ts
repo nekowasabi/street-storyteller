@@ -3,7 +3,7 @@
  * TDD Step 2: Green - テストを通過させる最小限の実装
  */
 import { parse as parseYaml } from "@std/yaml";
-import { err, ok, type Result } from "../../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 
 /**
  * Frontmatterから抽出されるデータの型定義

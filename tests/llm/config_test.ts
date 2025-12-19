@@ -7,7 +7,7 @@ import {
   DEFAULT_LLM_CONFIG,
   mergeWithDefaults,
   validateConfig,
-} from "../../src/llm/index.ts";
+} from "@storyteller/llm/index.ts";
 
 Deno.test("LLM Config - デフォルト設定", async (t) => {
   await t.step("デフォルト設定が正しい", () => {

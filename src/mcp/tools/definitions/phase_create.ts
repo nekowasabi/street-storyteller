@@ -6,13 +6,13 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { ElementPhaseCommand } from "../../../cli/modules/element/phase.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { ElementPhaseCommand } from "@storyteller/cli/modules/element/phase.ts";
 import type {
   PhaseImportance,
   TransitionType,
-} from "../../../type/v2/character_phase.ts";
+} from "@storyteller/types/v2/character_phase.ts";
 
 const VALID_TRANSITION_TYPES: TransitionType[] = [
   "gradual",

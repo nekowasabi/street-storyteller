@@ -7,8 +7,8 @@ import {
   createDefaultToolRegistry,
   handleToolsCall,
   handleToolsList,
-} from "../../../../src/mcp/server/handlers/tools.ts";
-import { ToolRegistry } from "../../../../src/mcp/tools/tool_registry.ts";
+} from "@storyteller/mcp/server/handlers/tools.ts";
+import { ToolRegistry } from "@storyteller/mcp/tools/tool_registry.ts";
 
 Deno.test("handleToolsList: 登録済みツール一覧を返す", () => {
   const registry = new ToolRegistry();

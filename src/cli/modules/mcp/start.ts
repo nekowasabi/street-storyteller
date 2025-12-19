@@ -2,14 +2,14 @@
  * MCP Start コマンド
  * MCPサーバーをCLIから起動する
  */
-import { err, ok } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 import type {
   CommandContext,
   CommandDescriptor,
   CommandOptionDescriptor,
-} from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 
 /**
  * McpStartCommandクラス

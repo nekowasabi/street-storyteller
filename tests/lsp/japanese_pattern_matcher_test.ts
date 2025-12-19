@@ -7,7 +7,7 @@ import { assertEquals } from "@std/assert";
 import {
   BASIC_PARTICLES,
   JapanesePatternMatcher,
-} from "../../src/lsp/detection/japanese_pattern_matcher.ts";
+} from "@storyteller/lsp/detection/japanese_pattern_matcher.ts";
 
 Deno.test("BASIC_PARTICLES - contains 8 basic particles", () => {
   assertEquals(BASIC_PARTICLES.length, 8);

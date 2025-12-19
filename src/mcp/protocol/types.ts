@@ -7,7 +7,7 @@ import type {
   JsonRpcMessage,
   JsonRpcNotification,
   JsonRpcRequest,
-} from "../../lsp/protocol/types.ts";
+} from "@storyteller/lsp/protocol/types.ts";
 
 // ===== MCP エラーコード =====
 

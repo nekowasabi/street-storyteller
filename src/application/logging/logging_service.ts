@@ -1,11 +1,11 @@
-import { LogManager } from "../../shared/logging/log_manager.ts";
+import { LogManager } from "@storyteller/shared/logging/log_manager.ts";
 import type {
   LogContext,
   Logger,
   LoggerFactory,
-} from "../../shared/logging/types.ts";
-import type { AppConfig } from "../../shared/config/schema.ts";
-import { ConsoleLoggerFactory } from "../../infrastructure/logging/console_logger.ts";
+} from "@storyteller/shared/logging/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
+import { ConsoleLoggerFactory } from "@storyteller/infrastructure/logging/console_logger.ts";
 
 export interface ConfigurationManagerLike {
   resolve(): Promise<AppConfig>;

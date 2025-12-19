@@ -3,7 +3,10 @@
  * タイムラインファイルの読み込み・パース・書き込みユーティリティ
  */
 
-import type { Timeline, TimelineEvent } from "../../type/v2/timeline.ts";
+import type {
+  Timeline,
+  TimelineEvent,
+} from "@storyteller/types/v2/timeline.ts";
 
 /**
  * JavaScriptオブジェクトリテラルからコメントを除去する

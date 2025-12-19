@@ -4,8 +4,8 @@
  * API呼び出し回数を制限し、過剰な実行を防止する
  */
 
-import { err, ok } from "../../shared/result.ts";
-import type { Result } from "../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 
 /**
  * 呼び出し制限エラー

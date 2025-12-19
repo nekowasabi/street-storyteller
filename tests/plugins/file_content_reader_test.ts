@@ -3,7 +3,7 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { FileContentReader } from "../../src/plugins/features/details/file_content_reader.ts";
+import { FileContentReader } from "@storyteller/plugins/features/details/file_content_reader.ts";
 
 const TEST_PROJECT_ROOT = "/tmp/test_file_content_reader";
 

@@ -3,9 +3,9 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals } from "@std/assert";
-import { projectSetupWizardPrompt } from "../../../../src/mcp/prompts/definitions/project_setup_wizard.ts";
-import { chapterReviewPrompt } from "../../../../src/mcp/prompts/definitions/chapter_review.ts";
-import { consistencyFixPrompt } from "../../../../src/mcp/prompts/definitions/consistency_fix.ts";
+import { projectSetupWizardPrompt } from "@storyteller/mcp/prompts/definitions/project_setup_wizard.ts";
+import { chapterReviewPrompt } from "@storyteller/mcp/prompts/definitions/chapter_review.ts";
+import { consistencyFixPrompt } from "@storyteller/mcp/prompts/definitions/consistency_fix.ts";
 
 Deno.test("project_setup_wizard: name引数を受け取りメッセージを生成する", () => {
   assertEquals(projectSetupWizardPrompt.name, "project_setup_wizard");

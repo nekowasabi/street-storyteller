@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { createDocumentationEmitter } from "../../src/application/documentation_emitter.ts";
+import { createDocumentationEmitter } from "@storyteller/application/documentation_emitter.ts";
 
 Deno.test("DocumentationEmitter - emitTddGuide generates 3 TDD step messages", () => {
   const emitter = createDocumentationEmitter();

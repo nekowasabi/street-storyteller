@@ -3,8 +3,8 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assert } from "../../asserts.ts";
-import { HtmlGenerator } from "../../../src/application/view/html_generator.ts";
-import type { ProjectAnalysis } from "../../../src/application/view/project_analyzer.ts";
+import { HtmlGenerator } from "@storyteller/application/view/html_generator.ts";
+import type { ProjectAnalysis } from "@storyteller/application/view/project_analyzer.ts";
 
 // テスト用のモックデータ
 const mockAnalysis: ProjectAnalysis = {

@@ -1,12 +1,18 @@
-import { err, ok } from "../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../types.ts";
-import { BaseCliCommand } from "../base_command.ts";
-import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
-import type { CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import type {
+  CommandDescriptor,
+  CommandOptionDescriptor,
+} from "@storyteller/cli/types.ts";
 import {
   type GenerateOptions,
   generateStoryProject,
-} from "../../commands/generate.ts";
+} from "@storyteller/commands/generate.ts";
 
 function parseGenerateOptions(
   context: CommandContext,

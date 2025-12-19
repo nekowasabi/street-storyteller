@@ -2,7 +2,7 @@
  * 詳細フィールドのテンプレート
  */
 
-import type { CharacterDevelopment } from "../../../type/v2/character.ts";
+import type { CharacterDevelopment } from "@storyteller/types/v2/character.ts";
 
 /**
  * 利用可能な詳細フィールド

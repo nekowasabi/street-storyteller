@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { StaticTemplateCatalog } from "../src/domain/project_blueprint.ts";
+import { StaticTemplateCatalog } from "@storyteller/domain/project_blueprint.ts";
 
 Deno.test("StaticTemplateCatalog provides base directories and files", () => {
   const catalog = new StaticTemplateCatalog();

@@ -3,13 +3,13 @@
  * 原稿ファイルのFrontmatterに記載されるエンティティIDが
  * 実際にプロジェクト内に存在するかを検証する
  */
-import { ProjectAnalyzer } from "../view/project_analyzer.ts";
+import { ProjectAnalyzer } from "@storyteller/application/view/project_analyzer.ts";
 import type {
   CharacterSummary,
   ForeshadowingSummary,
   SettingSummary,
   TimelineSummary,
-} from "../view/project_analyzer.ts";
+} from "@storyteller/application/view/project_analyzer.ts";
 
 /**
  * バリデーション対象のエンティティタイプ

@@ -4,21 +4,21 @@
  * 要素（Character, Setting等）の作成と詳細追加を統合的に管理するサービス
  */
 
-import { err } from "../shared/result.ts";
-import type { Result } from "../shared/result.ts";
+import { err } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import type {
   CreateElementOptions,
   ElementCreationResult,
   ElementPlugin,
   PluginRegistry,
   StorytellerPlugin,
-} from "../core/plugin_system.ts";
-import type { Character } from "../type/v2/character.ts";
+} from "@storyteller/core/plugin_system.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 import {
   DetailsPlugin,
   type SeparateFilesResult,
-} from "../plugins/features/details/plugin.ts";
-import type { DetailField } from "../plugins/features/details/templates.ts";
+} from "@storyteller/plugins/features/details/plugin.ts";
+import type { DetailField } from "@storyteller/plugins/features/details/templates.ts";
 
 export class ElementService {
   constructor(private readonly pluginRegistry: PluginRegistry) {}

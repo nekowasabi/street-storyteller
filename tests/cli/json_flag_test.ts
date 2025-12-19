@@ -1,6 +1,6 @@
 import { assertEquals } from "@std/assert";
-import { parseCliArgs } from "../../src/cli/arg_parser.ts";
-import { createPresenterFromArgs } from "../../src/cli/output_presenter.ts";
+import { parseCliArgs } from "@storyteller/cli/arg_parser.ts";
+import { createPresenterFromArgs } from "@storyteller/cli/output_presenter.ts";
 
 Deno.test("parseCliArgs - parses --json flag as boolean true", () => {
   const result = parseCliArgs(["--json", "help"]);

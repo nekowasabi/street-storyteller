@@ -9,7 +9,7 @@ import type {
   CharacterDetails,
   CharacterDevelopment,
   CharacterRole,
-} from "../type/v2/character.ts";
+} from "@storyteller/types/v2/character.ts";
 
 /**
  * 単一キャラクターの完成度分析結果

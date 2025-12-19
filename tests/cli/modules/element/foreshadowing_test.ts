@@ -5,7 +5,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { ElementForeshadowingCommand } from "../../../../src/cli/modules/element/foreshadowing.ts";
+import { ElementForeshadowingCommand } from "@storyteller/cli/modules/element/foreshadowing.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
 
 Deno.test("ElementForeshadowingCommand", async (t) => {

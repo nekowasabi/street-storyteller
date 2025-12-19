@@ -3,8 +3,8 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assert, createStubLogger, createStubPresenter } from "../asserts.ts";
-import { ViewCommand } from "../../src/cli/modules/view.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import { ViewCommand } from "@storyteller/cli/modules/view.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 
 Deno.test("ViewCommand --serve - オプション解析", async (t) => {
   await t.step("--serve オプションが受け付けられる", async () => {

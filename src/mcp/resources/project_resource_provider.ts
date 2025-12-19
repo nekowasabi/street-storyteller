@@ -3,16 +3,16 @@
  * プロジェクト構造をMCP Resourcesとして公開する
  */
 
-import type { McpResource } from "../protocol/types.ts";
-import type { ResourceProvider } from "./resource_provider.ts";
-import { parseResourceUri } from "./uri_parser.ts";
+import type { McpResource } from "@storyteller/mcp/protocol/types.ts";
+import type { ResourceProvider } from "@storyteller/mcp/resources/resource_provider.ts";
+import { parseResourceUri } from "@storyteller/mcp/resources/uri_parser.ts";
 import {
   type ProjectAnalysis,
   ProjectAnalyzer,
-} from "../../application/view/project_analyzer.ts";
-import { CharacterPhaseResolver } from "../../application/character_phase_resolver.ts";
-import type { CharacterSummary } from "../../application/view/project_analyzer.ts";
-import { EntityDetailsExpander } from "../../plugins/features/details/entity_details_expander.ts";
+} from "@storyteller/application/view/project_analyzer.ts";
+import { CharacterPhaseResolver } from "@storyteller/application/character_phase_resolver.ts";
+import type { CharacterSummary } from "@storyteller/application/view/project_analyzer.ts";
+import { EntityDetailsExpander } from "@storyteller/plugins/features/details/entity_details_expander.ts";
 
 export class ProjectResourceProvider implements ResourceProvider {
   private cachedAnalysis?: {

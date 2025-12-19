@@ -3,13 +3,13 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { ElementCharacterCommand } from "../../src/cli/modules/element/character.ts";
+import { ElementCharacterCommand } from "@storyteller/cli/modules/element/character.ts";
 import {
   createStubConfig,
   createStubLogger,
   createStubPresenter,
 } from "../asserts.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 
 Deno.test("ElementCharacterCommand with --force option", async (t) => {
   await t.step(

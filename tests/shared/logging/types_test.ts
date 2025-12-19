@@ -4,7 +4,7 @@ import {
   LOG_LEVELS,
   type LogLevel,
   logLevelWeight,
-} from "../../../src/shared/logging/types.ts";
+} from "@storyteller/shared/logging/types.ts";
 
 Deno.test("logLevelWeight returns ordered weights", () => {
   // Each level should have a higher weight than the previous one

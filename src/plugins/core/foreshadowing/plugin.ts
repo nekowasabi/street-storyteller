@@ -4,8 +4,8 @@
  * Foreshadowing要素の作成、検証、スキーマエクスポートを担当するプラグイン
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { Result } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import type {
   CreateElementOptions,
   ElementCreationResult,
@@ -13,9 +13,9 @@ import type {
   PluginMetadata,
   TypeSchema,
   ValidationResult,
-} from "../../../core/plugin_system.ts";
-import type { Foreshadowing } from "../../../type/v2/foreshadowing.ts";
-import { validateForeshadowing } from "./validator.ts";
+} from "@storyteller/core/plugin_system.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
+import { validateForeshadowing } from "@storyteller/plugins/core/foreshadowing/validator.ts";
 import { join } from "@std/path";
 
 export class ForeshadowingPlugin implements ElementPlugin {

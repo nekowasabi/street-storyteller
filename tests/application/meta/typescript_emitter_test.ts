@@ -1,5 +1,5 @@
 import { assertEquals } from "../../asserts.ts";
-import { TypeScriptEmitter } from "../../../src/application/meta/typescript_emitter.ts";
+import { TypeScriptEmitter } from "@storyteller/application/meta/typescript_emitter.ts";
 
 function joinPath(...segments: readonly string[]): string {
   let result = "";

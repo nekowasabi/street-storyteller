@@ -9,10 +9,10 @@ import { assertEquals, assertStringIncludes } from "@std/assert";
 import {
   CharacterLoader,
   ViewCharacterCommand,
-} from "../../../../src/cli/modules/view/character.ts";
+} from "@storyteller/cli/modules/view/character.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
-import type { Character } from "../../../../src/type/v2/character.ts";
-import type { OutputPresenter } from "../../../../src/cli/types.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
+import type { OutputPresenter } from "@storyteller/cli/types.ts";
 
 /**
  * テスト用のCharacterLoader（インメモリ）

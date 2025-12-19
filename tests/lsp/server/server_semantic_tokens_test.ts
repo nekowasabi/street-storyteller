@@ -6,14 +6,14 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { LspServer } from "../../../src/lsp/server/server.ts";
-import { LspTransport } from "../../../src/lsp/protocol/transport.ts";
+import { LspServer } from "@storyteller/lsp/server/server.ts";
+import { LspTransport } from "@storyteller/lsp/protocol/transport.ts";
 import {
   createLspMessage,
   createMockReader,
   createMockWriter,
 } from "../helpers.ts";
-import type { DetectableEntity } from "../../../src/lsp/detection/positioned_detector.ts";
+import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ
 const mockEntities: DetectableEntity[] = [

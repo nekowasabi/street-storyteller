@@ -4,7 +4,7 @@
  */
 import { assertEquals, assertExists } from "@std/assert";
 import { join } from "@std/path";
-import { lspValidateTool } from "../../../../src/mcp/tools/definitions/lsp_validate.ts";
+import { lspValidateTool } from "@storyteller/mcp/tools/definitions/lsp_validate.ts";
 
 Deno.test("lspValidateTool: ツール定義がMCP仕様に準拠している", () => {
   assertExists(lspValidateTool);

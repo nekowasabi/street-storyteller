@@ -11,7 +11,7 @@ import type {
   SemanticTokensParams,
   SemanticTokensRangeParams,
   TextDocumentIdentifier,
-} from "../../../src/lsp/providers/lsp_types.ts";
+} from "@storyteller/lsp/providers/lsp_types.ts";
 
 // ランタイムチェック用のダミーオブジェクトをimport
 import {
@@ -19,7 +19,7 @@ import {
   SemanticTokensParams as SemanticTokensParamsRuntime,
   SemanticTokensRangeParams as SemanticTokensRangeParamsRuntime,
   TextDocumentIdentifier as TextDocumentIdentifierRuntime,
-} from "../../../src/lsp/providers/lsp_types.ts";
+} from "@storyteller/lsp/providers/lsp_types.ts";
 
 // ===== SemanticTokens型テスト =====
 

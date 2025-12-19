@@ -3,8 +3,8 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import type { ResourceProvider } from "../../../src/mcp/resources/resource_provider.ts";
-import type { McpResource } from "../../../src/mcp/protocol/types.ts";
+import type { ResourceProvider } from "@storyteller/mcp/resources/resource_provider.ts";
+import type { McpResource } from "@storyteller/mcp/protocol/types.ts";
 
 class InMemoryResourceProvider implements ResourceProvider {
   constructor(

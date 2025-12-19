@@ -3,7 +3,7 @@
  * 物語のディレクターとして、プロジェクト全体を把握し応答する
  */
 
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 /**
  * フォーカス領域の型

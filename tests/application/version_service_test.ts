@@ -1,8 +1,8 @@
 import { assert, assertEquals, createStubLogger } from "../asserts.ts";
-import { createVersionService } from "../../src/application/version_service.ts";
-import type { FileSystemGateway } from "../../src/application/file_system_gateway.ts";
-import { err, ok } from "../../src/shared/result.ts";
-import type { ProjectMetadata } from "../../src/shared/config/schema.ts";
+import { createVersionService } from "@storyteller/application/version_service.ts";
+import type { FileSystemGateway } from "@storyteller/application/file_system_gateway.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { ProjectMetadata } from "@storyteller/shared/config/schema.ts";
 
 function createMockFileSystem(
   files: Record<string, string>,

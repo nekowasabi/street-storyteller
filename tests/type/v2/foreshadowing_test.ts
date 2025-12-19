@@ -17,7 +17,7 @@ import type {
   ForeshadowingType,
   PlantingInfo,
   ResolutionInfo,
-} from "../../../src/type/v2/foreshadowing.ts";
+} from "@storyteller/types/v2/foreshadowing.ts";
 
 Deno.test("Foreshadowing型定義", async (t) => {
   await t.step("ForeshadowingStatus型が4種類のリテラル型であること", () => {

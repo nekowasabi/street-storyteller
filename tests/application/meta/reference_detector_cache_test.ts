@@ -1,6 +1,6 @@
 import { assertEquals } from "../../asserts.ts";
-import type { EntityLoader } from "../../../src/application/meta/reference_detector.ts";
-import { ReferenceDetector } from "../../../src/application/meta/reference_detector.ts";
+import type { EntityLoader } from "@storyteller/application/meta/reference_detector.ts";
+import { ReferenceDetector } from "@storyteller/application/meta/reference_detector.ts";
 
 Deno.test("reference_detector_cache caches entity loads per project path", async () => {
   let loadCalls = 0;

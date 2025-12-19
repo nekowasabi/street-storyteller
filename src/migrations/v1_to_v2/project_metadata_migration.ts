@@ -9,7 +9,7 @@ import type {
   MigrationOptions,
   MigrationResult,
   ProjectContext,
-} from "../types.ts";
+} from "@storyteller/migrations/types.ts";
 
 /**
  * プロジェクトメタデータのv1→v2マイグレーション

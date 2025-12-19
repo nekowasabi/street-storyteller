@@ -2,11 +2,14 @@
  * Character要素のバリデーター
  */
 
-import type { Character, CharacterRole } from "../../../type/v2/character.ts";
+import type {
+  Character,
+  CharacterRole,
+} from "@storyteller/types/v2/character.ts";
 import type {
   ValidationError,
   ValidationResult,
-} from "../../../core/plugin_system.ts";
+} from "@storyteller/core/plugin_system.ts";
 
 /**
  * Characterを検証する

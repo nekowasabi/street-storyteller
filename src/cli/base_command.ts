@@ -1,10 +1,10 @@
-import type { Result } from "../shared/result.ts";
-import { err } from "../shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import { err } from "@storyteller/shared/result.ts";
 import type {
   CommandContext,
   CommandExecutionError,
   CommandHandler,
-} from "./types.ts";
+} from "@storyteller/cli/types.ts";
 
 export abstract class BaseCliCommand implements CommandHandler {
   abstract readonly name: string;

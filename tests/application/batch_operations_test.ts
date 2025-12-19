@@ -3,8 +3,8 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { BatchOperations } from "../../src/application/batch_operations.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { BatchOperations } from "@storyteller/application/batch_operations.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 Deno.test("BatchOperations", async (t) => {
   await t.step(

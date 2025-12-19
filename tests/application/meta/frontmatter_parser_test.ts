@@ -5,7 +5,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import {
   FrontmatterParser,
-} from "../../../src/application/meta/frontmatter_parser.ts";
+} from "@storyteller/application/meta/frontmatter_parser.ts";
 
 Deno.test("FrontmatterParser", async (t) => {
   const parser = new FrontmatterParser();

@@ -1,5 +1,5 @@
 import { assertEquals } from "../asserts.ts";
-import { extractMarkdownPathsFromWatchEvent } from "../../src/cli/modules/meta/watch.ts";
+import { extractMarkdownPathsFromWatchEvent } from "@storyteller/cli/modules/meta/watch.ts";
 
 Deno.test("meta watch - extractMarkdownPathsFromWatchEvent ignores access events", () => {
   const result = extractMarkdownPathsFromWatchEvent({

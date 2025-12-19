@@ -4,7 +4,7 @@
  * キャラクターのフェーズ遷移の妥当性をチェックする
  */
 
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 export const phaseTransitionCheckPrompt: McpPromptDefinition = {
   name: "phase_transition_check",

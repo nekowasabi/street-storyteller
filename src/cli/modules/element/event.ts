@@ -5,18 +5,21 @@
  * 既存のタイムラインファイルにイベントを追加する
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import type {
   EventCategory,
   Timeline,
   TimelineEvent,
-} from "../../../type/v2/timeline.ts";
+} from "@storyteller/types/v2/timeline.ts";
 import {
   generateTimelineFile,
   parseTimelineFromFileWithMutableEvents,
-} from "../../../application/timeline/timeline_file_parser.ts";
+} from "@storyteller/application/timeline/timeline_file_parser.ts";
 
 /**
  * ElementEventCommandのオプション

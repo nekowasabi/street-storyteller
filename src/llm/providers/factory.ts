@@ -4,18 +4,18 @@
  * 設定に基づいてLLMプロバイダーを作成
  */
 
-import type { Result } from "../../shared/result.ts";
-import { err, ok } from "../../shared/result.ts";
-import type { LLMConfig } from "../config/llm_config.ts";
-import { DEFAULT_SAFETY_CONFIG } from "../config/llm_config.ts";
-import type { LLMProvider } from "./provider.ts";
-import { OpenRouterProvider } from "./openrouter.ts";
-import { MockLLMProvider } from "./mock.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { LLMConfig } from "@storyteller/llm/config/llm_config.ts";
+import { DEFAULT_SAFETY_CONFIG } from "@storyteller/llm/config/llm_config.ts";
+import type { LLMProvider } from "@storyteller/llm/providers/provider.ts";
+import { OpenRouterProvider } from "@storyteller/llm/providers/openrouter.ts";
+import { MockLLMProvider } from "@storyteller/llm/providers/mock.ts";
 import {
   type SafeLLMProvider,
   wrapWithSafety,
-} from "../safety/safe_provider.ts";
-import type { CallLimitError } from "../safety/call_limiter.ts";
+} from "@storyteller/llm/safety/safe_provider.ts";
+import type { CallLimitError } from "@storyteller/llm/safety/call_limiter.ts";
 
 /**
  * ファクトリーエラー

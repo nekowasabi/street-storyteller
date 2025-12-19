@@ -6,16 +6,16 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
 import { toFileUrl } from "@std/path";
-import { PositionedDetector } from "../../../lsp/detection/positioned_detector.ts";
-import { DiagnosticsGenerator } from "../../../lsp/diagnostics/diagnostics_generator.ts";
+import { PositionedDetector } from "@storyteller/lsp/detection/positioned_detector.ts";
+import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import {
   listMarkdownFiles,
   loadDetectableEntities,
   resolvePath,
   toProjectRelative,
-} from "../lsp_shared.ts";
+} from "@storyteller/mcp/tools/lsp_shared.ts";
 
 export const lspValidateTool: McpToolDefinition = {
   name: "lsp_validate",

@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { viewBrowserTool } from "../../../../src/mcp/tools/definitions/view_browser.ts";
+import { viewBrowserTool } from "@storyteller/mcp/tools/definitions/view_browser.ts";
 
 Deno.test("viewBrowserTool: ツール定義がMCP仕様に準拠している", () => {
   assertExists(viewBrowserTool);

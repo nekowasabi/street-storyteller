@@ -4,56 +4,59 @@
  * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/
  */
 
-import { LspTransport } from "../protocol/transport.ts";
+import { LspTransport } from "@storyteller/lsp/protocol/transport.ts";
 import {
   isJsonRpcNotification,
   isJsonRpcRequest,
   type JsonRpcMessage,
   type JsonRpcNotification,
   type JsonRpcRequest,
-} from "../protocol/types.ts";
+} from "@storyteller/lsp/protocol/types.ts";
 import {
   createErrorResponse,
   createSuccessResponse,
-} from "../protocol/json_rpc.ts";
+} from "@storyteller/lsp/protocol/json_rpc.ts";
 import {
   getServerCapabilities,
   type ServerCapabilities,
-} from "./capabilities.ts";
-import { DocumentManager } from "../document/document_manager.ts";
+} from "@storyteller/lsp/server/capabilities.ts";
+import { DocumentManager } from "@storyteller/lsp/document/document_manager.ts";
 import {
   type DidChangeTextDocumentParams,
   type DidCloseTextDocumentParams,
   type DidOpenTextDocumentParams,
   TextDocumentSyncHandler,
-} from "../handlers/text_document_sync.ts";
+} from "@storyteller/lsp/handlers/text_document_sync.ts";
 import {
   type DetectableEntity,
   type Position,
   PositionedDetector,
-} from "../detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 
 // 型の再エクスポート
 export type {
   DetectableEntity,
   Position,
-} from "../detection/positioned_detector.ts";
-export type { EntityInfo } from "../providers/hover_provider.ts";
-import { DefinitionProvider } from "../providers/definition_provider.ts";
-import { type EntityInfo, HoverProvider } from "../providers/hover_provider.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
+export type { EntityInfo } from "@storyteller/lsp/providers/hover_provider.ts";
+import { DefinitionProvider } from "@storyteller/lsp/providers/definition_provider.ts";
+import {
+  type EntityInfo,
+  HoverProvider,
+} from "@storyteller/lsp/providers/hover_provider.ts";
 import {
   CodeActionProvider,
   type Range,
-} from "../providers/code_action_provider.ts";
-import { SemanticTokensProvider } from "../providers/semantic_tokens_provider.ts";
-import { DocumentSymbolProvider } from "../providers/document_symbol_provider.ts";
-import { CompletionProvider } from "../providers/completion_provider.ts";
+} from "@storyteller/lsp/providers/code_action_provider.ts";
+import { SemanticTokensProvider } from "@storyteller/lsp/providers/semantic_tokens_provider.ts";
+import { DocumentSymbolProvider } from "@storyteller/lsp/providers/document_symbol_provider.ts";
+import { CompletionProvider } from "@storyteller/lsp/providers/completion_provider.ts";
 import type {
   SemanticTokensParams,
   SemanticTokensRangeParams,
-} from "../providers/lsp_types.ts";
-import { DiagnosticsGenerator } from "../diagnostics/diagnostics_generator.ts";
-import { DiagnosticsPublisher } from "../diagnostics/diagnostics_publisher.ts";
+} from "@storyteller/lsp/providers/lsp_types.ts";
+import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
+import { DiagnosticsPublisher } from "@storyteller/lsp/diagnostics/diagnostics_publisher.ts";
 
 /** サーバー未初期化エラーコード (LSP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;

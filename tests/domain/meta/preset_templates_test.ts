@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "../../asserts.ts";
-import { getPreset } from "../../../src/domain/meta/preset_templates.ts";
+import { getPreset } from "@storyteller/domain/meta/preset_templates.ts";
 
 Deno.test("preset_templates - battle-scene preset is available", () => {
   const preset = getPreset("battle-scene");

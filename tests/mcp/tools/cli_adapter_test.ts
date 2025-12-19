@@ -6,9 +6,9 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   createMockContext,
   executeCliCommand,
-} from "../../../src/mcp/tools/cli_adapter.ts";
-import type { CommandHandler } from "../../../src/cli/types.ts";
-import { err, ok } from "../../../src/shared/result.ts";
+} from "@storyteller/mcp/tools/cli_adapter.ts";
+import type { CommandHandler } from "@storyteller/cli/types.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 
 /**
  * テスト用の成功するコマンドハンドラー

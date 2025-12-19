@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { runCLI } from "../src/cli.ts";
+import { runCLI } from "@storyteller/cli.ts";
 
 const originalArgs = Deno.args;
 const originalExit = Deno.exit;

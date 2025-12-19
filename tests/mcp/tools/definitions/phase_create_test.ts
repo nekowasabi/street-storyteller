@@ -3,7 +3,7 @@
  * TDD Red-Green-Refactor サイクルに従って作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { phaseCreateTool } from "../../../../src/mcp/tools/definitions/phase_create.ts";
+import { phaseCreateTool } from "@storyteller/mcp/tools/definitions/phase_create.ts";
 
 Deno.test("phaseCreateTool: ツール定義がMCP仕様に準拠している", () => {
   assertExists(phaseCreateTool);

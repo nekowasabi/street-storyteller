@@ -4,8 +4,8 @@
  */
 import { assertEquals, assertExists } from "@std/assert";
 import { join } from "@std/path";
-import { ProjectResourceProvider } from "../../../src/mcp/resources/project_resource_provider.ts";
-import { ok } from "../../../src/shared/result.ts";
+import { ProjectResourceProvider } from "@storyteller/mcp/resources/project_resource_provider.ts";
+import { ok } from "@storyteller/shared/result.ts";
 
 async function createTempProject(): Promise<string> {
   const projectRoot = await Deno.makeTempDir();

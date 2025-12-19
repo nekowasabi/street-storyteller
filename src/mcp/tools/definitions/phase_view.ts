@@ -6,9 +6,9 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { CharacterPhaseResolver } from "../../../application/character_phase_resolver.ts";
-import type { Character } from "../../../type/v2/character.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { CharacterPhaseResolver } from "@storyteller/application/character_phase_resolver.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 export const phaseViewTool: McpToolDefinition = {
   name: "phase_view",

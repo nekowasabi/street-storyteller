@@ -5,8 +5,11 @@
  * CharacterPhaseResolverによって生成される
  */
 
-import type { CharacterRole, RelationType } from "./character.ts";
-import type { StatusDelta } from "./character_phase.ts";
+import type {
+  CharacterRole,
+  RelationType,
+} from "@storyteller/types/v2/character.ts";
+import type { StatusDelta } from "@storyteller/types/v2/character_phase.ts";
 
 /**
  * キャラクターの完全な状態スナップショット

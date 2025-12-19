@@ -7,7 +7,7 @@
 import {
   PositionedDetector,
   type PositionedMatch,
-} from "../detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 
 /**
  * LSP Position型

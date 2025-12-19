@@ -8,18 +8,18 @@ import type {
   CommandHandler,
   ConfigurationManagerRef,
   OutputPresenter,
-} from "../../cli/types.ts";
+} from "@storyteller/cli/types.ts";
 import type {
   LogContext,
   Logger,
   LogLevel,
   LogMetadata,
-} from "../../shared/logging/types.ts";
-import type { AppConfig } from "../../shared/config/schema.ts";
+} from "@storyteller/shared/logging/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 import type {
   McpCallToolResult,
   McpToolResultContent,
-} from "../protocol/types.ts";
+} from "@storyteller/mcp/protocol/types.ts";
 
 /**
  * 出力をキャプチャするモックPresenter

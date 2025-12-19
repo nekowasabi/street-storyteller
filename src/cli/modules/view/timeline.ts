@@ -4,10 +4,10 @@
  * storyteller view timelines / storyteller view timeline {id} コマンドの実装
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import type { Timeline } from "../../../type/v2/timeline.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 /**
  * ViewTimelineCommandクラス

@@ -6,7 +6,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   type McpPromptDefinition,
   PromptRegistry,
-} from "../../../src/mcp/prompts/prompt_registry.ts";
+} from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 function createTestPrompt(name: string): McpPromptDefinition {
   return {

@@ -5,7 +5,7 @@
  * ElementPlugin（要素型単位）とFeaturePlugin（機能レイヤー単位）を提供します。
  */
 
-import { err, ok, type Result } from "../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 
 export interface PluginMetadata {
   readonly id: string;

@@ -4,15 +4,15 @@
  * テスト用のモックLLMプロバイダー
  */
 
-import { ok } from "../../shared/result.ts";
-import type { Result } from "../../shared/result.ts";
+import { ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import type {
   LLMCallOptions,
   LLMError,
   LLMMessage,
   LLMResponse,
   StreamingLLMProvider,
-} from "./provider.ts";
+} from "@storyteller/llm/providers/provider.ts";
 
 /**
  * MockLLMProviderのオプション

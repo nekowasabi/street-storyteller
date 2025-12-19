@@ -10,9 +10,9 @@ import {
   type CharacterLoader,
   ViewCharacterCommand,
   type ViewCharacterResult,
-} from "../../src/cli/modules/view/character.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+} from "@storyteller/cli/modules/view/character.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 // テスト用のモックコンテキスト
 function createMockContext(

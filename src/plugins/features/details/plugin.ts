@@ -4,24 +4,24 @@
  * 既存の要素に詳細情報（details）を段階的に追加する機能プラグイン
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { Result } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import type {
   FeaturePlugin,
   PluginMetadata,
-} from "../../../core/plugin_system.ts";
+} from "@storyteller/core/plugin_system.ts";
 import type {
   Character,
   CharacterDetails,
   CharacterDevelopment,
-} from "../../../type/v2/character.ts";
+} from "@storyteller/types/v2/character.ts";
 import {
   type DetailField,
   getAvailableFields,
   getTemplate,
   isValidField,
-} from "./templates.ts";
-import { generateMarkdownContent } from "./markdown.ts";
+} from "@storyteller/plugins/features/details/templates.ts";
+import { generateMarkdownContent } from "@storyteller/plugins/features/details/markdown.ts";
 
 export class DetailsPlugin implements FeaturePlugin {
   readonly meta: PluginMetadata = {

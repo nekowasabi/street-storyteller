@@ -4,8 +4,11 @@ import {
   createStubConfig,
   createStubLogger,
 } from "../asserts.ts";
-import type { CommandContext, OutputPresenter } from "../../src/cli/types.ts";
-import { MetaGenerateCommand } from "../../src/cli/modules/meta/generate.ts";
+import type {
+  CommandContext,
+  OutputPresenter,
+} from "@storyteller/cli/types.ts";
+import { MetaGenerateCommand } from "@storyteller/cli/modules/meta/generate.ts";
 
 function joinPath(...segments: readonly string[]): string {
   let result = "";

@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "../asserts.ts";
-import { InteractiveResolver } from "../../src/cli/modules/meta/interactive_resolver.ts";
-import type { DetectedEntity } from "../../src/application/meta/reference_detector.ts";
+import { InteractiveResolver } from "@storyteller/cli/modules/meta/interactive_resolver.ts";
+import type { DetectedEntity } from "@storyteller/application/meta/reference_detector.ts";
 
 Deno.test("InteractiveResolver - resolves ambiguous references via user choice", async () => {
   const outputs: string[] = [];

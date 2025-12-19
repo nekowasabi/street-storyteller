@@ -3,7 +3,7 @@
  * @see https://spec.modelcontextprotocol.io/specification/
  */
 
-import type { McpServerCapabilities } from "../protocol/types.ts";
+import type { McpServerCapabilities } from "@storyteller/mcp/protocol/types.ts";
 
 /**
  * サーバー能力の設定オプション

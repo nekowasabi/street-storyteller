@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { createConsolePresenter } from "../../src/cli/output_presenter.ts";
+import { createConsolePresenter } from "@storyteller/cli/output_presenter.ts";
 
 Deno.test("createConsolePresenter - showInfo outputs to console.log", () => {
   const logs: string[] = [];

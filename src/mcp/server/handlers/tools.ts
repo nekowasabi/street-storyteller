@@ -3,26 +3,26 @@
  * tools/list, tools/call リクエストの処理
  */
 
-import { ToolRegistry } from "../../tools/tool_registry.ts";
+import { ToolRegistry } from "@storyteller/mcp/tools/tool_registry.ts";
 import type {
   McpCallToolParams,
   McpCallToolResult,
   McpListToolsResult,
-} from "../../protocol/types.ts";
-import { metaCheckTool } from "../../tools/definitions/meta_check.ts";
-import { metaGenerateTool } from "../../tools/definitions/meta_generate.ts";
-import { elementCreateTool } from "../../tools/definitions/element_create.ts";
-import { viewBrowserTool } from "../../tools/definitions/view_browser.ts";
-import { lspValidateTool } from "../../tools/definitions/lsp_validate.ts";
-import { lspFindReferencesTool } from "../../tools/definitions/lsp_find_references.ts";
-import { timelineCreateTool } from "../../tools/definitions/timeline_create.ts";
-import { eventCreateTool } from "../../tools/definitions/event_create.ts";
-import { eventUpdateTool } from "../../tools/definitions/event_update.ts";
-import { timelineViewTool } from "../../tools/definitions/timeline_view.ts";
-import { timelineAnalyzeTool } from "../../tools/definitions/timeline_analyze.ts";
-import { phaseCreateTool } from "../../tools/definitions/phase_create.ts";
-import { phaseViewTool } from "../../tools/definitions/phase_view.ts";
-import { manuscriptBindingTool } from "../../tools/definitions/manuscript_binding.ts";
+} from "@storyteller/mcp/protocol/types.ts";
+import { metaCheckTool } from "@storyteller/mcp/tools/definitions/meta_check.ts";
+import { metaGenerateTool } from "@storyteller/mcp/tools/definitions/meta_generate.ts";
+import { elementCreateTool } from "@storyteller/mcp/tools/definitions/element_create.ts";
+import { viewBrowserTool } from "@storyteller/mcp/tools/definitions/view_browser.ts";
+import { lspValidateTool } from "@storyteller/mcp/tools/definitions/lsp_validate.ts";
+import { lspFindReferencesTool } from "@storyteller/mcp/tools/definitions/lsp_find_references.ts";
+import { timelineCreateTool } from "@storyteller/mcp/tools/definitions/timeline_create.ts";
+import { eventCreateTool } from "@storyteller/mcp/tools/definitions/event_create.ts";
+import { eventUpdateTool } from "@storyteller/mcp/tools/definitions/event_update.ts";
+import { timelineViewTool } from "@storyteller/mcp/tools/definitions/timeline_view.ts";
+import { timelineAnalyzeTool } from "@storyteller/mcp/tools/definitions/timeline_analyze.ts";
+import { phaseCreateTool } from "@storyteller/mcp/tools/definitions/phase_create.ts";
+import { phaseViewTool } from "@storyteller/mcp/tools/definitions/phase_view.ts";
+import { manuscriptBindingTool } from "@storyteller/mcp/tools/definitions/manuscript_binding.ts";
 
 /**
  * tools/list リクエストを処理

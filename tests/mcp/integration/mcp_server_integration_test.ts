@@ -3,9 +3,9 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { McpServer } from "../../../src/mcp/server/server.ts";
-import { McpTransport } from "../../../src/mcp/protocol/transport.ts";
-import { createDefaultToolRegistry } from "../../../src/mcp/server/handlers/tools.ts";
+import { McpServer } from "@storyteller/mcp/server/server.ts";
+import { McpTransport } from "@storyteller/mcp/protocol/transport.ts";
+import { createDefaultToolRegistry } from "@storyteller/mcp/server/handlers/tools.ts";
 
 /**
  * テスト用のモックReader

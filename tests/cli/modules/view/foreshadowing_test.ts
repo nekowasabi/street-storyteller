@@ -5,9 +5,9 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { ViewForeshadowingCommand } from "../../../../src/cli/modules/view/foreshadowing.ts";
+import { ViewForeshadowingCommand } from "@storyteller/cli/modules/view/foreshadowing.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
-import type { Foreshadowing } from "../../../../src/type/v2/foreshadowing.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
 
 Deno.test("ViewForeshadowingCommand", async (t) => {
   await t.step("コマンド名とパスが正しいこと", () => {

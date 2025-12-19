@@ -1,19 +1,19 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { createProjectScaffoldingService } from "../src/application/project_scaffolding_service.ts";
+import { createProjectScaffoldingService } from "@storyteller/application/project_scaffolding_service.ts";
 import type {
   FileSystemError,
   FileSystemGateway,
-} from "../src/application/file_system_gateway.ts";
+} from "@storyteller/application/file_system_gateway.ts";
 import type {
   MigrationFacilitator,
   MigrationPlan,
   MigrationReport,
-} from "../src/application/migration_facilitator.ts";
-import type { ProjectBlueprint } from "../src/domain/project_blueprint.ts";
-import type { DocumentationEmitter } from "../src/application/documentation_emitter.ts";
-import type { TemplateId } from "../src/domain/project_blueprint.ts";
-import type { StoryDomainService } from "../src/domain/story_domain_service.ts";
-import { err, ok } from "../src/shared/result.ts";
+} from "@storyteller/application/migration_facilitator.ts";
+import type { ProjectBlueprint } from "@storyteller/domain/project_blueprint.ts";
+import type { DocumentationEmitter } from "@storyteller/application/documentation_emitter.ts";
+import type { TemplateId } from "@storyteller/domain/project_blueprint.ts";
+import type { StoryDomainService } from "@storyteller/domain/story_domain_service.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 
 class InMemoryFileSystem implements FileSystemGateway {
   readonly directories: string[] = [];

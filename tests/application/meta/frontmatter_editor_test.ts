@@ -6,7 +6,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   type EditResult,
   FrontmatterEditor,
-} from "../../../src/application/meta/frontmatter_editor.ts";
+} from "@storyteller/application/meta/frontmatter_editor.ts";
 
 Deno.test("FrontmatterEditor", async (t) => {
   // ========================================

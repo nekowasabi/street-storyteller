@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { metaCheckTool } from "../../../../src/mcp/tools/definitions/meta_check.ts";
+import { metaCheckTool } from "@storyteller/mcp/tools/definitions/meta_check.ts";
 
 Deno.test("metaCheckTool: ツール定義がMCP仕様に準拠している", () => {
   assertExists(metaCheckTool);

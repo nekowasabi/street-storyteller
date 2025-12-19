@@ -6,9 +6,9 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { ElementEventCommand } from "../../../cli/modules/element/event.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { ElementEventCommand } from "@storyteller/cli/modules/element/event.ts";
 
 /**
  * 有効なイベントカテゴリ

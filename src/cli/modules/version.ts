@@ -1,11 +1,17 @@
-import { err, ok } from "../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../types.ts";
-import { BaseCliCommand } from "../base_command.ts";
-import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
-import type { CommandDescriptor, CommandOptionDescriptor } from "../types.ts";
-import { createVersionService } from "../../application/version_service.ts";
-import { DenoFileSystemGateway } from "../../application/file_system_gateway.ts";
-import { STORYTELLER_VERSION } from "../../core/version.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import type {
+  CommandDescriptor,
+  CommandOptionDescriptor,
+} from "@storyteller/cli/types.ts";
+import { createVersionService } from "@storyteller/application/version_service.ts";
+import { DenoFileSystemGateway } from "@storyteller/application/file_system_gateway.ts";
+import { STORYTELLER_VERSION } from "@storyteller/core/version.ts";
 
 interface VersionOptions {
   check?: boolean;

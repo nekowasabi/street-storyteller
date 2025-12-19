@@ -3,8 +3,8 @@
  * resources/list, resources/read の処理
  */
 
-import type { McpResource } from "../../protocol/types.ts";
-import type { ResourceProvider } from "../../resources/resource_provider.ts";
+import type { McpResource } from "@storyteller/mcp/protocol/types.ts";
+import type { ResourceProvider } from "@storyteller/mcp/resources/resource_provider.ts";
 
 /**
  * resources/list を処理

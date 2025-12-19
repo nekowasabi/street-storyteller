@@ -8,12 +8,12 @@ import {
   createStubLogger,
   createStubPresenter,
 } from "../asserts.ts";
-import { MigrateCommand } from "../../src/cli/modules/migrate/index.ts";
+import { MigrateCommand } from "@storyteller/cli/modules/migrate/index.ts";
 import type {
   CommandContext,
   ConfigurationManagerRef,
-} from "../../src/cli/types.ts";
-import type { AppConfig } from "../../src/shared/config/schema.ts";
+} from "@storyteller/cli/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 // スタブConfig
 function createStubConfig(): ConfigurationManagerRef {

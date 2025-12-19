@@ -7,8 +7,8 @@
 
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { parseResourceUri } from "../../../src/mcp/resources/uri_parser.ts";
-import type { Character } from "../../../src/type/v2/character.ts";
+import { parseResourceUri } from "@storyteller/mcp/resources/uri_parser.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 // テスト用のキャラクター（将来の統合テスト用）
 const _testCharacter: Character = {

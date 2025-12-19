@@ -1,6 +1,6 @@
 import { assertEquals, assertExists } from "@std/assert";
-import { CharacterPlugin } from "../../src/plugins/core/character/plugin.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { CharacterPlugin } from "@storyteller/plugins/core/character/plugin.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 Deno.test("CharacterPlugin - メタデータが正しい", () => {
   const plugin = new CharacterPlugin();

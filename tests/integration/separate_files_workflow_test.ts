@@ -5,9 +5,9 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { DetailsPlugin } from "../../src/plugins/features/details/plugin.ts";
-import { FileReferenceValidator } from "../../src/plugins/features/details/validator.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { DetailsPlugin } from "@storyteller/plugins/features/details/plugin.ts";
+import { FileReferenceValidator } from "@storyteller/plugins/features/details/validator.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 import { join } from "@std/path";
 
 Deno.test("統合テスト: インライン作成 → ファイル分離 → 検証", async () => {

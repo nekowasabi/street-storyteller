@@ -1,24 +1,27 @@
-import { createPresenterFromArgs } from "./cli/output_presenter.ts";
-import { createCommandRegistry } from "./cli/command_registry.ts";
-import { registerCoreModules } from "./cli/modules/index.ts";
+import { createPresenterFromArgs } from "@storyteller/cli/output_presenter.ts";
+import { createCommandRegistry } from "@storyteller/cli/command_registry.ts";
+import { registerCoreModules } from "@storyteller/cli/modules/index.ts";
 import type {
   CliDependencies,
   CommandContext,
   CommandHandler,
   ConfigurationManagerRef,
   OutputPresenter,
-} from "./cli/types.ts";
-import { parseCliArgs, type ParsedArguments } from "./cli/arg_parser.ts";
-import { ConfigurationManager } from "./application/config/configuration_manager.ts";
-import { LoggingService } from "./application/logging/logging_service.ts";
+} from "@storyteller/cli/types.ts";
+import {
+  parseCliArgs,
+  type ParsedArguments,
+} from "@storyteller/cli/arg_parser.ts";
+import { ConfigurationManager } from "@storyteller/application/config/configuration_manager.ts";
+import { LoggingService } from "@storyteller/application/logging/logging_service.ts";
 import {
   CliConfigurationProvider,
   type CliConfigurationProviderOptions,
   DefaultConfigurationProvider,
   EnvConfigurationProvider,
   FileConfigurationProvider,
-} from "./infrastructure/config/providers.ts";
-import type { Logger } from "./shared/logging/types.ts";
+} from "@storyteller/infrastructure/config/providers.ts";
+import type { Logger } from "@storyteller/shared/logging/types.ts";
 import { join } from "@std/path/join";
 
 const aliasMap = new Map<string, string>([

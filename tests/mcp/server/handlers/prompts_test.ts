@@ -3,12 +3,12 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { PromptRegistry } from "../../../../src/mcp/prompts/prompt_registry.ts";
+import { PromptRegistry } from "@storyteller/mcp/prompts/prompt_registry.ts";
 import {
   createDefaultPromptRegistry,
   handlePromptsGet,
   handlePromptsList,
-} from "../../../../src/mcp/server/handlers/prompts.ts";
+} from "@storyteller/mcp/server/handlers/prompts.ts";
 
 Deno.test("handlePromptsList: 登録済みプロンプト一覧を返す", () => {
   const registry = new PromptRegistry();

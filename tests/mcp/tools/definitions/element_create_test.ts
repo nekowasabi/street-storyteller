@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { elementCreateTool } from "../../../../src/mcp/tools/definitions/element_create.ts";
+import { elementCreateTool } from "@storyteller/mcp/tools/definitions/element_create.ts";
 
 function extractToolResultJson(
   result: unknown,

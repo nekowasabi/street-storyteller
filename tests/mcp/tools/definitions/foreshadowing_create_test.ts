@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { foreshadowingCreateTool } from "../../../../src/mcp/tools/definitions/foreshadowing_create.ts";
+import { foreshadowingCreateTool } from "@storyteller/mcp/tools/definitions/foreshadowing_create.ts";
 
 Deno.test("foreshadowing_create MCPツール", async (t) => {
   await t.step("ツール名がforeshadowing_createであること", () => {

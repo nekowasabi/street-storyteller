@@ -4,9 +4,9 @@ import {
   createStubConfig,
   createStubLogger,
 } from "../asserts.ts";
-import { MetaWatchCommand } from "../../src/cli/modules/meta/watch.ts";
-import { err, ok } from "../../src/shared/result.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import { MetaWatchCommand } from "@storyteller/cli/modules/meta/watch.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 
 function createRecordingPresenter() {
   const messages: Record<"info" | "success" | "warning" | "error", string[]> = {

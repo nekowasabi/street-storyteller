@@ -7,7 +7,7 @@ import {
   type LogLevel,
   type LogMetadata,
   type LogWriter,
-} from "./types.ts";
+} from "@storyteller/shared/logging/types.ts";
 
 export interface LogManagerOptions {
   readonly level: LogLevel;

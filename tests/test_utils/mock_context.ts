@@ -8,14 +8,14 @@ import type {
   CommandContext,
   ConfigurationManagerRef,
   OutputPresenter,
-} from "../../src/cli/types.ts";
+} from "@storyteller/cli/types.ts";
 import type {
   LogContext,
   Logger,
   LogLevel,
   LogMetadata,
-} from "../../src/shared/logging/types.ts";
-import type { AppConfig } from "../../src/shared/config/schema.ts";
+} from "@storyteller/shared/logging/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 /**
  * モックプレゼンター

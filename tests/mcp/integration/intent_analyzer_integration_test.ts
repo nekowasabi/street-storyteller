@@ -14,8 +14,8 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { IntentAnalyzer } from "../../../src/mcp/nlp/intent_analyzer.ts";
-import { CommandMapper } from "../../../src/mcp/nlp/command_mapper.ts";
+import { IntentAnalyzer } from "@storyteller/mcp/nlp/intent_analyzer.ts";
+import { CommandMapper } from "@storyteller/mcp/nlp/command_mapper.ts";
 
 // ===== キャラクター作成関連テスト =====
 

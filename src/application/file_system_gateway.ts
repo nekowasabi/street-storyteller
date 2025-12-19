@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 
 export interface FileSystemGateway {
   ensureDir(path: string): Promise<Result<void, FileSystemError>>;

@@ -7,8 +7,8 @@ import type {
   Position,
   PositionedDetector,
   PositionedMatch,
-} from "../detection/positioned_detector.ts";
-import { isValidContent } from "./provider_utils.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
+import { isValidContent } from "@storyteller/lsp/providers/provider_utils.ts";
 
 /**
  * エンティティリゾルバーインターフェース

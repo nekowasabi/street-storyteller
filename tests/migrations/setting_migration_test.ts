@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "../asserts.ts";
-import { SettingMigration } from "../../src/migrations/v1_to_v2/setting_migration.ts";
-import type { ProjectContext } from "../../src/migrations/types.ts";
+import { SettingMigration } from "@storyteller/migrations/v1_to_v2/setting_migration.ts";
+import type { ProjectContext } from "@storyteller/migrations/types.ts";
 
 function createProjectContext(): ProjectContext {
   return {

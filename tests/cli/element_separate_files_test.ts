@@ -3,8 +3,8 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { ElementCharacterCommand } from "../../src/cli/modules/element/character.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import { ElementCharacterCommand } from "@storyteller/cli/modules/element/character.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 import { join } from "@std/path";
 
 function createMockLogger(): any {

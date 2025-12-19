@@ -1,7 +1,7 @@
 import { assertEquals } from "./asserts.ts";
-import type { AppConfig } from "../src/shared/config/schema.ts";
-import { LoggingService } from "../src/application/logging/logging_service.ts";
-import { MemoryLoggerFactory } from "../src/infrastructure/logging/memory_logger.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
+import { LoggingService } from "@storyteller/application/logging/logging_service.ts";
+import { MemoryLoggerFactory } from "@storyteller/infrastructure/logging/memory_logger.ts";
 
 class StubConfigurationManager {
   constructor(private readonly config: AppConfig) {}

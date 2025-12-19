@@ -3,7 +3,7 @@ import type {
   LogEvent,
   LoggerFactory,
   LogWriter,
-} from "../../shared/logging/types.ts";
+} from "@storyteller/shared/logging/types.ts";
 
 export class MemoryLoggerFactory implements LoggerFactory {
   #events: LogEvent[] = [];

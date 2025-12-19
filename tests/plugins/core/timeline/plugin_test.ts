@@ -5,8 +5,8 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { TimelinePlugin } from "../../../../src/plugins/core/timeline/plugin.ts";
-import type { Timeline } from "../../../../src/type/v2/timeline.ts";
+import { TimelinePlugin } from "@storyteller/plugins/core/timeline/plugin.ts";
+import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 Deno.test("TimelinePlugin", async (t) => {
   const plugin = new TimelinePlugin();

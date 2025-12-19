@@ -2,15 +2,18 @@
  * LSP コマンドグループ
  * `storyteller lsp` コマンドとそのサブコマンドを管理
  */
-import { ok } from "../../../shared/result.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import { renderHelp } from "../../help/renderer.ts";
-import type { CommandRegistry } from "../../command_registry.ts";
-import type { CommandContext, CommandDescriptor } from "../../types.ts";
-import { lspStartCommandDescriptor } from "./start.ts";
-import { lspInstallCommandDescriptor } from "./install.ts";
-import { lspValidateCommandDescriptor } from "./validate.ts";
+import { ok } from "@storyteller/shared/result.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import { renderHelp } from "@storyteller/cli/help/renderer.ts";
+import type { CommandRegistry } from "@storyteller/cli/command_registry.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+} from "@storyteller/cli/types.ts";
+import { lspStartCommandDescriptor } from "@storyteller/cli/modules/lsp/start.ts";
+import { lspInstallCommandDescriptor } from "@storyteller/cli/modules/lsp/install.ts";
+import { lspValidateCommandDescriptor } from "@storyteller/cli/modules/lsp/validate.ts";
 
 /**
  * LspCommand クラス

@@ -8,11 +8,11 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { CodeActionProvider } from "../../../src/lsp/providers/code_action_provider.ts";
+import { CodeActionProvider } from "@storyteller/lsp/providers/code_action_provider.ts";
 import {
   type DetectableEntity,
   PositionedDetector,
-} from "../../../src/lsp/detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ
 const mockEntities: DetectableEntity[] = [

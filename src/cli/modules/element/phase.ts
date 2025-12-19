@@ -5,19 +5,22 @@
  * キャラクターの成長フェーズを追加・管理する
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import type {
   CharacterPhase,
   CharacterStateDelta,
   PhaseImportance,
   RelationshipsDelta,
   TransitionType,
-} from "../../../type/v2/character_phase.ts";
-import type { RelationType } from "../../../type/v2/character.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import type { CommandDescriptor } from "../../types.ts";
+} from "@storyteller/types/v2/character_phase.ts";
+import type { RelationType } from "@storyteller/types/v2/character.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import type { CommandDescriptor } from "@storyteller/cli/types.ts";
 
 /**
  * ElementPhaseCommandのオプション

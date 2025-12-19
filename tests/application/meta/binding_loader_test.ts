@@ -1,6 +1,6 @@
 import { assertEquals } from "../../asserts.ts";
-import { loadBindingFile } from "../../../src/application/meta/binding_loader.ts";
-import { ReferenceDetector } from "../../../src/application/meta/reference_detector.ts";
+import { loadBindingFile } from "@storyteller/application/meta/binding_loader.ts";
+import { ReferenceDetector } from "@storyteller/application/meta/reference_detector.ts";
 
 function joinPath(...segments: readonly string[]): string {
   let result = "";

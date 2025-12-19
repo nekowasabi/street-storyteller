@@ -1,9 +1,9 @@
 import type {
   FileSystemError,
   FileSystemGateway,
-} from "./file_system_gateway.ts";
-import { err, ok, type Result } from "../shared/result.ts";
-import { PROJECT_SCHEMA_VERSION } from "../core/version.ts";
+} from "@storyteller/application/file_system_gateway.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
+import { PROJECT_SCHEMA_VERSION } from "@storyteller/core/version.ts";
 
 export interface MigrationPlanAction {
   readonly description: string;

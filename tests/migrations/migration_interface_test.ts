@@ -10,7 +10,7 @@ import type {
   MigrationOptions,
   MigrationResult,
   ProjectContext,
-} from "../../src/migrations/types.ts";
+} from "@storyteller/migrations/types.ts";
 
 Deno.test("Migration - インターフェースの基本構造", () => {
   // Migrationインターフェースを実装するダミーマイグレーション

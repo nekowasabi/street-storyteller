@@ -3,8 +3,8 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { FileReferenceValidator } from "../../src/plugins/features/details/validator.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { FileReferenceValidator } from "@storyteller/plugins/features/details/validator.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 import { join } from "@std/path";
 
 Deno.test("FileReferenceValidator: ファイル参照が存在する場合", async () => {

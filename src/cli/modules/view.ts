@@ -2,20 +2,20 @@
  * View コマンド
  * プロジェクトの物語要素をHTML形式で可視化する
  */
-import { err, ok } from "../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 import type {
   CommandContext,
   CommandDescriptor,
   CommandOptionDescriptor,
-} from "../types.ts";
-import { BaseCliCommand } from "../base_command.ts";
-import { createLegacyCommandDescriptor } from "../legacy_adapter.ts";
-import { ProjectAnalyzer } from "../../application/view/project_analyzer.ts";
-import { HtmlGenerator } from "../../application/view/html_generator.ts";
-import { LocalViewServer } from "../../application/view/local_server.ts";
-import { FileWatcher } from "../../application/view/file_watcher.ts";
-import { ViewForeshadowingCommand } from "./view/foreshadowing.ts";
-import { viewSettingCommandDescriptor } from "./view/setting.ts";
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import { ProjectAnalyzer } from "@storyteller/application/view/project_analyzer.ts";
+import { HtmlGenerator } from "@storyteller/application/view/html_generator.ts";
+import { LocalViewServer } from "@storyteller/application/view/local_server.ts";
+import { FileWatcher } from "@storyteller/application/view/file_watcher.ts";
+import { ViewForeshadowingCommand } from "@storyteller/cli/modules/view/foreshadowing.ts";
+import { viewSettingCommandDescriptor } from "@storyteller/cli/modules/view/setting.ts";
 
 /**
  * ViewCommandクラス

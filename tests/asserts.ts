@@ -1,4 +1,4 @@
-import type { Logger } from "../src/shared/logging/types.ts";
+import type { Logger } from "@storyteller/shared/logging/types.ts";
 
 export function assert(
   condition: unknown,

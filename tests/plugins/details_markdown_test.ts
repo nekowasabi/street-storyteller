@@ -3,8 +3,8 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { generateMarkdownContent } from "../../src/plugins/features/details/markdown.ts";
-import type { DetailField } from "../../src/plugins/features/details/templates.ts";
+import { generateMarkdownContent } from "@storyteller/plugins/features/details/markdown.ts";
+import type { DetailField } from "@storyteller/plugins/features/details/templates.ts";
 
 Deno.test("generateMarkdownContent - descriptionフィールドの日本語ラベル「詳細説明」が使用される", () => {
   const field: DetailField = "description";

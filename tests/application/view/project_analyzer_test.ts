@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assert, assertEquals } from "../../asserts.ts";
-import { ProjectAnalyzer } from "../../../src/application/view/project_analyzer.ts";
+import { ProjectAnalyzer } from "@storyteller/application/view/project_analyzer.ts";
 
 Deno.test("ProjectAnalyzer - 基本構造", async (t) => {
   await t.step("ProjectAnalyzerクラスが存在する", () => {

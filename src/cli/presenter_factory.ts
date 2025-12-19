@@ -3,11 +3,11 @@
  * Presenterの生成ロジックを一元化するファクトリパターン実装
  */
 
-import type { OutputPresenter } from "./types.ts";
+import type { OutputPresenter } from "@storyteller/cli/types.ts";
 import {
   createConsolePresenter,
   createJsonOutputPresenter,
-} from "./output_presenter.ts";
+} from "@storyteller/cli/output_presenter.ts";
 
 /**
  * Presenter種別

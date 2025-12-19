@@ -1,12 +1,12 @@
-import { Purpose } from "./type/purpose.ts";
-import { Character } from "./type/character.ts";
-import { Plot } from "./type/plot.ts";
-import { Chapter } from "./type/chapter.ts";
-import { StoryStructure } from "./type/story_structure.ts";
-import { TimeLine } from "./type/timeline.ts";
-import { Fun } from "./type/fun.ts";
-import { Setting } from "./type/setting.ts";
-import { Theme } from "./type/theme.ts";
+import { Purpose } from "@storyteller/types/purpose.ts";
+import { Character } from "@storyteller/types/character.ts";
+import { Plot } from "@storyteller/types/plot.ts";
+import { Chapter } from "@storyteller/types/chapter.ts";
+import { StoryStructure } from "@storyteller/types/story_structure.ts";
+import { TimeLine } from "@storyteller/types/timeline.ts";
+import { Fun } from "@storyteller/types/fun.ts";
+import { Setting } from "@storyteller/types/setting.ts";
+import { Theme } from "@storyteller/types/theme.ts";
 
 // MEMO: 登場人物が思惑を超えて動き出したときにどう対応できるか？
 

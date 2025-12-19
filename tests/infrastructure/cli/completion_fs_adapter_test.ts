@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { createCompletionFsAdapter } from "../../../src/infrastructure/cli/completion_fs_adapter.ts";
+import { createCompletionFsAdapter } from "@storyteller/infrastructure/cli/completion_fs_adapter.ts";
 
 Deno.test("createCompletionFsAdapter - writes bash and zsh completion scripts", async () => {
   const tmpDir = await Deno.makeTempDir({ prefix: "completion-test-" });

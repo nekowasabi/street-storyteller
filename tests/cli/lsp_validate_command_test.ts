@@ -4,10 +4,10 @@
  */
 import { assert, assertEquals, createStubLogger } from "../asserts.ts";
 import { assertExists } from "@std/assert";
-import type { CommandContext } from "../../src/cli/types.ts";
-import { LspValidateCommand } from "../../src/cli/modules/lsp/validate.ts";
-import { BaseCliCommand } from "../../src/cli/base_command.ts";
-import type { DetectableEntity } from "../../src/lsp/detection/positioned_detector.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
+import { LspValidateCommand } from "@storyteller/cli/modules/lsp/validate.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
 
 function createTestContext(
   args: Record<string, unknown>,

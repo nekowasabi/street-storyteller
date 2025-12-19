@@ -1,6 +1,6 @@
 import { assert } from "../asserts.ts";
-import { versionCommandHandler } from "../../src/cli/modules/version.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import { versionCommandHandler } from "@storyteller/cli/modules/version.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 import { createStubLogger, createStubPresenter } from "../asserts.ts";
 
 Deno.test("versionコマンド - 基本動作", async (t) => {

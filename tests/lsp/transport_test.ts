@@ -10,9 +10,9 @@ import { describe, it } from "@std/testing/bdd";
 import { createMockReader, createMockWriter } from "./helpers.ts";
 
 // Process2 Sub2: LspTransportクラスのテスト
-import { LspTransport } from "../../src/lsp/protocol/transport.ts";
+import { LspTransport } from "@storyteller/lsp/protocol/transport.ts";
 
-import type { JsonRpcRequest } from "../../src/lsp/protocol/types.ts";
+import type { JsonRpcRequest } from "@storyteller/lsp/protocol/types.ts";
 
 describe("モックReader/Writer", () => {
   describe("createMockReader", () => {

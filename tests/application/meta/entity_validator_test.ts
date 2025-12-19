@@ -4,7 +4,7 @@
  */
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
-import { EntityValidator } from "../../../src/application/meta/entity_validator.ts";
+import { EntityValidator } from "@storyteller/application/meta/entity_validator.ts";
 
 // テスト用のプロジェクトパス（cinderellaサンプル）
 // ProjectAnalyzerは絶対パスを期待するため、Deno.cwd()で結合

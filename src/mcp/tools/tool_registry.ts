@@ -8,7 +8,7 @@ import type {
   McpInputSchema,
   McpTool,
   McpToolResultContent,
-} from "../protocol/types.ts";
+} from "@storyteller/mcp/protocol/types.ts";
 
 /**
  * ツール実行時のコンテキスト

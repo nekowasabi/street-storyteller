@@ -4,7 +4,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { DocumentManager } from "../../src/lsp/document/document_manager.ts";
+import { DocumentManager } from "@storyteller/lsp/document/document_manager.ts";
 
 Deno.test("DocumentManager - open() saves document", () => {
   const manager = new DocumentManager();

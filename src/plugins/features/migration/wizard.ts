@@ -3,8 +3,11 @@
  * インタラクティブなマイグレーション実行のためのウィザード
  */
 
-import type { MigrationRegistry } from "../../../migrations/registry.ts";
-import type { Migration, ProjectContext } from "../../../migrations/types.ts";
+import type { MigrationRegistry } from "@storyteller/migrations/registry.ts";
+import type {
+  Migration,
+  ProjectContext,
+} from "@storyteller/migrations/types.ts";
 
 /**
  * マイグレーション分析結果

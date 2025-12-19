@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { LogManager } from "../src/shared/logging/log_manager.ts";
-import { ConsoleLoggerFactory } from "../src/infrastructure/logging/console_logger.ts";
-import { MemoryLoggerFactory } from "../src/infrastructure/logging/memory_logger.ts";
+import { LogManager } from "@storyteller/shared/logging/log_manager.ts";
+import { ConsoleLoggerFactory } from "@storyteller/infrastructure/logging/console_logger.ts";
+import { MemoryLoggerFactory } from "@storyteller/infrastructure/logging/memory_logger.ts";
 
 class BufferWriter {
   #chunks: string[] = [];

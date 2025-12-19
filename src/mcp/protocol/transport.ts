@@ -8,8 +8,11 @@ import {
   ContentLengthTransport,
   type TransportReader,
   type TransportWriter,
-} from "../../shared/transport/content_length_transport.ts";
-import { parseJsonRpc, serializeJsonRpc } from "../../lsp/protocol/json_rpc.ts";
+} from "@storyteller/shared/transport/content_length_transport.ts";
+import {
+  parseJsonRpc,
+  serializeJsonRpc,
+} from "@storyteller/lsp/protocol/json_rpc.ts";
 
 export type { TransportReader, TransportWriter };
 

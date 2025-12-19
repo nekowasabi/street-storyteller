@@ -6,8 +6,8 @@
 import { assertEquals, assertExists } from "@std/assert";
 import {
   TextDocumentSyncHandler,
-} from "../../src/lsp/handlers/text_document_sync.ts";
-import { DocumentManager } from "../../src/lsp/document/document_manager.ts";
+} from "@storyteller/lsp/handlers/text_document_sync.ts";
+import { DocumentManager } from "@storyteller/lsp/document/document_manager.ts";
 
 Deno.test("TextDocumentSyncHandler - handleDidOpen opens document", () => {
   const documentManager = new DocumentManager();

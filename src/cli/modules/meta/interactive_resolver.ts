@@ -1,4 +1,4 @@
-import type { DetectedEntity } from "../../../application/meta/reference_detector.ts";
+import type { DetectedEntity } from "@storyteller/application/meta/reference_detector.ts";
 
 export interface InteractiveIo {
   write(message: string): void;

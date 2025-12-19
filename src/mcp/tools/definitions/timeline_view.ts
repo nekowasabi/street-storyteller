@@ -6,8 +6,8 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import type { Timeline } from "../../../type/v2/timeline.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const timelineViewTool: McpToolDefinition = {
   name: "timeline_view",

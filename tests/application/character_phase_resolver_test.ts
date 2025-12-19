@@ -4,8 +4,8 @@
  */
 
 import { assertEquals, assertThrows } from "@std/assert";
-import { CharacterPhaseResolver } from "../../src/application/character_phase_resolver.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { CharacterPhaseResolver } from "@storyteller/application/character_phase_resolver.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 // テスト用キャラクターデータ
 function createTestCharacter(): Character {

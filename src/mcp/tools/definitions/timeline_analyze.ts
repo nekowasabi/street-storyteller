@@ -6,8 +6,11 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import type { Timeline, TimelineEvent } from "../../../type/v2/timeline.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import type {
+  Timeline,
+  TimelineEvent,
+} from "@storyteller/types/v2/timeline.ts";
 
 interface AnalysisIssue {
   type: "warning" | "error";

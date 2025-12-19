@@ -1,6 +1,6 @@
 import { assert, assertEquals } from "../../asserts.ts";
-import { ValidationGenerator } from "../../../src/application/meta/validation_generator.ts";
-import type { DetectionResult } from "../../../src/application/meta/reference_detector.ts";
+import { ValidationGenerator } from "@storyteller/application/meta/validation_generator.ts";
+import type { DetectionResult } from "@storyteller/application/meta/reference_detector.ts";
 
 Deno.test("ValidationGenerator - generates character_presence rules", () => {
   const generator = new ValidationGenerator();

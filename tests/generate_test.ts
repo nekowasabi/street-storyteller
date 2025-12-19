@@ -2,7 +2,7 @@ import { assertEquals } from "./asserts.ts";
 import {
   GenerateOptions,
   generateStoryProject,
-} from "../src/commands/generate.ts";
+} from "@storyteller/commands/generate.ts";
 
 async function withTestDir(
   testName: string,

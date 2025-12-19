@@ -3,12 +3,12 @@ import type {
   Character,
   CharacterRole,
   RelationType,
-} from "../../src/type/v2/character.ts";
+} from "@storyteller/types/v2/character.ts";
 import {
   downgradeCharacterV2toV1,
   migrateCharacterV1toV2,
-} from "../../src/type/compat.ts";
-import type { Character as CharacterV1 } from "../../src/type/character.ts";
+} from "@storyteller/types/compat.ts";
+import type { Character as CharacterV1 } from "@storyteller/types/character.ts";
 
 Deno.test("Character型v2 - 基本構造のテスト", () => {
   const character: Character = {

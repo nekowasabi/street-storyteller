@@ -16,7 +16,7 @@ import type {
   TimelineEvent,
   TimelineScope,
   TimePoint,
-} from "../../../src/type/v2/timeline.ts";
+} from "@storyteller/types/v2/timeline.ts";
 
 Deno.test("Timeline型定義", async (t) => {
   await t.step("EventCategory型が7種類のリテラル型であること", () => {

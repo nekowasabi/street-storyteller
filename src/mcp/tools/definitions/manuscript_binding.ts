@@ -7,15 +7,15 @@ import { isAbsolute, join } from "@std/path";
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
 import {
   type BindableEntityType,
   FrontmatterEditor,
-} from "../../../application/meta/frontmatter_editor.ts";
+} from "@storyteller/application/meta/frontmatter_editor.ts";
 import {
   EntityValidator,
   type ValidatableEntityType,
-} from "../../../application/meta/entity_validator.ts";
+} from "@storyteller/application/meta/entity_validator.ts";
 
 /**
  * 有効なアクション

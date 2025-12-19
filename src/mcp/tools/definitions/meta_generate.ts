@@ -6,9 +6,9 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { MetaGenerateCommand } from "../../../cli/modules/meta/generate.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { MetaGenerateCommand } from "@storyteller/cli/modules/meta/generate.ts";
 
 /**
  * meta_generateツール定義

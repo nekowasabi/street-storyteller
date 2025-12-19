@@ -11,7 +11,7 @@ import type {
   ResolutionSummary,
   SettingSummary,
   TimelineSummary,
-} from "./project_analyzer.ts";
+} from "@storyteller/application/view/project_analyzer.ts";
 
 /**
  * HTML生成クラス

@@ -1,8 +1,8 @@
 import { assertEquals, assertExists } from "@std/assert";
-import { ElementService } from "../../src/application/element_service.ts";
-import { createPluginRegistry } from "../../src/core/plugin_system.ts";
-import { CharacterPlugin } from "../../src/plugins/core/character/plugin.ts";
-import { DetailsPlugin } from "../../src/plugins/features/details/plugin.ts";
+import { ElementService } from "@storyteller/application/element_service.ts";
+import { createPluginRegistry } from "@storyteller/core/plugin_system.ts";
+import { CharacterPlugin } from "@storyteller/plugins/core/character/plugin.ts";
+import { DetailsPlugin } from "@storyteller/plugins/features/details/plugin.ts";
 
 Deno.test("ElementService - プラグインレジストリを使って初期化できる", () => {
   const registry = createPluginRegistry();

@@ -3,7 +3,7 @@
  * LocalViewServerのnotify機能をテスト
  */
 import { assert } from "../../asserts.ts";
-import { LocalViewServer } from "../../../src/application/view/local_server.ts";
+import { LocalViewServer } from "@storyteller/application/view/local_server.ts";
 
 Deno.test("WebSocket通知 - 基本機能", async (t) => {
   await t.step("WebSocket接続を受け付ける", async () => {

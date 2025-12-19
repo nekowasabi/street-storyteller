@@ -1,13 +1,16 @@
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
 import type {
   CommandDescriptor,
   CommandOptionDescriptor,
-} from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import { MetaGeneratorService } from "../../../application/meta/meta_generator_service.ts";
-import { TypeScriptEmitter } from "../../../application/meta/typescript_emitter.ts";
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import { MetaGeneratorService } from "@storyteller/application/meta/meta_generator_service.ts";
+import { TypeScriptEmitter } from "@storyteller/application/meta/typescript_emitter.ts";
 
 type WatchOptions = {
   readonly targetPath?: string;

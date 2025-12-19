@@ -6,12 +6,12 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { DocumentSymbolProvider } from "../../../src/lsp/providers/document_symbol_provider.ts";
+import { DocumentSymbolProvider } from "@storyteller/lsp/providers/document_symbol_provider.ts";
 import {
   type DetectableEntity,
   PositionedDetector,
-} from "../../../src/lsp/detection/positioned_detector.ts";
-import { SymbolKind } from "../../../src/lsp/providers/lsp_types.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
+import { SymbolKind } from "@storyteller/lsp/providers/lsp_types.ts";
 
 // テスト用のモックエンティティデータ
 const mockEntities: DetectableEntity[] = [

@@ -3,7 +3,7 @@
  * 物語プロジェクトの構造を解析し、HTML可視化用のデータを生成する
  */
 import { join, relative, toFileUrl } from "@std/path";
-import { err, ok, type Result } from "../../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 
 /**
  * キャラクターサマリー

@@ -10,18 +10,18 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { LspServer } from "../../src/lsp/server/server.ts";
-import { LspTransport } from "../../src/lsp/protocol/transport.ts";
+import { LspServer } from "@storyteller/lsp/server/server.ts";
+import { LspTransport } from "@storyteller/lsp/protocol/transport.ts";
 import {
   createLspMessage,
   createMockReader,
   createMockWriter,
 } from "./helpers.ts";
-import type { DetectableEntity } from "../../src/lsp/detection/positioned_detector.ts";
-import type { EntityInfo } from "../../src/lsp/providers/hover_provider.ts";
-import { PositionedDetector } from "../../src/lsp/detection/positioned_detector.ts";
-import { DiagnosticsGenerator } from "../../src/lsp/diagnostics/diagnostics_generator.ts";
-import { DocumentManager } from "../../src/lsp/document/document_manager.ts";
+import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
+import type { EntityInfo } from "@storyteller/lsp/providers/hover_provider.ts";
+import { PositionedDetector } from "@storyteller/lsp/detection/positioned_detector.ts";
+import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
+import { DocumentManager } from "@storyteller/lsp/document/document_manager.ts";
 
 // テスト用のモックエンティティデータ
 const mockEntities: DetectableEntity[] = [

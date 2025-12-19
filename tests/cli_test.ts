@@ -1,11 +1,11 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { runCLI } from "../src/cli.ts";
-import { createConsolePresenter } from "../src/cli/output_presenter.ts";
+import { runCLI } from "@storyteller/cli.ts";
+import { createConsolePresenter } from "@storyteller/cli/output_presenter.ts";
 import type {
   ConfigurationManagerRef,
   LoggingServiceRef,
-} from "../src/cli/types.ts";
-import type { AppConfig } from "../src/shared/config/schema.ts";
+} from "@storyteller/cli/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 // Mock Deno.args and Deno.exit for testing
 let mockArgs: string[] = [];

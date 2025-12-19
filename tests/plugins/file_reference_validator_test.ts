@@ -1,5 +1,5 @@
 import { assertEquals } from "../asserts.ts";
-import { FileReferenceValidator } from "../../src/plugins/features/details/validator.ts";
+import { FileReferenceValidator } from "@storyteller/plugins/features/details/validator.ts";
 
 Deno.test("FileReferenceValidator treats missing details as valid", async () => {
   const validator = new FileReferenceValidator();

@@ -1,10 +1,12 @@
 /**
  * 補完プロバイダー
  * @トリガーでキャラクター・設定・伏線の補完候補を提供
+ * "トリガーでリテラル型の値を補完
  * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion
  */
 
-import type { DetectableEntity } from "../detection/positioned_detector.ts";
+import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
+import { LiteralTypeCompletionProvider } from "@storyteller/lsp/providers/literal_type_completion_provider.ts";
 
 /**
  * LSP CompletionItemKind
@@ -76,21 +78,23 @@ export type CompletionList = {
  */
 export class CompletionProvider {
   private readonly entities: DetectableEntity[];
+  private readonly literalTypeProvider: LiteralTypeCompletionProvider;
 
   constructor(entities: DetectableEntity[]) {
     this.entities = entities;
+    this.literalTypeProvider = new LiteralTypeCompletionProvider();
   }
 
   /**
    * 補完候補を取得
-   * @param _uri ドキュメントURI
+   * @param uri ドキュメントURI
    * @param content ドキュメント内容
    * @param line 行番号（0-based）
    * @param character 文字位置（0-based）
    * @returns 補完リスト
    */
   getCompletions(
-    _uri: string,
+    uri: string,
     content: string,
     line: number,
     character: number,
@@ -100,49 +104,56 @@ export class CompletionProvider {
     const currentLine = lines[line] ?? "";
     const beforeCursor = currentLine.slice(0, character);
 
-    // @トリガーの検出
+    // @トリガーの検出（エンティティ補完）
     const atIndex = beforeCursor.lastIndexOf("@");
-    if (atIndex === -1) {
-      return { isIncomplete: false, items: [] };
+    if (atIndex !== -1) {
+      // @の後の文字列（フィルター用）
+      const prefix = beforeCursor.slice(atIndex + 1).toLowerCase();
+
+      // 補完候補を生成
+      const items: CompletionItem[] = [];
+
+      for (const entity of this.entities) {
+        // プレフィックスでフィルタリング
+        const matchesPrefix = entity.id.toLowerCase().includes(prefix) ||
+          entity.name.toLowerCase().includes(prefix) ||
+          (entity.displayNames ?? []).some((dn) =>
+            dn.toLowerCase().includes(prefix)
+          );
+
+        if (!matchesPrefix && prefix.length > 0) continue;
+
+        const kind = this.getCompletionItemKind(entity.kind);
+        const detail = this.getDetailText(entity);
+        const documentation = this.getDocumentation(entity);
+
+        items.push({
+          label: entity.name,
+          kind,
+          detail,
+          documentation,
+          insertText: entity.id,
+          sortText: this.getSortText(entity),
+          filterText: `@${entity.id} ${entity.name} ${
+            (entity.displayNames ?? []).join(" ")
+          }`,
+        });
+      }
+
+      return {
+        isIncomplete: false,
+        items,
+      };
     }
 
-    // @の後の文字列（フィルター用）
-    const prefix = beforeCursor.slice(atIndex + 1).toLowerCase();
-
-    // 補完候補を生成
-    const items: CompletionItem[] = [];
-
-    for (const entity of this.entities) {
-      // プレフィックスでフィルタリング
-      const matchesPrefix = entity.id.toLowerCase().includes(prefix) ||
-        entity.name.toLowerCase().includes(prefix) ||
-        (entity.displayNames ?? []).some((dn) =>
-          dn.toLowerCase().includes(prefix)
-        );
-
-      if (!matchesPrefix && prefix.length > 0) continue;
-
-      const kind = this.getCompletionItemKind(entity.kind);
-      const detail = this.getDetailText(entity);
-      const documentation = this.getDocumentation(entity);
-
-      items.push({
-        label: entity.name,
-        kind,
-        detail,
-        documentation,
-        insertText: entity.id,
-        sortText: this.getSortText(entity),
-        filterText: `@${entity.id} ${entity.name} ${
-          (entity.displayNames ?? []).join(" ")
-        }`,
-      });
-    }
-
-    return {
-      isIncomplete: false,
-      items,
-    };
+    // "トリガーの検出（リテラル型補完）
+    // LiteralTypeCompletionProviderに委譲
+    return this.literalTypeProvider.getCompletions(
+      uri,
+      content,
+      line,
+      character,
+    );
   }
 
   /**

@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 
 export interface ProjectBlueprint {
   readonly directories: readonly string[];
@@ -52,8 +52,8 @@ const BASE_DIRECTORIES = [
 const BASE_FILES: readonly ProjectFileSpec[] = [
   {
     path: "tests/story_test.ts",
-    content: `import { assert } from "../test_utils/assert.ts";
-import { MyStory } from "../story.ts";
+    content: `import { assert } from "@storyteller/test_utils/assert.ts";
+import { MyStory } from "@storyteller/story.ts";
 
 Deno.test("Story validation", () => {
   const story = new MyStory();
@@ -308,13 +308,14 @@ $ARGUMENTS
 function storyTemplate(): ProjectFileSpec {
   return {
     path: "story.ts",
-    content: `import { StoryTeller } from "../src/storyteller_interface.ts";
-import { Purpose } from "../src/type/purpose.ts";
-import { Character } from "../src/type/character.ts";
-import { Plot } from "../src/type/plot.ts";
-import { Chapter } from "../src/type/chapter.ts";
-import { Fun } from "../src/type/fun.ts";
-import { Setting } from "../src/type/setting.ts";
+    content:
+      `import { StoryTeller } from "@storyteller/src/storyteller_interface.ts";
+import { Purpose } from "@storyteller/src/type/purpose.ts";
+import { Character } from "@storyteller/src/type/character.ts";
+import { Plot } from "@storyteller/src/type/plot.ts";
+import { Chapter } from "@storyteller/src/type/chapter.ts";
+import { Fun } from "@storyteller/src/type/fun.ts";
+import { Setting } from "@storyteller/src/type/setting.ts";
 
 export class MyStory implements StoryTeller {
   purpose: Purpose = {

@@ -1,18 +1,21 @@
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import {
   type ChapterMeta,
   MetaGeneratorService,
-} from "../../../application/meta/meta_generator_service.ts";
-import { TypeScriptEmitter } from "../../../application/meta/typescript_emitter.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
+} from "@storyteller/application/meta/meta_generator_service.ts";
+import { TypeScriptEmitter } from "@storyteller/application/meta/typescript_emitter.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 import type {
   CommandDescriptor,
   CommandOptionDescriptor,
-} from "../../types.ts";
+} from "@storyteller/cli/types.ts";
 import { expandGlob } from "@std/fs";
-import { InteractiveResolver } from "./interactive_resolver.ts";
+import { InteractiveResolver } from "@storyteller/cli/modules/meta/interactive_resolver.ts";
 
 interface MetaGenerateOptions {
   readonly markdownInputs: readonly string[];

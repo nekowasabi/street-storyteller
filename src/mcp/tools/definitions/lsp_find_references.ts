@@ -6,13 +6,13 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { PositionedDetector } from "../../../lsp/detection/positioned_detector.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { PositionedDetector } from "@storyteller/lsp/detection/positioned_detector.ts";
 import {
   listMarkdownFiles,
   loadDetectableEntities,
   toProjectRelative,
-} from "../lsp_shared.ts";
+} from "@storyteller/mcp/tools/lsp_shared.ts";
 
 export type ReferenceLocation = {
   readonly kind: "character" | "setting" | "foreshadowing";

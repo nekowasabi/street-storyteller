@@ -3,9 +3,9 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { characterBrainstormPrompt } from "../../../../src/mcp/prompts/definitions/character_brainstorm.ts";
-import { plotSuggestionPrompt } from "../../../../src/mcp/prompts/definitions/plot_suggestion.ts";
-import { sceneImprovementPrompt } from "../../../../src/mcp/prompts/definitions/scene_improvement.ts";
+import { characterBrainstormPrompt } from "@storyteller/mcp/prompts/definitions/character_brainstorm.ts";
+import { plotSuggestionPrompt } from "@storyteller/mcp/prompts/definitions/plot_suggestion.ts";
+import { sceneImprovementPrompt } from "@storyteller/mcp/prompts/definitions/scene_improvement.ts";
 
 Deno.test("character_brainstorm: role引数を受け取りメッセージを生成する", () => {
   assertEquals(characterBrainstormPrompt.name, "character_brainstorm");

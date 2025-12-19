@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { createStoryDomainService } from "../src/domain/story_domain_service.ts";
-import { StaticTemplateCatalog } from "../src/domain/project_blueprint.ts";
-import { err, ok } from "../src/shared/result.ts";
+import { createStoryDomainService } from "@storyteller/domain/story_domain_service.ts";
+import { StaticTemplateCatalog } from "@storyteller/domain/project_blueprint.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 
 class StubTemplateCatalog extends StaticTemplateCatalog {
   constructor(

@@ -3,9 +3,9 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { parseResourceUri } from "../../../src/mcp/resources/uri_parser.ts";
-import { ProjectResourceProvider } from "../../../src/mcp/resources/project_resource_provider.ts";
-import type { Foreshadowing } from "../../../src/type/v2/foreshadowing.ts";
+import { parseResourceUri } from "@storyteller/mcp/resources/uri_parser.ts";
+import { ProjectResourceProvider } from "@storyteller/mcp/resources/project_resource_provider.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
 
 Deno.test("parseResourceUri: foreshadowings一覧URIを解析できる", () => {
   const parsed = parseResourceUri("storyteller://foreshadowings");

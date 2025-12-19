@@ -1,6 +1,6 @@
 import { join, relative, toFileUrl } from "@std/path";
-import type { BindingDefinition } from "./binding_loader.ts";
-import { loadBindingFile } from "./binding_loader.ts";
+import type { BindingDefinition } from "@storyteller/application/meta/binding_loader.ts";
+import { loadBindingFile } from "@storyteller/application/meta/binding_loader.ts";
 
 type FrontmatterLike = {
   readonly characters?: readonly string[];

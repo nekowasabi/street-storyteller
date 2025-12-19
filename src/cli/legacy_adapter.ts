@@ -3,7 +3,7 @@ import type {
   CommandExampleDescriptor,
   CommandHandler,
   CommandOptionDescriptor,
-} from "./types.ts";
+} from "@storyteller/cli/types.ts";
 
 export interface LegacyCommandAdapterOptions {
   readonly summary: string;

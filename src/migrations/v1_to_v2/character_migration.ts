@@ -9,10 +9,10 @@ import type {
   MigrationOptions,
   MigrationResult,
   ProjectContext,
-} from "../types.ts";
-import type { Character as CharacterV1 } from "../../type/character.ts";
-import type { Character as CharacterV2 } from "../../type/v2/character.ts";
-import { migrateCharacterV1toV2 } from "../../type/compat.ts";
+} from "@storyteller/migrations/types.ts";
+import type { Character as CharacterV1 } from "@storyteller/types/character.ts";
+import type { Character as CharacterV2 } from "@storyteller/types/v2/character.ts";
+import { migrateCharacterV1toV2 } from "@storyteller/types/compat.ts";
 
 /**
  * Character型のv1→v2マイグレーション

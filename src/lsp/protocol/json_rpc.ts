@@ -3,14 +3,14 @@
  * @see https://www.jsonrpc.org/specification
  */
 
-import { err, ok, type Result } from "../../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 import type {
   JsonRpcError,
   JsonRpcMessage,
   JsonRpcNotification,
   JsonRpcRequest,
   JsonRpcResponse,
-} from "./types.ts";
+} from "@storyteller/lsp/protocol/types.ts";
 
 // ===== JSON-RPC 2.0 エラーコード定数 =====
 

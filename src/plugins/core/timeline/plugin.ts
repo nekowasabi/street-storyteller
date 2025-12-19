@@ -4,8 +4,8 @@
  * Timeline要素の作成、検証、スキーマエクスポートを担当するプラグイン
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { Result } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import type {
   CreateElementOptions,
   ElementCreationResult,
@@ -13,9 +13,9 @@ import type {
   PluginMetadata,
   TypeSchema,
   ValidationResult,
-} from "../../../core/plugin_system.ts";
-import type { Timeline } from "../../../type/v2/timeline.ts";
-import { validateTimeline } from "./validator.ts";
+} from "@storyteller/core/plugin_system.ts";
+import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+import { validateTimeline } from "@storyteller/plugins/core/timeline/validator.ts";
 import { join } from "@std/path";
 
 export class TimelinePlugin implements ElementPlugin {

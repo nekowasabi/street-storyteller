@@ -5,8 +5,8 @@
 
 import { assertEquals, assertStringIncludes } from "@std/assert";
 import { join } from "@std/path";
-import { manuscriptBindingTool } from "../../../../src/mcp/tools/definitions/manuscript_binding.ts";
-import type { McpCallToolResult } from "../../../../src/mcp/protocol/types.ts";
+import { manuscriptBindingTool } from "@storyteller/mcp/tools/definitions/manuscript_binding.ts";
+import type { McpCallToolResult } from "@storyteller/mcp/protocol/types.ts";
 
 /**
  * McpCallToolResultからテキストを取得するヘルパー

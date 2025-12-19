@@ -19,7 +19,7 @@ import {
   type McpPrompt,
   type McpResource,
   type McpTool,
-} from "../../../src/mcp/protocol/types.ts";
+} from "@storyteller/mcp/protocol/types.ts";
 
 Deno.test("McpTool型が正しく定義されている", () => {
   const tool: McpTool = {

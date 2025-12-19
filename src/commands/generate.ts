@@ -1,12 +1,12 @@
-import { createProjectScaffoldingService } from "../application/project_scaffolding_service.ts";
-import { DenoFileSystemGateway } from "../application/file_system_gateway.ts";
-import { createMigrationFacilitator } from "../application/migration_facilitator.ts";
-import { createDocumentationEmitter } from "../application/documentation_emitter.ts";
-import { StaticTemplateCatalog } from "../domain/project_blueprint.ts";
+import { createProjectScaffoldingService } from "@storyteller/application/project_scaffolding_service.ts";
+import { DenoFileSystemGateway } from "@storyteller/application/file_system_gateway.ts";
+import { createMigrationFacilitator } from "@storyteller/application/migration_facilitator.ts";
+import { createDocumentationEmitter } from "@storyteller/application/documentation_emitter.ts";
+import { StaticTemplateCatalog } from "@storyteller/domain/project_blueprint.ts";
 import {
   createStandardValidationPolicy,
   createStoryDomainService,
-} from "../domain/story_domain_service.ts";
+} from "@storyteller/domain/story_domain_service.ts";
 
 export interface GenerateOptions {
   name: string;

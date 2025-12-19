@@ -15,8 +15,8 @@ import {
   createJsonOutputPresenter,
   createPresenterFromArgs,
   type JsonOutput,
-} from "../../../src/cli/output_presenter.ts";
-import type { OutputPresenter } from "../../../src/cli/types.ts";
+} from "@storyteller/cli/output_presenter.ts";
+import type { OutputPresenter } from "@storyteller/cli/types.ts";
 
 /**
  * コンソール出力をキャプチャするヘルパー

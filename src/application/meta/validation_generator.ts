@@ -1,4 +1,7 @@
-import type { DetectedEntity, DetectionResult } from "./reference_detector.ts";
+import type {
+  DetectedEntity,
+  DetectionResult,
+} from "@storyteller/application/meta/reference_detector.ts";
 
 export interface ValidationRule {
   readonly type:

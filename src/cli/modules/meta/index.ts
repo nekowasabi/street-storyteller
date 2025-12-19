@@ -1,12 +1,15 @@
-import { ok } from "../../../shared/result.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import { renderHelp } from "../../help/renderer.ts";
-import type { CommandRegistry } from "../../command_registry.ts";
-import type { CommandContext, CommandDescriptor } from "../../types.ts";
-import { metaCheckCommandDescriptor } from "./check.ts";
-import { metaGenerateCommandDescriptor } from "./generate.ts";
-import { metaWatchCommandDescriptor } from "./watch.ts";
+import { ok } from "@storyteller/shared/result.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import { renderHelp } from "@storyteller/cli/help/renderer.ts";
+import type { CommandRegistry } from "@storyteller/cli/command_registry.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+} from "@storyteller/cli/types.ts";
+import { metaCheckCommandDescriptor } from "@storyteller/cli/modules/meta/check.ts";
+import { metaGenerateCommandDescriptor } from "@storyteller/cli/modules/meta/generate.ts";
+import { metaWatchCommandDescriptor } from "@storyteller/cli/modules/meta/watch.ts";
 
 class MetaCommand extends BaseCliCommand {
   override readonly name = "meta" as const;

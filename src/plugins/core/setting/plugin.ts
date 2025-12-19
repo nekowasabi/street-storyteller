@@ -4,8 +4,8 @@
  * Setting要素の作成、検証、スキーマエクスポートを担当するプラグイン
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { Result } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import type {
   CreateElementOptions,
   ElementCreationResult,
@@ -13,9 +13,9 @@ import type {
   PluginMetadata,
   TypeSchema,
   ValidationResult,
-} from "../../../core/plugin_system.ts";
-import type { Setting } from "../../../type/v2/setting.ts";
-import { validateSetting } from "./validator.ts";
+} from "@storyteller/core/plugin_system.ts";
+import type { Setting } from "@storyteller/types/v2/setting.ts";
+import { validateSetting } from "@storyteller/plugins/core/setting/validator.ts";
 import { join } from "@std/path";
 
 export class SettingPlugin implements ElementPlugin {

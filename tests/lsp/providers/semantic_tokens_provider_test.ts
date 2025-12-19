@@ -9,7 +9,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   type DetectableEntity,
   PositionedDetector,
-} from "../../../src/lsp/detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティ
 const mockEntities: DetectableEntity[] = [

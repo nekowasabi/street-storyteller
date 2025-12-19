@@ -3,11 +3,11 @@
  * プロジェクトのバージョンマイグレーションを実行
  */
 
-import { BaseCliCommand } from "../../base_command.ts";
-import type { CommandContext } from "../../types.ts";
-import type { Result } from "../../../shared/result.ts";
-import { ok } from "../../../shared/result.ts";
-import type { CommandExecutionError } from "../../types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import { ok } from "@storyteller/shared/result.ts";
+import type { CommandExecutionError } from "@storyteller/cli/types.ts";
 
 /**
  * マイグレーションオプション

@@ -1,4 +1,7 @@
-import type { CommandOptionDescriptor, CommandTreeNode } from "../types.ts";
+import type {
+  CommandOptionDescriptor,
+  CommandTreeNode,
+} from "@storyteller/cli/types.ts";
 
 export function generateBashCompletionScript(tree: CommandTreeNode): string {
   const commands = collectExecutableCommands(tree);

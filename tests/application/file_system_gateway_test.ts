@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "../asserts.ts";
-import { DenoFileSystemGateway } from "../../src/application/file_system_gateway.ts";
+import { DenoFileSystemGateway } from "@storyteller/application/file_system_gateway.ts";
 
 Deno.test("DenoFileSystemGateway writeFile/readFile round-trip", async () => {
   const fs = new DenoFileSystemGateway();

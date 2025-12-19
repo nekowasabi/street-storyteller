@@ -1,5 +1,5 @@
 import { assertEquals } from "@std/assert";
-import { SessionContext } from "../../../src/mcp/context/session_context.ts";
+import { SessionContext } from "@storyteller/mcp/context/session_context.ts";
 
 Deno.test("SessionContext - addMessage stores messages with timestamp", () => {
   const ctx = new SessionContext();

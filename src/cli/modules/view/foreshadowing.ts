@@ -4,13 +4,13 @@
  * storyteller view foreshadowing / storyteller view foreshadowing --id {id} コマンドの実装
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import type {
   Foreshadowing,
   ForeshadowingStatus,
-} from "../../../type/v2/foreshadowing.ts";
+} from "@storyteller/types/v2/foreshadowing.ts";
 
 /**
  * ViewForeshadowingCommandクラス

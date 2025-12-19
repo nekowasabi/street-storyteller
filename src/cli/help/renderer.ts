@@ -1,4 +1,4 @@
-import type { CommandTreeNode } from "../types.ts";
+import type { CommandTreeNode } from "@storyteller/cli/types.ts";
 
 export type HelpRenderResult =
   | { kind: "root"; content: string }

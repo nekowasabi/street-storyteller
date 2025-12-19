@@ -4,9 +4,9 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { getServerCapabilities } from "../../src/lsp/server/capabilities.ts";
-import { LspServer } from "../../src/lsp/server/server.ts";
-import { LspTransport } from "../../src/lsp/protocol/transport.ts";
+import { getServerCapabilities } from "@storyteller/lsp/server/capabilities.ts";
+import { LspServer } from "@storyteller/lsp/server/server.ts";
+import { LspTransport } from "@storyteller/lsp/protocol/transport.ts";
 import {
   createLspMessage,
   createMockReader,

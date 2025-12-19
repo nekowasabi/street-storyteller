@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assert, assertEquals } from "../../asserts.ts";
-import { FileWatcher } from "../../../src/application/view/file_watcher.ts";
+import { FileWatcher } from "@storyteller/application/view/file_watcher.ts";
 
 Deno.test("FileWatcher - 基本構造", async (t) => {
   await t.step("FileWatcherクラスが存在する", () => {

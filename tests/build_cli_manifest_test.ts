@@ -2,7 +2,7 @@ import { assert, assertEquals } from "./asserts.ts";
 import {
   computeSha256Hex,
   createBuildManifest,
-} from "../src/infrastructure/cli/build_manifest.ts";
+} from "@storyteller/infrastructure/cli/build_manifest.ts";
 import { join } from "@std/path/join";
 
 Deno.test("computeSha256Hex returns deterministic checksum", async () => {

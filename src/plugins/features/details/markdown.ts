@@ -4,7 +4,7 @@
  * インライン詳細をMarkdownファイルに分離する際のフロントマター付きコンテンツ生成
  */
 
-import type { DetailField } from "./templates.ts";
+import type { DetailField } from "@storyteller/plugins/features/details/templates.ts";
 
 /**
  * Markdownコンテンツ生成時のメタデータ

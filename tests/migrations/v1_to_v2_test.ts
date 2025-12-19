@@ -3,14 +3,14 @@
  */
 
 import { assert, assertEquals } from "../asserts.ts";
-import { CharacterMigration } from "../../src/migrations/v1_to_v2/character_migration.ts";
-import { SettingMigration } from "../../src/migrations/v1_to_v2/setting_migration.ts";
-import { ProjectMetadataMigration } from "../../src/migrations/v1_to_v2/project_metadata_migration.ts";
+import { CharacterMigration } from "@storyteller/migrations/v1_to_v2/character_migration.ts";
+import { SettingMigration } from "@storyteller/migrations/v1_to_v2/setting_migration.ts";
+import { ProjectMetadataMigration } from "@storyteller/migrations/v1_to_v2/project_metadata_migration.ts";
 import type {
   MigrationOptions,
   ProjectContext,
-} from "../../src/migrations/types.ts";
-import type { Character as CharacterV1 } from "../../src/type/character.ts";
+} from "@storyteller/migrations/types.ts";
+import type { Character as CharacterV1 } from "@storyteller/types/character.ts";
 
 Deno.test("CharacterMigration - 基本的なマイグレーション", async () => {
   const migration = new CharacterMigration();

@@ -3,24 +3,24 @@
  * prompts/list, prompts/get の処理
  */
 
-import type { McpPrompt } from "../../protocol/types.ts";
+import type { McpPrompt } from "@storyteller/mcp/protocol/types.ts";
 import {
   type McpPromptMessage,
   PromptRegistry,
-} from "../../prompts/prompt_registry.ts";
-import { characterBrainstormPrompt } from "../../prompts/definitions/character_brainstorm.ts";
-import { plotSuggestionPrompt } from "../../prompts/definitions/plot_suggestion.ts";
-import { sceneImprovementPrompt } from "../../prompts/definitions/scene_improvement.ts";
-import { projectSetupWizardPrompt } from "../../prompts/definitions/project_setup_wizard.ts";
-import { chapterReviewPrompt } from "../../prompts/definitions/chapter_review.ts";
-import { consistencyFixPrompt } from "../../prompts/definitions/consistency_fix.ts";
-import { timelineBrainstormPrompt } from "../../prompts/definitions/timeline_brainstorm.ts";
-import { eventDetailSuggestPrompt } from "../../prompts/definitions/event_detail_suggest.ts";
-import { causalityAnalysisPrompt } from "../../prompts/definitions/causality_analysis.ts";
-import { timelineConsistencyCheckPrompt } from "../../prompts/definitions/timeline_consistency_check.ts";
-import { storyDirectorPrompt } from "../../prompts/definitions/story_director.ts";
-import { characterArcSuggestPrompt } from "../../prompts/definitions/character_arc_suggest.ts";
-import { phaseTransitionCheckPrompt } from "../../prompts/definitions/phase_transition_check.ts";
+} from "@storyteller/mcp/prompts/prompt_registry.ts";
+import { characterBrainstormPrompt } from "@storyteller/mcp/prompts/definitions/character_brainstorm.ts";
+import { plotSuggestionPrompt } from "@storyteller/mcp/prompts/definitions/plot_suggestion.ts";
+import { sceneImprovementPrompt } from "@storyteller/mcp/prompts/definitions/scene_improvement.ts";
+import { projectSetupWizardPrompt } from "@storyteller/mcp/prompts/definitions/project_setup_wizard.ts";
+import { chapterReviewPrompt } from "@storyteller/mcp/prompts/definitions/chapter_review.ts";
+import { consistencyFixPrompt } from "@storyteller/mcp/prompts/definitions/consistency_fix.ts";
+import { timelineBrainstormPrompt } from "@storyteller/mcp/prompts/definitions/timeline_brainstorm.ts";
+import { eventDetailSuggestPrompt } from "@storyteller/mcp/prompts/definitions/event_detail_suggest.ts";
+import { causalityAnalysisPrompt } from "@storyteller/mcp/prompts/definitions/causality_analysis.ts";
+import { timelineConsistencyCheckPrompt } from "@storyteller/mcp/prompts/definitions/timeline_consistency_check.ts";
+import { storyDirectorPrompt } from "@storyteller/mcp/prompts/definitions/story_director.ts";
+import { characterArcSuggestPrompt } from "@storyteller/mcp/prompts/definitions/character_arc_suggest.ts";
+import { phaseTransitionCheckPrompt } from "@storyteller/mcp/prompts/definitions/phase_transition_check.ts";
 
 export type McpListPromptsResult = {
   readonly prompts: readonly McpPrompt[];

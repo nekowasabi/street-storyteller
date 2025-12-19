@@ -1,15 +1,15 @@
 import { assertEquals, assertExists } from "@std/assert";
-import { ElementCharacterCommand } from "../../src/cli/modules/element/character.ts";
-import { ElementSettingCommand } from "../../src/cli/modules/element/setting.ts";
-import { createCommandRegistry } from "../../src/cli/command_registry.ts";
-import { registerCoreModules } from "../../src/cli/modules/index.ts";
+import { ElementCharacterCommand } from "@storyteller/cli/modules/element/character.ts";
+import { ElementSettingCommand } from "@storyteller/cli/modules/element/setting.ts";
+import { createCommandRegistry } from "@storyteller/cli/command_registry.ts";
+import { registerCoreModules } from "@storyteller/cli/modules/index.ts";
 import { createStubLogger } from "../asserts.ts";
 import type {
   CommandContext,
   ConfigurationManagerRef,
   OutputPresenter,
-} from "../../src/cli/types.ts";
-import type { AppConfig } from "../../src/shared/config/schema.ts";
+} from "@storyteller/cli/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 function createStubPresenter(): OutputPresenter {
   return {

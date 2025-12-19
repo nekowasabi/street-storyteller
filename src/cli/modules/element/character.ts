@@ -4,16 +4,19 @@
  * storyteller element character コマンドの実装
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import type { CharacterRole } from "../../../type/v2/character.ts";
-import { ElementService } from "../../../application/element_service.ts";
-import { createPluginRegistry } from "../../../core/plugin_system.ts";
-import { CharacterPlugin } from "../../../plugins/core/character/plugin.ts";
-import { DetailsPlugin } from "../../../plugins/features/details/plugin.ts";
-import type { DetailField } from "../../../plugins/features/details/templates.ts";
-import type { Character } from "../../../type/v2/character.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { CharacterRole } from "@storyteller/types/v2/character.ts";
+import { ElementService } from "@storyteller/application/element_service.ts";
+import { createPluginRegistry } from "@storyteller/core/plugin_system.ts";
+import { CharacterPlugin } from "@storyteller/plugins/core/character/plugin.ts";
+import { DetailsPlugin } from "@storyteller/plugins/features/details/plugin.ts";
+import type { DetailField } from "@storyteller/plugins/features/details/templates.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 /**
  * ElementCharacterCommandのオプション

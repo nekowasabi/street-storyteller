@@ -3,7 +3,7 @@
  * タイムラインの整合性をチェックする
  */
 
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 export const timelineConsistencyCheckPrompt: McpPromptDefinition = {
   name: "timeline_consistency_check",

@@ -5,7 +5,10 @@
  * 差分管理方式により、initialStateから順次フェーズの差分を適用してスナップショットを構築
  */
 
-import type { Character, RelationType } from "../type/v2/character.ts";
+import type {
+  Character,
+  RelationType,
+} from "@storyteller/types/v2/character.ts";
 import type {
   ArrayDelta,
   CharacterInitialState,
@@ -13,12 +16,12 @@ import type {
   CharacterStateDelta,
   RelationshipsDelta,
   StatusDelta,
-} from "../type/v2/character_phase.ts";
+} from "@storyteller/types/v2/character_phase.ts";
 import type {
   CharacterStateSnapshot,
   PhaseDiffResult,
   PhaseTimelineEntry,
-} from "../type/v2/character_state.ts";
+} from "@storyteller/types/v2/character_state.ts";
 
 /**
  * キャラクターフェーズリゾルバ

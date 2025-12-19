@@ -5,25 +5,28 @@
  * キャラクター情報とフェーズ（成長段階）情報を表示する
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandDescriptor } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 import type {
   Character,
   CharacterDetails,
   CharacterDevelopment,
-} from "../../../type/v2/character.ts";
+} from "@storyteller/types/v2/character.ts";
 import type {
   CharacterStateSnapshot,
   PhaseDiffResult,
   PhaseTimelineEntry,
-} from "../../../type/v2/character_state.ts";
-import { CharacterPhaseResolver } from "../../../application/character_phase_resolver.ts";
+} from "@storyteller/types/v2/character_state.ts";
+import { CharacterPhaseResolver } from "@storyteller/application/character_phase_resolver.ts";
 import {
   FileContentReader,
   type HybridFieldValue,
-} from "../../../plugins/features/details/file_content_reader.ts";
+} from "@storyteller/plugins/features/details/file_content_reader.ts";
 
 /**
  * キャラクターローダーインターフェース

@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { EntityDetailsExpander } from "../../src/plugins/features/details/entity_details_expander.ts";
+import { EntityDetailsExpander } from "@storyteller/plugins/features/details/entity_details_expander.ts";
 
 const TEST_PROJECT_ROOT = "/tmp/test_entity_details_expander";
 

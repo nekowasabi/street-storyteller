@@ -1,9 +1,12 @@
 import { assertEquals, assertFalse } from "./asserts.ts";
-import { createCommandRegistry } from "../src/cli/command_registry.ts";
-import { registerCoreModules } from "../src/cli/modules/index.ts";
-import { type CommandContext, type CommandHandler } from "../src/cli/types.ts";
-import type { AppConfig } from "../src/shared/config/schema.ts";
-import type { ConfigurationManagerRef } from "../src/cli/types.ts";
+import { createCommandRegistry } from "@storyteller/cli/command_registry.ts";
+import { registerCoreModules } from "@storyteller/cli/modules/index.ts";
+import {
+  type CommandContext,
+  type CommandHandler,
+} from "@storyteller/cli/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
+import type { ConfigurationManagerRef } from "@storyteller/cli/types.ts";
 
 function createStubLogger() {
   return {

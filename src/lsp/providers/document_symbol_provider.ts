@@ -8,12 +8,12 @@
 import {
   type PositionedDetector,
   type PositionedMatch,
-} from "../detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 import {
   type DocumentSymbol,
   SymbolKind,
   type SymbolKindType,
-} from "./lsp_types.ts";
+} from "@storyteller/lsp/providers/lsp_types.ts";
 
 /**
  * ヘッダー情報の内部表現

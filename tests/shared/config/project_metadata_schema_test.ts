@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "../../asserts.ts";
-import { parseProjectMetadata } from "../../../src/shared/config/schema.ts";
+import { parseProjectMetadata } from "@storyteller/shared/config/schema.ts";
 import { z } from "zod";
 
 Deno.test("ProjectMetadataSchema - 基本的な解析", () => {

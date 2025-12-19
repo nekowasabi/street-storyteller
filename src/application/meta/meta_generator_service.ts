@@ -1,17 +1,23 @@
 import { dirname, join } from "@std/path";
-import { err, ok, type Result } from "../../shared/result.ts";
-import type { FrontmatterData, ParseError } from "./frontmatter_parser.ts";
-import { FrontmatterParser } from "./frontmatter_parser.ts";
-import { ReferenceDetector } from "./reference_detector.ts";
-import type { DetectedEntity, DetectionResult } from "./reference_detector.ts";
-import { ValidationGenerator } from "./validation_generator.ts";
-import type { ValidationRule } from "./validation_generator.ts";
-import { TypeScriptEmitter } from "./typescript_emitter.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
+import type {
+  FrontmatterData,
+  ParseError,
+} from "@storyteller/application/meta/frontmatter_parser.ts";
+import { FrontmatterParser } from "@storyteller/application/meta/frontmatter_parser.ts";
+import { ReferenceDetector } from "@storyteller/application/meta/reference_detector.ts";
+import type {
+  DetectedEntity,
+  DetectionResult,
+} from "@storyteller/application/meta/reference_detector.ts";
+import { ValidationGenerator } from "@storyteller/application/meta/validation_generator.ts";
+import type { ValidationRule } from "@storyteller/application/meta/validation_generator.ts";
+import { TypeScriptEmitter } from "@storyteller/application/meta/typescript_emitter.ts";
 import {
   getPreset,
   type Preset,
   type PresetType,
-} from "../../domain/meta/preset_templates.ts";
+} from "@storyteller/domain/meta/preset_templates.ts";
 
 export interface MetaGenerateOptions {
   readonly projectPath?: string;

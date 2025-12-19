@@ -3,8 +3,8 @@
  */
 
 import { assert, assertEquals } from "../asserts.ts";
-import { MigrationPlugin } from "../../src/plugins/features/migration/plugin.ts";
-import { MigrationRegistry } from "../../src/migrations/registry.ts";
+import { MigrationPlugin } from "@storyteller/plugins/features/migration/plugin.ts";
+import { MigrationRegistry } from "@storyteller/migrations/registry.ts";
 import type {
   BackupContext,
   Migration,
@@ -12,7 +12,7 @@ import type {
   MigrationOptions,
   MigrationResult,
   ProjectContext,
-} from "../../src/migrations/types.ts";
+} from "@storyteller/migrations/types.ts";
 
 // テスト用のカウンター付きマイグレーション
 function createTestMigration(

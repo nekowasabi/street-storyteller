@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { timelineAnalyzeTool } from "../../../../src/mcp/tools/definitions/timeline_analyze.ts";
+import { timelineAnalyzeTool } from "@storyteller/mcp/tools/definitions/timeline_analyze.ts";
 
 Deno.test("timeline_analyze MCPツール", async (t) => {
   await t.step("ツール名がtimeline_analyzeであること", () => {

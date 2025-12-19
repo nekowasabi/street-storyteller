@@ -1,5 +1,5 @@
 import { dirname, join, relative } from "@std/path";
-import { err, ok, type Result } from "../../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 
 export type EmitError =
   | { type: "project_root_not_found"; message: string }

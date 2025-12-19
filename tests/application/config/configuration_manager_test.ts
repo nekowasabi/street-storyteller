@@ -1,7 +1,7 @@
 import { assert, assertEquals } from "../../asserts.ts";
-import type { ConfigurationProvider } from "../../../src/shared/config/provider.ts";
-import { ConfigurationManager } from "../../../src/application/config/configuration_manager.ts";
-import { ConfigurationError } from "../../../src/application/config/configuration_manager.ts";
+import type { ConfigurationProvider } from "@storyteller/shared/config/provider.ts";
+import { ConfigurationManager } from "@storyteller/application/config/configuration_manager.ts";
+import { ConfigurationError } from "@storyteller/application/config/configuration_manager.ts";
 
 function providerWithLayer(
   id: string,

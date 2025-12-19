@@ -9,11 +9,11 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   type EntityInfo,
   HoverProvider,
-} from "../../src/lsp/providers/hover_provider.ts";
+} from "@storyteller/lsp/providers/hover_provider.ts";
 import {
   type DetectableEntity,
   PositionedDetector,
-} from "../../src/lsp/detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ（拡張情報付き）
 const mockEntities: DetectableEntity[] = [

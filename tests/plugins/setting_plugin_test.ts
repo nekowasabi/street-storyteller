@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { SettingPlugin } from "../../src/plugins/core/setting/plugin.ts";
+import { SettingPlugin } from "@storyteller/plugins/core/setting/plugin.ts";
 
 Deno.test("SettingPlugin: メタデータが正しく設定されている", () => {
   const plugin = new SettingPlugin();

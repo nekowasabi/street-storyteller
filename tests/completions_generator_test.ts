@@ -1,10 +1,10 @@
 import { assert } from "./asserts.ts";
-import { createCommandRegistry } from "../src/cli/command_registry.ts";
-import { registerCoreModules } from "../src/cli/modules/index.ts";
+import { createCommandRegistry } from "@storyteller/cli/command_registry.ts";
+import { registerCoreModules } from "@storyteller/cli/modules/index.ts";
 import {
   generateBashCompletionScript,
   generateZshCompletionScript,
-} from "../src/cli/completions/generator.ts";
+} from "@storyteller/cli/completions/generator.ts";
 
 Deno.test("generateBashCompletionScript includes commands and options", () => {
   const registry = createCommandRegistry();

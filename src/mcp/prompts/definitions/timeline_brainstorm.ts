@@ -3,7 +3,7 @@
  * タイムラインのアイデアをブレインストーミングする
  */
 
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 export const timelineBrainstormPrompt: McpPromptDefinition = {
   name: "timeline_brainstorm",

@@ -3,8 +3,8 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { DetailsPlugin } from "../../src/plugins/features/details/plugin.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { DetailsPlugin } from "@storyteller/plugins/features/details/plugin.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 Deno.test("DetailsPlugin - separateFiles: backstoryをファイル参照に変換", async () => {
   const plugin = new DetailsPlugin();

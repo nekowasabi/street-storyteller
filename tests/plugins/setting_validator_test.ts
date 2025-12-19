@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assert, assertEquals } from "../asserts.ts";
-import { validateSetting } from "../../src/plugins/core/setting/validator.ts";
+import { validateSetting } from "@storyteller/plugins/core/setting/validator.ts";
 
 Deno.test("validateSetting rejects non-object inputs", () => {
   const result = validateSetting(null);

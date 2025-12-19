@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { ViewTimelineCommand } from "../../../../src/cli/modules/view/timeline.ts";
+import { ViewTimelineCommand } from "@storyteller/cli/modules/view/timeline.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
 
 Deno.test("ViewTimelineCommand - 基本", async (t) => {

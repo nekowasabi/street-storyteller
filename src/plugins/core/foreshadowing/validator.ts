@@ -7,11 +7,11 @@ import type {
   ForeshadowingStatus,
   ForeshadowingType,
   ResolutionInfo,
-} from "../../../type/v2/foreshadowing.ts";
+} from "@storyteller/types/v2/foreshadowing.ts";
 import type {
   ValidationError,
   ValidationResult,
-} from "../../../core/plugin_system.ts";
+} from "@storyteller/core/plugin_system.ts";
 
 /**
  * 有効なタイプ

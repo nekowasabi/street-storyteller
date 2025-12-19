@@ -2,8 +2,8 @@ import {
   type ConfigurationLayer,
   type ConfigurationProvider,
   type ConfigurationValue,
-} from "../../shared/config/provider.ts";
-import type { AppConfig } from "../../shared/config/schema.ts";
+} from "@storyteller/shared/config/provider.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 export class DefaultConfigurationProvider implements ConfigurationProvider {
   readonly meta = {

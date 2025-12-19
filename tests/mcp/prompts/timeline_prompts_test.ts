@@ -3,10 +3,10 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { timelineBrainstormPrompt } from "../../../src/mcp/prompts/definitions/timeline_brainstorm.ts";
-import { eventDetailSuggestPrompt } from "../../../src/mcp/prompts/definitions/event_detail_suggest.ts";
-import { causalityAnalysisPrompt } from "../../../src/mcp/prompts/definitions/causality_analysis.ts";
-import { timelineConsistencyCheckPrompt } from "../../../src/mcp/prompts/definitions/timeline_consistency_check.ts";
+import { timelineBrainstormPrompt } from "@storyteller/mcp/prompts/definitions/timeline_brainstorm.ts";
+import { eventDetailSuggestPrompt } from "@storyteller/mcp/prompts/definitions/event_detail_suggest.ts";
+import { causalityAnalysisPrompt } from "@storyteller/mcp/prompts/definitions/causality_analysis.ts";
+import { timelineConsistencyCheckPrompt } from "@storyteller/mcp/prompts/definitions/timeline_consistency_check.ts";
 
 Deno.test("timeline_brainstorm プロンプト", async (t) => {
   await t.step("name が timeline_brainstorm であること", () => {

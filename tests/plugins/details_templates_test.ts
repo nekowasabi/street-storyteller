@@ -3,12 +3,12 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { generateMarkdownContent } from "../../src/plugins/features/details/markdown.ts";
+import { generateMarkdownContent } from "@storyteller/plugins/features/details/markdown.ts";
 import {
   getAvailableFields,
   getTemplate,
   isValidField,
-} from "../../src/plugins/features/details/templates.ts";
+} from "@storyteller/plugins/features/details/templates.ts";
 
 Deno.test("generateMarkdownContent: backstoryのMarkdown生成", () => {
   const content =

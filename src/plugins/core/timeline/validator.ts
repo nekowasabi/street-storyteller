@@ -7,11 +7,11 @@ import type {
   Timeline,
   TimelineEvent,
   TimelineScope,
-} from "../../../type/v2/timeline.ts";
+} from "@storyteller/types/v2/timeline.ts";
 import type {
   ValidationError,
   ValidationResult,
-} from "../../../core/plugin_system.ts";
+} from "@storyteller/core/plugin_system.ts";
 
 /**
  * 有効なスコープ

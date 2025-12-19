@@ -3,8 +3,8 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { CompletenessAnalyzer } from "../../src/application/completeness_analyzer.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { CompletenessAnalyzer } from "@storyteller/application/completeness_analyzer.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 Deno.test("CompletenessAnalyzer", async (t) => {
   await t.step(

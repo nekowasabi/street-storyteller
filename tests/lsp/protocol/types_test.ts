@@ -7,7 +7,7 @@ import {
   type JsonRpcNotification,
   type JsonRpcRequest,
   type JsonRpcResponse,
-} from "../../../src/lsp/protocol/types.ts";
+} from "@storyteller/lsp/protocol/types.ts";
 
 Deno.test("isJsonRpcRequest returns true for request with id", () => {
   const request: JsonRpcRequest = {

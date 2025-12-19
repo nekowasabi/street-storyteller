@@ -1,4 +1,4 @@
-import { err, ok, type Result } from "../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 import type {
   CommandDescriptor,
   CommandExampleDescriptor,
@@ -6,7 +6,7 @@ import type {
   CommandOptionDescriptor,
   CommandRegistrationError,
   CommandTreeNode,
-} from "./types.ts";
+} from "@storyteller/cli/types.ts";
 
 type CommandId = string;
 type CommandPath = readonly string[];

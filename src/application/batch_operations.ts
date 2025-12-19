@@ -4,11 +4,14 @@
  * 複数キャラクターに対する一括操作を提供
  */
 
-import { err, ok } from "../shared/result.ts";
-import type { Result } from "../shared/result.ts";
-import type { Character, CharacterRole } from "../type/v2/character.ts";
-import { DetailsPlugin } from "../plugins/features/details/plugin.ts";
-import type { DetailField } from "../plugins/features/details/templates.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import type {
+  Character,
+  CharacterRole,
+} from "@storyteller/types/v2/character.ts";
+import { DetailsPlugin } from "@storyteller/plugins/features/details/plugin.ts";
+import type { DetailField } from "@storyteller/plugins/features/details/templates.ts";
 
 /**
  * 一括操作のオプション

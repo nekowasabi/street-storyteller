@@ -5,8 +5,8 @@
  */
 
 import { assertStringIncludes } from "@std/assert";
-import { HtmlGenerator } from "../../../src/application/view/html_generator.ts";
-import type { ProjectAnalysis } from "../../../src/application/view/project_analyzer.ts";
+import { HtmlGenerator } from "@storyteller/application/view/html_generator.ts";
+import type { ProjectAnalysis } from "@storyteller/application/view/project_analyzer.ts";
 
 Deno.test("HtmlGenerator Foreshadowing", async (t) => {
   await t.step("生成されたHTMLにForeshadowingsセクションが含まれること", () => {

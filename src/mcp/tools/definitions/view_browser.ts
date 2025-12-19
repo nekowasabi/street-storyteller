@@ -6,9 +6,9 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { ViewCommand } from "../../../cli/modules/view.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { ViewCommand } from "@storyteller/cli/modules/view.ts";
 
 export const viewBrowserTool: McpToolDefinition = {
   name: "view_browser",

@@ -3,8 +3,8 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals } from "@std/assert";
-import { CommandMapper } from "../../../src/mcp/nlp/command_mapper.ts";
-import type { Intent } from "../../../src/mcp/nlp/intent_analyzer.ts";
+import { CommandMapper } from "@storyteller/mcp/nlp/command_mapper.ts";
+import type { Intent } from "@storyteller/mcp/nlp/intent_analyzer.ts";
 
 Deno.test('CommandMapper: element_create インテント → "element_create"', () => {
   const mapper = new CommandMapper();

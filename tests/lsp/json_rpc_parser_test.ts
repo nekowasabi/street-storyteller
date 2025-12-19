@@ -12,7 +12,7 @@ import type {
   JsonRpcNotification,
   JsonRpcRequest,
   JsonRpcResponse,
-} from "../../src/lsp/protocol/types.ts";
+} from "@storyteller/lsp/protocol/types.ts";
 
 // Process1 Sub2: JSON-RPCパーサー関数のテスト
 import {
@@ -21,7 +21,7 @@ import {
   parseJsonRpc,
   parseJsonRpcBatch,
   serializeJsonRpc,
-} from "../../src/lsp/protocol/json_rpc.ts";
+} from "@storyteller/lsp/protocol/json_rpc.ts";
 
 describe("JSON-RPC 型定義", () => {
   describe("JsonRpcRequest", () => {

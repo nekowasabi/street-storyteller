@@ -6,7 +6,7 @@ import type {
   Setting,
   SettingDetails,
   SettingType,
-} from "../../src/type/v2/setting.ts";
+} from "@storyteller/types/v2/setting.ts";
 
 Deno.test("SettingDetails - descriptionフィールドが文字列で設定できる", () => {
   const details: SettingDetails = {

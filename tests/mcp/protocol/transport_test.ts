@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals } from "@std/assert";
-import { McpTransport } from "../../../src/mcp/protocol/transport.ts";
+import { McpTransport } from "@storyteller/mcp/protocol/transport.ts";
 
 /**
  * テスト用のモックReader

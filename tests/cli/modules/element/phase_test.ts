@@ -6,18 +6,18 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   ElementPhaseCommand,
   elementPhaseCommandDescriptor,
-} from "../../../../src/cli/modules/element/phase.ts";
+} from "@storyteller/cli/modules/element/phase.ts";
 import type {
   CommandContext,
   OutputPresenter,
-} from "../../../../src/cli/types.ts";
+} from "@storyteller/cli/types.ts";
 import type {
   LogContext,
   Logger,
   LogLevel,
   LogMetadata,
-} from "../../../../src/shared/logging/types.ts";
-import type { AppConfig } from "../../../../src/shared/config/schema.ts";
+} from "@storyteller/shared/logging/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 /**
  * テスト用のモックPresenter

@@ -1,8 +1,8 @@
 import { assert } from "../asserts.ts";
-import { updateCommandHandler } from "../../src/cli/modules/update.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import { updateCommandHandler } from "@storyteller/cli/modules/update.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 import { createStubLogger, createStubPresenter } from "../asserts.ts";
-import { STORYTELLER_VERSION } from "../../src/core/version.ts";
+import { STORYTELLER_VERSION } from "@storyteller/core/version.ts";
 
 async function writeProjectMetadata(projectPath: string, version: string) {
   const configDir = `${projectPath}/.storyteller`;

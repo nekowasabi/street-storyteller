@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals } from "@std/assert";
-import { parseResourceUri } from "../../../src/mcp/resources/uri_parser.ts";
+import { parseResourceUri } from "@storyteller/mcp/resources/uri_parser.ts";
 
 Deno.test("parseResourceUri: characters一覧URIを解析できる", () => {
   const parsed = parseResourceUri("storyteller://characters");

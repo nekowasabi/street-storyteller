@@ -1,4 +1,4 @@
-import type { OutputPresenter } from "./types.ts";
+import type { OutputPresenter } from "@storyteller/cli/types.ts";
 
 export interface PresenterOptions {
   readonly json?: boolean;

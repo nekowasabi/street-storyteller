@@ -6,9 +6,9 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { MetaCheckCommand } from "../../../cli/modules/meta/check.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { MetaCheckCommand } from "@storyteller/cli/modules/meta/check.ts";
 
 /**
  * meta_checkツール定義

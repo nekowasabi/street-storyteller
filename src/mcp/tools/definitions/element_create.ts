@@ -6,10 +6,10 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { ElementCharacterCommand } from "../../../cli/modules/element/character.ts";
-import { ElementSettingCommand } from "../../../cli/modules/element/setting.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { ElementCharacterCommand } from "@storyteller/cli/modules/element/character.ts";
+import { ElementSettingCommand } from "@storyteller/cli/modules/element/setting.ts";
 
 export const elementCreateTool: McpToolDefinition = {
   name: "element_create",

@@ -6,9 +6,9 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { ElementForeshadowingCommand } from "../../../cli/modules/element/foreshadowing.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { ElementForeshadowingCommand } from "@storyteller/cli/modules/element/foreshadowing.ts";
 
 export const foreshadowingCreateTool: McpToolDefinition = {
   name: "foreshadowing_create",

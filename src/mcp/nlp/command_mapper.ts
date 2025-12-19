@@ -3,7 +3,7 @@
  * インテントをMCPツール名にマッピングし、引数を正規化する
  */
 
-import type { Intent } from "./intent_analyzer.ts";
+import type { Intent } from "@storyteller/mcp/nlp/intent_analyzer.ts";
 
 const SUPPORTED_TOOLS: ReadonlySet<string> = new Set([
   "meta_check",

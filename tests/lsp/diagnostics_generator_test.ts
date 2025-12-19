@@ -9,11 +9,11 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   DiagnosticSeverity,
   DiagnosticsGenerator,
-} from "../../src/lsp/diagnostics/diagnostics_generator.ts";
+} from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import {
   type DetectableEntity,
   PositionedDetector,
-} from "../../src/lsp/detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ
 const mockEntities: DetectableEntity[] = [

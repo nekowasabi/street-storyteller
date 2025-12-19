@@ -3,11 +3,11 @@
  * マイグレーションの実行エンジン、バックアップ、ロールバックを管理
  */
 
-import type { MigrationRegistry } from "../../../migrations/registry.ts";
+import type { MigrationRegistry } from "@storyteller/migrations/registry.ts";
 import type {
   MigrationOptions,
   ProjectContext,
-} from "../../../migrations/types.ts";
+} from "@storyteller/migrations/types.ts";
 
 /**
  * マイグレーション実行結果

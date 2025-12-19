@@ -6,19 +6,19 @@
 import type {
   FileSystemError,
   FileSystemGateway,
-} from "./file_system_gateway.ts";
-import type { Logger } from "../shared/logging/types.ts";
-import { err, ok, type Result } from "../shared/result.ts";
+} from "@storyteller/application/file_system_gateway.ts";
+import type { Logger } from "@storyteller/shared/logging/types.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 import {
   parseProjectMetadata,
   type ProjectMetadata,
-} from "../shared/config/schema.ts";
+} from "@storyteller/shared/config/schema.ts";
 import {
   checkUpdates,
   type CompatibilityCheckResult,
   isCompatible,
   type UpdateCheckResult,
-} from "../core/version_manager.ts";
+} from "@storyteller/core/version_manager.ts";
 
 const CONFIG_DIR = ".storyteller";
 const CONFIG_FILE = "config.json";

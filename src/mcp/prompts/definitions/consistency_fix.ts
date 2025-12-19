@@ -1,4 +1,4 @@
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 export const consistencyFixPrompt: McpPromptDefinition = {
   name: "consistency_fix",

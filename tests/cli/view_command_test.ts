@@ -8,9 +8,9 @@ import {
   createStubLogger,
   createStubPresenter,
 } from "../asserts.ts";
-import { ViewCommand } from "../../src/cli/modules/view.ts";
-import { BaseCliCommand } from "../../src/cli/base_command.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import { ViewCommand } from "@storyteller/cli/modules/view.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 
 Deno.test("ViewCommand - 基本構造", async (t) => {
   await t.step("ViewCommandはBaseCliCommandを継承している", () => {

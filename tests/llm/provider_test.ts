@@ -7,7 +7,7 @@ import {
   isStreamingProvider,
   type LLMMessage,
   MockLLMProvider,
-} from "../../src/llm/index.ts";
+} from "@storyteller/llm/index.ts";
 
 Deno.test("MockLLMProvider - 基本動作", async (t) => {
   await t.step("デフォルトレスポンスを返す", async () => {

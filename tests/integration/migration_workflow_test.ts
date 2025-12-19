@@ -4,14 +4,14 @@
  */
 
 import { assert, assertEquals } from "../asserts.ts";
-import { MigrationRegistry } from "../../src/migrations/registry.ts";
-import { MigrationPlugin } from "../../src/plugins/features/migration/plugin.ts";
-import { MigrationWizard } from "../../src/plugins/features/migration/wizard.ts";
-import { GitIntegration } from "../../src/plugins/features/migration/git_integration.ts";
-import { CharacterMigration } from "../../src/migrations/v1_to_v2/character_migration.ts";
-import { SettingMigration } from "../../src/migrations/v1_to_v2/setting_migration.ts";
-import { ProjectMetadataMigration } from "../../src/migrations/v1_to_v2/project_metadata_migration.ts";
-import type { ProjectContext } from "../../src/migrations/types.ts";
+import { MigrationRegistry } from "@storyteller/migrations/registry.ts";
+import { MigrationPlugin } from "@storyteller/plugins/features/migration/plugin.ts";
+import { MigrationWizard } from "@storyteller/plugins/features/migration/wizard.ts";
+import { GitIntegration } from "@storyteller/plugins/features/migration/git_integration.ts";
+import { CharacterMigration } from "@storyteller/migrations/v1_to_v2/character_migration.ts";
+import { SettingMigration } from "@storyteller/migrations/v1_to_v2/setting_migration.ts";
+import { ProjectMetadataMigration } from "@storyteller/migrations/v1_to_v2/project_metadata_migration.ts";
+import type { ProjectContext } from "@storyteller/migrations/types.ts";
 
 Deno.test("統合テスト - v1→v2マイグレーション完全フロー", async () => {
   // 1. MigrationRegistryにv1→v2のマイグレーションを登録

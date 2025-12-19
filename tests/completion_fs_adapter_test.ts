@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "./asserts.ts";
-import { createCompletionFsAdapter } from "../src/infrastructure/cli/completion_fs_adapter.ts";
+import { createCompletionFsAdapter } from "@storyteller/infrastructure/cli/completion_fs_adapter.ts";
 import { join } from "@std/path/join";
 
 Deno.test("CompletionFsAdapter writes bash and zsh scripts", async () => {

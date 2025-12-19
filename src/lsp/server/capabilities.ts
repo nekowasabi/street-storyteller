@@ -147,7 +147,7 @@ export function getServerCapabilities(): ServerCapabilities {
       range: true,
     },
     completionProvider: {
-      triggerCharacters: ["@"],
+      triggerCharacters: ["@", '"'],
       resolveProvider: false,
     },
   };

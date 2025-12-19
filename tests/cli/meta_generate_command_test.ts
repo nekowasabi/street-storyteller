@@ -5,9 +5,9 @@ import {
   createStubLogger,
   createStubPresenter,
 } from "../asserts.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
-import { MetaGenerateCommand } from "../../src/cli/modules/meta/generate.ts";
-import type { ChapterMeta } from "../../src/application/meta/meta_generator_service.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
+import { MetaGenerateCommand } from "@storyteller/cli/modules/meta/generate.ts";
+import type { ChapterMeta } from "@storyteller/application/meta/meta_generator_service.ts";
 
 function joinPath(...segments: readonly string[]): string {
   let result = "";

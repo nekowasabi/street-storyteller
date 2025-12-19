@@ -4,8 +4,8 @@
  * v1とv2のCharacter型を相互変換
  */
 
-import type { Character as CharacterV1 } from "./character.ts";
-import type { Character as CharacterV2 } from "./v2/character.ts";
+import type { Character as CharacterV1 } from "@storyteller/types/character.ts";
+import type { Character as CharacterV2 } from "@storyteller/types/v2/character.ts";
 
 /**
  * v1のCharacter型をv2に変換

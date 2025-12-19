@@ -3,7 +3,7 @@
  * マイグレーションの登録とパス探索を管理
  */
 
-import type { Migration } from "./types.ts";
+import type { Migration } from "@storyteller/migrations/types.ts";
 
 /**
  * マイグレーションレジストリ

@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "../asserts.ts";
-import { validateCharacter } from "../../src/plugins/core/character/validator.ts";
+import { validateCharacter } from "@storyteller/plugins/core/character/validator.ts";
 
 Deno.test("validateCharacter rejects non-object inputs", () => {
   const result = validateCharacter(null);

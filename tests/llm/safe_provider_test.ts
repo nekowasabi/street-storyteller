@@ -2,13 +2,13 @@
  * Safe LLM Provider テスト
  */
 import { assert, assertEquals } from "@std/assert";
-import { MockLLMProvider } from "../../src/llm/providers/mock.ts";
+import { MockLLMProvider } from "@storyteller/llm/providers/mock.ts";
 import {
   SafeLLMProvider,
   wrapWithSafety,
-} from "../../src/llm/safety/safe_provider.ts";
-import type { SafetyConfig } from "../../src/llm/config/llm_config.ts";
-import type { LLMMessage } from "../../src/llm/providers/provider.ts";
+} from "@storyteller/llm/safety/safe_provider.ts";
+import type { SafetyConfig } from "@storyteller/llm/config/llm_config.ts";
+import type { LLMMessage } from "@storyteller/llm/providers/provider.ts";
 
 const testMessages: LLMMessage[] = [
   { role: "user", content: "Hello" },

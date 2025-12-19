@@ -5,8 +5,8 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { ProjectAnalyzer } from "../../../src/application/view/project_analyzer.ts";
-import type { Foreshadowing } from "../../../src/type/v2/foreshadowing.ts";
+import { ProjectAnalyzer } from "@storyteller/application/view/project_analyzer.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
 
 Deno.test("ProjectAnalyzer Foreshadowing", async (t) => {
   await t.step(

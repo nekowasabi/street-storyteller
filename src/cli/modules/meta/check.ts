@@ -1,14 +1,14 @@
 import { expandGlob } from "@std/fs";
-import { err, ok } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 import type {
   CommandContext,
   CommandDescriptor,
   CommandExecutionError,
   CommandOptionDescriptor,
-} from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import { MetaGeneratorService } from "../../../application/meta/meta_generator_service.ts";
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import { MetaGeneratorService } from "@storyteller/application/meta/meta_generator_service.ts";
 
 type MetaCheckOptions = {
   readonly markdownInputs: readonly string[];

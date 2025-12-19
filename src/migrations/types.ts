@@ -2,7 +2,7 @@
  * マイグレーションシステムの型定義
  */
 
-import type { ProjectMetadata } from "../core/version_manager.ts";
+import type { ProjectMetadata } from "@storyteller/core/version_manager.ts";
 
 /**
  * プロジェクトコンテキスト

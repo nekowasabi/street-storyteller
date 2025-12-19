@@ -3,7 +3,7 @@
  * イベント間の因果関係を分析・提案する
  */
 
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 export const causalityAnalysisPrompt: McpPromptDefinition = {
   name: "causality_analysis",

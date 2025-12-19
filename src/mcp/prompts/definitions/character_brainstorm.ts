@@ -1,4 +1,4 @@
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 export const characterBrainstormPrompt: McpPromptDefinition = {
   name: "character_brainstorm",

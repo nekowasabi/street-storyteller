@@ -1,11 +1,11 @@
-import type { Result } from "../shared/result.ts";
-import { err, ok } from "../shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 import type {
   ProjectBlueprint,
   TemplateCatalog,
   TemplateError,
   TemplateId,
-} from "./project_blueprint.ts";
+} from "@storyteller/domain/project_blueprint.ts";
 
 export interface ValidationError {
   readonly code: "missing_directory" | "missing_file" | "invalid_content";

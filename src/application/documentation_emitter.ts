@@ -1,5 +1,5 @@
-import type { MigrationReport } from "./migration_facilitator.ts";
-import type { TemplateId } from "../domain/project_blueprint.ts";
+import type { MigrationReport } from "@storyteller/application/migration_facilitator.ts";
+import type { TemplateId } from "@storyteller/domain/project_blueprint.ts";
 
 export interface DocumentationEmitter {
   emitTddGuide(input: { template: TemplateId }): readonly string[];

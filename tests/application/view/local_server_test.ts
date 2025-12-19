@@ -3,7 +3,7 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assert, assertEquals } from "../../asserts.ts";
-import { LocalViewServer } from "../../../src/application/view/local_server.ts";
+import { LocalViewServer } from "@storyteller/application/view/local_server.ts";
 
 Deno.test("LocalViewServer - 基本構造", async (t) => {
   await t.step("LocalViewServerクラスが存在する", () => {

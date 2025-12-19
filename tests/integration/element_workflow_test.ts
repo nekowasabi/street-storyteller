@@ -6,11 +6,11 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { createPluginRegistry } from "../../src/core/plugin_system.ts";
-import { CharacterPlugin } from "../../src/plugins/core/character/plugin.ts";
-import { DetailsPlugin } from "../../src/plugins/features/details/plugin.ts";
-import { ElementService } from "../../src/application/element_service.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { createPluginRegistry } from "@storyteller/core/plugin_system.ts";
+import { CharacterPlugin } from "@storyteller/plugins/core/character/plugin.ts";
+import { DetailsPlugin } from "@storyteller/plugins/features/details/plugin.ts";
+import { ElementService } from "@storyteller/application/element_service.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 Deno.test("統合テスト - 基本要素作成ワークフロー", async () => {
   // 1. プラグインレジストリの初期化

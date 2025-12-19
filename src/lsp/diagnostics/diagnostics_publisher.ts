@@ -4,7 +4,7 @@
  * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_publishDiagnostics
  */
 
-import type { Diagnostic } from "./diagnostics_generator.ts";
+import type { Diagnostic } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 
 /**
  * Writer インターフェース

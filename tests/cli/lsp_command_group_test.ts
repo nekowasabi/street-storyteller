@@ -3,12 +3,15 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assert, assertEquals, createStubLogger } from "../asserts.ts";
-import { createLspDescriptor } from "../../src/cli/modules/lsp/index.ts";
+import { createLspDescriptor } from "@storyteller/cli/modules/lsp/index.ts";
 import {
   createCommandRegistry,
   registerCommandDescriptor,
-} from "../../src/cli/command_registry.ts";
-import type { CommandContext, CommandDescriptor } from "../../src/cli/types.ts";
+} from "@storyteller/cli/command_registry.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+} from "@storyteller/cli/types.ts";
 
 Deno.test("LSPコマンドグループ - 基本構造", async (t) => {
   await t.step("createLspDescriptor関数が存在する", () => {

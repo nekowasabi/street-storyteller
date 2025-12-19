@@ -2,16 +2,16 @@
  * LSP Validate コマンド
  * 原稿ファイルの検証をワンショットで実行する
  */
-import { err, ok } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 import type {
   CommandContext,
   CommandDescriptor,
   CommandOptionDescriptor,
-} from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import type { DetectableEntity } from "../../../lsp/detection/positioned_detector.ts";
-import { loadEntities } from "./start.ts";
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
+import { loadEntities } from "@storyteller/cli/modules/lsp/start.ts";
 
 /**
  * 検証結果の型

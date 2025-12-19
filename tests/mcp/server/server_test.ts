@@ -3,13 +3,13 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { McpServer } from "../../../src/mcp/server/server.ts";
-import { McpTransport } from "../../../src/mcp/protocol/transport.ts";
-import type { ResourceProvider } from "../../../src/mcp/resources/resource_provider.ts";
-import type { McpResource } from "../../../src/mcp/protocol/types.ts";
-import { PromptRegistry } from "../../../src/mcp/prompts/prompt_registry.ts";
-import { ToolRegistry } from "../../../src/mcp/tools/tool_registry.ts";
-import { MCP_ERROR_CODES } from "../../../src/mcp/protocol/types.ts";
+import { McpServer } from "@storyteller/mcp/server/server.ts";
+import { McpTransport } from "@storyteller/mcp/protocol/transport.ts";
+import type { ResourceProvider } from "@storyteller/mcp/resources/resource_provider.ts";
+import type { McpResource } from "@storyteller/mcp/protocol/types.ts";
+import { PromptRegistry } from "@storyteller/mcp/prompts/prompt_registry.ts";
+import { ToolRegistry } from "@storyteller/mcp/tools/tool_registry.ts";
+import { MCP_ERROR_CODES } from "@storyteller/mcp/protocol/types.ts";
 
 /**
  * テスト用のモックReader

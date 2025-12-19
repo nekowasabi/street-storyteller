@@ -3,7 +3,10 @@
  * プロンプトの登録・取得・一覧化を管理
  */
 
-import type { McpPrompt, McpPromptArgument } from "../protocol/types.ts";
+import type {
+  McpPrompt,
+  McpPromptArgument,
+} from "@storyteller/mcp/protocol/types.ts";
 
 export type McpPromptMessage = {
   readonly role: "system" | "user" | "assistant";

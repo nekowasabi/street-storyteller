@@ -2,7 +2,7 @@ import { assert, assertEquals, assertFalse } from "../asserts.ts";
 import {
   createPluginRegistry,
   type StorytellerPlugin,
-} from "../../src/core/plugin_system.ts";
+} from "@storyteller/core/plugin_system.ts";
 
 Deno.test("PluginRegistry - 基本的なプラグイン登録", () => {
   const registry = createPluginRegistry();

@@ -5,8 +5,8 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { HtmlGenerator } from "../../../src/application/view/html_generator.ts";
-import type { ProjectAnalysis } from "../../../src/application/view/project_analyzer.ts";
+import { HtmlGenerator } from "@storyteller/application/view/html_generator.ts";
+import type { ProjectAnalysis } from "@storyteller/application/view/project_analyzer.ts";
 
 Deno.test("HtmlGenerator Timeline機能", async (t) => {
   const generator = new HtmlGenerator();

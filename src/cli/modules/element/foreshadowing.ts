@@ -4,14 +4,17 @@
  * storyteller element foreshadowing コマンドの実装
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import type { ForeshadowingType } from "../../../type/v2/foreshadowing.ts";
-import { ElementService } from "../../../application/element_service.ts";
-import { createPluginRegistry } from "../../../core/plugin_system.ts";
-import { ForeshadowingPlugin } from "../../../plugins/core/foreshadowing/plugin.ts";
-import type { Foreshadowing } from "../../../type/v2/foreshadowing.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { ForeshadowingType } from "@storyteller/types/v2/foreshadowing.ts";
+import { ElementService } from "@storyteller/application/element_service.ts";
+import { createPluginRegistry } from "@storyteller/core/plugin_system.ts";
+import { ForeshadowingPlugin } from "@storyteller/plugins/core/foreshadowing/plugin.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
 
 /**
  * ElementForeshadowingCommandのオプション

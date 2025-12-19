@@ -1,15 +1,15 @@
 import { assert, assertEquals } from "./asserts.ts";
 import { join } from "@std/path/join";
 import { ensureDir } from "@std/fs/ensure-dir";
-import { parseAppConfig } from "../src/shared/config/schema.ts";
-import type { AppConfig } from "../src/shared/config/schema.ts";
+import { parseAppConfig } from "@storyteller/shared/config/schema.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 import {
   CliConfigurationProvider,
   DefaultConfigurationProvider,
   EnvConfigurationProvider,
   FileConfigurationProvider,
-} from "../src/infrastructure/config/providers.ts";
-import { ConfigurationManager } from "../src/application/config/configuration_manager.ts";
+} from "@storyteller/infrastructure/config/providers.ts";
+import { ConfigurationManager } from "@storyteller/application/config/configuration_manager.ts";
 
 function normalize(config: AppConfig) {
   return {

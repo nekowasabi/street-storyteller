@@ -5,7 +5,7 @@ import {
   type LogLevel,
   logLevelWeight,
   type LogWriter,
-} from "../../shared/logging/types.ts";
+} from "@storyteller/shared/logging/types.ts";
 
 const encoder = new TextEncoder();
 

@@ -3,7 +3,7 @@
  */
 
 import { assert, assertEquals } from "../asserts.ts";
-import { GitIntegration } from "../../src/plugins/features/migration/git_integration.ts";
+import { GitIntegration } from "@storyteller/plugins/features/migration/git_integration.ts";
 
 Deno.test("GitIntegration - マイグレーションブランチ名の生成", () => {
   const git = new GitIntegration("/test/project");

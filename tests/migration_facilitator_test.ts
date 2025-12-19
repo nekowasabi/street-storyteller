@@ -2,13 +2,13 @@ import { assert, assertEquals } from "./asserts.ts";
 import {
   createMigrationFacilitator,
   NoopMigrationFacilitator,
-} from "../src/application/migration_facilitator.ts";
-import { PROJECT_SCHEMA_VERSION } from "../src/core/version.ts";
+} from "@storyteller/application/migration_facilitator.ts";
+import { PROJECT_SCHEMA_VERSION } from "@storyteller/core/version.ts";
 import type {
   FileSystemError,
   FileSystemGateway,
-} from "../src/application/file_system_gateway.ts";
-import { err, ok } from "../src/shared/result.ts";
+} from "@storyteller/application/file_system_gateway.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 
 class FakeFileSystem implements FileSystemGateway {
   failEnsureDir = false;

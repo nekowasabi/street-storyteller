@@ -6,9 +6,9 @@
 import type {
   McpToolDefinition,
   ToolExecutionContext,
-} from "../tool_registry.ts";
-import { executeCliCommand } from "../cli_adapter.ts";
-import { ElementTimelineCommand } from "../../../cli/modules/element/timeline.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
+import { executeCliCommand } from "@storyteller/mcp/tools/cli_adapter.ts";
+import { ElementTimelineCommand } from "@storyteller/cli/modules/element/timeline.ts";
 
 export const timelineCreateTool: McpToolDefinition = {
   name: "timeline_create",

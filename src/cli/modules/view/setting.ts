@@ -4,15 +4,18 @@
  * storyteller view setting / storyteller view setting --id {id} コマンドの実装
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandDescriptor } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import type { Setting, SettingType } from "../../../type/v2/setting.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import type { Setting, SettingType } from "@storyteller/types/v2/setting.ts";
 import {
   FileContentReader,
   type HybridFieldValue,
-} from "../../../plugins/features/details/file_content_reader.ts";
+} from "@storyteller/plugins/features/details/file_content_reader.ts";
 
 /**
  * 設定ローダーインターフェース

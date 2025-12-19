@@ -4,13 +4,13 @@
  * storyteller.llm.json からLLM設定を読み込む
  */
 
-import type { Result } from "../../shared/result.ts";
-import { err, ok } from "../../shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
 import {
   type LLMConfig,
   mergeWithDefaults,
   validateConfig,
-} from "./llm_config.ts";
+} from "@storyteller/llm/config/llm_config.ts";
 import { join } from "@std/path";
 
 /**

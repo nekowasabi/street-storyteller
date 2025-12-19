@@ -4,7 +4,7 @@
 
 import { isAbsolute, join, relative, toFileUrl } from "@std/path";
 import { walk } from "@std/fs";
-import type { DetectableEntity } from "../../lsp/detection/positioned_detector.ts";
+import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
 
 export function resolvePath(projectRoot: string, userPath: string): string {
   return isAbsolute(userPath) ? userPath : join(projectRoot, userPath);

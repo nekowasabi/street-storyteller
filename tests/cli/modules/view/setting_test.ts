@@ -8,9 +8,9 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   DefaultSettingLoader,
   ViewSettingCommand,
-} from "../../../../src/cli/modules/view/setting.ts";
+} from "@storyteller/cli/modules/view/setting.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
-import type { Setting } from "../../../../src/type/v2/setting.ts";
+import type { Setting } from "@storyteller/types/v2/setting.ts";
 
 Deno.test("ViewSettingCommand", async (t) => {
   await t.step("コマンド名とパスが正しいこと", () => {

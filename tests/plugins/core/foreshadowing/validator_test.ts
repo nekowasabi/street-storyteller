@@ -5,8 +5,8 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { validateForeshadowing } from "../../../../src/plugins/core/foreshadowing/validator.ts";
-import type { Foreshadowing } from "../../../../src/type/v2/foreshadowing.ts";
+import { validateForeshadowing } from "@storyteller/plugins/core/foreshadowing/validator.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
 
 Deno.test("validateForeshadowing", async (t) => {
   await t.step("有効なForeshadowingを検証できること", () => {

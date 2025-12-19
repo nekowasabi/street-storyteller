@@ -5,16 +5,16 @@
  * @see https://openrouter.ai/docs
  */
 
-import { err, ok } from "../../shared/result.ts";
-import type { Result } from "../../shared/result.ts";
-import type { LLMConfig } from "../config/llm_config.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import type { LLMConfig } from "@storyteller/llm/config/llm_config.ts";
 import type {
   LLMCallOptions,
   LLMError,
   LLMMessage,
   LLMProvider,
   LLMResponse,
-} from "./provider.ts";
+} from "@storyteller/llm/providers/provider.ts";
 
 /**
  * OpenRouter APIのベースURL

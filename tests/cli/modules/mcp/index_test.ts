@@ -3,8 +3,8 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals, assertExists } from "@std/assert";
-import { createMcpDescriptor } from "../../../../src/cli/modules/mcp/index.ts";
-import { createCommandRegistry } from "../../../../src/cli/command_registry.ts";
+import { createMcpDescriptor } from "@storyteller/cli/modules/mcp/index.ts";
+import { createCommandRegistry } from "@storyteller/cli/command_registry.ts";
 
 Deno.test("createMcpDescriptor: コマンドグループを返す", () => {
   const registry = createCommandRegistry();

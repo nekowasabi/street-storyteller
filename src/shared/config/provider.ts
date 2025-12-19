@@ -1,4 +1,4 @@
-import type { AppConfig } from "./schema.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 export interface ConfigurationSourceMeta {
   readonly id: string;

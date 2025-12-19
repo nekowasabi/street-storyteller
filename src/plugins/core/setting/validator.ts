@@ -7,8 +7,8 @@
 import type {
   ValidationError,
   ValidationResult,
-} from "../../../core/plugin_system.ts";
-import type { SettingType } from "../../../type/v2/setting.ts";
+} from "@storyteller/core/plugin_system.ts";
+import type { SettingType } from "@storyteller/types/v2/setting.ts";
 
 const VALID_SETTING_TYPES: SettingType[] = [
   "location",

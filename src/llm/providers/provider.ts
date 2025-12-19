@@ -4,7 +4,7 @@
  * LLMプロバイダーの共通インターフェースを定義
  */
 
-import type { Result } from "../../shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 
 /**
  * LLMメッセージの役割

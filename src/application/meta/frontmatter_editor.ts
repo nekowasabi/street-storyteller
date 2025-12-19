@@ -3,7 +3,7 @@
  * 原稿ファイルのFrontmatterにエンティティIDを追加・削除・置換する
  */
 import { parse as parseYaml, stringify as stringifyYaml } from "@std/yaml";
-import { err, ok, type Result } from "../../shared/result.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
 
 /**
  * 紐付け可能なエンティティタイプ

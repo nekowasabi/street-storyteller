@@ -4,7 +4,7 @@ import {
   compareVersions,
   isCompatible,
   type ProjectMetadata,
-} from "../../src/core/version_manager.ts";
+} from "@storyteller/core/version_manager.ts";
 
 Deno.test("VersionManager - compareVersions", async (t) => {
   await t.step("同じバージョンの比較", () => {

@@ -3,8 +3,11 @@
  * LSP/MCPが共通で使用する Content-Length 形式の読み書きを提供する
  */
 
-import { err, ok, type Result } from "../result.ts";
-import type { JsonRpcError, JsonRpcMessage } from "../../lsp/protocol/types.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
+import type {
+  JsonRpcError,
+  JsonRpcMessage,
+} from "@storyteller/lsp/protocol/types.ts";
 
 /** 読み取りエラーコード */
 const TRANSPORT_READ_ERROR = -32000;

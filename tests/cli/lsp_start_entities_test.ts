@@ -1,5 +1,8 @@
 import { assert, assertEquals } from "../asserts.ts";
-import { loadEntities, parseEntity } from "../../src/cli/modules/lsp/start.ts";
+import {
+  loadEntities,
+  parseEntity,
+} from "@storyteller/cli/modules/lsp/start.ts";
 
 Deno.test("LspStart helpers: parseEntity returns null for invalid inputs", () => {
   assertEquals(parseEntity(null), null);

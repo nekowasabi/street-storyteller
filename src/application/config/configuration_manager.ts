@@ -1,10 +1,10 @@
-import type { AppConfig } from "../../shared/config/schema.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 import {
   type ConfigurationLayer,
   type ConfigurationProvider,
   mergeConfigurationLayers,
-} from "../../shared/config/provider.ts";
-import { parseAppConfig } from "../../shared/config/schema.ts";
+} from "@storyteller/shared/config/provider.ts";
+import { parseAppConfig } from "@storyteller/shared/config/schema.ts";
 
 export class ConfigurationError extends Error {
   override cause?: unknown;

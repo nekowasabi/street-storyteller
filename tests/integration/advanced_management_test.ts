@@ -3,9 +3,9 @@
  */
 
 import { assertEquals } from "@std/assert";
-import { CompletenessAnalyzer } from "../../src/application/completeness_analyzer.ts";
-import { BatchOperations } from "../../src/application/batch_operations.ts";
-import type { Character } from "../../src/type/v2/character.ts";
+import { CompletenessAnalyzer } from "@storyteller/application/completeness_analyzer.ts";
+import { BatchOperations } from "@storyteller/application/batch_operations.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
 
 Deno.test("Phase 5統合テスト: 完成度分析→一括処理→検証フロー", async (t) => {
   await t.step("ステップ1: 複数キャラクターの完成度分析", () => {

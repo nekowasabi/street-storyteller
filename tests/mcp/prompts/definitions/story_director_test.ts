@@ -6,9 +6,9 @@ import { assertEquals, assertExists } from "@std/assert";
 import type {
   McpPromptDefinition,
   McpPromptMessage,
-} from "../../../../src/mcp/prompts/prompt_registry.ts";
-import type { McpPromptArgument } from "../../../../src/mcp/protocol/types.ts";
-import { storyDirectorPrompt } from "../../../../src/mcp/prompts/definitions/story_director.ts";
+} from "@storyteller/mcp/prompts/prompt_registry.ts";
+import type { McpPromptArgument } from "@storyteller/mcp/protocol/types.ts";
+import { storyDirectorPrompt } from "@storyteller/mcp/prompts/definitions/story_director.ts";
 
 // ===== McpPromptDefinition型準拠テスト =====
 

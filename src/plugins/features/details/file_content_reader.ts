@@ -5,8 +5,8 @@
  * ファイル参照の場合は内容を読み込んでフロントマターを除去する
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { Result } from "../../../shared/result.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import { join } from "@std/path";
 
 /**

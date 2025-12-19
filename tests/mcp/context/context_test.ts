@@ -3,8 +3,8 @@
  * TDD Step 1: Red - 失敗するテストを作成
  */
 import { assertEquals } from "@std/assert";
-import { SessionContext } from "../../../src/mcp/context/session_context.ts";
-import { ProjectContext } from "../../../src/mcp/context/project_context.ts";
+import { SessionContext } from "@storyteller/mcp/context/session_context.ts";
+import { ProjectContext } from "@storyteller/mcp/context/project_context.ts";
 
 Deno.test("SessionContext: 履歴を保持する", () => {
   const ctx = new SessionContext();

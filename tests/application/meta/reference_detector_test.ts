@@ -1,5 +1,5 @@
 import { assertEquals } from "../../asserts.ts";
-import { ReferenceDetector } from "../../../src/application/meta/reference_detector.ts";
+import { ReferenceDetector } from "@storyteller/application/meta/reference_detector.ts";
 
 function joinPath(...segments: readonly string[]): string {
   let result = "";

@@ -6,7 +6,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   getMcpServerCapabilities,
   type McpServerCapabilitiesConfig,
-} from "../../../src/mcp/server/capabilities.ts";
+} from "@storyteller/mcp/server/capabilities.ts";
 
 Deno.test("getMcpServerCapabilities: デフォルトでtools, resources, promptsを含む", () => {
   const capabilities = getMcpServerCapabilities();

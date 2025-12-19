@@ -6,9 +6,9 @@ import { assertEquals, assertRejects } from "@std/assert";
 import {
   handleResourcesList,
   handleResourcesRead,
-} from "../../../../src/mcp/server/handlers/resources.ts";
-import type { ResourceProvider } from "../../../../src/mcp/resources/resource_provider.ts";
-import type { McpResource } from "../../../../src/mcp/protocol/types.ts";
+} from "@storyteller/mcp/server/handlers/resources.ts";
+import type { ResourceProvider } from "@storyteller/mcp/resources/resource_provider.ts";
+import type { McpResource } from "@storyteller/mcp/protocol/types.ts";
 
 class InMemoryResourceProvider implements ResourceProvider {
   constructor(

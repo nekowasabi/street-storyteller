@@ -7,19 +7,19 @@
 import {
   PositionedDetector,
   type PositionedMatch,
-} from "../detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 import type {
   CodeAction,
   Diagnostic,
   Range,
   TextEdit,
   WorkspaceEdit,
-} from "./lsp_types.ts";
+} from "@storyteller/lsp/providers/lsp_types.ts";
 import {
   createEntityResolver,
   type EntityResolver,
-} from "./entity_resolver.ts";
-import { isValidContent } from "./provider_utils.ts";
+} from "@storyteller/lsp/providers/entity_resolver.ts";
+import { isValidContent } from "@storyteller/lsp/providers/provider_utils.ts";
 
 // 型の再エクスポート（後方互換性のため）
 export type { CodeAction, Diagnostic, Range, TextEdit, WorkspaceEdit };

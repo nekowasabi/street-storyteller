@@ -1,5 +1,5 @@
 import { assert, assertEquals } from "../asserts.ts";
-import { MetaGeneratorService } from "../../src/application/meta/meta_generator_service.ts";
+import { MetaGeneratorService } from "@storyteller/application/meta/meta_generator_service.ts";
 
 function joinPath(...segments: readonly string[]): string {
   let result = "";

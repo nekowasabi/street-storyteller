@@ -8,11 +8,11 @@
 import { assertEquals, assertExists } from "@std/assert";
 import {
   DiagnosticsPublisher,
-} from "../../src/lsp/diagnostics/diagnostics_publisher.ts";
+} from "@storyteller/lsp/diagnostics/diagnostics_publisher.ts";
 import {
   type Diagnostic,
   DiagnosticSeverity,
-} from "../../src/lsp/diagnostics/diagnostics_generator.ts";
+} from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import { createMockWriter } from "./helpers.ts";
 
 // テスト用の診断データ

@@ -8,7 +8,7 @@ import {
   DocumentManager,
   type Range,
   type TextDocumentContentChangeEvent,
-} from "../document/document_manager.ts";
+} from "@storyteller/lsp/document/document_manager.ts";
 
 /**
  * TextDocumentItem

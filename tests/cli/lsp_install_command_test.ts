@@ -8,9 +8,9 @@ import {
   createStubLogger,
   createStubPresenter,
 } from "../asserts.ts";
-import { LspInstallCommand } from "../../src/cli/modules/lsp/install.ts";
-import { BaseCliCommand } from "../../src/cli/base_command.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
+import { LspInstallCommand } from "@storyteller/cli/modules/lsp/install.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
 
 Deno.test("LspInstallCommand - 基本構造", async (t) => {
   await t.step("LspInstallCommandはBaseCliCommandを継承している", () => {

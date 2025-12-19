@@ -1,13 +1,16 @@
-import { err, ok, type Result } from "../shared/result.ts";
-import type { FileSystemGateway } from "./file_system_gateway.ts";
-import type { DocumentationEmitter } from "./documentation_emitter.ts";
+import { err, ok, type Result } from "@storyteller/shared/result.ts";
+import type { FileSystemGateway } from "@storyteller/application/file_system_gateway.ts";
+import type { DocumentationEmitter } from "@storyteller/application/documentation_emitter.ts";
 import type {
   MigrationFacilitator,
   MigrationPlan,
   MigrationReport,
-} from "./migration_facilitator.ts";
-import type { TemplateError, TemplateId } from "../domain/project_blueprint.ts";
-import type { StoryDomainService } from "../domain/story_domain_service.ts";
+} from "@storyteller/application/migration_facilitator.ts";
+import type {
+  TemplateError,
+  TemplateId,
+} from "@storyteller/domain/project_blueprint.ts";
+import type { StoryDomainService } from "@storyteller/domain/story_domain_service.ts";
 
 export interface ProjectScaffoldingOptions {
   readonly name: string;

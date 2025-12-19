@@ -4,14 +4,17 @@
  * storyteller element timeline コマンドの実装
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import type { TimelineScope } from "../../../type/v2/timeline.ts";
-import { ElementService } from "../../../application/element_service.ts";
-import { createPluginRegistry } from "../../../core/plugin_system.ts";
-import { TimelinePlugin } from "../../../plugins/core/timeline/plugin.ts";
-import type { Timeline } from "../../../type/v2/timeline.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { TimelineScope } from "@storyteller/types/v2/timeline.ts";
+import { ElementService } from "@storyteller/application/element_service.ts";
+import { createPluginRegistry } from "@storyteller/core/plugin_system.ts";
+import { TimelinePlugin } from "@storyteller/plugins/core/timeline/plugin.ts";
+import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 /**
  * ElementTimelineCommandのオプション

@@ -5,7 +5,7 @@
  * 差分管理方式により、変化した属性のみを記述し、変化しない属性は前フェーズから自動継承
  */
 
-import type { RelationType } from "./character.ts";
+import type { RelationType } from "@storyteller/types/v2/character.ts";
 
 /**
  * フェーズの重要度

@@ -4,21 +4,21 @@
  * @see https://spec.modelcontextprotocol.io/specification/
  */
 
-import { McpTransport } from "../protocol/transport.ts";
+import { McpTransport } from "@storyteller/mcp/protocol/transport.ts";
 import {
   isJsonRpcNotification,
   isJsonRpcRequest,
   type JsonRpcMessage,
   type JsonRpcNotification,
   type JsonRpcRequest,
-} from "../../lsp/protocol/types.ts";
+} from "@storyteller/lsp/protocol/types.ts";
 import {
   createErrorResponse,
   createSuccessResponse,
   JSON_RPC_METHOD_NOT_FOUND,
-} from "../../lsp/protocol/json_rpc.ts";
-import { getMcpServerCapabilities } from "./capabilities.ts";
-import { MCP_ERROR_CODES } from "../protocol/types.ts";
+} from "@storyteller/lsp/protocol/json_rpc.ts";
+import { getMcpServerCapabilities } from "@storyteller/mcp/server/capabilities.ts";
+import { MCP_ERROR_CODES } from "@storyteller/mcp/protocol/types.ts";
 import type {
   McpCallToolParams,
   McpInitializeParams,
@@ -28,15 +28,18 @@ import type {
   McpReadResourceResult,
   McpServerInfo,
   McpTool,
-} from "../protocol/types.ts";
-import { ToolRegistry } from "../tools/tool_registry.ts";
-import type { ResourceProvider } from "../resources/resource_provider.ts";
+} from "@storyteller/mcp/protocol/types.ts";
+import { ToolRegistry } from "@storyteller/mcp/tools/tool_registry.ts";
+import type { ResourceProvider } from "@storyteller/mcp/resources/resource_provider.ts";
 import {
   handleResourcesList,
   handleResourcesRead,
-} from "./handlers/resources.ts";
-import { PromptRegistry } from "../prompts/prompt_registry.ts";
-import { handlePromptsGet, handlePromptsList } from "./handlers/prompts.ts";
+} from "@storyteller/mcp/server/handlers/resources.ts";
+import { PromptRegistry } from "@storyteller/mcp/prompts/prompt_registry.ts";
+import {
+  handlePromptsGet,
+  handlePromptsList,
+} from "@storyteller/mcp/server/handlers/prompts.ts";
 
 /** サーバー未初期化エラーコード (MCP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;

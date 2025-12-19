@@ -2,11 +2,11 @@ import { assert, assertEquals } from "./asserts.ts";
 import {
   AppConfigSchema,
   parseAppConfig,
-} from "../src/shared/config/schema.ts";
+} from "@storyteller/shared/config/schema.ts";
 import {
   type ConfigurationLayer,
   mergeConfigurationLayers,
-} from "../src/shared/config/provider.ts";
+} from "@storyteller/shared/config/provider.ts";
 
 Deno.test("AppConfigSchema provides defaults and validates inputs", () => {
   const config = parseAppConfig({});

@@ -11,7 +11,7 @@
  * - プロジェクト管理関連: 3個
  */
 import { assertEquals } from "@std/assert";
-import { IntentAnalyzer } from "../../../src/mcp/nlp/intent_analyzer.ts";
+import { IntentAnalyzer } from "@storyteller/mcp/nlp/intent_analyzer.ts";
 
 // =====================================================
 // 既存テスト（維持）

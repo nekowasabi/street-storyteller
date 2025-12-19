@@ -6,7 +6,7 @@ import { assertEquals, assertExists } from "@std/assert";
 import {
   type McpToolDefinition,
   ToolRegistry,
-} from "../../../src/mcp/tools/tool_registry.ts";
+} from "@storyteller/mcp/tools/tool_registry.ts";
 
 /**
  * テスト用のツール定義を作成

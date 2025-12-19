@@ -6,7 +6,7 @@
 import { assertEquals, assertExists } from "@std/assert";
 import {
   PositionedDetector,
-} from "../../src/lsp/detection/positioned_detector.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
 
 // テスト用のモックエンティティデータ
 const mockEntities = [

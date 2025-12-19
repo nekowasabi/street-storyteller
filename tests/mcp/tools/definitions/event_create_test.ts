@@ -3,7 +3,7 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { eventCreateTool } from "../../../../src/mcp/tools/definitions/event_create.ts";
+import { eventCreateTool } from "@storyteller/mcp/tools/definitions/event_create.ts";
 
 Deno.test("event_create MCPツール", async (t) => {
   await t.step("ツール名がevent_createであること", () => {

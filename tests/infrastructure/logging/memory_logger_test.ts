@@ -1,5 +1,5 @@
 import { assertEquals } from "../../asserts.ts";
-import { MemoryLoggerFactory } from "../../../src/infrastructure/logging/memory_logger.ts";
+import { MemoryLoggerFactory } from "@storyteller/infrastructure/logging/memory_logger.ts";
 
 Deno.test("MemoryLoggerFactory - write stores events", () => {
   const factory = new MemoryLoggerFactory();

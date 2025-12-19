@@ -3,7 +3,7 @@
  * イベントの詳細を提案する
  */
 
-import type { McpPromptDefinition } from "../prompt_registry.ts";
+import type { McpPromptDefinition } from "@storyteller/mcp/prompts/prompt_registry.ts";
 
 export const eventDetailSuggestPrompt: McpPromptDefinition = {
   name: "event_detail_suggest",

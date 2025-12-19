@@ -9,9 +9,9 @@ import { join, toFileUrl } from "@std/path";
 import {
   FileContentReader,
   type HybridFieldValue,
-} from "./file_content_reader.ts";
-import { err, ok } from "../../../shared/result.ts";
-import type { Result } from "../../../shared/result.ts";
+} from "@storyteller/plugins/features/details/file_content_reader.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 
 /**
  * 展開エラーの種類

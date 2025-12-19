@@ -2,18 +2,21 @@
  * Element コマンドグループ
  * `storyteller element` コマンドとそのサブコマンドを管理
  */
-import { ok } from "../../../shared/result.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import { createLegacyCommandDescriptor } from "../../legacy_adapter.ts";
-import { renderHelp } from "../../help/renderer.ts";
-import type { CommandRegistry } from "../../command_registry.ts";
-import type { CommandContext, CommandDescriptor } from "../../types.ts";
-import { ElementCharacterCommand } from "./character.ts";
-import { ElementSettingCommand } from "./setting.ts";
-import { ElementTimelineCommand } from "./timeline.ts";
-import { ElementEventCommand } from "./event.ts";
-import { ElementForeshadowingCommand } from "./foreshadowing.ts";
-import { elementPhaseCommandDescriptor } from "./phase.ts";
+import { ok } from "@storyteller/shared/result.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import { renderHelp } from "@storyteller/cli/help/renderer.ts";
+import type { CommandRegistry } from "@storyteller/cli/command_registry.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+} from "@storyteller/cli/types.ts";
+import { ElementCharacterCommand } from "@storyteller/cli/modules/element/character.ts";
+import { ElementSettingCommand } from "@storyteller/cli/modules/element/setting.ts";
+import { ElementTimelineCommand } from "@storyteller/cli/modules/element/timeline.ts";
+import { ElementEventCommand } from "@storyteller/cli/modules/element/event.ts";
+import { ElementForeshadowingCommand } from "@storyteller/cli/modules/element/foreshadowing.ts";
+import { elementPhaseCommandDescriptor } from "@storyteller/cli/modules/element/phase.ts";
 
 /**
  * ElementCommand クラス

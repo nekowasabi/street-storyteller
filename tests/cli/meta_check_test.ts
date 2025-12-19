@@ -5,8 +5,8 @@ import {
   createStubLogger,
   createStubPresenter,
 } from "../asserts.ts";
-import type { CommandContext } from "../../src/cli/types.ts";
-import { MetaCheckCommand } from "../../src/cli/modules/meta/check.ts";
+import type { CommandContext } from "@storyteller/cli/types.ts";
+import { MetaCheckCommand } from "@storyteller/cli/modules/meta/check.ts";
 
 function joinPath(...segments: readonly string[]): string {
   let result = "";

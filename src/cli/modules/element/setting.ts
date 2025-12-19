@@ -4,14 +4,17 @@
  * storyteller element setting コマンドの実装
  */
 
-import { err, ok } from "../../../shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "../../types.ts";
-import { BaseCliCommand } from "../../base_command.ts";
-import type { SettingType } from "../../../type/v2/setting.ts";
-import { ElementService } from "../../../application/element_service.ts";
-import { createPluginRegistry } from "../../../core/plugin_system.ts";
-import { SettingPlugin } from "../../../plugins/core/setting/plugin.ts";
-import type { Setting } from "../../../type/v2/setting.ts";
+import { err, ok } from "@storyteller/shared/result.ts";
+import type {
+  CommandContext,
+  CommandExecutionError,
+} from "@storyteller/cli/types.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import type { SettingType } from "@storyteller/types/v2/setting.ts";
+import { ElementService } from "@storyteller/application/element_service.ts";
+import { createPluginRegistry } from "@storyteller/core/plugin_system.ts";
+import { SettingPlugin } from "@storyteller/plugins/core/setting/plugin.ts";
+import type { Setting } from "@storyteller/types/v2/setting.ts";
 
 /**
  * ElementSettingCommandのオプション

@@ -4,8 +4,8 @@
  */
 import { assertEquals } from "@std/assert";
 import { join } from "@std/path";
-import { manuscriptBindingTool } from "../../../../src/mcp/tools/definitions/manuscript_binding.ts";
-import type { ToolExecutionContext } from "../../../../src/mcp/tools/tool_registry.ts";
+import { manuscriptBindingTool } from "@storyteller/mcp/tools/definitions/manuscript_binding.ts";
+import type { ToolExecutionContext } from "@storyteller/mcp/tools/tool_registry.ts";
 
 // テスト用のプロジェクトパス（cinderellaサンプル）
 const SAMPLE_PROJECT_PATH = join(Deno.cwd(), "samples/cinderella");
@@ -190,7 +190,7 @@ Deno.test("manuscript_binding MCPツール 統合テスト", async (t) => {
   // テスト用キャラクターファイル作成
   await Deno.writeTextFile(
     join(tmpDir, "src/characters/test_hero.ts"),
-    `import type { Character } from "../../../../src/type/v2/character.ts";
+    `import type { Character } from "@storyteller/types/v2/character.ts";
 export const test_hero: Character = {
   id: "test_hero",
   name: "テストヒーロー",

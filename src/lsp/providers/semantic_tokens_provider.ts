@@ -7,9 +7,12 @@
 import {
   PositionedDetector,
   type PositionedMatch,
-} from "../detection/positioned_detector.ts";
-import type { Range, SemanticTokens } from "./lsp_types.ts";
-import { SEMANTIC_TOKEN_TYPES } from "../server/capabilities.ts";
+} from "@storyteller/lsp/detection/positioned_detector.ts";
+import type {
+  Range,
+  SemanticTokens,
+} from "@storyteller/lsp/providers/lsp_types.ts";
+import { SEMANTIC_TOKEN_TYPES } from "@storyteller/lsp/server/capabilities.ts";
 
 /**
  * トークン位置情報（ソート用）

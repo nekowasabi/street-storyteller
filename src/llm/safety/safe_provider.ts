@@ -4,17 +4,20 @@
  * 呼び出し制限機能付きのLLMプロバイダーラッパー
  */
 
-import { err } from "../../shared/result.ts";
-import type { Result } from "../../shared/result.ts";
+import { err } from "@storyteller/shared/result.ts";
+import type { Result } from "@storyteller/shared/result.ts";
 import type {
   LLMCallOptions,
   LLMError,
   LLMMessage,
   LLMProvider,
   LLMResponse,
-} from "../providers/provider.ts";
-import type { SafetyConfig } from "../config/llm_config.ts";
-import { CallLimiter, type CallLimitError } from "./call_limiter.ts";
+} from "@storyteller/llm/providers/provider.ts";
+import type { SafetyConfig } from "@storyteller/llm/config/llm_config.ts";
+import {
+  CallLimiter,
+  type CallLimitError,
+} from "@storyteller/llm/safety/call_limiter.ts";
 
 /**
  * SafeLLMProviderのオプション

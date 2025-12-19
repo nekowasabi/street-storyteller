@@ -5,8 +5,8 @@
  */
 
 import { assertEquals, assertExists } from "@std/assert";
-import { ForeshadowingPlugin } from "../../../../src/plugins/core/foreshadowing/plugin.ts";
-import type { Foreshadowing } from "../../../../src/type/v2/foreshadowing.ts";
+import { ForeshadowingPlugin } from "@storyteller/plugins/core/foreshadowing/plugin.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
 
 Deno.test("ForeshadowingPlugin", async (t) => {
   const plugin = new ForeshadowingPlugin();

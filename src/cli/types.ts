@@ -1,6 +1,6 @@
-import type { Result } from "../shared/result.ts";
-import type { Logger } from "../shared/logging/types.ts";
-import type { AppConfig } from "../shared/config/schema.ts";
+import type { Result } from "@storyteller/shared/result.ts";
+import type { Logger } from "@storyteller/shared/logging/types.ts";
+import type { AppConfig } from "@storyteller/shared/config/schema.ts";
 
 export interface CommandContext {
   readonly args?: Record<string, unknown>;
