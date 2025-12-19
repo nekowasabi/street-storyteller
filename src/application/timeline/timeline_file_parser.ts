@@ -6,6 +6,61 @@
 import type { Timeline, TimelineEvent } from "../../type/v2/timeline.ts";
 
 /**
+ * JavaScriptオブジェクトリテラルからコメントを除去する
+ * @param jsCode JavaScriptオブジェクトリテラル
+ * @returns コメントを除去した文字列
+ */
+function removeComments(jsCode: string): string {
+  // 文字列リテラル内のスラッシュを保護するため、まず文字列を一時的に置換
+  const stringPlaceholders: string[] = [];
+  let protectedCode = jsCode.replace(
+    /(["'`])(?:(?!\1|\\).|\\.)*\1/g,
+    (match) => {
+      stringPlaceholders.push(match);
+      return `__STRING_${stringPlaceholders.length - 1}__`;
+    },
+  );
+
+  // 単一行コメントを除去
+  protectedCode = protectedCode.replace(/\/\/.*$/gm, "");
+
+  // 複数行コメントを除去
+  protectedCode = protectedCode.replace(/\/\*[\s\S]*?\*\//g, "");
+
+  // 文字列を復元
+  protectedCode = protectedCode.replace(
+    /__STRING_(\d+)__/g,
+    (_, index) => stringPlaceholders[parseInt(index, 10)],
+  );
+
+  return protectedCode;
+}
+
+/**
+ * JavaScriptオブジェクトリテラルをJSONに変換する
+ * - 未引用のキーを引用符付きキーに変換
+ * - トレーリングカンマを除去
+ * @param jsCode JavaScriptオブジェクトリテラル
+ * @returns JSON形式の文字列
+ */
+function convertJsObjectToJson(jsCode: string): string {
+  // コメントを除去
+  let code = removeComments(jsCode);
+
+  // 未引用のキーを引用符付きキーに変換
+  // パターン: { key: や , key: を "key": に変換
+  code = code.replace(
+    /([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)(\s*:)/g,
+    '$1"$2"$3',
+  );
+
+  // トレーリングカンマを除去
+  code = code.replace(/,(\s*[}\]])/g, "$1");
+
+  return code;
+}
+
+/**
  * タイムラインファイルの内容からTimelineオブジェクトを解析する
  * @param content ファイル内容
  * @returns Timelineオブジェクト、パース失敗時はnull
@@ -19,7 +74,14 @@ export function parseTimelineFromFile(content: string): Timeline | null {
       return null;
     }
 
-    return JSON.parse(match[1]) as Timeline;
+    // まずそのままJSONパースを試みる（後方互換性のため）
+    try {
+      return JSON.parse(match[1]) as Timeline;
+    } catch {
+      // JSONパース失敗時はコメント除去・変換してパースを試みる
+      const jsonStr = convertJsObjectToJson(match[1]);
+      return JSON.parse(jsonStr) as Timeline;
+    }
   } catch {
     return null;
   }
