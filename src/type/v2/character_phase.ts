@@ -9,18 +9,28 @@ import type { RelationType } from "@storyteller/types/v2/character.ts";
 
 /**
  * フェーズの重要度
+ *
+ * - `major`: 主要なフェーズ（物語の転換点）
+ * - `minor`: 補助的なフェーズ
+ * - `subtle`: 微細なフェーズ（細かな変化）
  */
 export type PhaseImportance = "major" | "minor" | "subtle";
 
 /**
  * フェーズの遷移タイプ
+ *
+ * - `gradual`: 緩やかな変化（段階的な成長）
+ * - `turning_point`: 転換点（大きな変化のきっかけ）
+ * - `revelation`: 真実の発覚（気づき・覚醒）
+ * - `regression`: 後退・退行（失墜・堕落）
+ * - `transformation`: 劇的な変容
  */
 export type TransitionType =
-  | "gradual" // 段階的な成長
-  | "turning_point" // 大きな転換点
-  | "revelation" // 気づき・覚醒
-  | "regression" // 退行・失墜
-  | "transformation"; // 変容
+  | "gradual"
+  | "turning_point"
+  | "revelation"
+  | "regression"
+  | "transformation";
 
 /**
  * 配列属性の差分
