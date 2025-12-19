@@ -7,6 +7,14 @@
 
 /**
  * イベントのカテゴリ
+ *
+ * - `plot_point`: プロットの転換点
+ * - `character_event`: キャラクター関連イベント
+ * - `world_event`: 世界観に関するイベント
+ * - `backstory`: 過去の出来事
+ * - `foreshadow`: 伏線となるイベント
+ * - `climax`: クライマックス
+ * - `resolution`: 解決・結末
  */
 export type EventCategory =
   | "plot_point"
@@ -19,11 +27,20 @@ export type EventCategory =
 
 /**
  * イベントの重要度
+ *
+ * - `major`: 物語の主要イベント
+ * - `minor`: 補助的なイベント
+ * - `background`: 背景イベント
  */
 export type EventImportance = "major" | "minor" | "background";
 
 /**
  * タイムラインのスコープ
+ *
+ * - `story`: 物語全体のタイムライン
+ * - `world`: 世界観のタイムライン
+ * - `character`: キャラクター個別のタイムライン
+ * - `arc`: ストーリーアーク単位のタイムライン
  */
 export type TimelineScope = "story" | "world" | "character" | "arc";
 
