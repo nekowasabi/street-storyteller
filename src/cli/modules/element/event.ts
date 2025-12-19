@@ -13,6 +13,10 @@ import type {
   Timeline,
   TimelineEvent,
 } from "../../../type/v2/timeline.ts";
+import {
+  generateTimelineFile,
+  parseTimelineFromFileWithMutableEvents,
+} from "../../../application/timeline/timeline_file_parser.ts";
 
 /**
  * ElementEventCommandのオプション
@@ -88,8 +92,11 @@ export class ElementEventCommand extends BaseCliCommand {
       // タイムラインファイルを読み込む
       const fileContent = await Deno.readTextFile(timelineFilePath);
 
-      // 既存のTimelineオブジェクトを抽出
-      const timeline = this.parseTimelineFromFile(fileContent, parsed.timeline);
+      // 既存のTimelineオブジェクトを抽出（コメント付きフォーマット対応）
+      const timeline = parseTimelineFromFileWithMutableEvents(
+        fileContent,
+        parsed.timeline,
+      );
       if (!timeline) {
         return err({
           code: "timeline_parse_error",
@@ -128,7 +135,7 @@ export class ElementEventCommand extends BaseCliCommand {
       timeline.events.sort((a, b) => a.time.order - b.time.order);
 
       // 更新されたファイルを生成
-      const updatedContent = this.generateTimelineFile(timeline);
+      const updatedContent = generateTimelineFile(timeline);
 
       // ファイルを書き込む
       await Deno.writeTextFile(timelineFilePath, updatedContent);
@@ -253,51 +260,5 @@ export class ElementEventCommand extends BaseCliCommand {
       .toLowerCase()
       .replace(/[^a-z0-9\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf]+/g, "_")
       .replace(/^_|_$/g, "");
-  }
-
-  /**
-   * ファイル内容からTimelineオブジェクトを解析する
-   */
-  private parseTimelineFromFile(
-    content: string,
-    timelineId: string,
-  ): Timeline | null {
-    try {
-      // JSON部分を抽出（export const xxx: Timeline = {...}; の形式）
-      const match = content.match(
-        /export\s+const\s+\w+\s*:\s*Timeline\s*=\s*(\{[\s\S]*?\});?\s*$/,
-      );
-      if (!match) {
-        return null;
-      }
-
-      const jsonStr = match[1];
-      const timeline = JSON.parse(jsonStr) as Timeline;
-
-      // IDを確認
-      if (timeline.id !== timelineId) {
-        timeline.id = timelineId;
-      }
-
-      return timeline;
-    } catch {
-      return null;
-    }
-  }
-
-  /**
-   * TimelineオブジェクトからTypeScriptファイルを生成する
-   */
-  private generateTimelineFile(timeline: Timeline): string {
-    const timelineJson = JSON.stringify(timeline, null, 2);
-
-    return `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
-
-/**
- * ${timeline.name}
- * ${timeline.summary}
- */
-export const ${timeline.id}: Timeline = ${timelineJson};
-`;
   }
 }
