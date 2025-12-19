@@ -150,10 +150,15 @@ export class SettingPlugin implements ElementPlugin {
 
   /**
    * TypeScriptファイルを生成する
+   * 全フィールドをコメント付きで出力し、ユーザーが設定可能な項目を把握できるようにする
    */
   private generateTypeScriptFile(setting: Setting): string {
-    // JSONを整形して出力
-    const settingJson = JSON.stringify(setting, null, 2);
+    // 値をJSONリテラルに変換するヘルパー
+    const toJson = (value: unknown): string => JSON.stringify(value, null, 2);
+    const indent = (str: string, spaces: number): string =>
+      str.split("\n").map((line, i) =>
+        i === 0 ? line : " ".repeat(spaces) + line
+      ).join("\n");
 
     return `import type { Setting } from "@storyteller/types/v2/setting.ts";
 
@@ -161,7 +166,78 @@ export class SettingPlugin implements ElementPlugin {
  * ${setting.name}
  * ${setting.summary}
  */
-export const ${setting.id}: Setting = ${settingJson};
+export const ${setting.id}: Setting = {
+  // =============================================
+  // 必須メタデータ
+  // =============================================
+
+  /** 一意なID（プログラム的な識別子） */
+  id: ${toJson(setting.id)},
+
+  /** 設定名（物語内での名前） */
+  name: ${toJson(setting.name)},
+
+  /** 設定の種類: "location" | "world" | "culture" | "organization" */
+  type: ${toJson(setting.type)},
+
+  /** 登場するチャプターのIDリスト */
+  appearingChapters: ${indent(toJson(setting.appearingChapters ?? []), 2)},
+
+  /** 短い概要（必須） */
+  summary: ${toJson(setting.summary)},
+
+  // =============================================
+  // 表示・検出設定（オプショナル）
+  // =============================================
+
+  /** 表示名のバリエーション（例: ["王都", "首都"]） - 原稿での検出に使用 */
+  displayNames: ${indent(toJson(setting.displayNames ?? []), 2)},
+
+  // =============================================
+  // 詳細情報（オプショナル）
+  // =============================================
+
+  /** 詳細情報 - 各フィールドは文字列 or { file: "path/to/file.md" } */
+  details: {
+    /** 設定の説明（summaryより詳細な説明） */
+    description: "",
+    /** 地理情報 */
+    geography: "",
+    /** 歴史 */
+    history: "",
+    /** 文化 */
+    culture: "",
+    /** 政治 */
+    politics: "",
+    /** 経済 */
+    economy: "",
+    /** 住民 */
+    inhabitants: "",
+    /** ランドマーク */
+    landmarks: "",
+  },
+
+  // =============================================
+  // 関連設定（オプショナル）
+  // =============================================
+
+  /** 関連する設定のIDリスト */
+  relatedSettings: [],
+
+  // =============================================
+  // LSP検出ヒント（オプショナル）
+  // =============================================
+
+  /** LSP用の検出ヒント - 原稿から設定を自動検出する際の設定 */
+  detectionHints: {
+    /** よく使われるパターン（例: ["王都の", "王都で"]） */
+    commonPatterns: [],
+    /** 除外すべきパターン */
+    excludePatterns: [],
+    /** 検出の信頼度（0.0～1.0） */
+    confidence: 1.0,
+  },
+};
 `;
   }
 }

@@ -165,10 +165,75 @@ export class TimelinePlugin implements ElementPlugin {
 
   /**
    * TypeScriptファイルを生成する
+   * 全フィールドをコメント付きで出力し、ユーザーが設定可能な項目を把握できるようにする
    */
   private generateTypeScriptFile(timeline: Timeline): string {
-    // JSONを整形して出力
-    const timelineJson = JSON.stringify(timeline, null, 2);
+    // 値をJSONリテラルに変換するヘルパー
+    const toJson = (value: unknown): string => JSON.stringify(value, null, 2);
+    const indent = (str: string, spaces: number): string =>
+      str.split("\n").map((line, i) =>
+        i === 0 ? line : " ".repeat(spaces) + line
+      ).join("\n");
+
+    // displayOptionsのデフォルト値をマージ
+    const displayOptions = {
+      showRelations: true,
+      colorScheme: "",
+      collapsed: false,
+      ...timeline.displayOptions,
+    };
+
+    // detailsのデフォルト値をマージ
+    const details = {
+      background: "",
+      notes: "",
+      ...timeline.details,
+    };
+
+    // イベントがある場合はそのままJSON出力、ない場合はテンプレートコメントを表示
+    const eventsSection = timeline.events.length > 0
+      ? `/** イベントリスト */
+  events: ${indent(toJson(timeline.events), 2)},`
+      : `/** イベントリスト */
+  events: [
+    // イベントのテンプレート（使用時はコメントを外してください）
+    // {
+    //   // === 必須フィールド ===
+    //   id: "event_001",
+    //   title: "イベントタイトル",
+    //   category: "plot_point",  // "plot_point" | "character_event" | "world_event" | "backstory" | "foreshadow" | "climax" | "resolution"
+    //   time: {
+    //     order: 1,              // タイムライン内での順序（必須）
+    //     label: "",             // 表示用の時間表記
+    //     date: "",              // 物語内での日付表記
+    //     chapter: "",           // 関連するチャプターID
+    //   },
+    //   summary: "イベントの概要",
+    //   characters: [],          // 関連キャラクターIDリスト
+    //   settings: [],            // 関連設定IDリスト
+    //   chapters: [],            // 関連チャプターIDリスト
+    //
+    //   // === オプショナルフィールド ===
+    //   causedBy: [],            // このイベントの原因となったイベントIDリスト
+    //   causes: [],              // このイベントが引き起こすイベントIDリスト
+    //   importance: "major",     // "major" | "minor" | "background"
+    //   endTime: undefined,      // イベント終了時点（期間があるイベントの場合）
+    //   displayNames: [],        // 表示名のバリエーション
+    //   details: {
+    //     description: "",       // 詳細説明
+    //     impact: "",            // イベントの影響
+    //     notes: "",             // メモ
+    //   },
+    //   detectionHints: {
+    //     commonPatterns: [],
+    //     excludePatterns: [],
+    //     confidence: 1.0,
+    //   },
+    //   phaseChanges: [          // キャラクターフェーズ変化
+    //     // { characterId: "hero", toPhaseId: "phase_02", fromPhaseId: "phase_01", description: "" }
+    //   ],
+    // },
+  ],`;
 
     return `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
@@ -176,7 +241,71 @@ export class TimelinePlugin implements ElementPlugin {
  * ${timeline.name}
  * ${timeline.summary}
  */
-export const ${timeline.id}: Timeline = ${timelineJson};
+export const ${timeline.id}: Timeline = {
+  // =============================================
+  // 必須メタデータ
+  // =============================================
+
+  /** 一意なID（プログラム的な識別子） */
+  id: ${toJson(timeline.id)},
+
+  /** タイムライン名 */
+  name: ${toJson(timeline.name)},
+
+  /** タイムラインのスコープ: "story" | "world" | "character" | "arc" */
+  scope: ${toJson(timeline.scope)},
+
+  /** 短い概要（必須） */
+  summary: ${toJson(timeline.summary)},
+
+  ${eventsSection}
+
+  // =============================================
+  // 階層構造（オプショナル）
+  // =============================================
+
+  /** 親タイムラインのID */
+  parentTimeline: ${toJson(timeline.parentTimeline ?? "")},
+
+  /** 子タイムラインのIDリスト */
+  childTimelines: ${indent(toJson(timeline.childTimelines ?? []), 2)},
+
+  // =============================================
+  // 関連情報（オプショナル）
+  // =============================================
+
+  /** 関連するキャラクターのID（scope: "character" の場合に使用） */
+  relatedCharacter: ${toJson(timeline.relatedCharacter ?? "")},
+
+  /** 表示名のバリエーション */
+  displayNames: ${indent(toJson(timeline.displayNames ?? []), 2)},
+
+  // =============================================
+  // 表示オプション（オプショナル）
+  // =============================================
+
+  /** 表示オプション */
+  displayOptions: {
+    /** 関連を表示するか */
+    showRelations: ${toJson(displayOptions.showRelations)},
+    /** カラースキーム */
+    colorScheme: ${toJson(displayOptions.colorScheme)},
+    /** 折りたたみ状態 */
+    collapsed: ${toJson(displayOptions.collapsed)},
+  },
+
+  // =============================================
+  // 詳細情報（オプショナル）
+  // =============================================
+
+  /** 詳細情報 - 各フィールドは文字列 or { file: "path/to/file.md" } */
+  details: {
+    /** 背景説明 */
+    background: ${toJson(details.background)},
+    /** メモ */
+    notes: ${toJson(details.notes)},
+  },
+};
 `;
   }
 }

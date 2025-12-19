@@ -172,10 +172,45 @@ export class CharacterPlugin implements ElementPlugin {
 
   /**
    * TypeScriptファイルを生成する
+   * 全フィールドをコメント付きで出力し、ユーザーが設定可能な項目を把握できるようにする
    */
   private generateTypeScriptFile(character: Character): string {
-    // JSONを整形して出力
-    const characterJson = JSON.stringify(character, null, 2);
+    // 値をJSONリテラルに変換するヘルパー
+    const toJson = (value: unknown): string => JSON.stringify(value, null, 2);
+    const indent = (str: string, spaces: number): string =>
+      str.split("\n").map((line, i) =>
+        i === 0 ? line : " ".repeat(spaces) + line
+      ).join("\n");
+
+    // detailsのデフォルト値をマージ
+    const details = {
+      description: "",
+      appearance: "",
+      personality: "",
+      backstory: "",
+      relationships_detail: "",
+      goals: "",
+      ...character.details,
+    };
+
+    // detectionHintsのデフォルト値をマージ
+    const detectionHints = {
+      commonPatterns: [],
+      excludePatterns: [],
+      confidence: 1.0,
+      ...character.detectionHints,
+    };
+
+    // initialStateのデフォルト値をマージ
+    const initialState = {
+      traits: [],
+      beliefs: [],
+      abilities: [],
+      relationships: {},
+      appearance: [],
+      goals: [],
+      ...character.initialState,
+    };
 
     return `import type { Character } from "@storyteller/types/v2/character.ts";
 
@@ -183,7 +218,135 @@ export class CharacterPlugin implements ElementPlugin {
  * ${character.name}
  * ${character.summary}
  */
-export const ${character.id}: Character = ${characterJson};
+export const ${character.id}: Character = {
+  // =============================================
+  // 必須メタデータ
+  // =============================================
+
+  /** 一意なID（プログラム的な識別子） */
+  id: ${toJson(character.id)},
+
+  /** キャラクター名（物語内での名前） */
+  name: ${toJson(character.name)},
+
+  /** 役割: "protagonist" | "antagonist" | "supporting" | "guest" */
+  role: ${toJson(character.role)},
+
+  /** 特徴・属性のリスト */
+  traits: ${indent(toJson(character.traits ?? []), 2)},
+
+  /** 他キャラクターとの関係性マップ { characterId: RelationType } */
+  // RelationType: "ally" | "enemy" | "neutral" | "romantic" | "respect" | "competitive" | "mentor"
+  relationships: ${indent(toJson(character.relationships ?? {}), 2)},
+
+  /** 登場するチャプターのIDリスト */
+  appearingChapters: ${indent(toJson(character.appearingChapters ?? []), 2)},
+
+  /** 短い概要（必須） */
+  summary: ${toJson(character.summary)},
+
+  // =============================================
+  // 表示・検出設定（オプショナル）
+  // =============================================
+
+  /** 表示名のバリエーション（例: ["勇者", "若者"]） - 原稿での検出に使用 */
+  displayNames: ${indent(toJson(character.displayNames ?? []), 2)},
+
+  /** 別名・愛称 */
+  aliases: ${indent(toJson(character.aliases ?? []), 2)},
+
+  /** 人称代名詞（LSP用、例: ["彼", "彼女"]） */
+  pronouns: ${indent(toJson(character.pronouns ?? []), 2)},
+
+  // =============================================
+  // 詳細情報（オプショナル）
+  // =============================================
+
+  /** 詳細情報 - 各フィールドは文字列 or { file: "path/to/file.md" } */
+  details: {
+    /** キャラクターの説明（summaryより詳細な紹介文） */
+    description: ${toJson(details.description)},
+    /** 外見描写 */
+    appearance: ${toJson(details.appearance)},
+    /** 性格 */
+    personality: ${toJson(details.personality)},
+    /** 背景ストーリー */
+    backstory: ${toJson(details.backstory)},
+    /** 関係性の詳細 */
+    relationships_detail: ${toJson(details.relationships_detail)},
+    /** 目標・動機の詳細 */
+    goals: ${toJson(details.goals)},
+    /** キャラクター発展（成長アーク） */
+    // development: {
+    //   initial: "",    // 初期状態
+    //   goal: "",       // 目標
+    //   obstacle: "",   // 障害
+    //   resolution: "", // 解決
+    //   arc_notes: "",  // 成長アークのメモ
+    // },
+  },
+
+  // =============================================
+  // LSP検出ヒント（オプショナル）
+  // =============================================
+
+  /** LSP用の検出ヒント - 原稿からキャラクターを自動検出する際の設定 */
+  detectionHints: {
+    /** よく使われるパターン（例: ["勇者は", "勇者が"]） */
+    commonPatterns: ${indent(toJson(detectionHints.commonPatterns), 4)},
+    /** 除外すべきパターン（例: ["伝説の勇者"]） */
+    excludePatterns: ${indent(toJson(detectionHints.excludePatterns), 4)},
+    /** 検出の信頼度（0.0～1.0） */
+    confidence: ${toJson(detectionHints.confidence)},
+  },
+
+  // =============================================
+  // キャラクター成長・変化（Phase機能）（オプショナル）
+  // =============================================
+
+  /** 初期状態（差分計算のベースライン） - Phase機能を使用する場合に設定 */
+  initialState: {
+    /** 初期特性 */
+    traits: ${indent(toJson(initialState.traits), 4)},
+    /** 初期信条 */
+    beliefs: ${indent(toJson(initialState.beliefs), 4)},
+    /** 初期能力 */
+    abilities: ${indent(toJson(initialState.abilities), 4)},
+    /** 初期関係性 */
+    relationships: ${indent(toJson(initialState.relationships), 4)},
+    /** 初期外見 */
+    appearance: ${indent(toJson(initialState.appearance), 4)},
+    /** 初期状態 { physical?, mental?, social? } */
+    // status: {},
+    /** 初期目標 */
+    goals: ${indent(toJson(initialState.goals), 4)},
+  },
+
+  /** 成長フェーズのリスト - キャラクターの変化を段階的に定義 */
+  // phases: [
+  //   {
+  //     id: "phase_01",
+  //     name: "覚醒",
+  //     order: 1,
+  //     summary: "覚醒後の変化",
+  //     delta: {
+  //       traits: { add: ["勇敢"], remove: ["臆病"] },
+  //       beliefs: { add: ["正義を信じる"] },
+  //       abilities: { add: ["剣術"], improve: ["体力"] },
+  //       relationships: { add: { mentor: "respect" } },
+  //     },
+  //     transitionType: "revelation",  // "gradual" | "turning_point" | "revelation" | "regression" | "transformation"
+  //     importance: "major",           // "major" | "minor" | "subtle"
+  //     triggerEventId: "",            // TimelineEventへの参照
+  //     startChapter: "",
+  //     endChapter: "",
+  //   },
+  // ],
+  phases: ${indent(toJson(character.phases ?? []), 2)},
+
+  /** 現在のフェーズID（執筆進行管理用） */
+  currentPhaseId: ${toJson(character.currentPhaseId ?? "")},
+};
 `;
   }
 }
