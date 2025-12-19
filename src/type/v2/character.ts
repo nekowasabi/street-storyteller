@@ -6,6 +6,11 @@
 
 /**
  * キャラクターの役割
+ *
+ * - `protagonist`: 物語の主役キャラクター
+ * - `antagonist`: 主人公と対立する敵役
+ * - `supporting`: 物語を支える脇役
+ * - `guest`: 一時的に登場するゲストキャラクター
  */
 export type CharacterRole =
   | "protagonist"
@@ -15,6 +20,14 @@ export type CharacterRole =
 
 /**
  * キャラクター間の関係性の種類
+ *
+ * - `ally`: 味方・仲間
+ * - `enemy`: 敵対関係
+ * - `neutral`: 中立
+ * - `romantic`: 恋愛関係
+ * - `respect`: 尊敬の関係
+ * - `competitive`: ライバル関係
+ * - `mentor`: 師弟関係
  */
 export type RelationType =
   | "ally"
