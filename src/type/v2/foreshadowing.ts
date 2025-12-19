@@ -7,6 +7,11 @@
 
 /**
  * 伏線のステータス
+ *
+ * - `planted`: 設置済み（未回収）
+ * - `partially_resolved`: 部分的に回収
+ * - `resolved`: 完全に回収済み
+ * - `abandoned`: 放棄（回収しない）
  */
 export type ForeshadowingStatus =
   | "planted"
@@ -16,6 +21,13 @@ export type ForeshadowingStatus =
 
 /**
  * 伏線のタイプ
+ *
+ * - `hint`: 後の展開を示唆するヒント
+ * - `prophecy`: 予言・予告
+ * - `mystery`: 謎・疑問
+ * - `symbol`: 象徴的な要素
+ * - `chekhov`: チェーホフの銃（物理的伏線）
+ * - `red_herring`: レッドヘリング（ミスリード）
  */
 export type ForeshadowingType =
   | "hint"
@@ -27,6 +39,10 @@ export type ForeshadowingType =
 
 /**
  * 伏線の重要度
+ *
+ * - `major`: 主要な伏線（物語の根幹に関わる）
+ * - `minor`: 補助的な伏線
+ * - `subtle`: 微細な伏線（注意深い読者向け）
  */
 export type ForeshadowingImportance = "major" | "minor" | "subtle";
 
