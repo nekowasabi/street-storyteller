@@ -21,12 +21,12 @@ storyteller element character --name "キャラ名" --role antagonist --summary 
 
 ### 役割オプション
 
-| 役割          | 説明               |
-| ------------- | ------------------ |
-| `protagonist` | 主人公             |
-| `antagonist`  | 敵対者             |
-| `supporting`  | 脇役・サポート     |
-| `guest`       | ゲスト・一時的登場 |
+| 役割 | 説明 |
+|------|------|
+| `protagonist` | 主人公 |
+| `antagonist` | 敵対者 |
+| `supporting` | 脇役・サポート |
+| `guest` | ゲスト・一時的登場 |
 
 ## 引数の解析
 

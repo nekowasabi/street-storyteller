@@ -9,7 +9,6 @@
 ## Character Notes
 
 ### Main Character
-
 - Name:
 - Background:
 - Motivation:
