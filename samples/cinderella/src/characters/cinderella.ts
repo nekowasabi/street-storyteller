@@ -18,6 +18,6 @@ export const cinderella: Character = {
   "appearingChapters": [],
   "summary": "継母にいじめられながらも優しさを失わない少女",
   "details": {
-    "description": { "file": "src/characters/cinderella_description.md" },
+    "description": { "file": "./cinderella_description.md" },
   },
 };
