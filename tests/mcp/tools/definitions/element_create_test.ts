@@ -97,7 +97,10 @@ Deno.test("elementCreateTool: setting typeでdisplayNamesを配列で渡せる",
   const content = json.content;
   assertEquals(typeof content, "string");
   if (typeof content === "string") {
-    assertEquals(content.includes('"displayNames"'), true);
+    // displayNamesが含まれていること
+    assertEquals(content.includes("displayNames:"), true);
+    assertEquals(content.includes('"王都"'), true);
+    assertEquals(content.includes('"首都"'), true);
   }
 });
 
@@ -136,10 +139,10 @@ Deno.test("elementCreateTool: traits配列はCSVとして渡され、TSに反映
   const content = json.content;
   assertEquals(typeof content, "string");
   if (typeof content === "string") {
-    assertEquals(
-      content.includes('"traits": [\n    "brave",\n    "kind"\n  ]'),
-      true,
-    );
+    // traitsが含まれていること
+    assertEquals(content.includes("traits:"), true);
+    assertEquals(content.includes('"brave"'), true);
+    assertEquals(content.includes('"kind"'), true);
   }
 });
 
@@ -155,10 +158,10 @@ Deno.test("elementCreateTool: traits文字列はそのまま渡される", async
   const content = json.content;
   assertEquals(typeof content, "string");
   if (typeof content === "string") {
-    assertEquals(
-      content.includes('"traits": [\n    "brave",\n    "kind"\n  ]'),
-      true,
-    );
+    // traitsが含まれていること
+    assertEquals(content.includes("traits:"), true);
+    assertEquals(content.includes('"brave"'), true);
+    assertEquals(content.includes('"kind"'), true);
   }
 });
 
@@ -174,7 +177,8 @@ Deno.test("elementCreateTool: withDetailsはdetailsを生成する", async () =>
   const content = json.content;
   assertEquals(typeof content, "string");
   if (typeof content === "string") {
-    assertEquals(content.includes('"details"'), true);
+    // detailsセクションが含まれていること
+    assertEquals(content.includes("details:"), true);
   }
 });
 
@@ -190,6 +194,7 @@ Deno.test("elementCreateTool: addDetailsは指定フィールドのdetailsを生
   const content = json.content;
   assertEquals(typeof content, "string");
   if (typeof content === "string") {
-    assertEquals(content.includes('"details"'), true);
+    // detailsセクションが含まれていること
+    assertEquals(content.includes("details:"), true);
   }
 });
