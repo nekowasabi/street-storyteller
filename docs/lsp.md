@@ -78,28 +78,29 @@ TypeScript/TSXファイル内のリテラル型値にカーソルを合わせる
 
 **対応する型:**
 
-| 型名                    | フィールド名     | 値の例                                |
-| ----------------------- | ---------------- | ------------------------------------- |
-| `CharacterRole`         | `role`           | `protagonist`, `antagonist`, `supporting`, `guest` |
-| `RelationType`          | `relationships.*` | `ally`, `enemy`, `romantic`, `mentor` |
-| `ForeshadowingType`     | `type`           | `hint`, `prophecy`, `mystery`, `symbol` |
-| `ForeshadowingStatus`   | `status`         | `planted`, `resolved`, `abandoned`    |
-| `ForeshadowingImportance` | `importance`   | `major`, `minor`, `subtle`            |
-| `SettingType`           | `type`           | `location`, `world`, `culture`        |
-| `EventCategory`         | `category`       | `plot_point`, `climax`, `resolution`  |
-| `EventImportance`       | `importance`     | `major`, `minor`, `background`        |
-| `TimelineScope`         | `scope`          | `story`, `world`, `character`, `arc`  |
-| `TransitionType`        | `transitionType` | `gradual`, `turning_point`, `revelation` |
+| 型名                      | フィールド名      | 値の例                                             |
+| ------------------------- | ----------------- | -------------------------------------------------- |
+| `CharacterRole`           | `role`            | `protagonist`, `antagonist`, `supporting`, `guest` |
+| `RelationType`            | `relationships.*` | `ally`, `enemy`, `romantic`, `mentor`              |
+| `ForeshadowingType`       | `type`            | `hint`, `prophecy`, `mystery`, `symbol`            |
+| `ForeshadowingStatus`     | `status`          | `planted`, `resolved`, `abandoned`                 |
+| `ForeshadowingImportance` | `importance`      | `major`, `minor`, `subtle`                         |
+| `SettingType`             | `type`            | `location`, `world`, `culture`                     |
+| `EventCategory`           | `category`        | `plot_point`, `climax`, `resolution`               |
+| `EventImportance`         | `importance`      | `major`, `minor`, `background`                     |
+| `TimelineScope`           | `scope`           | `story`, `world`, `character`, `arc`               |
+| `TransitionType`          | `transitionType`  | `gradual`, `turning_point`, `revelation`           |
 
 **使用例:**
 
 ```typescript
 const char: Character = {
-  role: "protagonist"  // ← ホバーで「主人公」と表示
+  role: "protagonist", // ← ホバーで「主人公」と表示
 };
 ```
 
 ホバー表示:
+
 ```
 **`protagonist`** `[CharacterRole]`
 
@@ -107,6 +108,7 @@ const char: Character = {
 ```
 
 **特徴:**
+
 - 親型（`Character`, `Foreshadowing`等）を自動推定
 - 同名フィールド（`type`, `importance`等）を親型で区別
 - `relationships`内のネストされた値にも対応
