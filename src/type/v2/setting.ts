@@ -6,6 +6,11 @@
 
 /**
  * 設定の種類
+ *
+ * - `location`: 具体的な場所（城、森、町など）
+ * - `world`: 世界・国（王国、大陸など）
+ * - `culture`: 文化・風習
+ * - `organization`: 組織・団体（騎士団、ギルドなど）
  */
 export type SettingType = "location" | "world" | "culture" | "organization";
 
