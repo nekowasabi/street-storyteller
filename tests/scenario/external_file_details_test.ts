@@ -248,7 +248,7 @@ Deno.test("External File Details - Character型との整合性", async () => {
  */
 Deno.test("External File Details - ViewCharacterCommandの--detailsオプション", async (t) => {
   // 直接コマンドクラスをインポート
-  const { ViewCharacterCommand, DefaultCharacterLoader } = await import(
+  const { ViewCharacterCommand } = await import(
     "../../src/cli/modules/view/character.ts"
   );
 

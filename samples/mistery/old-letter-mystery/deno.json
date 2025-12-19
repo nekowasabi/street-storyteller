@@ -1,6 +1,0 @@
-{
-  "imports": {
-    "@storyteller/types/": "../../../src/type/",
-    "@storyteller/": "../../../src/"
-  }
-}

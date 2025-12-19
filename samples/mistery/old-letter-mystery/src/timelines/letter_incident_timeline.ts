@@ -15,25 +15,25 @@ export const letter_incident_timeline: Timeline = {
       "title": "手紙消失の発見",
       "category": "plot_point",
       "time": {
-        "order": 1,
+        "order": 1
       },
       "summary": "手紙消失の発見の概要（要追加）",
       "characters": [],
       "settings": [],
-      "chapters": [],
+      "chapters": []
     },
     {
       "id": "別の手紙の発見",
       "title": "別の手紙の発見",
       "category": "plot_point",
       "time": {
-        "order": 2,
+        "order": 2
       },
       "summary": "別の手紙の発見の概要（要追加）",
       "characters": [],
       "settings": [],
-      "chapters": [],
-    },
+      "chapters": []
+    }
   ],
   "parentTimeline": "",
   "childTimelines": [],
@@ -42,10 +42,10 @@ export const letter_incident_timeline: Timeline = {
   "displayOptions": {
     "showRelations": true,
     "colorScheme": "",
-    "collapsed": false,
+    "collapsed": false
   },
   "details": {
     "background": "",
-    "notes": "",
-  },
+    "notes": ""
+  }
 };

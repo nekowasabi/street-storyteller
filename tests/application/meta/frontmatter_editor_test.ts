@@ -4,7 +4,6 @@
  */
 import { assertEquals, assertExists } from "@std/assert";
 import {
-  type EditResult,
   FrontmatterEditor,
 } from "@storyteller/application/meta/frontmatter_editor.ts";
 

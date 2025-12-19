@@ -13,7 +13,6 @@ import type {
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import type {
   EventCategory,
-  Timeline,
   TimelineEvent,
 } from "@storyteller/types/v2/timeline.ts";
 import {

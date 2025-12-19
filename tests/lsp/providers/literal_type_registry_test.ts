@@ -6,7 +6,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import {
   type FieldContext,
-  type LiteralTypeDefinition,
   LiteralTypeRegistry,
 } from "@storyteller/lsp/providers/literal_type_registry.ts";
 

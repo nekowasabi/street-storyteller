@@ -9,5 +9,5 @@ export const config: StoryConfig = {
   title: "My Story",
   author: "Author Name",
   template: "novel",
-  version: "1.0.0",
+  version: "1.0.0"
 };

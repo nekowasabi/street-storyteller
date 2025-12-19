@@ -2,11 +2,7 @@
  * Setting型（v2）のテスト
  */
 import { assertEquals, assertExists } from "@std/assert";
-import type {
-  Setting,
-  SettingDetails,
-  SettingType,
-} from "@storyteller/types/v2/setting.ts";
+import type { Setting, SettingDetails } from "@storyteller/types/v2/setting.ts";
 
 Deno.test("SettingDetails - descriptionフィールドが文字列で設定できる", () => {
   const details: SettingDetails = {
