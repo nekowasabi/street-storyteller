@@ -58,6 +58,7 @@ import type {
 import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import { DiagnosticsPublisher } from "@storyteller/lsp/diagnostics/diagnostics_publisher.ts";
 import { LiteralTypeHoverProvider } from "@storyteller/lsp/providers/literal_type_hover_provider.ts";
+import { CodeLensProvider } from "@storyteller/lsp/providers/code_lens_provider.ts";
 
 /** サーバー未初期化エラーコード (LSP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;
@@ -150,6 +151,7 @@ export class LspServer {
   private readonly semanticTokensProvider: SemanticTokensProvider;
   private readonly documentSymbolProvider: DocumentSymbolProvider;
   private readonly completionProvider: CompletionProvider;
+  private readonly codeLensProvider: CodeLensProvider;
 
   // 診断
   private readonly diagnosticsGenerator: DiagnosticsGenerator;
@@ -184,6 +186,7 @@ export class LspServer {
     this.semanticTokensProvider = new SemanticTokensProvider(this.detector);
     this.documentSymbolProvider = new DocumentSymbolProvider(this.detector);
     this.completionProvider = new CompletionProvider(entities);
+    this.codeLensProvider = new CodeLensProvider();
 
     // 診断機能の初期化
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
@@ -290,6 +293,14 @@ export class LspServer {
         break;
       case "textDocument/semanticTokens/range":
         await this.handleSemanticTokensRange(request);
+        break;
+      // Code Lens ハンドラー
+      case "textDocument/codeLens":
+        await this.handleCodeLens(request);
+        break;
+      // Execute Command ハンドラー
+      case "workspace/executeCommand":
+        await this.handleExecuteCommand(request);
         break;
       default: {
         // 未実装のメソッドにはMethodNotFoundエラーを返す（LSP仕様準拠）
@@ -591,5 +602,53 @@ export class LspServer {
     );
 
     await this.diagnosticsPublisher.publish(uri, diagnostics);
+  }
+
+  /**
+   * textDocument/codeLens リクエストを処理
+   */
+  private async handleCodeLens(request: JsonRpcRequest): Promise<void> {
+    const params = request.params as { textDocument: { uri: string } };
+    const document = this.documentManager.get(params.textDocument.uri);
+
+    let result: unknown[] = [];
+    if (document) {
+      result = this.codeLensProvider.provideCodeLenses(
+        params.textDocument.uri,
+        document.content,
+      );
+    }
+
+    const response = createSuccessResponse(request.id, result);
+    await this.transport.writeMessage(response);
+  }
+
+  /**
+   * workspace/executeCommand リクエストを処理
+   */
+  private async handleExecuteCommand(request: JsonRpcRequest): Promise<void> {
+    const params = request.params as {
+      command: string;
+      arguments?: unknown[];
+    };
+
+    let result: unknown = null;
+
+    switch (params.command) {
+      case "storyteller.openReferencedFile": {
+        // ファイル参照を開くコマンド
+        // 実際のファイル表示はクライアント側で行うため、ここでは成功を返す
+        // クライアントはコマンド実行後にwindow/showDocument等で対応
+        result = { success: true, uri: params.arguments?.[0] };
+        break;
+      }
+      default:
+        // 未知のコマンド
+        result = { success: false, error: `Unknown command: ${params.command}` };
+        break;
+    }
+
+    const response = createSuccessResponse(request.id, result);
+    await this.transport.writeMessage(response);
   }
 }

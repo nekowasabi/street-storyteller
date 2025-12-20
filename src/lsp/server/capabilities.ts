@@ -85,6 +85,15 @@ export type CompletionOptions = {
 };
 
 /**
+ * コマンド実行プロバイダーオプション型
+ * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#executeCommandOptions
+ */
+export type ExecuteCommandOptions = {
+  /** サポートするコマンドID */
+  readonly commands: readonly string[];
+};
+
+/**
  * サーバーキャパビリティ
  * LSPサーバーがサポートする機能を定義
  */
@@ -128,11 +137,23 @@ export type ServerCapabilities = {
    * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_completion
    */
   readonly completionProvider?: CompletionOptions;
+
+  /**
+   * Code Lens機能のサポート
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_codeLens
+   */
+  readonly codeLensProvider?: boolean;
+
+  /**
+   * コマンド実行機能のサポート
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_executeCommand
+   */
+  readonly executeCommandProvider?: ExecuteCommandOptions;
 };
 
 /**
  * サーバーキャパビリティを取得する
- * Full同期、定義ジャンプ、ホバー、Code Action、ドキュメントシンボル、セマンティックトークン、補完をサポート
+ * Full同期、定義ジャンプ、ホバー、Code Action、ドキュメントシンボル、セマンティックトークン、補完、Code Lensをサポート
  */
 export function getServerCapabilities(): ServerCapabilities {
   return {
@@ -149,6 +170,10 @@ export function getServerCapabilities(): ServerCapabilities {
     completionProvider: {
       triggerCharacters: ["@", '"'],
       resolveProvider: false,
+    },
+    codeLensProvider: true,
+    executeCommandProvider: {
+      commands: ["storyteller.openReferencedFile"],
     },
   };
 }

@@ -142,3 +142,46 @@ Deno.test("Capabilities - semanticTokensProvider supports range tokens", async (
     assertEquals(provider.range, true);
   }
 });
+
+// ========================================
+// process5: CodeLens関連キャパビリティテスト
+// ========================================
+
+Deno.test("Capabilities - getServerCapabilities includes codeLensProvider", async () => {
+  const { getServerCapabilities } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+
+  const caps = getServerCapabilities();
+
+  assertExists(caps.codeLensProvider);
+  assertEquals(caps.codeLensProvider, true);
+});
+
+Deno.test("Capabilities - getServerCapabilities includes executeCommandProvider", async () => {
+  const { getServerCapabilities } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+
+  const caps = getServerCapabilities();
+
+  assertExists(caps.executeCommandProvider);
+});
+
+Deno.test("Capabilities - executeCommandProvider includes storyteller.openReferencedFile command", async () => {
+  const { getServerCapabilities } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+
+  const caps = getServerCapabilities();
+
+  assertExists(caps.executeCommandProvider);
+  if (caps.executeCommandProvider) {
+    assertEquals(
+      caps.executeCommandProvider.commands.includes(
+        "storyteller.openReferencedFile",
+      ),
+      true,
+    );
+  }
+});
