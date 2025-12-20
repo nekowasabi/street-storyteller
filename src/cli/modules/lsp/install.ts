@@ -10,6 +10,7 @@ import type {
 } from "@storyteller/cli/types.ts";
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import { detectStorytellerPath } from "@storyteller/shared/path_detection.ts";
 
 /**
  * 対応エディタ
@@ -55,8 +56,17 @@ export class LspInstallCommand extends BaseCliCommand {
       });
     }
 
+    // storytellerのパスを決定
+    // 優先順位: --path > --detect-path > デフォルト("storyteller")
+    let storytellerPath = "storyteller";
+    if (typeof args.path === "string" && args.path.trim().length > 0) {
+      storytellerPath = args.path.trim();
+    } else if (args["detect-path"] === true) {
+      storytellerPath = await detectStorytellerPath();
+    }
+
     // 設定テンプレートを生成
-    const config = generateEditorConfig(editor);
+    const config = generateEditorConfig(editor, storytellerPath);
 
     // dry-runモードの場合は出力せずに表示
     if (args["dry-run"] === true) {
@@ -109,19 +119,22 @@ function isSupportedEditor(editor: string): editor is SupportedEditor {
 /**
  * エディタ用の設定を生成
  */
-function generateEditorConfig(editor: SupportedEditor): string {
+function generateEditorConfig(
+  editor: SupportedEditor,
+  storytellerPath: string = "storyteller",
+): string {
   switch (editor) {
     case "nvim":
-      return generateNvimConfig();
+      return generateNvimConfig(storytellerPath);
     case "vscode":
-      return generateVscodeConfig();
+      return generateVscodeConfig(storytellerPath);
   }
 }
 
 /**
  * Neovim用のLua設定を生成
  */
-function generateNvimConfig(): string {
+function generateNvimConfig(storytellerPath: string = "storyteller"): string {
   return `-- storyteller LSP configuration for nvim-lspconfig
 -- Add this to your Neovim configuration (e.g., ~/.config/nvim/lua/storyteller.lua)
 
@@ -132,7 +145,7 @@ local configs = require('lspconfig.configs')
 if not configs.storyteller then
   configs.storyteller = {
     default_config = {
-      cmd = { 'storyteller', 'lsp', 'start', '--stdio' },
+      cmd = { '${storytellerPath}', 'lsp', 'start', '--stdio' },
       filetypes = { 'markdown' },
       root_dir = lspconfig.util.root_pattern('storyteller.json', 'deno.json', '.git'),
       settings = {},
@@ -172,13 +185,13 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 /**
  * VSCode用の設定を生成
  */
-function generateVscodeConfig(): string {
+function generateVscodeConfig(storytellerPath: string = "storyteller"): string {
   return `{
   // storyteller LSP configuration for VSCode
   // Add this to your .vscode/settings.json
 
   "languageServerStoryteller.enable": true,
-  "languageServerStoryteller.path": "storyteller",
+  "languageServerStoryteller.path": "${storytellerPath}",
   "languageServerStoryteller.args": ["lsp", "start", "--stdio"],
 
   // Note: You may need a VSCode extension to load custom LSP servers.
@@ -207,6 +220,10 @@ function renderLspInstallHelp(): string {
   lines.push(
     "  --output <file>  Write configuration to file instead of stdout",
   );
+  lines.push("  --path <path>    Path to storyteller executable");
+  lines.push(
+    "  --detect-path    Auto-detect and use the current executable path",
+  );
   lines.push("  --dry-run        Show configuration without writing");
   lines.push("  --help, -h       Show this help message");
   lines.push("");
@@ -215,6 +232,8 @@ function renderLspInstallHelp(): string {
   lines.push(
     "  storyteller lsp install nvim --output ~/.config/nvim/lua/storyteller.lua",
   );
+  lines.push("  storyteller lsp install nvim --path /path/to/storyteller");
+  lines.push("  storyteller lsp install nvim --detect-path");
   lines.push("  storyteller lsp install vscode --output .vscode/settings.json");
   return lines.join("\n");
 }
@@ -226,6 +245,16 @@ const LSP_INSTALL_OPTIONS: readonly CommandOptionDescriptor[] = [
     name: "--output",
     summary: "Write configuration to file instead of stdout.",
     type: "string",
+  },
+  {
+    name: "--path",
+    summary: "Path to storyteller executable.",
+    type: "string",
+  },
+  {
+    name: "--detect-path",
+    summary: "Auto-detect and use the current executable path.",
+    type: "boolean",
   },
   {
     name: "--dry-run",
@@ -256,6 +285,14 @@ export const lspInstallCommandDescriptor: CommandDescriptor =
           summary: "Generate and save Neovim configuration",
           command:
             "storyteller lsp install nvim --output ~/.config/nvim/lua/storyteller.lua",
+        },
+        {
+          summary: "Generate configuration with custom path",
+          command: "storyteller lsp install nvim --path /path/to/storyteller",
+        },
+        {
+          summary: "Generate configuration with auto-detected path",
+          command: "storyteller lsp install nvim --detect-path",
         },
         {
           summary: "Generate VSCode configuration",

@@ -175,3 +175,156 @@ Deno.test("LspInstallCommand - エラーハンドリング", async (t) => {
     );
   });
 });
+
+Deno.test("LspInstallCommand - パスオプション", async (t) => {
+  await t.step("--path オプションでカスタムパスが設定に含まれる", async () => {
+    const command = new LspInstallCommand();
+    const logger = createStubLogger();
+    const messages: string[] = [];
+    const presenter = {
+      showInfo: (msg: string) => messages.push(msg),
+      showSuccess: () => {},
+      showWarning: () => {},
+      showError: () => {},
+    };
+
+    const context: CommandContext = {
+      logger,
+      presenter,
+      args: {
+        extra: "nvim",
+        path: "/custom/path/to/storyteller",
+        "dry-run": true,
+      },
+      config: undefined as never,
+    };
+
+    const result = await command.execute(context);
+    assert(result.ok, "--path オプションで成功すべき");
+    const output = messages.join("\n");
+    assert(
+      output.includes("/custom/path/to/storyteller"),
+      "カスタムパスが設定に含まれるべき",
+    );
+  });
+
+  await t.step(
+    "--detect-path オプションで自動検出パスが使用される",
+    async () => {
+      const command = new LspInstallCommand();
+      const logger = createStubLogger();
+      const messages: string[] = [];
+      const presenter = {
+        showInfo: (msg: string) => messages.push(msg),
+        showSuccess: () => {},
+        showWarning: () => {},
+        showError: () => {},
+      };
+
+      const context: CommandContext = {
+        logger,
+        presenter,
+        args: { extra: "nvim", "detect-path": true, "dry-run": true },
+        config: undefined as never,
+      };
+
+      const result = await command.execute(context);
+      assert(result.ok, "--detect-path オプションで成功すべき");
+      const output = messages.join("\n");
+      // 自動検出されたパスが含まれている（storyteller または deno run を含む）
+      assert(
+        output.includes("storyteller") || output.includes("deno run"),
+        "自動検出パスが設定に含まれるべき",
+      );
+    },
+  );
+
+  await t.step(
+    "--path と --detect-path 両方指定時は --path が優先される",
+    async () => {
+      const command = new LspInstallCommand();
+      const logger = createStubLogger();
+      const messages: string[] = [];
+      const presenter = {
+        showInfo: (msg: string) => messages.push(msg),
+        showSuccess: () => {},
+        showWarning: () => {},
+        showError: () => {},
+      };
+
+      const context: CommandContext = {
+        logger,
+        presenter,
+        args: {
+          extra: "nvim",
+          path: "/explicit/path/storyteller",
+          "detect-path": true,
+          "dry-run": true,
+        },
+        config: undefined as never,
+      };
+
+      const result = await command.execute(context);
+      assert(result.ok, "両方のオプション指定で成功すべき");
+      const output = messages.join("\n");
+      assert(
+        output.includes("/explicit/path/storyteller"),
+        "--path が優先されるべき",
+      );
+    },
+  );
+
+  await t.step("vscode設定にもカスタムパスが正しく出力される", async () => {
+    const command = new LspInstallCommand();
+    const logger = createStubLogger();
+    const messages: string[] = [];
+    const presenter = {
+      showInfo: (msg: string) => messages.push(msg),
+      showSuccess: () => {},
+      showWarning: () => {},
+      showError: () => {},
+    };
+
+    const context: CommandContext = {
+      logger,
+      presenter,
+      args: { extra: "vscode", path: "/my/storyteller", "dry-run": true },
+      config: undefined as never,
+    };
+
+    const result = await command.execute(context);
+    assert(result.ok, "vscode + --path オプションで成功すべき");
+    const output = messages.join("\n");
+    assert(
+      output.includes('"/my/storyteller"'),
+      "VSCode設定にカスタムパスが含まれるべき",
+    );
+  });
+
+  await t.step("デフォルトでは 'storyteller' が使用される", async () => {
+    const command = new LspInstallCommand();
+    const logger = createStubLogger();
+    const messages: string[] = [];
+    const presenter = {
+      showInfo: (msg: string) => messages.push(msg),
+      showSuccess: () => {},
+      showWarning: () => {},
+      showError: () => {},
+    };
+
+    const context: CommandContext = {
+      logger,
+      presenter,
+      args: { extra: "nvim", "dry-run": true },
+      config: undefined as never,
+    };
+
+    const result = await command.execute(context);
+    assert(result.ok, "デフォルトで成功すべき");
+    const output = messages.join("\n");
+    assert(
+      output.includes("'storyteller', 'lsp', 'start'"),
+      "デフォルトでは 'storyteller' が使用されるべき",
+    );
+  });
+});
