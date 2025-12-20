@@ -11,21 +11,21 @@ export const ガラスの靴の伏線: Foreshadowing = {
   "summary": "ガラスの靴の伏線の概要（要追加）",
   "planting": {
     "chapter": "chapter_02",
-    "description": "妖精のおばあさんが特別なガラスの靴を用意する"
+    "description": "妖精のおばあさんが特別なガラスの靴を用意する",
   },
   "status": "planted",
   "importance": "major",
   "relations": {
     "characters": [
       "fairy_godmother",
-      "cinderella"
+      "cinderella",
     ],
     "settings": [
-      "glass_slipper"
-    ]
+      "glass_slipper",
+    ],
   },
   "displayNames": [
     "ガラスの靴",
-    "特別な靴"
-  ]
+    "特別な靴",
+  ],
 };
