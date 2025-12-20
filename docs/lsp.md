@@ -101,7 +101,7 @@ const char: Character = {
 
 ホバー表示:
 
-```
+```markdown
 **`protagonist`** `[CharacterRole]`
 
 主人公
