@@ -159,7 +159,88 @@ const char: Character = {
 @heroは剣を抜いた。
 ```
 
-### 6. セマンティックトークン（v1.1新機能）
+### 6. ファイル参照機能（v1.4新機能）
+
+TypeScriptファイル内の `{ file: "./path.md" }` パターンに対して、以下の機能を提供します。
+
+#### 6.1 ファイル参照ホバー
+
+ファイル参照にカーソルを合わせると、参照先ファイルの内容をプレビュー表示します。
+
+```typescript
+const hero: Character = {
+  details: {
+    description: { file: "./hero_description.md" }, // ← ホバーでプレビュー表示
+  },
+};
+```
+
+ホバー表示:
+
+```markdown
+**ファイル参照**: `./hero_description.md`
+
+---
+
+（ファイル内容のプレビュー - 最大1000文字）
+
+---
+
+_パス: `/project/src/characters/hero_description.md`_
+```
+
+**特徴:**
+
+- 参照先ファイルの内容を最大1000文字までプレビュー
+- ファイルが存在しない場合はエラーメッセージを表示
+- 解決済みの絶対パスを表示
+
+#### 6.2 ファイル参照定義ジャンプ
+
+ファイル参照上でGo to Definitionを実行すると、参照先ファイルにジャンプできます。
+
+```typescript
+description: {
+  file: "./description.md";
+} // ← Go to Definitionで参照先ファイルを開く
+```
+
+#### 6.3 Code Lens
+
+ファイル参照に対して「Open」ボタンを表示し、クリックで参照先ファイルを開けます。
+
+```typescript
+description: { file: "./description.md" },   // [Open ./description.md]
+backstory: { file: "./backstory.md" },        // [Open ./backstory.md]
+```
+
+**対応パターン:**
+
+| パターン                     | 例                              |
+| ---------------------------- | ------------------------------- |
+| `{ file: "./path.md" }`      | 基本パターン                    |
+| `{ "file": "./path.md" }`    | JSON形式（引用符付きキー）      |
+| `{ 'file': './path.md' }`    | シングルクォート                |
+| `{ file : "./path.md" }`     | スペース付き                    |
+| `{ file: "../shared/a.md" }` | 親ディレクトリ参照              |
+
+**対象ディレクトリ:**
+
+ファイル参照機能は以下のディレクトリ内のファイルでのみ有効です（denolsとの競合回避）:
+
+- `/characters/`
+- `/settings/`
+- `/samples/`
+
+#### デバッグログ
+
+環境変数 `STORYTELLER_LSP_DEBUG=1` を設定すると、ファイル参照機能のデバッグログが出力されます。
+
+```bash
+STORYTELLER_LSP_DEBUG=1 storyteller lsp start --stdio
+```
+
+### 7. セマンティックトークン（v1.1新機能）
 
 キャラクター名・設定名をエディタ上でハイライト表示します。
 
@@ -370,4 +451,4 @@ coc-tsserverの代わりに`typescript-language-server`をNeovim組み込みLSP�
 
 ---
 
-_Last updated: 2025-12-19 (v1.3 - TypeScriptリテラル型ホバー機能追加)_
+_Last updated: 2025-12-20 (v1.4 - ファイル参照機能追加)_
