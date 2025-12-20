@@ -475,3 +475,106 @@ Deno.test("HoverProvider - displays foreshadowing related characters", async () 
     true,
   );
 });
+
+// ========================================
+// process2: ファイル参照ホバーのテスト
+// ========================================
+
+Deno.test("HoverProvider - returns hover with file reference info when file not found", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new HoverProvider(detector, mockEntityInfoMap);
+
+  // TypeScriptファイル内のファイル参照（存在しないファイル）
+  const content = `const character = {
+  name: "hero",
+  description: { file: "./nonexistent.md" },
+};`;
+  const uri = "file:///project/samples/cinderella/characters/hero.ts";
+  const projectPath = "/project";
+
+  // カーソルがファイル参照内（description.md の位置）
+  const result = await provider.getHover(uri, content, {
+    line: 2,
+    character: 20, // { file: 内
+  }, projectPath);
+
+  // ファイル参照ホバーはエラーメッセージを返す
+  assertExists(result);
+  assertEquals(result.contents.kind, "markdown");
+  // エラーメッセージが含まれる
+  assertEquals(result.contents.value.includes("エラー"), true);
+  assertEquals(result.contents.value.includes("ファイルが見つかりません"), true);
+});
+
+Deno.test("HoverProvider - file reference hover shows markdown format", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new HoverProvider(detector, mockEntityInfoMap);
+
+  const content = `description: { file: "./description.md" },`;
+  const uri = "file:///project/samples/cinderella/characters/hero.ts";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 15,
+  }, projectPath);
+
+  // ファイル参照ホバーが返される
+  assertExists(result);
+  assertEquals(result.contents.kind, "markdown");
+  // ファイル参照情報が含まれる
+  assertEquals(result.contents.value.includes("ファイル参照"), true);
+});
+
+Deno.test("HoverProvider - file reference hover includes range", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new HoverProvider(detector, mockEntityInfoMap);
+
+  const content = `description: { file: "./description.md" },`;
+  const uri = "file:///project/samples/cinderella/characters/hero.ts";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 15,
+  }, projectPath);
+
+  assertExists(result);
+  assertExists(result.range);
+  assertEquals(result.range.start.line, 0);
+});
+
+Deno.test("HoverProvider - returns null for file reference outside storyteller directory", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new HoverProvider(detector, mockEntityInfoMap);
+
+  const content = `description: { file: "./description.md" },`;
+  // storyteller専用ディレクトリ外（characters/, settings/, samples/以外）
+  const uri = "file:///project/src/utils/helper.ts";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 15,
+  }, projectPath);
+
+  // storyteller外ではファイル参照ホバーは動作しない
+  assertEquals(result, null);
+});
+
+Deno.test("HoverProvider - returns null for non-file-reference position", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new HoverProvider(detector, mockEntityInfoMap);
+
+  const content = `const name = "hero";`;
+  const uri = "file:///project/samples/cinderella/characters/hero.ts";
+  const projectPath = "/project";
+
+  const result = await provider.getHover(uri, content, {
+    line: 0,
+    character: 5,
+  }, projectPath);
+
+  // ファイル参照でもエンティティでもない位置ではnull
+  assertEquals(result, null);
+});

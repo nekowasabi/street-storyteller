@@ -18,6 +18,10 @@ import {
   createEntityResolver,
   type EntityResolver,
 } from "@storyteller/lsp/providers/entity_resolver.ts";
+import {
+  debugLog,
+  detectAndResolveFileRef,
+} from "@storyteller/lsp/providers/file_ref_utils.ts";
 
 // 型の再エクスポート（後方互換性のため）
 export type { Hover, MarkupContent, Range };
@@ -83,20 +87,31 @@ export class HoverProvider {
     this.entityInfoMap = entityInfoMap;
   }
 
+  /** ファイル内容プレビューの最大文字数 */
+  private static readonly MAX_PREVIEW_LENGTH = 1000;
+
   /**
    * 指定位置のホバー情報を取得
-   * @param _uri ドキュメントURI（現時点では未使用）
+   * @param uri ドキュメントURI
    * @param content ドキュメント内容
    * @param position カーソル位置
    * @param _projectPath プロジェクトルートパス（現時点では未使用）
    * @returns ホバー情報、または見つからない場合はnull
    */
   async getHover(
-    _uri: string,
+    uri: string,
     content: string,
     position: Position,
     _projectPath: string,
   ): Promise<Hover | null> {
+    debugLog(`getHover: uri=${uri}, line=${position.line}, char=${position.character}`);
+
+    // ファイル参照ホバーを先にチェック（共通ユーティリティ使用）
+    const fileRefHover = await this.getFileRefHover(uri, content, position);
+    if (fileRefHover) {
+      return fileRefHover;
+    }
+
     // 共通リゾルバーでエンティティを解決
     const match = this.resolver.resolveAtPosition(content, position);
     if (!match) {
@@ -130,6 +145,101 @@ export class HoverProvider {
         }
         : undefined,
     };
+  }
+
+  /**
+   * ファイル参照のホバー情報を取得
+   * { file: "./path.md" } パターンにカーソルがある場合、参照先ファイルの内容をプレビュー
+   */
+  private async getFileRefHover(
+    uri: string,
+    content: string,
+    position: Position,
+  ): Promise<Hover | null> {
+    // 共通ユーティリティでファイル参照を検出・解決
+    const detected = detectAndResolveFileRef(uri, content, position);
+    if (!detected) {
+      return null;
+    }
+
+    const { fileRef, resolvedPath } = detected;
+    debugLog(`getFileRefHover: detected file reference ${fileRef.path}`);
+
+    // ファイル内容を読み込み
+    let fileContent: string;
+    try {
+      fileContent = await Deno.readTextFile(resolvedPath);
+    } catch (_error) {
+      // ファイルが見つからない場合はエラーメッセージを表示
+      return {
+        contents: {
+          kind: "markdown",
+          value: `**ファイル参照**: \`${fileRef.path}\`\n\n` +
+            `*エラー: ファイルが見つかりません*\n` +
+            `パス: \`${resolvedPath}\``,
+        },
+        range: {
+          start: { line: position.line, character: fileRef.startChar },
+          end: { line: position.line, character: fileRef.endChar },
+        },
+      };
+    }
+
+    // 内容をトランケート（1000文字制限）
+    let preview = fileContent;
+    let truncated = false;
+    if (preview.length > HoverProvider.MAX_PREVIEW_LENGTH) {
+      preview = preview.substring(0, HoverProvider.MAX_PREVIEW_LENGTH);
+      truncated = true;
+    }
+
+    // Markdown形式でプレビューを生成
+    const markdownValue = this.generateFileRefMarkdown(
+      fileRef.path,
+      preview,
+      truncated,
+      resolvedPath,
+    );
+
+    return {
+      contents: {
+        kind: "markdown",
+        value: markdownValue,
+      },
+      range: {
+        start: { line: position.line, character: fileRef.startChar },
+        end: { line: position.line, character: fileRef.endChar },
+      },
+    };
+  }
+
+  /**
+   * ファイル参照のプレビュー用Markdownを生成
+   */
+  private generateFileRefMarkdown(
+    refPath: string,
+    content: string,
+    truncated: boolean,
+    resolvedPath: string,
+  ): string {
+    const lines: string[] = [];
+
+    lines.push(`**ファイル参照**: \`${refPath}\``);
+    lines.push("");
+    lines.push("---");
+    lines.push("");
+    lines.push(content);
+
+    if (truncated) {
+      lines.push("");
+      lines.push(`*...（${HoverProvider.MAX_PREVIEW_LENGTH}文字で切り捨て）*`);
+    }
+
+    lines.push("");
+    lines.push("---");
+    lines.push(`*パス: \`${resolvedPath}\`*`);
+
+    return lines.join("\n");
   }
 
   /**
