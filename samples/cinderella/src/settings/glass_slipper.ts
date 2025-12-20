@@ -12,6 +12,5 @@ export const glass_slipper: Setting = {
   "appearingChapters": [],
   "displayNames": [
     "ガラスの靴",
-    "靴",
   ],
 };
