@@ -118,23 +118,28 @@ export class EntityDetailsExpander {
       });
     }
 
-    // detailsを展開
-    return await this.expandDetails(details);
+    // detailsを展開（ソースファイルパスを渡す）
+    return await this.expandDetails(details, filePath);
   }
 
   /**
    * detailsオブジェクトのハイブリッドフィールドを展開する
    *
    * @param details 展開対象のdetailsオブジェクト
+   * @param sourceFilePath ファイル参照の基準となるソースファイルのパス（プロジェクトルートからの相対パス）
    * @returns 展開されたdetailsオブジェクト
    */
   async expandDetails(
     details: Record<string, HybridFieldValue>,
+    sourceFilePath?: string,
   ): Promise<Result<Record<string, string | undefined>, ExpandDetailsError>> {
     const expandedDetails: Record<string, string | undefined> = {};
 
     for (const [key, value] of Object.entries(details)) {
-      const result = await this.reader.resolveHybridField(value);
+      const result = await this.reader.resolveHybridField(
+        value,
+        sourceFilePath,
+      );
       if (result.ok) {
         expandedDetails[key] = result.value;
       } else {
