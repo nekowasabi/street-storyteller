@@ -32,7 +32,9 @@
     "cli:manifest": "deno run --allow-read --allow-write scripts/build_cli.ts --out dist --artifacts dist/storyteller",
     "cli:build": "deno task cli:manifest",
     "cli:completions": "deno run --allow-read --allow-write scripts/generate_completions.ts",
-    "cli:package": "deno task cli:compile && deno task cli:manifest && deno task cli:completions"
+    "cli:package": "deno task cli:compile && deno task cli:manifest && deno task cli:completions",
+    "install": "mkdir -p ~/.local/bin && ln -sf $(pwd)/storyteller ~/.local/bin/storyteller && echo 'Installed: ~/.local/bin/storyteller'",
+    "uninstall": "rm -f ~/.local/bin/storyteller && echo 'Uninstalled: ~/.local/bin/storyteller'"
   },
   "fmt": {
     "exclude": ["coverage/", "dist/", "output/", "test_output/"]
