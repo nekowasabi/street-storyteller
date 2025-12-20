@@ -10,11 +10,8 @@ import type {
 } from "@storyteller/cli/types.ts";
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
-import {
-  dirname,
-  fromFileUrl,
-  join,
-} from "https://deno.land/std@0.224.0/path/mod.ts";
+import { join } from "https://deno.land/std@0.224.0/path/mod.ts";
+import { detectStorytellerPath } from "@storyteller/shared/path_detection.ts";
 
 /**
  * .mcp.json のフォーマット
@@ -58,7 +55,7 @@ export class McpInitCommand extends BaseCliCommand {
         : Deno.cwd();
 
     // storytellerの実行パスを検出
-    const storytellerPath = await this.detectStorytellerPath();
+    const storytellerPath = await detectStorytellerPath();
 
     // 設定を生成
     const config = this.generateConfig(storytellerPath, outputDir, args);
@@ -106,41 +103,6 @@ export class McpInitCommand extends BaseCliCommand {
         message: error instanceof Error ? error.message : String(error),
       });
     }
-  }
-
-  /**
-   * storytellerの実行パスを検出
-   */
-  private async detectStorytellerPath(): Promise<string> {
-    // 1. 環境変数からstorytellerのパスを取得
-    const envPath = Deno.env.get("STORYTELLER_PATH");
-    if (envPath) {
-      return envPath;
-    }
-
-    // 2. main.tsの場所を基準に検出
-    try {
-      const mainModuleUrl = Deno.mainModule;
-      if (mainModuleUrl.startsWith("file://")) {
-        const mainPath = fromFileUrl(mainModuleUrl);
-        const mainDir = dirname(mainPath);
-
-        // storytellerスクリプトがあるか確認
-        const storytellerScript = join(mainDir, "storyteller");
-        try {
-          await Deno.stat(storytellerScript);
-          return storytellerScript;
-        } catch {
-          // storytellerスクリプトが見つからない場合はdenoコマンドを使用
-          return `deno run -A ${mainPath}`;
-        }
-      }
-    } catch {
-      // 検出失敗
-    }
-
-    // 3. デフォルト: storytellerコマンドがPATHにあると仮定
-    return "storyteller";
   }
 
   /**
