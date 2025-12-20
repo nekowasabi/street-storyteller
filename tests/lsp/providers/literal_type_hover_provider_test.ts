@@ -350,9 +350,9 @@ Deno.test("LiteralTypeHoverProvider - works with nested object (delta.traits)", 
   },
   transitionType: "gradual"
 };`;
-  const pos = findValuePosition(content, 5, "gradual");
+  const pos = findValuePosition(content, 6, "gradual");
   const result = provider.getHover("file:///test.ts", content, {
-    line: 5,
+    line: 6,
     character: pos,
   });
 
