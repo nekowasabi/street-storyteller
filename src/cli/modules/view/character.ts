@@ -244,9 +244,12 @@ export class ViewCharacterCommand extends BaseCliCommand {
     let resolvedDetails: ResolvedDetails | undefined;
 
     if (showDetails && character.details) {
+      // ソースファイルパスを構築（キャラクターファイルの標準的な場所）
+      const characterSourcePath = `src/characters/${characterId}.ts`;
       resolvedDetails = await this.resolveDetails(
         character.details,
         projectRoot,
+        characterSourcePath,
       );
       result.resolvedDetails = resolvedDetails;
     }
@@ -278,10 +281,14 @@ export class ViewCharacterCommand extends BaseCliCommand {
 
   /**
    * キャラクターのdetailsフィールドを解決する
+   * @param details キャラクター詳細
+   * @param projectRoot プロジェクトルートパス
+   * @param sourceFilePath ファイル参照の基準となるソースファイルのパス（プロジェクトルートからの相対パス）
    */
   private async resolveDetails(
     details: CharacterDetails,
     projectRoot: string,
+    sourceFilePath?: string,
   ): Promise<ResolvedDetails> {
     const reader = new FileContentReader(projectRoot);
     const resolved: ResolvedDetails = {};
@@ -299,7 +306,7 @@ export class ViewCharacterCommand extends BaseCliCommand {
     for (const fieldName of fieldNames) {
       const value = details[fieldName] as HybridFieldValue;
       if (value !== undefined) {
-        const result = await reader.resolveHybridField(value);
+        const result = await reader.resolveHybridField(value, sourceFilePath);
         if (result.ok) {
           resolved[fieldName] = result.value;
         } else {

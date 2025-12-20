@@ -156,9 +156,12 @@ export class ViewSettingCommand extends BaseCliCommand {
       // --details オプション: ファイル参照を解決
       if (showDetails && setting.details) {
         const fileContentReader = new FileContentReader(projectRoot);
+        // ソースファイルパスを構築（設定ファイルの標準的な場所）
+        const settingSourcePath = `src/settings/${settingId}.ts`;
         const resolvedDetails = await this.resolveDetails(
           setting,
           fileContentReader,
+          settingSourcePath,
         );
 
         if (jsonOutput) {
@@ -192,10 +195,14 @@ export class ViewSettingCommand extends BaseCliCommand {
 
   /**
    * 詳細情報を解決する
+   * @param setting 設定
+   * @param reader ファイル内容リーダー
+   * @param sourceFilePath ファイル参照の基準となるソースファイルのパス（プロジェクトルートからの相対パス）
    */
   private async resolveDetails(
     setting: Setting,
     reader: FileContentReader,
+    sourceFilePath?: string,
   ): Promise<Record<string, string | undefined>> {
     const resolved: Record<string, string | undefined> = {};
 
@@ -218,7 +225,7 @@ export class ViewSettingCommand extends BaseCliCommand {
       const value = setting.details[key] as HybridFieldValue;
       if (value === undefined) continue;
 
-      const result = await reader.resolveHybridField(value);
+      const result = await reader.resolveHybridField(value, sourceFilePath);
       if (result.ok) {
         resolved[key] = result.value;
       } else {

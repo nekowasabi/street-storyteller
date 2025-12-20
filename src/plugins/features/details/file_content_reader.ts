@@ -7,7 +7,7 @@
 
 import { err, ok } from "@storyteller/shared/result.ts";
 import type { Result } from "@storyteller/shared/result.ts";
-import { join } from "@std/path";
+import { dirname, join } from "@std/path";
 
 /**
  * ファイル読み込みエラー
@@ -39,10 +39,12 @@ export class FileContentReader {
    * ハイブリッドフィールドを解決する
    *
    * @param value インライン文字列、ファイル参照、またはundefined
+   * @param sourceFilePath ファイル参照の基準となるソースファイルのパス（プロジェクトルートからの相対パス）
    * @returns 解決された文字列、またはundefined
    */
   async resolveHybridField(
     value: HybridFieldValue,
+    sourceFilePath?: string,
   ): Promise<Result<string | undefined, FileContentError>> {
     // undefinedの場合
     if (value === undefined) {
@@ -55,19 +57,31 @@ export class FileContentReader {
     }
 
     // ファイル参照の場合
-    return await this.readFileContent(value.file);
+    return await this.readFileContent(value.file, sourceFilePath);
   }
 
   /**
    * ファイル内容を読み込む
    *
-   * @param relativePath プロジェクトルートからの相対パス
+   * @param relativePath プロジェクトルートからの相対パス、または ./ で始まるソースファイル相対パス
+   * @param sourceFilePath ファイル参照の基準となるソースファイルのパス（プロジェクトルートからの相対パス）
    * @returns ファイル内容（フロントマター除去済み）
    */
   async readFileContent(
     relativePath: string,
+    sourceFilePath?: string,
   ): Promise<Result<string, FileContentError>> {
-    const absolutePath = join(this.projectRoot, relativePath);
+    // ./ または ../ で始まるパスは、ソースファイルからの相対パスとして解決
+    let resolvedPath = relativePath;
+    if (
+      sourceFilePath &&
+      (relativePath.startsWith("./") || relativePath.startsWith("../"))
+    ) {
+      const sourceDir = dirname(sourceFilePath);
+      resolvedPath = join(sourceDir, relativePath);
+    }
+
+    const absolutePath = join(this.projectRoot, resolvedPath);
 
     try {
       const content = await Deno.readTextFile(absolutePath);
