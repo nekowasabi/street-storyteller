@@ -60,8 +60,9 @@ Deno.test("External File Details - cinderellaプロジェクトでの統合テ�
     // ファイル参照のパスを取得
     const descRef = cinderella.details!.description as { file: string };
 
-    // ファイル内容を読み込む
-    const result = await reader.readFileContent(descRef.file);
+    // ソースファイルパス（cinderella.tsの場所）を指定してファイル内容を読み込む
+    const sourceFilePath = "src/characters/cinderella.ts";
+    const result = await reader.readFileContent(descRef.file, sourceFilePath);
 
     assertEquals(result.ok, true, "ファイル読み込みが成功すること");
     if (result.ok) {
@@ -96,9 +97,11 @@ Deno.test("External File Details - cinderellaプロジェクトでの統合テ�
     async () => {
       const reader = new FileContentReader(PROJECT_ROOT);
 
-      // ファイル参照を解決
+      // ソースファイルパス（cinderella.tsの場所）を指定してファイル参照を解決
+      const sourceFilePath = "src/characters/cinderella.ts";
       const result = await reader.resolveHybridField(
         cinderella.details!.description,
+        sourceFilePath,
       );
 
       assertEquals(result.ok, true, "ファイル参照の解決が成功すること");
@@ -150,7 +153,8 @@ Deno.test("External File Details - cinderellaプロジェクトでの統合テ�
   await t.step("フロントマター内のメタデータは除去される", async () => {
     const reader = new FileContentReader(PROJECT_ROOT);
     const descRef = cinderella.details!.description as { file: string };
-    const result = await reader.readFileContent(descRef.file);
+    const sourceFilePath = "src/characters/cinderella.ts";
+    const result = await reader.readFileContent(descRef.file, sourceFilePath);
 
     assertEquals(result.ok, true);
     if (result.ok) {
