@@ -1,3 +1,9 @@
 #!/bin/bash
 # storyteller CLI wrapper script
-exec deno run -A "$(dirname "$0")/main.ts" "$@"
+# Resolve symlinks to find the actual script location
+SCRIPT_PATH="$0"
+if [ -L "$SCRIPT_PATH" ]; then
+  SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+fi
+SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+exec deno run -A "$SCRIPT_DIR/main.ts" "$@"
