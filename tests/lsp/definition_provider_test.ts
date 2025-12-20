@@ -285,3 +285,91 @@ Deno.test("DefinitionProvider - works with foreshadowing alias", async () => {
     true,
   );
 });
+
+// ========================================
+// process3: ファイル参照定義ジャンプのテスト
+// ========================================
+
+Deno.test("DefinitionProvider - returns location for file reference", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new DefinitionProvider(detector);
+
+  // TypeScriptファイル内のファイル参照
+  const content = `const character = {
+  name: "hero",
+  description: { file: "./description.md" },
+};`;
+  const uri = "file:///project/samples/cinderella/characters/hero.ts";
+  const projectPath = "/project";
+
+  // カーソルがファイル参照内
+  const result = await provider.getDefinition(uri, content, {
+    line: 2,
+    character: 20,
+  }, projectPath);
+
+  assertExists(result);
+  // 参照先ファイルのURIを返す
+  assertEquals(
+    result.uri.includes("description.md"),
+    true,
+  );
+  // rangeは先頭
+  assertEquals(result.range.start.line, 0);
+  assertEquals(result.range.start.character, 0);
+});
+
+Deno.test("DefinitionProvider - file reference definition includes resolved path", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new DefinitionProvider(detector);
+
+  const content = `backstory: { file: "../shared/backstory.md" },`;
+  const uri = "file:///project/samples/cinderella/characters/hero.ts";
+  const projectPath = "/project";
+
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 15,
+  }, projectPath);
+
+  assertExists(result);
+  // 相対パスが解決される
+  assertEquals(result.uri.startsWith("file://"), true);
+  assertEquals(result.uri.includes("backstory.md"), true);
+});
+
+Deno.test("DefinitionProvider - returns null for file reference outside storyteller directory", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new DefinitionProvider(detector);
+
+  const content = `description: { file: "./description.md" },`;
+  // storyteller専用ディレクトリ外
+  const uri = "file:///project/src/utils/helper.ts";
+  const projectPath = "/project";
+
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 15,
+  }, projectPath);
+
+  // storyteller外ではファイル参照定義ジャンプは動作しない
+  assertEquals(result, null);
+});
+
+Deno.test("DefinitionProvider - falls back to entity definition when not in file reference", async () => {
+  const detector = new PositionedDetector(mockEntities);
+  const provider = new DefinitionProvider(detector);
+
+  const content = `勇者が登場した。`;
+  const uri = "file:///project/samples/cinderella/manuscripts/chapter01.md";
+  const projectPath = "/project";
+
+  const result = await provider.getDefinition(uri, content, {
+    line: 0,
+    character: 0,
+  }, projectPath);
+
+  // エンティティ（勇者）の定義を返す
+  assertExists(result);
+  assertEquals(result.uri.endsWith("src/characters/hero.ts"), true);
+});
