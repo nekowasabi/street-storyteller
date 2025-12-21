@@ -42,7 +42,8 @@ export function debugLog(message: string, data?: unknown): void {
  * キャプチャグループ:
  * - グループ1: ファイルパス（引用符なし）
  */
-export const FILE_REF_PATTERN = /\{\s*["']?file["']?\s*:\s*["']([^"']+)["']\s*\}/;
+export const FILE_REF_PATTERN =
+  /\{\s*["']?file["']?\s*:\s*["']([^"']+)["']\s*\}/;
 
 /**
  * storyteller専用ディレクトリかどうかを判定
@@ -183,7 +184,9 @@ export function getLineAtPosition(
 ): string | null {
   const lines = content.split("\n");
   if (position.line >= lines.length) {
-    debugLog(`getLineAtPosition: line ${position.line} out of range (${lines.length} lines)`);
+    debugLog(
+      `getLineAtPosition: line ${position.line} out of range (${lines.length} lines)`,
+    );
     return null;
   }
   return lines[position.line];
@@ -218,13 +221,17 @@ export function detectAndResolveFileRef(
   // ファイル参照を検出
   const fileRef = detectFileReference(line, position.character);
   if (!fileRef) {
-    debugLog(`detectAndResolveFileRef: no file reference at position ${position.character}`);
+    debugLog(
+      `detectAndResolveFileRef: no file reference at position ${position.character}`,
+    );
     return null;
   }
 
   // パスを解決
   const resolvedPath = resolveFileRefPath(fileRef.path, uri);
-  debugLog(`detectAndResolveFileRef: resolved ${fileRef.path} -> ${resolvedPath}`);
+  debugLog(
+    `detectAndResolveFileRef: resolved ${fileRef.path} -> ${resolvedPath}`,
+  );
 
   return { fileRef, resolvedPath };
 }

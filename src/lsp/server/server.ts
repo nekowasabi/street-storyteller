@@ -59,6 +59,11 @@ import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_g
 import { DiagnosticsPublisher } from "@storyteller/lsp/diagnostics/diagnostics_publisher.ts";
 import { LiteralTypeHoverProvider } from "@storyteller/lsp/providers/literal_type_hover_provider.ts";
 import { CodeLensProvider } from "@storyteller/lsp/providers/code_lens_provider.ts";
+import { ProjectDetector } from "@storyteller/lsp/project/project_detector.ts";
+import {
+  type ProjectContext,
+  ProjectContextManager,
+} from "@storyteller/lsp/project/project_context_manager.ts";
 
 /** サーバー未初期化エラーコード (LSP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;
@@ -157,6 +162,10 @@ export class LspServer {
   private readonly diagnosticsGenerator: DiagnosticsGenerator;
   private readonly diagnosticsPublisher: DiagnosticsPublisher;
 
+  // マルチプロジェクト対応
+  private readonly projectDetector: ProjectDetector;
+  private readonly projectContextManager: ProjectContextManager;
+
   constructor(
     transport: LspTransport,
     projectRoot: string,
@@ -194,6 +203,10 @@ export class LspServer {
       { write: (p) => transport.writeRaw(p) },
       { debounceMs: options?.diagnosticsDebounceMs ?? 0 },
     );
+
+    // マルチプロジェクト対応の初期化
+    this.projectDetector = new ProjectDetector(projectRoot);
+    this.projectContextManager = new ProjectContextManager();
   }
 
   /**
@@ -201,6 +214,17 @@ export class LspServer {
    */
   isInitialized(): boolean {
     return this.state === "initialized";
+  }
+
+  /**
+   * ファイルURIからプロジェクトコンテキストを取得（マルチプロジェクト対応）
+   * ファイルの最も近い.storyteller.jsonを検出し、そのプロジェクトのエンティティをロード
+   * @param uri ファイルURI
+   * @returns プロジェクトコンテキスト（エンティティとEntityInfoMap）
+   */
+  private async getProjectContext(uri: string): Promise<ProjectContext> {
+    const projectRoot = await this.projectDetector.detectProjectRoot(uri);
+    return await this.projectContextManager.getContext(projectRoot);
   }
 
   /**
@@ -391,11 +415,14 @@ export class LspServer {
 
     let result = null;
     if (document) {
+      // マルチプロジェクト対応：ファイルURIからプロジェクトルートを動的に取得
+      const uri = params.textDocument.uri;
+      const projectRoot = await this.projectDetector.detectProjectRoot(uri);
       result = await this.definitionProvider.getDefinition(
-        params.textDocument.uri,
+        uri,
         document.content,
         params.position,
-        this.projectRoot,
+        projectRoot,
       );
     }
 
@@ -427,11 +454,19 @@ export class LspServer {
 
       // リテラル型ホバーが見つからない場合、既存のホバープロバイダーにフォールバック
       if (!result) {
+        // マルチプロジェクト対応：ファイルURIからプロジェクトコンテキストを動的に取得
+        const context = await this.getProjectContext(uri);
+        // 動的コンテキストにエンティティがある場合のみオーバーライド
+        // （テスト等でモックURIを使用する場合、動的検出できないためフォールバック）
+        const options = context.entityInfoMap.size > 0
+          ? { entityInfoMap: context.entityInfoMap }
+          : undefined;
         result = await this.hoverProvider.getHover(
           uri,
           document.content,
           params.position,
           this.projectRoot,
+          options,
         );
       }
     }
@@ -644,7 +679,10 @@ export class LspServer {
       }
       default:
         // 未知のコマンド
-        result = { success: false, error: `Unknown command: ${params.command}` };
+        result = {
+          success: false,
+          error: `Unknown command: ${params.command}`,
+        };
         break;
     }
 

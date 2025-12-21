@@ -503,7 +503,10 @@ Deno.test("HoverProvider - returns hover with file reference info when file not 
   assertEquals(result.contents.kind, "markdown");
   // エラーメッセージが含まれる
   assertEquals(result.contents.value.includes("エラー"), true);
-  assertEquals(result.contents.value.includes("ファイルが見つかりません"), true);
+  assertEquals(
+    result.contents.value.includes("ファイルが見つかりません"),
+    true,
+  );
 });
 
 Deno.test("HoverProvider - file reference hover shows markdown format", async () => {

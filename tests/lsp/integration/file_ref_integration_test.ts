@@ -43,7 +43,8 @@ const mockEntityInfoMap = new Map<string, EntityInfo>([
 ]);
 
 // 実際のcinderella.tsの内容を模したテストデータ
-const cinderellaFileContent = `import type { Character } from "@storyteller/types/v2/character.ts";
+const cinderellaFileContent =
+  `import type { Character } from "@storyteller/types/v2/character.ts";
 
 export const cinderella: Character = {
   "id": "cinderella",
@@ -144,7 +145,10 @@ Deno.test("Integration - HoverProvider handles non-existent file gracefully", as
   assertExists(result);
   // エラーメッセージが表示される
   assertEquals(result.contents.value.includes("エラー"), true);
-  assertEquals(result.contents.value.includes("ファイルが見つかりません"), true);
+  assertEquals(
+    result.contents.value.includes("ファイルが見つかりません"),
+    true,
+  );
 });
 
 // ===== 複合テスト：エンティティ + ファイル参照 =====

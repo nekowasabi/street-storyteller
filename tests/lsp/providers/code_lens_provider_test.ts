@@ -9,7 +9,6 @@
 import { assertEquals, assertExists } from "@std/assert";
 import {
   CodeLensProvider,
-  type CodeLens,
 } from "@storyteller/lsp/providers/code_lens_provider.ts";
 
 // ===== provideCodeLenses テスト =====

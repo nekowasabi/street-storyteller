@@ -96,6 +96,8 @@ export class HoverProvider {
    * @param content ドキュメント内容
    * @param position カーソル位置
    * @param _projectPath プロジェクトルートパス（現時点では未使用）
+   * @param options オプション設定
+   * @param options.entityInfoMap エンティティ情報マップのオーバーライド（マルチプロジェクト対応用）
    * @returns ホバー情報、または見つからない場合はnull
    */
   async getHover(
@@ -103,8 +105,13 @@ export class HoverProvider {
     content: string,
     position: Position,
     _projectPath: string,
+    options?: {
+      entityInfoMap?: Map<string, EntityInfo>;
+    },
   ): Promise<Hover | null> {
-    debugLog(`getHover: uri=${uri}, line=${position.line}, char=${position.character}`);
+    debugLog(
+      `getHover: uri=${uri}, line=${position.line}, char=${position.character}`,
+    );
 
     // ファイル参照ホバーを先にチェック（共通ユーティリティ使用）
     const fileRefHover = await this.getFileRefHover(uri, content, position);
@@ -118,8 +125,9 @@ export class HoverProvider {
       return null;
     }
 
-    // エンティティの詳細情報を取得
-    const entityInfo = this.entityInfoMap.get(match.id);
+    // エンティティの詳細情報を取得（オーバーライドがあれば優先）
+    const effectiveInfoMap = options?.entityInfoMap ?? this.entityInfoMap;
+    const entityInfo = effectiveInfoMap.get(match.id);
 
     // Markdown形式のホバーコンテンツを生成
     const markdownContent = this.generateMarkdown(match, entityInfo);

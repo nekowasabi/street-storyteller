@@ -37,7 +37,7 @@ Deno.test("FILE_REF_PATTERN - detects { 'file': 'path.md' } pattern with single 
   assertEquals(match[1], "backstory.md");
 });
 
-Deno.test("FILE_REF_PATTERN - detects { \"file\": \"path.md\" } pattern with double quotes on key", () => {
+Deno.test('FILE_REF_PATTERN - detects { "file": "path.md" } pattern with double quotes on key', () => {
   const line = 'appearance: { "file": "./appearance.md" },';
   const match = line.match(FILE_REF_PATTERN);
 

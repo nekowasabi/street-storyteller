@@ -46,7 +46,9 @@ export class DefinitionProvider {
     position: Position,
     projectPath: string,
   ): Promise<Location | null> {
-    debugLog(`getDefinition: uri=${uri}, line=${position.line}, char=${position.character}`);
+    debugLog(
+      `getDefinition: uri=${uri}, line=${position.line}, char=${position.character}`,
+    );
 
     // ファイル参照定義ジャンプを先にチェック（共通ユーティリティ使用）
     const fileRefLocation = this.getFileRefDefinition(uri, content, position);

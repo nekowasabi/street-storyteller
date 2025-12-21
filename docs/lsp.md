@@ -161,7 +161,8 @@ const char: Character = {
 
 ### 6. ファイル参照機能（v1.4新機能）
 
-TypeScriptファイル内の `{ file: "./path.md" }` パターンに対して、以下の機能を提供します。
+TypeScriptファイル内の `{ file: "./path.md" }`
+パターンに対して、以下の機能を提供します。
 
 #### 6.1 ファイル参照ホバー
 
@@ -216,13 +217,13 @@ backstory: { file: "./backstory.md" },        // [Open ./backstory.md]
 
 **対応パターン:**
 
-| パターン                     | 例                              |
-| ---------------------------- | ------------------------------- |
-| `{ file: "./path.md" }`      | 基本パターン                    |
-| `{ "file": "./path.md" }`    | JSON形式（引用符付きキー）      |
-| `{ 'file': './path.md' }`    | シングルクォート                |
-| `{ file : "./path.md" }`     | スペース付き                    |
-| `{ file: "../shared/a.md" }` | 親ディレクトリ参照              |
+| パターン                     | 例                         |
+| ---------------------------- | -------------------------- |
+| `{ file: "./path.md" }`      | 基本パターン               |
+| `{ "file": "./path.md" }`    | JSON形式（引用符付きキー） |
+| `{ 'file': './path.md' }`    | シングルクォート           |
+| `{ file : "./path.md" }`     | スペース付き               |
+| `{ file: "../shared/a.md" }` | 親ディレクトリ参照         |
 
 **対象ディレクトリ:**
 
@@ -234,7 +235,8 @@ backstory: { file: "./backstory.md" },        // [Open ./backstory.md]
 
 #### デバッグログ
 
-環境変数 `STORYTELLER_LSP_DEBUG=1` を設定すると、ファイル参照機能のデバッグログが出力されます。
+環境変数 `STORYTELLER_LSP_DEBUG=1`
+を設定すると、ファイル参照機能のデバッグログが出力されます。
 
 ```bash
 STORYTELLER_LSP_DEBUG=1 storyteller lsp start --stdio
