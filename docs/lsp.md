@@ -159,7 +159,7 @@ const char: Character = {
 @heroは剣を抜いた。
 ```
 
-### 6. ファイル参照機能（v1.4新機能）
+### 6. ファイル参照機能（v1.4新機能〜v1.5）
 
 TypeScriptファイル内の `{ file: "./path.md" }`
 パターンに対して、以下の機能を提供します。
@@ -242,7 +242,50 @@ backstory: { file: "./backstory.md" },        // [Open ./backstory.md]
 STORYTELLER_LSP_DEBUG=1 storyteller lsp start --stdio
 ```
 
-### 7. セマンティックトークン（v1.1新機能）
+### 7. ファイル変更監視 (File Watching)
+
+storyteller
+LSPは、プロジェクト内のエンティティファイル（キャラクター、設定、伏線など）の変更を監視し、
+原稿ファイルの診断・セマンティックトークンを自動的に更新します。
+
+#### 監視対象ファイルパターン
+
+- `src/characters/**/*.ts` - キャラクター定義
+- `src/settings/**/*.ts` - 設定定義
+- `src/foreshadowings/**/*.ts` - 伏線定義
+- `src/timelines/**/*.ts` - タイムライン定義
+
+#### 動作
+
+1. エディタがファイル変更を検知
+2. `workspace/didChangeWatchedFiles`通知をLSPサーバーに送信
+3. LSPサーバーがキャッシュをクリア
+4. 開いている原稿ファイルの診断・セマンティックトークンを再計算
+
+#### Neovim設定
+
+nvim-lspconfigでファイル監視を有効にするには、以下の設定が必要です。
+
+通常、Neovimのデフォルト設定ではファイル監視は自動的に有効になりますが、
+LSPサーバーキャパビリティーに`workspace.fileOperations`が含まれていることが前提です。
+
+```lua
+require('lspconfig').storyteller.setup({
+  -- ... 他の設定
+  on_attach = function(client, bufnr)
+    -- ファイル監視が有効になっていることを確認
+    if client.server_capabilities.workspace and
+       client.server_capabilities.workspace.fileOperations then
+      -- ファイル監視が自動的に有効
+    end
+  end,
+})
+```
+
+注意: Neovim組み込みLSPクライアントはファイル変更通知を自動的に処理します。
+エンティティファイルを編集すると、影響を受ける原稿ファイルの表示が自動的に更新されます。
+
+### 8. セマンティックトークン（v1.1新機能）
 
 キャラクター名・設定名をエディタ上でハイライト表示します。
 
