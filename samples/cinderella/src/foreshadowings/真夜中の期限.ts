@@ -13,7 +13,7 @@ export const 真夜中の期限: Foreshadowing = {
     "chapter": "chapter_02",
     "description": "魔法は真夜中に解けると妖精が警告する",
   },
-  "status": "planted",
+  "status": "resolved",
   "importance": "major",
   "relations": {
     "characters": [

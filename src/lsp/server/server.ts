@@ -747,13 +747,19 @@ export class LspServer {
     }
 
     // セマンティックトークンの再取得をクライアントに要求
+    // LSP仕様: workspace/semanticTokens/refresh はサーバー→クライアントのリクエスト（idが必要）
     try {
+      const refreshRequestId = `semantic-refresh-${Date.now()}`;
       await this.transport.writeMessage({
         jsonrpc: "2.0" as const,
+        id: refreshRequestId,
         method: "workspace/semanticTokens/refresh",
         params: {},
       });
-      console.error("[LSP:DEBUG] semanticTokens/refresh sent");
+      console.error(
+        "[LSP:DEBUG] semanticTokens/refresh request sent with id:",
+        refreshRequestId,
+      );
     } catch (error) {
       console.error(
         "[LSP:DEBUG] Failed to send semanticTokens/refresh:",
