@@ -1,16 +1,15 @@
-# title: HTMLコメント行上アノテーション方式による伏線参照の改善
+# title: 伏線アノテーションのセマンティックハイライト機能
 
 ## 概要
 
-- 現行の`@伏線ID`インライン方式を、HTMLコメント行上アノテーション方式に改善
-- 原稿本文の可読性を向上させ、文字数カウントの正確性を確保
-- 既存LSP機能との互換性を維持しながら、新方式を追加実装
+- HTMLコメント行上アノテーション `<!-- @foreshadowing:ID -->`
+  を、伏線の状態（planted/resolved）に応じた色でハイライト表示
+- 物語の品質チェック時に、伏線が回収されているかを視覚的に即座に判別可能にする
 
 ### goal
 
-- 作家が原稿を執筆する際、伏線アノテーションがテキストの可読性を阻害しない
-- Markdownビューアで閲覧時、アノテーションが非表示になる
-- LSPで伏線参照を検出し、診断・ホバー・ジャンプ機能が動作する
+- 作家がNeovimで執筆中、アノテーション行がコメントグレーではなく**状態に応じた色**で表示される
+- 未回収の伏線（planted）はオレンジ、回収済み（resolved）は緑で表示
 
 ## 必須のルール
 
@@ -23,135 +22,188 @@
 
 ## 開発のゴール
 
-- HTMLコメント行上アノテーション方式 `<!-- @foreshadowing:ID -->` を導入
-- 既存の`@ID`インライン方式との後方互換性を維持
-- 移行ツール `storyteller migrate annotations` を提供
+- `PositionedDetector`がHTMLコメントアノテーションを検出し、セマンティックトークンとして登録
+- Neovimでステータス別の色分けハイライトが動作
 
 ## 実装仕様
 
-### 構文仕様
+### 色分け仕様
+
+| ステータス           | 色       | Hex     | 意味                 |
+| -------------------- | -------- | ------- | -------------------- |
+| `planted`            | オレンジ | #e67e22 | 伏線設置済み・未回収 |
+| `partially_resolved` | 黄色     | #f1c40f | 部分的に回収         |
+| `resolved`           | 緑       | #27ae60 | 完全回収済み         |
+| `abandoned`          | グレー   | #7f8c8d | 放棄                 |
+
+### 期待される動作
+
+**Before（現状）**:
 
 ```markdown
-# 基本形式（推奨）
+<!-- @foreshadowing:ガラスの靴の伏線 -->  ← グレー（HTMLコメント）
 
-<!-- @foreshadowing:伏線ID -->
-
-対象テキストの段落
-
-# 短縮形式
-
-<!-- @fs:伏線ID -->
-
-対象テキストの段落
-
-# 複数伏線
-
-<!-- @fs:伏線A @fs:伏線B -->
-
-この段落には複数の伏線
-
-# 特定テキスト指定（精密モード・オプション）
-
-<!-- @fs:伏線ID @target:"真夜中の12時" -->
-
-「ただし、この魔法は真夜中の12時に解けてしまいます。必ずそれまでにお帰りなさい」
+「ただし、この魔法は真夜中の12時に解けてしまいます...」
 ```
 
-### 変換例
-
-**Before（現行）**:
+**After（実装後）**:
 
 ```markdown
-「ただし、この魔法は真夜中の12時に解けてしまいます@ガラスの靴の伏線。必ずそれまでにお帰りなさい」
-```
+<!-- @foreshadowing:ガラスの靴の伏線 -->  ← オレンジ（planted）または 緑（resolved）
 
-**After（新方式）**:
-
-```markdown
-<!-- @foreshadowing:ガラスの靴の伏線 -->
-
-「ただし、この魔法は真夜中の12時に解けてしまいます。必ずそれまでにお帰りなさい」
+「ただし、この魔法は真夜中の12時に解けてしまいます...」
 ```
 
 ## 生成AIの学習用コンテキスト
 
-### LSP検出機構
+### 既存実装（調査結果）
+
+#### SemanticTokensProvider
+
+- `src/lsp/providers/semantic_tokens_provider.ts`
+  - `getSemanticTokens()`: ドキュメント全体のトークン取得
+  - `convertMatchesToTokens()`: PositionedMatchをTokenPositionに変換
+  - `getStatusModifierMask()`:
+    foreshadowingステータス→ビットマスク変換（**既存実装を活用**）
+
+#### セマンティックトークン定義
+
+- `src/lsp/server/capabilities.ts`
+  - `SEMANTIC_TOKEN_TYPES = ["character", "setting", "foreshadowing"]` (index 2)
+  - `SEMANTIC_TOKEN_MODIFIERS = ["highConfidence", "mediumConfidence", "lowConfidence", "planted", "resolved"]`
+  - `planted`: bit 3 = 8
+  - `resolved`: bit 4 = 16
+
+#### PositionedDetector
 
 - `src/lsp/detection/positioned_detector.ts`
-  - `getPatternsWithConfidence()`: 既存の`@id`パターン検出ロジック
-  - `findAllPositions()`: パターン位置の検出
   - `detectWithPositions()`: エンティティ検出のエントリポイント
+  - `getPatternsWithConfidence()`: 検出パターンと信頼度の取得
+  - `findAllPositions()`: パターン位置の検出
 
 ### テストファイル
 
-- `tests/lsp/positioned_detector_test.ts`
-  - 既存の検出テストケース
+- `tests/lsp/providers/semantic_tokens_provider_test.ts`
+  - 既存テスト: `detects foreshadowing token`,
+    `foreshadowing planted status modifier`,
+    `foreshadowing resolved status modifier`
 
-### 原稿サンプル
+### ドキュメント
 
-- `samples/cinderella/manuscripts/chapter02.md`
-  - 現行方式の使用例（62行目: `@ガラスの靴の伏線`）
+- `docs/lsp.md:285-322`
+  - Neovim設定例: `@lsp.mod.planted`, `@lsp.mod.resolved`ハイライト設定
 
-### 調査した先行事例と採否理由
+### 調査根拠
 
-| 方式                     | 可読性   | LSP互換性    | 標準互換 | 採否  | 理由                 |
-| ------------------------ | -------- | ------------ | -------- | ----- | -------------------- |
-| 現行`@ID`インライン      | 低       | 高（実装済） | 低       | 現行  | 可読性問題あり       |
-| Fountain `[[...]]`       | 中-高    | 中           | 低       | ×     | Markdown標準ではない |
-| CriticMarkup `{>>...<<}` | 中       | 中           | 高       | △     | 構文がやや冗長       |
-| **HTMLコメント**         | **最高** | **中**       | **最高** | **◎** | 標準・可読性最高     |
-| 番号参照方式             | 最高     | 低           | 中       | ×     | 関連が分かりにくい   |
-| 外部ファイル方式         | 最高     | 低           | 中       | ×     | 行番号ずれ問題       |
+**現在の課題**:
 
-**Sources**:
+1. `PositionedDetector`は本文中のエンティティ名を検出するが、`<!-- @foreshadowing:ID -->`自体は検出対象外
+2. Markdownのシンタックスハイライトでは、HTMLコメントはグレー（目立たない）
+3. アノテーションからIDを抽出し、Foreshadowing定義のステータスを参照する必要あり
 
-- [Fountain Syntax](https://fountain.io/syntax/)
-- [CriticMarkup](https://fletcher.github.io/MultiMarkdown-6/syntax/critic.html)
-- [Material for MkDocs Annotations](https://squidfunk.github.io/mkdocs-material/reference/annotations/)
-- [Markdown Comments](https://www.docstomarkdown.pro/comments-in-markdown/)
+**解決策**:
+
+- `PositionedDetector`にアノテーション行検出メソッドを追加
+- 検出したアノテーションに対してforeshadowingトークンとステータスモディファイアを適用
 
 ---
 
 ## Process
 
-### process1 HTMLコメントアノテーション検出機能
+### process1 アノテーション検出機能の追加
 
-#### sub1 アノテーションパーサーの実装
+#### sub1 PositionedDetectorにアノテーション検出メソッドを追加
 
-@target: `src/lsp/detection/annotation_parser.ts` (新規) @ref:
-`src/lsp/detection/positioned_detector.ts`
+@target: `src/lsp/detection/positioned_detector.ts` @ref:
+`src/lsp/server/capabilities.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/lsp/detection/annotation_parser_test.ts` (新規)
+@test: `tests/lsp/positioned_detector_test.ts` (追記)
 
-- [ ] 基本形式のパーステスト
-  - `<!-- @foreshadowing:ガラスの靴の伏線 -->` →
-    `{ type: "foreshadowing", id: "ガラスの靴の伏線" }`
-- [ ] 短縮形式のパーステスト
-  - `<!-- @fs:伏線ID -->` → `{ type: "foreshadowing", id: "伏線ID" }`
-- [ ] 複数伏線のパーステスト
-  - `<!-- @fs:伏線A @fs:伏線B -->` → 2つのアノテーション
-- [ ] 特定テキスト指定のパーステスト
-  - `<!-- @fs:伏線ID @target:"真夜中" -->` → target付きアノテーション
-- [ ] 不正形式の除外テスト
-  - 通常のHTMLコメント `<!-- 普通のコメント -->` は無視
+- [ ] アノテーション行検出テストを作成
+  - `<!-- @foreshadowing:ガラスの靴の伏線 -->` が検出されること
+- [ ] 短縮形式のテスト
+  - `<!-- @fs:伏線ID -->` も検出されること
+- [ ] 複数アノテーションのテスト
+  - `<!-- @fs:伏線A @fs:伏線B -->` で2つ検出されること
+- [ ] 存在しないIDのテスト
+  - 定義されていないIDはスキップされること
+
+```typescript
+Deno.test("PositionedDetector - detects foreshadowing annotation comment", async () => {
+  const entities: DetectableEntity[] = [
+    {
+      kind: "foreshadowing",
+      id: "ガラスの靴の伏線",
+      name: "ガラスの靴の伏線",
+      displayNames: ["ガラスの靴"],
+      filePath: "src/foreshadowings/glass_slipper.ts",
+      status: "planted",
+    },
+  ];
+  const detector = new PositionedDetector(entities);
+  const content = `<!-- @foreshadowing:ガラスの靴の伏線 -->
+「魔法は真夜中に解けます」`;
+
+  const results = detector.detectWithPositions(content);
+
+  assertEquals(results.length, 1);
+  assertEquals(results[0].kind, "foreshadowing");
+  assertEquals(results[0].status, "planted");
+  assertEquals(results[0].positions[0].line, 0);
+});
+```
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `AnnotationParser` クラスを作成
-  - 正規表現:
-    `/<!--\s*(@(?:foreshadowing|fs):([^\s>@]+)(?:\s+@target:"([^"]+)")?)+\s*-->/g`
-- [ ] `parse(content: string): Annotation[]` メソッド実装
-- [ ] `Annotation` 型定義
+- [ ] `detectAnnotations`プライベートメソッドを追加
   ```typescript
-  type Annotation = {
-    type: "foreshadowing";
-    id: string;
-    target?: string;
-    line: number;
-    raw: string;
-  };
+  private detectAnnotations(content: string): PositionedMatch[] {
+    const matches: PositionedMatch[] = [];
+    const pattern = /<!--\s*@(?:foreshadowing|fs):([^\s>@]+)/g;
+    const lines = content.split("\n");
+
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(line)) !== null) {
+        const id = match[1];
+        const entity = this.entities.find(
+          e => e.kind === "foreshadowing" && (e.id === id || e.name === id)
+        );
+        if (entity) {
+          // アノテーション全体の長さを計算
+          const fullMatch = line.match(/<!--\s*@(?:foreshadowing|fs):[^\s>]+(?:\s+@(?:foreshadowing|fs):[^\s>]+)*\s*-->/);
+          matches.push({
+            entity,
+            kind: "foreshadowing",
+            confidence: 1.0,
+            status: (entity as any).status,
+            positions: [{
+              line: lineIndex,
+              character: 0,
+              length: fullMatch ? fullMatch[0].length : match[0].length,
+            }],
+          });
+        }
+      }
+    }
+    return matches;
+  }
+  ```
+
+- [ ] `detectWithPositions`で`detectAnnotations`の結果をマージ
+  ```typescript
+  detectWithPositions(content: string): PositionedMatch[] {
+    // 既存のエンティティ名検出
+    const nameMatches = this.detectEntityNames(content);
+    // アノテーション検出（新規）
+    const annotationMatches = this.detectAnnotations(content);
+    // マージして重複除去
+    return this.mergeMatches([...nameMatches, ...annotationMatches]);
+  }
   ```
 
 ##### TDD Step 3: Refactor & Verify
@@ -163,98 +215,50 @@
 
 ---
 
-#### sub2 アノテーションと段落の関連付けロジック
+### process2 SemanticTokensProviderの拡張
 
-@target: `src/lsp/detection/annotation_resolver.ts` (新規) @ref:
-`src/lsp/detection/annotation_parser.ts`
+#### sub1 アノテーショントークンの生成確認
 
-##### TDD Step 1: Red（失敗するテストを作成）
-
-@test: `tests/lsp/detection/annotation_resolver_test.ts` (新規)
-
-- [ ] アノテーション直後の段落への関連付けテスト
-  - アノテーション行の次の非空行から次の空行までを対象
-- [ ] 複数アノテーションの関連付けテスト
-- [ ] 空行を挟んだ場合のテスト
-- [ ] ファイル末尾のアノテーションテスト
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] `AnnotationResolver` クラスを作成
-- [ ] `resolve(annotations: Annotation[], content: string): ResolvedAnnotation[]`
-      メソッド実装
-- [ ] `ResolvedAnnotation` 型定義
-  ```typescript
-  type ResolvedAnnotation = Annotation & {
-    targetRange: {
-      startLine: number;
-      endLine: number;
-    };
-  };
-  ```
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
-
----
-
-### process2 PositionedDetectorへの統合
-
-#### sub1 アノテーション検出の統合
-
-@target: `src/lsp/detection/positioned_detector.ts` @ref:
-`src/lsp/detection/annotation_parser.ts`,
-`src/lsp/detection/annotation_resolver.ts`
+@target: `src/lsp/providers/semantic_tokens_provider.ts` @ref:
+`src/lsp/detection/positioned_detector.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/lsp/positioned_detector_test.ts` (追記)
+@test: `tests/lsp/providers/semantic_tokens_provider_test.ts` (追記)
 
-- [ ] HTMLコメントアノテーションからの伏線検出テスト
+- [ ] アノテーションからセマンティックトークンが生成されるテスト
   ```typescript
-  Deno.test("detectWithPositions - HTML comment annotation", async () => {
+  Deno.test("SemanticTokensProvider - detects foreshadowing annotation comment", async () => {
+    const entities: DetectableEntity[] = [
+      createForeshadowingEntity("ガラスの靴の伏線", "planted"),
+    ];
+    const detector = new PositionedDetector(entities);
+    const provider = new SemanticTokensProvider(detector);
+
     const content = `<!-- @foreshadowing:ガラスの靴の伏線 -->
   ```
 
-「魔法は真夜中に解けます」`; // ガラスの靴の伏線エンティティが検出されること });
+「魔法は真夜中に解けます」`;
 
-```
-- [ ] 既存`@ID`方式との併用テスト
-- [ ] confidence値のテスト（アノテーション経由 = 1.0）
+    const result = provider.getSemanticTokens(content);
 
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] `getPatternsWithConfidence()` にアノテーションパターンを追加
-- [ ] `detectWithPositions()` でアノテーション検出を統合
-- [ ] アノテーション経由の検出は confidence: 1.0 を設定
+    // data配列が存在すること
+    assert(result.data.length > 0);
+    // tokenType = 2 (foreshadowing)
+    assertEquals(result.data[3], 2);
+    // modifier includes planted (bit 3 = 8)
+    assert((result.data[4] & 8) !== 0);
 
-##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
+});
 
----
-
-### process3 診断機能の拡張
-
-#### sub1 アノテーション診断の追加
-
-@target: `src/lsp/diagnostics/diagnostics_generator.ts`
-@ref: `src/lsp/detection/annotation_resolver.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/diagnostics_generator_test.ts` (追記)
-
-- [ ] 存在しない伏線IDのアノテーションに警告を出すテスト
-- [ ] FrontMatterに未登録のアノテーションに情報診断を出すテスト
-- [ ] 有効なアノテーションには診断を出さないテスト
+````
+- [ ] resolvedステータスのテスト
+- [ ] 複数アノテーションのテスト
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] アノテーションからの伏線ID抽出
-- [ ] エンティティ存在確認
-- [ ] 診断メッセージの生成
+
+- [ ] 既存の`convertMatchesToTokens`がアノテーション由来のマッチも正しく処理することを確認
+- 既存ロジックで対応可能なはず（`getStatusModifierMask`が既に実装済み）
 
 ##### TDD Step 3: Refactor & Verify
 - [ ] テストを実行し、通過することを確認
@@ -262,72 +266,64 @@
 
 ---
 
-### process4 移行ツールの実装
+### process3 Neovim設定の提供
 
-#### sub1 CLIコマンド `migrate annotations` の実装
+#### sub1 ハイライト設定ファイルの作成
 
-@target: `src/cli/modules/migrate/annotations.ts` (新規)
-@ref: `src/cli/command_registry.ts`
-
-##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/cli/modules/migrate/annotations_test.ts` (新規)
-
-- [ ] 単一ファイルの変換テスト
-- `@伏線ID` → `<!-- @foreshadowing:伏線ID -->` への変換
-- [ ] 複数ファイルの一括変換テスト
-- [ ] ドライランモードのテスト（変更なし、プレビューのみ）
-- [ ] バックアップ作成テスト
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] コマンドパーサーの実装
-```
-
-storyteller migrate annotations [path] [--dry-run] [--backup]
-
-```
-- [ ] 変換ロジックの実装
-- 正規表現: `/([「『（]?[^@\n]+)@([^\s。、！？」』）\n]+)([。、！？」』）]?)/g`
-- 置換: `<!-- @foreshadowing:$2 -->\n$1$3`
-- [ ] ファイル書き込み処理
-
-##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
-
----
-
-### process5 ホバー・定義ジャンプの対応
-
-#### sub1 アノテーション上のホバー情報
-
-@target: `src/lsp/providers/hover_provider.ts`
-@ref: `src/lsp/detection/annotation_resolver.ts`
+@target: `docs/lsp.md` (更新)
+@target: `samples/cinderella/nvim-config-example.lua` (新規)
 
 ##### TDD Step 1: Red（失敗するテストを作成）
-@test: `tests/lsp/hover_provider_test.ts` (追記)
 
-- [ ] アノテーションコメント上でのホバーで伏線情報を表示するテスト
-- [ ] アノテーション対象段落上でのホバーで伏線情報を表示するテスト
+_このプロセスはドキュメント/設定なのでテストなし_
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
-- [ ] アノテーション位置の検出
-- [ ] 対象段落との関連付け
-- [ ] ホバー情報の生成
+
+- [ ] `docs/lsp.md`のNeovim設定例を更新
+- アノテーション行のハイライト設定を追加
+```lua
+-- ~/.config/nvim/after/ftplugin/markdown.lua
+
+-- storyteller LSP用セマンティックトークンハイライト
+-- アノテーション行をステータス別に色分け
+vim.api.nvim_set_hl(0, "@lsp.type.foreshadowing.markdown", {
+  fg = "#e67e22",
+  bold = true,
+  italic = true
+})
+
+-- ステータス別ハイライト（typemod形式）
+vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.planted.markdown", {
+  fg = "#e67e22",  -- オレンジ（未回収）
+  bold = true
+})
+vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.resolved.markdown", {
+  fg = "#27ae60",  -- グリーン（回収済み）
+  bold = true
+})
+vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.lowConfidence.markdown", {
+  underdotted = true
+})
+````
+
+- [ ] サンプル設定ファイルを作成
+  - `samples/cinderella/nvim-config-example.lua`
 
 ##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+
+- [ ] サンプルプロジェクトで動作確認
+- [ ] ドキュメントの整合性確認
 
 ---
 
 ### process10 ユニットテスト（追加・統合テスト）
 
-@test: `tests/lsp/annotation_integration_test.ts` (新規)
+@test: `tests/lsp/annotation_semantic_tokens_test.ts` (新規)
 
 - [ ] エンドツーエンドの統合テスト
-- 原稿ファイル読み込み → アノテーション検出 → 診断生成 → ホバー表示
-- [ ] 既存`@ID`方式との併用テスト
-- [ ] 大規模ファイルでのパフォーマンステスト
+  - 原稿ファイル読み込み → アノテーション検出 → セマンティックトークン生成
+- [ ] plantedとresolvedの混在テスト
+- [ ] 日本語IDのテスト
 
 ---
 
@@ -339,45 +335,39 @@ _実装後に仕様変更などが発生した場合は、ここにProcessを追
 
 ### process100 リファクタリング
 
-- [ ] `PositionedDetector` クラスの責務分離検討
-- インライン検出とアノテーション検出の分離
-- [ ] 共通パターンの抽出
-- [ ] 型定義の整理
+- [ ] `PositionedDetector`のアノテーション検出ロジックを別クラスに分離検討
+- [ ] 正規表現パターンの共通化
 
 ---
 
 ### process200 ドキュメンテーション
 
-- [ ] `docs/lsp.md` にアノテーション方式の説明を追加
+- [ ] `docs/lsp.md` のセマンティックトークンセクションを更新
+  - アノテーション行のハイライトについて追記
 - [ ] `CLAUDE.md` の「進行中の機能開発」セクションを更新
-- [ ] `samples/cinderella/manuscripts/chapter02.md` を新方式に変換
-- [ ] エディタ設定例の追加（VSCode, Neovim）
-- アノテーションコメントのシンタックスハイライト設定
-
----
-
-## 後方互換性
-
-| 機能 | 現行`@ID`方式 | 新HTMLコメント方式 |
-|------|--------------|-------------------|
-| 明示的参照 | `@ガラスの靴の伏線` | `<!-- @fs:ガラスの靴の伏線 -->` |
-| displayNames検出 | `ガラスの靴` (0.9) | 同様（本文検出は維持） |
-| 移行期間 | サポート継続 | 新規推奨 |
-| 信頼度 | 1.0 | 1.0 |
+- [ ] Serena Memoryに実装知見を保存
+  - `foreshadowing_semantic_highlight`
 
 ---
 
 ## 見積もり
 
-| Process | 推定工数 |
-|---------|----------|
-| process1 | 中（1-2時間） |
-| process2 | 小（30分-1時間） |
-| process3 | 小（30分-1時間） |
-| process4 | 中（1-2時間） |
-| process5 | 小（30分-1時間） |
-| process10 | 小（30分） |
-| process100 | 小（30分） |
-| process200 | 小（30分） |
-| **合計** | **4-8時間** |
-```
+| Process    | 推定工数    |
+| ---------- | ----------- |
+| process1   | 1-2時間     |
+| process2   | 30分-1時間  |
+| process3   | 30分        |
+| process10  | 30分-1時間  |
+| process100 | 30分        |
+| process200 | 30分        |
+| **合計**   | **3-5時間** |
+
+---
+
+## 調査ソース
+
+- 既存実装: `src/lsp/providers/semantic_tokens_provider.ts`
+- 既存定義: `src/lsp/server/capabilities.ts`
+- 既存テスト: `tests/lsp/providers/semantic_tokens_provider_test.ts`
+- ドキュメント: `docs/lsp.md`
+- Memory: `foreshadowing_annotation_research`

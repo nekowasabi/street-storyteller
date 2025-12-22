@@ -73,12 +73,20 @@ export class PositionedDetector {
     this.lastContent = content;
     this.lastResults = [];
 
+    // 既存のエンティティ名検出
     for (const entity of this.entities) {
       const matches = this.detectEntity(content, entity);
       if (matches.length > 0) {
         this.lastResults.push(...matches);
       }
     }
+
+    // HTMLコメントアノテーション検出（新規）
+    const annotationMatches = this.detectAnnotations(content);
+    this.lastResults.push(...annotationMatches);
+
+    // 同じエンティティIDを持つマッチをマージ
+    this.lastResults = this.mergeMatchesByEntityId(this.lastResults);
 
     return this.lastResults;
   }
@@ -285,5 +293,104 @@ export class PositionedDetector {
     }
 
     return unique;
+  }
+
+  /**
+   * HTMLコメント形式のアノテーションを検出
+   * 形式: <!-- @foreshadowing:ID --> または <!-- @fs:ID -->
+   */
+  private detectAnnotations(content: string): PositionedMatch[] {
+    const matches: PositionedMatch[] = [];
+    const lines = content.split("\n");
+
+    // アノテーション内のIDを抽出するパターン
+    const idPattern = /@(?:foreshadowing|fs):([^\s>@]+)/g;
+
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
+
+      // HTMLコメントを検出
+      const commentMatch = line.match(/<!--(.+?)-->/);
+      if (!commentMatch) continue;
+
+      const commentContent = commentMatch[1];
+      const commentStart = line.indexOf("<!--");
+      const commentEnd = line.indexOf("-->") + 3;
+      const commentLength = commentEnd - commentStart;
+
+      // コメント内のアノテーションIDを抽出
+      idPattern.lastIndex = 0;
+      let idMatch;
+      while ((idMatch = idPattern.exec(commentContent)) !== null) {
+        const annotationId = idMatch[1];
+
+        // IDまたはnameでforeshadowingエンティティを検索
+        const entity = this.entities.find(
+          (e) =>
+            e.kind === "foreshadowing" &&
+            (e.id === annotationId || e.name === annotationId),
+        );
+
+        if (entity) {
+          matches.push({
+            kind: "foreshadowing",
+            id: entity.id,
+            filePath: entity.filePath,
+            matchedPattern: `@foreshadowing:${annotationId}`,
+            positions: [
+              {
+                line: lineIndex,
+                character: commentStart,
+                length: commentLength,
+              },
+            ],
+            confidence: 1.0, // 明示的アノテーションは最高信頼度
+            status: entity.status,
+          });
+        }
+      }
+    }
+
+    return matches;
+  }
+
+  /**
+   * 同じエンティティIDを持つ複数のマッチをマージ
+   * アノテーション検出とdisplayNames検出が重複した場合に統合
+   */
+  private mergeMatchesByEntityId(
+    matches: PositionedMatch[],
+  ): PositionedMatch[] {
+    const mergedMap = new Map<string, PositionedMatch>();
+
+    for (const match of matches) {
+      const key = `${match.kind}:${match.id}`;
+      const existing = mergedMap.get(key);
+
+      if (existing) {
+        // 既存のマッチとマージ
+        const allPositions = [...existing.positions, ...match.positions];
+        const uniquePositions = this.deduplicatePositions([...allPositions]);
+
+        // より高い信頼度を採用
+        const betterConfidence = Math.max(
+          existing.confidence,
+          match.confidence,
+        );
+
+        mergedMap.set(key, {
+          ...existing,
+          positions: uniquePositions,
+          confidence: betterConfidence,
+          matchedPattern: match.confidence >= existing.confidence
+            ? match.matchedPattern
+            : existing.matchedPattern,
+        });
+      } else {
+        mergedMap.set(key, match);
+      }
+    }
+
+    return Array.from(mergedMap.values());
   }
 }

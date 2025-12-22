@@ -604,3 +604,59 @@ Deno.test("SemanticTokensProvider - getSemanticTokensRange with large line offse
   // 城（絶対行101、前のトークンから1行下）
   assertEquals(result.data[5], 1); // line_delta from previous (101 - 100)
 });
+
+// ========================================
+// process2: アノテーションからセマンティックトークン生成のテスト
+// ========================================
+
+Deno.test("SemanticTokensProvider - detects foreshadowing annotation comment", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new SemanticTokensProvider(detector);
+
+  // HTMLコメントアノテーション
+  const content = `<!-- @foreshadowing:ガラスの靴の伏線 -->
+「魔法は真夜中に解けます」`;
+
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
+
+  // アノテーション行がトークンとして検出される
+  assertEquals(result.data.length >= 5, true);
+  // tokenType = 2 (foreshadowing)
+  assertEquals(result.data[3], 2);
+  // modifier includes planted (bit 3 = 8)
+  assertEquals((result.data[4] & 8) !== 0, true);
+});
+
+Deno.test("SemanticTokensProvider - annotation resolved status modifier", async () => {
+  const { SemanticTokensProvider } = await import(
+    "../../../src/lsp/providers/semantic_tokens_provider.ts"
+  );
+
+  const detector = new PositionedDetector(mockEntitiesWithForeshadowing);
+  const provider = new SemanticTokensProvider(detector);
+
+  // resolved ステータスの伏線をアノテーションで指定
+  const content = `<!-- @foreshadowing:真夜中の期限 -->
+時計が鳴った`;
+
+  const result = provider.getSemanticTokens(
+    "file:///test.md",
+    content,
+    "/project",
+  );
+
+  // アノテーション行がトークンとして検出される
+  assertEquals(result.data.length >= 5, true);
+  // tokenType = 2 (foreshadowing)
+  assertEquals(result.data[3], 2);
+  // modifier includes resolved (bit 4 = 16)
+  assertEquals((result.data[4] & 16) !== 0, true);
+});

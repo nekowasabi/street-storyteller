@@ -275,6 +275,37 @@ STORYTELLER_LSP_DEBUG=1 storyteller lsp start --stdio
 | `planted`      | 未回収の伏線   | オレンジ (#e67e22) |
 | `resolved`     | 回収済みの伏線 | グリーン (#27ae60) |
 
+#### 伏線アノテーション機能（v1.5新機能）
+
+HTMLコメント形式のアノテーションを検出し、伏線の状態に応じた色でハイライト表示します。
+
+**対応フォーマット:**
+
+```markdown
+<!-- @foreshadowing:伏線ID -->
+<!-- @fs:伏線ID -->              <!-- 短縮形式 -->
+<!-- @fs:伏線A @fs:伏線B -->     <!-- 複数指定 -->
+```
+
+**動作例:**
+
+```markdown
+<!-- @foreshadowing:ガラスの靴の伏線 -->  ← オレンジ（planted）
+
+「この魔法は真夜中に解けます」
+
+<!-- @foreshadowing:真夜中の期限 -->      ← グリーン（resolved）
+
+時計が12時を打った
+```
+
+**特徴:**
+
+- 伏線IDまたは名前で参照可能
+- 存在しないIDは検出されない（エラーにならない）
+- Markdownのシンタックスハイライトでグレー表示される部分が、状態に応じた色で表示される
+- 物語の品質チェック時に、未回収の伏線を視覚的に識別可能
+
 #### サポートするメソッド
 
 | メソッド                            | 説明                           |
@@ -298,6 +329,17 @@ vim.api.nvim_set_hl(0, "@lsp.mod.lowConfidence", { underdotted = true })
 -- 伏線ステータスによるスタイル分け
 vim.api.nvim_set_hl(0, "@lsp.mod.planted", { fg = "#e67e22" })  -- オレンジ（未回収）
 vim.api.nvim_set_hl(0, "@lsp.mod.resolved", { fg = "#27ae60" }) -- グリーン（回収済み）
+
+-- 伏線アノテーション用の強調設定（typemod形式）
+-- Markdownファイルで伏線のステータスに応じた色分け
+vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.planted.markdown", {
+  fg = "#e67e22",  -- オレンジ（未回収の伏線）
+  bold = true
+})
+vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.resolved.markdown", {
+  fg = "#27ae60",  -- グリーン（回収済みの伏線）
+  bold = true
+})
 ```
 
 #### VSCode設定例
@@ -453,4 +495,4 @@ coc-tsserverの代わりに`typescript-language-server`をNeovim組み込みLSP�
 
 ---
 
-_Last updated: 2025-12-20 (v1.4 - ファイル参照機能追加)_
+_Last updated: 2025-12-22 (v1.5 - 伏線アノテーション機能追加)_

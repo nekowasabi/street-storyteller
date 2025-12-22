@@ -339,3 +339,112 @@ Deno.test("PositionedDetector - getEntityAtPosition returns foreshadowing", () =
   assertEquals(entity.id, "glass_slipper");
   assertEquals(entity.kind, "foreshadowing");
 });
+
+// ========================================
+// process1: HTMLコメントアノテーション検出のテスト
+// ========================================
+
+Deno.test("PositionedDetector - detects foreshadowing annotation comment (long form)", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = `<!-- @foreshadowing:ガラスの靴の伏線 -->
+「魔法は真夜中に解けます」`;
+
+  const results = detector.detectWithPositions(content);
+
+  // アノテーション行が検出されること
+  const annotationResult = results.find(
+    (r) => r.kind === "foreshadowing" && r.id === "glass_slipper",
+  );
+  assertExists(annotationResult);
+  // アノテーション行の位置 (line 0)
+  const annotationPos = annotationResult.positions.find((p) => p.line === 0);
+  assertExists(annotationPos);
+  // アノテーション全体がマッチすること
+  assertEquals(annotationPos.character, 0);
+  assertEquals(annotationPos.length, 32); // <!-- @foreshadowing:ガラスの靴の伏線 --> (JS length)
+  // ステータスが正しいこと
+  assertEquals(annotationResult.status, "planted");
+});
+
+Deno.test("PositionedDetector - detects foreshadowing annotation comment (short form @fs)", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = `<!-- @fs:ガラスの靴の伏線 -->
+「魔法は真夜中に解けます」`;
+
+  const results = detector.detectWithPositions(content);
+
+  const annotationResult = results.find(
+    (r) => r.kind === "foreshadowing" && r.id === "glass_slipper",
+  );
+  assertExists(annotationResult);
+  const annotationPos = annotationResult.positions.find((p) => p.line === 0);
+  assertExists(annotationPos);
+  assertEquals(annotationResult.status, "planted");
+});
+
+Deno.test("PositionedDetector - detects multiple annotations in same comment", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = `<!-- @fs:ガラスの靴の伏線 @fs:真夜中の期限 -->
+「魔法は真夜中に解けます」`;
+
+  const results = detector.detectWithPositions(content);
+
+  // 両方の伏線が検出されること
+  const glassSlipperResult = results.find((r) => r.id === "glass_slipper");
+  assertExists(glassSlipperResult);
+  assertEquals(glassSlipperResult.status, "planted");
+
+  const midnightResult = results.find((r) => r.id === "midnight_deadline");
+  assertExists(midnightResult);
+  assertEquals(midnightResult.status, "resolved");
+});
+
+Deno.test("PositionedDetector - skips annotation with undefined foreshadowing id", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = `<!-- @foreshadowing:存在しない伏線ID -->
+「この伏線は定義されていない」`;
+
+  const results = detector.detectWithPositions(content);
+
+  // 存在しないIDはスキップされる（検出されない）
+  const undefinedResult = results.find(
+    (r) => r.id === "存在しない伏線ID",
+  );
+  assertEquals(undefinedResult, undefined);
+});
+
+Deno.test("PositionedDetector - annotation detection confidence is 1.0", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  const content = `<!-- @foreshadowing:ガラスの靴の伏線 -->
+「魔法は真夜中に解けます」`;
+
+  const results = detector.detectWithPositions(content);
+
+  const annotationResult = results.find(
+    (r) => r.kind === "foreshadowing" && r.id === "glass_slipper",
+  );
+  assertExists(annotationResult);
+  // 明示的アノテーションなので confidence は 1.0
+  assertEquals(annotationResult.confidence, 1.0);
+});
+
+Deno.test("PositionedDetector - detects annotation with ID match (not name)", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  // IDで指定
+  const content = `<!-- @foreshadowing:glass_slipper -->
+「ガラスの靴が輝く」`;
+
+  const results = detector.detectWithPositions(content);
+
+  const annotationResult = results.find(
+    (r) => r.kind === "foreshadowing" && r.id === "glass_slipper",
+  );
+  assertExists(annotationResult);
+  assertEquals(annotationResult.status, "planted");
+});
