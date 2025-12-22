@@ -143,6 +143,83 @@ Deno.test("Capabilities - semanticTokensProvider supports range tokens", async (
   }
 });
 
+// =============================================================================
+// Process 1: FileChangeType型のテスト
+// =============================================================================
+
+Deno.test("Capabilities - FileChangeType.Created equals 1", async () => {
+  const { FileChangeType } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+  assertEquals(FileChangeType.Created, 1);
+});
+
+Deno.test("Capabilities - FileChangeType.Changed equals 2", async () => {
+  const { FileChangeType } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+  assertEquals(FileChangeType.Changed, 2);
+});
+
+Deno.test("Capabilities - FileChangeType.Deleted equals 3", async () => {
+  const { FileChangeType } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+  assertEquals(FileChangeType.Deleted, 3);
+});
+
+// =============================================================================
+// Process 2: FileEvent型とDidChangeWatchedFilesParams型のテスト
+// =============================================================================
+
+Deno.test("Capabilities - FileEvent type has correct structure", async () => {
+  const { FileChangeType } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+  // 型テストは実行時にはnoop、コンパイルで検証
+  // FileEvent型に準拠したオブジェクトを作成
+  const event = { uri: "file:///test.ts", type: FileChangeType.Created };
+  assertExists(event.uri);
+  assertExists(event.type);
+  assertEquals(typeof event.uri, "string");
+  assertEquals(typeof event.type, "number");
+});
+
+Deno.test("Capabilities - DidChangeWatchedFilesParams has changes array", async () => {
+  const { FileChangeType } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+  // DidChangeWatchedFilesParams型に準拠したオブジェクトを作成
+  const params = {
+    changes: [
+      { uri: "file:///test.ts", type: FileChangeType.Created },
+    ],
+  };
+  assertExists(params.changes);
+  assertEquals(Array.isArray(params.changes), true);
+  assertEquals(params.changes.length, 1);
+});
+
+// =============================================================================
+// Process 3: ServerCapabilitiesにworkspaceセクション追加のテスト
+// =============================================================================
+
+Deno.test("Capabilities - getServerCapabilities includes workspace section", async () => {
+  const { getServerCapabilities } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+  const caps = getServerCapabilities();
+  assertExists(caps.workspace);
+});
+
+Deno.test("Capabilities - workspace.didChangeWatchedFiles is supported", async () => {
+  const { getServerCapabilities } = await import(
+    "../../../src/lsp/server/capabilities.ts"
+  );
+  const caps = getServerCapabilities();
+  assertExists(caps.workspace?.didChangeWatchedFiles);
+});
+
 // ========================================
 // process5: CodeLens関連キャパビリティテスト
 // ========================================

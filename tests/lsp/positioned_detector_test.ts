@@ -448,3 +448,95 @@ Deno.test("PositionedDetector - detects annotation with ID match (not name)", ()
   assertExists(annotationResult);
   assertEquals(annotationResult.status, "planted");
 });
+
+// ========================================
+// updateEntities: エンティティ動的更新テスト
+// ========================================
+
+Deno.test("PositionedDetector - updateEntities replaces existing entities", () => {
+  const detector = new PositionedDetector(mockEntities);
+
+  // 初期状態: 勇者が検出される
+  const content = "勇者は魔法使いと冒険した。";
+  const results1 = detector.detectWithPositions(content);
+  assertEquals(results1.length, 1);
+  assertEquals(results1[0].id, "hero");
+
+  // エンティティを更新: 新しいキャラクター「魔法使い」を追加
+  const newEntities = [
+    ...mockEntities,
+    {
+      kind: "character" as const,
+      id: "mage",
+      name: "魔法使い",
+      displayNames: ["魔法使い"],
+      aliases: [],
+      filePath: "src/characters/mage.ts",
+    },
+  ];
+  detector.updateEntities(newEntities);
+
+  // 更新後: 両方のキャラクターが検出される
+  const results2 = detector.detectWithPositions(content);
+  assertEquals(results2.length, 2);
+  const heroResult = results2.find((r) => r.id === "hero");
+  const mageResult = results2.find((r) => r.id === "mage");
+  assertExists(heroResult);
+  assertExists(mageResult);
+});
+
+Deno.test("PositionedDetector - updateEntities clears internal cache", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  // 初期状態でstatus=plantedで検出される
+  const content = "ガラスの靴が輝いていた。";
+  const results1 = detector.detectWithPositions(content);
+  const foreshadowing1 = results1.find((r) => r.id === "glass_slipper");
+  assertExists(foreshadowing1);
+  assertEquals(foreshadowing1.status, "planted");
+
+  // エンティティのstatusを変更してupdateEntities
+  const updatedEntities = [
+    {
+      kind: "foreshadowing" as const,
+      id: "glass_slipper",
+      name: "ガラスの靴の伏線",
+      displayNames: ["ガラスの靴"],
+      aliases: [],
+      filePath: "src/foreshadowings/glass_slipper.ts",
+      status: "resolved" as const, // planted → resolved に変更
+    },
+    {
+      kind: "foreshadowing" as const,
+      id: "midnight_deadline",
+      name: "真夜中の期限",
+      displayNames: ["真夜中の期限", "真夜中"],
+      aliases: [],
+      filePath: "src/foreshadowings/midnight_deadline.ts",
+      status: "resolved" as const,
+    },
+  ];
+  detector.updateEntities(updatedEntities);
+
+  // 更新後: status=resolvedで検出される
+  const results2 = detector.detectWithPositions(content);
+  const foreshadowing2 = results2.find((r) => r.id === "glass_slipper");
+  assertExists(foreshadowing2);
+  assertEquals(foreshadowing2.status, "resolved");
+});
+
+Deno.test("PositionedDetector - updateEntities with empty array clears all entities", () => {
+  const detector = new PositionedDetector(mockEntities);
+
+  // 初期状態: 勇者が検出される
+  const content = "勇者は剣を抜いた。";
+  const results1 = detector.detectWithPositions(content);
+  assertEquals(results1.length, 1);
+
+  // 空の配列で更新
+  detector.updateEntities([]);
+
+  // 更新後: 何も検出されない
+  const results2 = detector.detectWithPositions(content);
+  assertEquals(results2.length, 0);
+});

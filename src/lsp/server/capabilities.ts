@@ -18,6 +18,32 @@ export const TextDocumentSyncKind = {
 export type TextDocumentSyncKind =
   (typeof TextDocumentSyncKind)[keyof typeof TextDocumentSyncKind];
 
+// LSP FileChangeType定数（https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#fileChangeType）
+export const FileChangeType = {
+  /** ファイルが作成された */
+  Created: 1,
+  /** ファイルが変更された */
+  Changed: 2,
+  /** ファイルが削除された */
+  Deleted: 3,
+} as const;
+export type FileChangeType =
+  (typeof FileChangeType)[keyof typeof FileChangeType];
+
+// FileEvent型（ファイル変更イベント）
+export type FileEvent = {
+  /** ファイルのURI */
+  uri: string;
+  /** 変更タイプ */
+  type: FileChangeType;
+};
+
+// DidChangeWatchedFilesParams型（ファイル変更監視パラメータ）
+export type DidChangeWatchedFilesParams = {
+  /** ファイル変更イベントの配列 */
+  changes: FileEvent[];
+};
+
 /**
  * セマンティックトークンタイプ定義
  * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#semanticTokenTypes
@@ -149,6 +175,21 @@ export type ServerCapabilities = {
    * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_executeCommand
    */
   readonly executeCommandProvider?: ExecuteCommandOptions;
+
+  /**
+   * ワークスペース機能のサポート
+   * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace
+   */
+  readonly workspace?: {
+    /**
+     * ファイル変更監視機能のサポート
+     * @see https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#workspace_didChangeWatchedFiles
+     */
+    readonly didChangeWatchedFiles?: {
+      /** 動的登録のサポート */
+      readonly dynamicRegistration?: boolean;
+    };
+  };
 };
 
 /**
@@ -174,6 +215,11 @@ export function getServerCapabilities(): ServerCapabilities {
     codeLensProvider: true,
     executeCommandProvider: {
       commands: ["storyteller.openReferencedFile"],
+    },
+    workspace: {
+      didChangeWatchedFiles: {
+        dynamicRegistration: false,
+      },
     },
   };
 }

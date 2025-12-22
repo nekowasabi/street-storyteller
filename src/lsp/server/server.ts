@@ -17,6 +17,7 @@ import {
   createSuccessResponse,
 } from "@storyteller/lsp/protocol/json_rpc.ts";
 import {
+  type DidChangeWatchedFilesParams,
   getServerCapabilities,
   type ServerCapabilities,
 } from "@storyteller/lsp/server/capabilities.ts";
@@ -347,7 +348,7 @@ export class LspServer {
   ): Promise<void> {
     switch (notification.method) {
       case "initialized":
-        this.handleInitialized();
+        await this.handleInitialized();
         break;
       case "textDocument/didOpen":
         await this.handleDidOpen(
@@ -362,6 +363,11 @@ export class LspServer {
       case "textDocument/didClose":
         await this.handleDidClose(
           notification.params as DidCloseTextDocumentParams,
+        );
+        break;
+      case "workspace/didChangeWatchedFiles":
+        await this.handleDidChangeWatchedFiles(
+          notification.params as DidChangeWatchedFilesParams,
         );
         break;
       case "exit":
@@ -394,8 +400,40 @@ export class LspServer {
   /**
    * initialized 通知を処理
    */
-  private handleInitialized(): void {
+  private async handleInitialized(): Promise<void> {
     this.state = "initialized";
+
+    // ファイル監視の動的登録
+    const registrationId = `storyteller-file-watcher-${Date.now()}`;
+    const registrationParams = {
+      registrations: [{
+        id: registrationId,
+        method: "workspace/didChangeWatchedFiles",
+        registerOptions: {
+          watchers: [
+            { globPattern: "**/src/characters/**/*.ts" },
+            { globPattern: "**/src/settings/**/*.ts" },
+            { globPattern: "**/src/foreshadowings/**/*.ts" },
+            { globPattern: "**/src/timelines/**/*.ts" },
+          ],
+        },
+      }],
+    };
+
+    // client/registerCapability リクエストを送信
+    const request = {
+      jsonrpc: "2.0" as const,
+      id: registrationId,
+      method: "client/registerCapability",
+      params: registrationParams,
+    };
+
+    try {
+      await this.transport.writeMessage(request);
+      console.error("[LSP:DEBUG] File watcher registration sent");
+    } catch (error) {
+      console.error("[LSP:DEBUG] Failed to register file watchers:", error);
+    }
   }
 
   /**
@@ -527,15 +565,27 @@ export class LspServer {
     request: JsonRpcRequest,
   ): Promise<void> {
     const params = request.params as SemanticTokensParams;
+    console.error(
+      `[LSP:DEBUG] handleSemanticTokensFull called for: ${params.textDocument.uri}`,
+    );
+
     const document = this.documentManager.get(params.textDocument.uri);
 
     let result = { data: [] as number[] };
     if (document) {
+      console.error(
+        `[LSP:DEBUG] Document found, content length: ${document.content.length}`,
+      );
       result = this.semanticTokensProvider.getSemanticTokens(
         params.textDocument.uri,
         document.content,
         this.projectRoot,
       );
+      console.error(
+        `[LSP:DEBUG] Semantic tokens result: ${result.data.length} data items`,
+      );
+    } else {
+      console.error(`[LSP:DEBUG] Document NOT found in manager`);
     }
 
     const response = createSuccessResponse(request.id, result);
@@ -621,6 +671,99 @@ export class LspServer {
     this.textDocumentSyncHandler.handleDidClose(params);
     // 診断をクリア（空の診断配列を発行）
     await this.diagnosticsPublisher.publish(params.textDocument.uri, []);
+  }
+
+  /**
+   * ファイル変更監視ハンドラ
+   * プロジェクト内のTypeScriptファイル（キャラクター、設定、伏線など）が
+   * 外部から変更された場合にキャッシュをクリアし、開いているドキュメントの診断を再発行
+   */
+  private async handleDidChangeWatchedFiles(
+    params: DidChangeWatchedFilesParams,
+  ): Promise<void> {
+    // デバッグログ
+    console.error(
+      `[LSP:DEBUG] ========== File Change Notification Received ==========`,
+    );
+    console.error(
+      `[LSP:DEBUG] File changes detected: ${params.changes.length} files`,
+    );
+    for (const change of params.changes) {
+      console.error(`[LSP:DEBUG]   ${change.uri} (type: ${change.type})`);
+    }
+
+    // キャッシュをクリア
+    try {
+      this.projectContextManager.clearCache();
+      console.error("[LSP:DEBUG] Project context cache cleared");
+    } catch (error) {
+      console.error(
+        "[LSP:DEBUG] Failed to clear project context cache:",
+        error,
+      );
+    }
+
+    // エンティティを再ロードしてDetectorを更新
+    try {
+      const context = await this.projectContextManager.getContext(
+        this.projectRoot,
+      );
+      const entities = [...context.entities];
+      console.error(`[LSP:DEBUG] Reloaded entities: ${entities.length} total`);
+
+      // 伏線エンティティのステータスを詳細出力
+      const foreshadowings = entities.filter((e) => e.kind === "foreshadowing");
+      console.error(
+        `[LSP:DEBUG] Foreshadowing entities: ${foreshadowings.length}`,
+      );
+      for (const fs of foreshadowings) {
+        console.error(
+          `[LSP:DEBUG]   - ${fs.id}: status="${fs.status}", name="${fs.name}"`,
+        );
+      }
+
+      this.detector.updateEntities(entities);
+      console.error(`[LSP:DEBUG] Detector entities updated`);
+    } catch (error) {
+      console.error("[LSP:DEBUG] Failed to update detector entities:", error);
+    }
+
+    // 開いているドキュメントの診断を再発行
+    const openDocumentUris = this.documentManager.getAllUris();
+    console.error(
+      `[LSP:DEBUG] Republishing diagnostics for ${openDocumentUris.length} open documents`,
+    );
+
+    for (const uri of openDocumentUris) {
+      try {
+        await this.publishDiagnosticsForUri(uri);
+        console.error(`[LSP:DEBUG] Diagnostics published for: ${uri}`);
+      } catch (error) {
+        console.error(
+          `[LSP:DEBUG] Failed to publish diagnostics for ${uri}:`,
+          error,
+        );
+      }
+    }
+
+    // セマンティックトークンの再取得をクライアントに要求
+    try {
+      await this.transport.writeMessage({
+        jsonrpc: "2.0" as const,
+        method: "workspace/semanticTokens/refresh",
+        params: {},
+      });
+      console.error("[LSP:DEBUG] semanticTokens/refresh sent");
+    } catch (error) {
+      console.error(
+        "[LSP:DEBUG] Failed to send semanticTokens/refresh:",
+        error,
+      );
+    }
+
+    console.error(
+      `[LSP:DEBUG] ========== File Change Processing Complete ==========`,
+    );
   }
 
   /**

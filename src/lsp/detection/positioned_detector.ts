@@ -58,12 +58,22 @@ export type DetectableEntity = {
  * 位置追跡付き検出器
  */
 export class PositionedDetector {
-  private readonly entities: DetectableEntity[];
+  private entities: DetectableEntity[];
   private lastResults: PositionedMatch[] = [];
   private lastContent: string = "";
 
   constructor(entities: DetectableEntity[]) {
     this.entities = entities;
+  }
+
+  /**
+   * エンティティを動的に更新
+   * ファイル変更時にキャッシュをクリアし、新しいエンティティで検出を行えるようにする
+   */
+  updateEntities(entities: DetectableEntity[]): void {
+    this.entities = entities;
+    this.lastResults = [];
+    this.lastContent = "";
   }
 
   /**

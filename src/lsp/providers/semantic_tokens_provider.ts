@@ -50,11 +50,26 @@ export class SemanticTokensProvider {
     content: string,
     _projectPath: string,
   ): SemanticTokens {
+    console.error(
+      `[LSP:DEBUG] SemanticTokensProvider.getSemanticTokens called for: ${_uri}`,
+    );
+
     if (!content || content.trim().length === 0) {
+      console.error(`[LSP:DEBUG] Empty content, returning empty tokens`);
       return { data: [] };
     }
 
     const matches = this.detector.detectWithPositions(content);
+    console.error(`[LSP:DEBUG] Detected ${matches.length} matches`);
+
+    // 伏線マッチの詳細をログ
+    const fsMatches = matches.filter((m) => m.kind === "foreshadowing");
+    for (const m of fsMatches) {
+      console.error(
+        `[LSP:DEBUG]   Foreshadowing match: id="${m.id}", status="${m.status}", pattern="${m.matchedPattern}"`,
+      );
+    }
+
     const tokens = this.convertMatchesToTokens(matches);
     const data = this.encodeTokens(tokens);
 

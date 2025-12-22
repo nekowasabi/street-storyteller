@@ -1,15 +1,12 @@
-# title: 伏線アノテーションのセマンティックハイライト機能
+# title: LSPファイル変更監視機能の実装
 
 ## 概要
 
-- HTMLコメント行上アノテーション `<!-- @foreshadowing:ID -->`
-  を、伏線の状態（planted/resolved）に応じた色でハイライト表示
-- 物語の品質チェック時に、伏線が回収されているかを視覚的に即座に判別可能にする
+- 外部ファイル（伏線定義等のエンティティファイル）の変更を検知し、原稿ファイルのセマンティックトークン・診断をリアルタイムで更新する機能を実装
 
 ### goal
 
-- 作家がNeovimで執筆中、アノテーション行がコメントグレーではなく**状態に応じた色**で表示される
-- 未回収の伏線（planted）はオレンジ、回収済み（resolved）は緑で表示
+- 伏線設定ファイルを変更した後、Neovimを再起動せずに原稿ファイルのハイライトが自動更新される
 
 ## 必須のルール
 
@@ -22,352 +19,255 @@
 
 ## 開発のゴール
 
-- `PositionedDetector`がHTMLコメントアノテーションを検出し、セマンティックトークンとして登録
-- Neovimでステータス別の色分けハイライトが動作
+- LSPサーバーが`workspace/didChangeWatchedFiles`通知を処理できるようにする
+- ファイル変更時にProjectContextManagerのキャッシュをクリアする
+- 開いているドキュメントの診断・セマンティックトークンを再計算する
 
 ## 実装仕様
 
-### 色分け仕様
+### LSPプロトコル仕様
 
-| ステータス           | 色       | Hex     | 意味                 |
-| -------------------- | -------- | ------- | -------------------- |
-| `planted`            | オレンジ | #e67e22 | 伏線設置済み・未回収 |
-| `partially_resolved` | 黄色     | #f1c40f | 部分的に回収         |
-| `resolved`           | 緑       | #27ae60 | 完全回収済み         |
-| `abandoned`          | グレー   | #7f8c8d | 放棄                 |
+- `workspace/didChangeWatchedFiles`:
+  クライアントがファイル変更を検知した際に送信する通知
+- `FileChangeType`: Created(1), Changed(2), Deleted(3)
+- サーバーは`ServerCapabilities.workspace.fileOperations`でファイル監視サポートを宣言
 
-### 期待される動作
+### 監視対象ファイルパターン
 
-**Before（現状）**:
-
-```markdown
-<!-- @foreshadowing:ガラスの靴の伏線 -->  ← グレー（HTMLコメント）
-
-「ただし、この魔法は真夜中の12時に解けてしまいます...」
-```
-
-**After（実装後）**:
-
-```markdown
-<!-- @foreshadowing:ガラスの靴の伏線 -->  ← オレンジ（planted）または 緑（resolved）
-
-「ただし、この魔法は真夜中の12時に解けてしまいます...」
-```
+- `src/characters/**/*.ts` - キャラクター定義
+- `src/settings/**/*.ts` - 設定定義
+- `src/foreshadowings/**/*.ts` - 伏線定義
+- `src/timelines/**/*.ts` - タイムライン定義
 
 ## 生成AIの学習用コンテキスト
 
-### 既存実装（調査結果）
+### LSPサーバー実装
 
-#### SemanticTokensProvider
-
-- `src/lsp/providers/semantic_tokens_provider.ts`
-  - `getSemanticTokens()`: ドキュメント全体のトークン取得
-  - `convertMatchesToTokens()`: PositionedMatchをTokenPositionに変換
-  - `getStatusModifierMask()`:
-    foreshadowingステータス→ビットマスク変換（**既存実装を活用**）
-
-#### セマンティックトークン定義
-
+- `src/lsp/server/server.ts`
+  - `LspServer`クラス: メインサーバー実装
+  - `handleNotification()`: 通知ハンドラー（変更対象）
 - `src/lsp/server/capabilities.ts`
-  - `SEMANTIC_TOKEN_TYPES = ["character", "setting", "foreshadowing"]` (index 2)
-  - `SEMANTIC_TOKEN_MODIFIERS = ["highConfidence", "mediumConfidence", "lowConfidence", "planted", "resolved"]`
-  - `planted`: bit 3 = 8
-  - `resolved`: bit 4 = 16
+  - `ServerCapabilities`型: サーバー機能定義（変更対象）
+  - `getServerCapabilities()`: キャパビリティ取得（変更対象）
 
-#### PositionedDetector
+### プロジェクトコンテキスト管理
 
-- `src/lsp/detection/positioned_detector.ts`
-  - `detectWithPositions()`: エンティティ検出のエントリポイント
-  - `getPatternsWithConfidence()`: 検出パターンと信頼度の取得
-  - `findAllPositions()`: パターン位置の検出
+- `src/lsp/project/project_context_manager.ts`
+  - `ProjectContextManager.clearCache()`: キャッシュクリア（既存、呼び出し追加）
+  - `ProjectContextManager.getContext()`: コンテキスト取得（キャッシュ利用）
 
-### テストファイル
+### 診断・セマンティックトークン
 
-- `tests/lsp/providers/semantic_tokens_provider_test.ts`
-  - 既存テスト: `detects foreshadowing token`,
-    `foreshadowing planted status modifier`,
-    `foreshadowing resolved status modifier`
+- `src/lsp/diagnostics/diagnostics_publisher.ts`
+  - 診断情報の再発行に使用
+- `src/lsp/providers/semantic_tokens_provider.ts`
+  - セマンティックトークンの再計算
 
-### ドキュメント
+### 既存テスト参照
 
-- `docs/lsp.md:285-322`
-  - Neovim設定例: `@lsp.mod.planted`, `@lsp.mod.resolved`ハイライト設定
-
-### 調査根拠
-
-**現在の課題**:
-
-1. `PositionedDetector`は本文中のエンティティ名を検出するが、`<!-- @foreshadowing:ID -->`自体は検出対象外
-2. Markdownのシンタックスハイライトでは、HTMLコメントはグレー（目立たない）
-3. アノテーションからIDを抽出し、Foreshadowing定義のステータスを参照する必要あり
-
-**解決策**:
-
-- `PositionedDetector`にアノテーション行検出メソッドを追加
-- 検出したアノテーションに対してforeshadowingトークンとステータスモディファイアを適用
-
----
+- `tests/lsp/server/server_test.ts`
+  - サーバーテストパターン参照
 
 ## Process
 
-### process1 アノテーション検出機能の追加
+### process1 FileChangeType型の定義
 
-#### sub1 PositionedDetectorにアノテーション検出メソッドを追加
+@target: `src/lsp/server/capabilities.ts` @ref: LSP仕様
+https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#fileChangeType
 
-@target: `src/lsp/detection/positioned_detector.ts` @ref:
-`src/lsp/server/capabilities.ts`
+#### TDD Step 1: Red（失敗するテストを作成）
 
-##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/server/capabilities_test.ts`
 
-@test: `tests/lsp/positioned_detector_test.ts` (追記)
+- [x] `FileChangeType`定数が正しい値を持つことを検証
+  - Created = 1
+  - Changed = 2
+  - Deleted = 3
 
-- [ ] アノテーション行検出テストを作成
-  - `<!-- @foreshadowing:ガラスの靴の伏線 -->` が検出されること
-- [ ] 短縮形式のテスト
-  - `<!-- @fs:伏線ID -->` も検出されること
-- [ ] 複数アノテーションのテスト
-  - `<!-- @fs:伏線A @fs:伏線B -->` で2つ検出されること
-- [ ] 存在しないIDのテスト
-  - 定義されていないIDはスキップされること
+#### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-```typescript
-Deno.test("PositionedDetector - detects foreshadowing annotation comment", async () => {
-  const entities: DetectableEntity[] = [
-    {
-      kind: "foreshadowing",
-      id: "ガラスの靴の伏線",
-      name: "ガラスの靴の伏線",
-      displayNames: ["ガラスの靴"],
-      filePath: "src/foreshadowings/glass_slipper.ts",
-      status: "planted",
-    },
-  ];
-  const detector = new PositionedDetector(entities);
-  const content = `<!-- @foreshadowing:ガラスの靴の伏線 -->
-「魔法は真夜中に解けます」`;
+- [x] `FileChangeType`定数オブジェクトを定義
+- [x] 型エクスポートを追加
 
-  const results = detector.detectWithPositions(content);
+#### TDD Step 3: Refactor & Verify
 
-  assertEquals(results.length, 1);
-  assertEquals(results[0].kind, "foreshadowing");
-  assertEquals(results[0].status, "planted");
-  assertEquals(results[0].positions[0].line, 0);
-});
-```
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] `detectAnnotations`プライベートメソッドを追加
-  ```typescript
-  private detectAnnotations(content: string): PositionedMatch[] {
-    const matches: PositionedMatch[] = [];
-    const pattern = /<!--\s*@(?:foreshadowing|fs):([^\s>@]+)/g;
-    const lines = content.split("\n");
-
-    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-      const line = lines[lineIndex];
-      pattern.lastIndex = 0;
-      let match;
-      while ((match = pattern.exec(line)) !== null) {
-        const id = match[1];
-        const entity = this.entities.find(
-          e => e.kind === "foreshadowing" && (e.id === id || e.name === id)
-        );
-        if (entity) {
-          // アノテーション全体の長さを計算
-          const fullMatch = line.match(/<!--\s*@(?:foreshadowing|fs):[^\s>]+(?:\s+@(?:foreshadowing|fs):[^\s>]+)*\s*-->/);
-          matches.push({
-            entity,
-            kind: "foreshadowing",
-            confidence: 1.0,
-            status: (entity as any).status,
-            positions: [{
-              line: lineIndex,
-              character: 0,
-              length: fullMatch ? fullMatch[0].length : match[0].length,
-            }],
-          });
-        }
-      }
-    }
-    return matches;
-  }
-  ```
-
-- [ ] `detectWithPositions`で`detectAnnotations`の結果をマージ
-  ```typescript
-  detectWithPositions(content: string): PositionedMatch[] {
-    // 既存のエンティティ名検出
-    const nameMatches = this.detectEntityNames(content);
-    // アノテーション検出（新規）
-    const annotationMatches = this.detectAnnotations(content);
-    // マージして重複除去
-    return this.mergeMatches([...nameMatches, ...annotationMatches]);
-  }
-  ```
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] テストを実行し、通過することを確認
-- [ ] 必要に応じてリファクタリング
-- [ ] 再度テストを実行し、通過を確認
-  - **テストが失敗した場合**: 修正 → テスト実行を繰り返す
+- [x] `deno test tests/lsp/server/capabilities_test.ts` を実行
+- [x] `deno check src/lsp/server/capabilities.ts` で型チェック
 
 ---
 
-### process2 SemanticTokensProviderの拡張
+### process2 FileEvent型とDidChangeWatchedFilesParams型の定義
 
-#### sub1 アノテーショントークンの生成確認
+@target: `src/lsp/server/capabilities.ts`
 
-@target: `src/lsp/providers/semantic_tokens_provider.ts` @ref:
-`src/lsp/detection/positioned_detector.ts`
+#### TDD Step 1: Red
 
-##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/server/capabilities_test.ts`
 
-@test: `tests/lsp/providers/semantic_tokens_provider_test.ts` (追記)
+- [x] `FileEvent`型が`uri`と`type`プロパティを持つことを検証
+- [x] `DidChangeWatchedFilesParams`型が`changes`配列を持つことを検証
 
-- [ ] アノテーションからセマンティックトークンが生成されるテスト
-  ```typescript
-  Deno.test("SemanticTokensProvider - detects foreshadowing annotation comment", async () => {
-    const entities: DetectableEntity[] = [
-      createForeshadowingEntity("ガラスの靴の伏線", "planted"),
-    ];
-    const detector = new PositionedDetector(entities);
-    const provider = new SemanticTokensProvider(detector);
+#### TDD Step 2: Green
 
-    const content = `<!-- @foreshadowing:ガラスの靴の伏線 -->
-  ```
+- [x] `FileEvent`型を定義（uri: string, type: FileChangeType）
+- [x] `DidChangeWatchedFilesParams`型を定義（changes: FileEvent[]）
 
-「魔法は真夜中に解けます」`;
+#### TDD Step 3: Refactor & Verify
 
-    const result = provider.getSemanticTokens(content);
-
-    // data配列が存在すること
-    assert(result.data.length > 0);
-    // tokenType = 2 (foreshadowing)
-    assertEquals(result.data[3], 2);
-    // modifier includes planted (bit 3 = 8)
-    assert((result.data[4] & 8) !== 0);
-
-});
-
-````
-- [ ] resolvedステータスのテスト
-- [ ] 複数アノテーションのテスト
-
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [ ] 既存の`convertMatchesToTokens`がアノテーション由来のマッチも正しく処理することを確認
-- 既存ロジックで対応可能なはず（`getStatusModifierMask`が既に実装済み）
-
-##### TDD Step 3: Refactor & Verify
-- [ ] テストを実行し、通過することを確認
-- [ ] 再度テストを実行し、通過を確認
+- [x] `deno test tests/lsp/server/capabilities_test.ts`
+- [x] `deno check src/lsp/server/capabilities.ts`
 
 ---
 
-### process3 Neovim設定の提供
+### process3 ServerCapabilitiesにworkspaceセクションを追加
 
-#### sub1 ハイライト設定ファイルの作成
+@target: `src/lsp/server/capabilities.ts`
 
-@target: `docs/lsp.md` (更新)
-@target: `samples/cinderella/nvim-config-example.lua` (新規)
+#### TDD Step 1: Red
 
-##### TDD Step 1: Red（失敗するテストを作成）
+@test: `tests/lsp/server/capabilities_test.ts`
 
-_このプロセスはドキュメント/設定なのでテストなし_
+- [x] `getServerCapabilities()`の戻り値に`workspace`プロパティが存在することを検証
+- [x] `workspace.didChangeWatchedFiles`がtrueであることを検証
 
-##### TDD Step 2: Green（テストを通過させる最小限の実装）
+#### TDD Step 2: Green
 
-- [ ] `docs/lsp.md`のNeovim設定例を更新
-- アノテーション行のハイライト設定を追加
-```lua
--- ~/.config/nvim/after/ftplugin/markdown.lua
+- [x] `ServerCapabilities`型に`workspace`セクションを追加
+- [x] `getServerCapabilities()`で`workspace.didChangeWatchedFiles`を返す
 
--- storyteller LSP用セマンティックトークンハイライト
--- アノテーション行をステータス別に色分け
-vim.api.nvim_set_hl(0, "@lsp.type.foreshadowing.markdown", {
-  fg = "#e67e22",
-  bold = true,
-  italic = true
-})
+#### TDD Step 3: Refactor & Verify
 
--- ステータス別ハイライト（typemod形式）
-vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.planted.markdown", {
-  fg = "#e67e22",  -- オレンジ（未回収）
-  bold = true
-})
-vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.resolved.markdown", {
-  fg = "#27ae60",  -- グリーン（回収済み）
-  bold = true
-})
-vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.lowConfidence.markdown", {
-  underdotted = true
-})
-````
-
-- [ ] サンプル設定ファイルを作成
-  - `samples/cinderella/nvim-config-example.lua`
-
-##### TDD Step 3: Refactor & Verify
-
-- [ ] サンプルプロジェクトで動作確認
-- [ ] ドキュメントの整合性確認
+- [x] `deno test tests/lsp/server/capabilities_test.ts`
+- [x] `deno check src/lsp/server/capabilities.ts`
 
 ---
 
-### process10 ユニットテスト（追加・統合テスト）
+### process4 handleDidChangeWatchedFilesメソッドの実装
 
-@test: `tests/lsp/annotation_semantic_tokens_test.ts` (新規)
+@target: `src/lsp/server/server.ts` @ref:
+`src/lsp/project/project_context_manager.ts`
 
-- [ ] エンドツーエンドの統合テスト
-  - 原稿ファイル読み込み → アノテーション検出 → セマンティックトークン生成
-- [ ] plantedとresolvedの混在テスト
-- [ ] 日本語IDのテスト
+#### TDD Step 1: Red
+
+@test: `tests/lsp/server/server_file_watching_test.ts`
+
+- [x] `handleDidChangeWatchedFiles`がキャッシュをクリアすることを検証
+  - モックProjectContextManagerを使用
+  - `clearCache()`が呼ばれることを確認
+
+#### TDD Step 2: Green
+
+- [x] `LspServer`に`handleDidChangeWatchedFiles`メソッドを追加
+- [x] メソッド内で`projectContextManager.clearCache()`を呼び出し
+
+#### TDD Step 3: Refactor & Verify
+
+- [x] `deno test tests/lsp/server/server_file_watching_test.ts --filter "handleDidChangeWatchedFiles"`
+- [x] `deno check src/lsp/server/server.ts`
+
+---
+
+### process5 handleNotificationにworkspace/didChangeWatchedFilesケースを追加
+
+@target: `src/lsp/server/server.ts`
+
+#### TDD Step 1: Red
+
+@test: `tests/lsp/server/server_file_watching_test.ts`
+
+- [x] `workspace/didChangeWatchedFiles`通知を受信した際に`handleDidChangeWatchedFiles`が呼ばれることを検証
+
+#### TDD Step 2: Green
+
+- [x] `handleNotification`のswitch文に`workspace/didChangeWatchedFiles`ケースを追加
+- [x] `handleDidChangeWatchedFiles`を呼び出し
+
+#### TDD Step 3: Refactor & Verify
+
+- [x] `deno test tests/lsp/server/server_file_watching_test.ts`
+- [x] `deno check src/lsp/server/server.ts`
+
+---
+
+### process6 ファイル変更時の診断再発行
+
+@target: `src/lsp/server/server.ts`
+
+#### TDD Step 1: Red
+
+@test: `tests/lsp/server/server_file_watching_test.ts`
+
+- [x] ファイル変更後、開いているドキュメントの診断が再計算されることを検証
+
+#### TDD Step 2: Green
+
+- [x] `handleDidChangeWatchedFiles`内で、`documentManager`から開いているドキュメント一覧を取得
+- [x] 各ドキュメントに対して`publishDiagnosticsForUri`を呼び出し
+
+#### TDD Step 3: Refactor & Verify
+
+- [x] `deno test tests/lsp/server/server_file_watching_test.ts`
+- [x] `deno check src/lsp/server/server.ts`
+
+---
+
+### process10 統合テスト
+
+#### sub1 エンドツーエンドテスト
+
+@test: `tests/lsp/server/file_watching_integration_test.ts`
+
+- [x] 伏線ファイル変更 → キャッシュクリア →
+      診断更新の一連の流れをテスト（8シナリオ実装）
 
 ---
 
 ### process50 フォローアップ
 
-_実装後に仕様変更などが発生した場合は、ここにProcessを追加する_
+（実装後に仕様変更などが発生した場合は、ここにProcessを追加する）
 
 ---
 
 ### process100 リファクタリング
 
-- [ ] `PositionedDetector`のアノテーション検出ロジックを別クラスに分離検討
-- [ ] 正規表現パターンの共通化
+- [x] 重複コードの抽出（不要と判断）
+- [x] エラーハンドリングの強化（try-catch追加）
+- [x] ログ出力の追加（デバッグ用console.debug）
 
 ---
 
 ### process200 ドキュメンテーション
 
-- [ ] `docs/lsp.md` のセマンティックトークンセクションを更新
-  - アノテーション行のハイライトについて追記
-- [ ] `CLAUDE.md` の「進行中の機能開発」セクションを更新
-- [ ] Serena Memoryに実装知見を保存
-  - `foreshadowing_semantic_highlight`
+- [x] `docs/lsp.md`にファイル監視機能のセクションを追加（セクション7「ファイル変更監視」）
+- [x] Serena
+      Memoryの`neovim_integration_lessons`を更新（v1.6実装完了ステータス）
+- [x] CLAUDE.mdの「進行中の機能開発」セクションを更新（LSP機能として既に含まれているため追加不要）
 
 ---
 
-## 見積もり
+## 調査結果サマリー
 
-| Process    | 推定工数    |
-| ---------- | ----------- |
-| process1   | 1-2時間     |
-| process2   | 30分-1時間  |
-| process3   | 30分        |
-| process10  | 30分-1時間  |
-| process100 | 30分        |
-| process200 | 30分        |
-| **合計**   | **3-5時間** |
+### 現状の問題点 → 実装完了
 
----
+| コンポーネント          | 状態        | 詳細                                          |
+| ----------------------- | ----------- | --------------------------------------------- |
+| `handleNotification`    | ✅ 実装済み | `workspace/didChangeWatchedFiles`ケースを追加 |
+| `ProjectContextManager` | ✅ 統合済み | `clearCache()`がファイル変更時に呼び出される  |
+| `ServerCapabilities`    | ✅ 宣言済み | `workspace.didChangeWatchedFiles`を宣言       |
 
-## 調査ソース
+### 変更ファイル
 
-- 既存実装: `src/lsp/providers/semantic_tokens_provider.ts`
-- 既存定義: `src/lsp/server/capabilities.ts`
-- 既存テスト: `tests/lsp/providers/semantic_tokens_provider_test.ts`
-- ドキュメント: `docs/lsp.md`
-- Memory: `foreshadowing_annotation_research`
+- `src/lsp/server/server.ts` -
+  `handleDidChangeWatchedFiles`メソッド追加、`handleNotification`拡張
+- `src/lsp/server/capabilities.ts` - FileChangeType, FileEvent,
+  DidChangeWatchedFilesParams型追加、workspace宣言
+- `tests/lsp/server/server_file_watching_test.ts` - 6ユニットテスト（新規）
+- `tests/lsp/server/file_watching_integration_test.ts` - 8統合テスト（新規）
+- `tests/lsp/server/capabilities_test.ts` - 7テスト追加
+- `docs/lsp.md` - ファイル監視セクション追加
+- `.serena/memories/neovim_integration_lessons.md` - 実装完了ステータス更新
+
+### 暫定回避策 → 不要になりました
+
+~~`:LspRestart` コマンドでLSPサーバーを再起動するとキャッシュがクリアされる~~ →
+エンティティファイル変更時に自動でキャッシュクリア・診断再発行が行われます
