@@ -11,6 +11,12 @@ import { LspTransport } from "@storyteller/lsp/protocol/transport.ts";
 import { createLspMessage, createMockWriter } from "../helpers.ts";
 import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
 
+// デバウンス遅延時間（サーバーの200msに余裕を持たせる）
+const DEBOUNCE_WAIT = 250;
+
+// デバウンス待機用ヘルパー
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // テスト用モックエンティティ
 const mockEntities: DetectableEntity[] = [
   {
@@ -194,6 +200,9 @@ Deno.test("Integration - file change triggers diagnostics republish for manuscri
     await server.handleMessage(result.value);
   }
 
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
+
   const allResponses = extractAllResponses(writer.getData());
   const diagnosticsNotifications = extractDiagnosticsNotifications(
     allResponses,
@@ -289,6 +298,9 @@ Deno.test("Integration - file change triggers diagnostics republish for all open
     await server.handleMessage(result.value);
   }
 
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
+
   const allResponses = extractAllResponses(writer.getData());
 
   // 各ドキュメントの診断通知を確認
@@ -372,6 +384,9 @@ Deno.test("Integration - diagnostics content is correct after file change", asyn
     await server.handleMessage(result.value);
   }
 
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
+
   const allResponses = extractAllResponses(writer.getData());
   const diagnosticsNotifications = extractDiagnosticsNotifications(
     allResponses,
@@ -451,6 +466,9 @@ Deno.test("Integration - character file change triggers diagnostics republish", 
     await server.handleMessage(result.value);
   }
 
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
+
   const allResponses = extractAllResponses(writer.getData());
   const diagnosticsNotifications = extractDiagnosticsNotifications(
     allResponses,
@@ -523,6 +541,9 @@ Deno.test("Integration - setting file change triggers diagnostics republish", as
     if (!result.ok) break;
     await server.handleMessage(result.value);
   }
+
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
 
   const allResponses = extractAllResponses(writer.getData());
   const diagnosticsNotifications = extractDiagnosticsNotifications(
@@ -602,6 +623,9 @@ Deno.test("Integration - multiple file changes in single notification", async ()
     await server.handleMessage(result.value);
   }
 
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
+
   const allResponses = extractAllResponses(writer.getData());
   const diagnosticsNotifications = extractDiagnosticsNotifications(
     allResponses,
@@ -665,6 +689,9 @@ Deno.test("Integration - file change with no open documents does not crash", asy
     if (!result.ok) break;
     await server.handleMessage(result.value);
   }
+
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
 
   const allResponses = extractAllResponses(writer.getData());
 
@@ -759,6 +786,9 @@ Deno.test("Integration - file change after document close does not republish dia
     if (!result.ok) break;
     await server.handleMessage(result.value);
   }
+
+  // デバウンス処理の完了を待つ
+  await delay(DEBOUNCE_WAIT);
 
   const allResponses = extractAllResponses(writer.getData());
   const diagnosticsNotifications = extractDiagnosticsNotifications(

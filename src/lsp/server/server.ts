@@ -18,6 +18,7 @@ import {
 } from "@storyteller/lsp/protocol/json_rpc.ts";
 import {
   type DidChangeWatchedFilesParams,
+  type FileEvent,
   getServerCapabilities,
   type ServerCapabilities,
 } from "@storyteller/lsp/server/capabilities.ts";
@@ -65,6 +66,7 @@ import {
   type ProjectContext,
   ProjectContextManager,
 } from "@storyteller/lsp/project/project_context_manager.ts";
+import { loadSingleEntity } from "@storyteller/cli/modules/lsp/start.ts";
 
 /** サーバー未初期化エラーコード (LSP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;
@@ -166,6 +168,14 @@ export class LspServer {
   // マルチプロジェクト対応
   private readonly projectDetector: ProjectDetector;
   private readonly projectContextManager: ProjectContextManager;
+
+  // ファイル変更デバウンス
+  private fileChangeDebounceTimer: number | null = null;
+  private pendingFileChanges: FileEvent[] = [];
+  /** ファイル変更デバウンス遅延時間（ミリ秒） */
+  private readonly DEBOUNCE_DELAY = 200;
+  /** 増分更新を使用するエンティティファイル変更の最大数 */
+  private readonly INCREMENTAL_UPDATE_THRESHOLD = 5;
 
   constructor(
     transport: LspTransport,
@@ -430,9 +440,8 @@ export class LspServer {
 
     try {
       await this.transport.writeMessage(request);
-      console.error("[LSP:DEBUG] File watcher registration sent");
     } catch (error) {
-      console.error("[LSP:DEBUG] Failed to register file watchers:", error);
+      // ファイルウォッチャー登録失敗時は無視
     }
   }
 
@@ -565,27 +574,15 @@ export class LspServer {
     request: JsonRpcRequest,
   ): Promise<void> {
     const params = request.params as SemanticTokensParams;
-    console.error(
-      `[LSP:DEBUG] handleSemanticTokensFull called for: ${params.textDocument.uri}`,
-    );
-
     const document = this.documentManager.get(params.textDocument.uri);
 
     let result = { data: [] as number[] };
     if (document) {
-      console.error(
-        `[LSP:DEBUG] Document found, content length: ${document.content.length}`,
-      );
       result = this.semanticTokensProvider.getSemanticTokens(
         params.textDocument.uri,
         document.content,
         this.projectRoot,
       );
-      console.error(
-        `[LSP:DEBUG] Semantic tokens result: ${result.data.length} data items`,
-      );
-    } else {
-      console.error(`[LSP:DEBUG] Document NOT found in manager`);
     }
 
     const response = createSuccessResponse(request.id, result);
@@ -681,73 +678,68 @@ export class LspServer {
   private async handleDidChangeWatchedFiles(
     params: DidChangeWatchedFilesParams,
   ): Promise<void> {
-    // デバッグログ
-    console.error(
-      `[LSP:DEBUG] ========== File Change Notification Received ==========`,
-    );
-    console.error(
-      `[LSP:DEBUG] File changes detected: ${params.changes.length} files`,
-    );
-    for (const change of params.changes) {
-      console.error(`[LSP:DEBUG]   ${change.uri} (type: ${change.type})`);
+    // 変更をバッファに追加
+    this.pendingFileChanges.push(...params.changes);
+
+    // 既存タイマーをクリア
+    if (this.fileChangeDebounceTimer !== null) {
+      clearTimeout(this.fileChangeDebounceTimer);
     }
 
-    // キャッシュをクリア
-    try {
-      this.projectContextManager.clearCache();
-      console.error("[LSP:DEBUG] Project context cache cleared");
-    } catch (error) {
-      console.error(
-        "[LSP:DEBUG] Failed to clear project context cache:",
-        error,
-      );
-    }
+    // 新しいタイマーをセット
+    this.fileChangeDebounceTimer = setTimeout(() => {
+      const changes = [...this.pendingFileChanges];
+      this.pendingFileChanges = [];
+      this.fileChangeDebounceTimer = null;
+      this.processFileChanges(changes);
+    }, this.DEBOUNCE_DELAY);
+  }
 
-    // エンティティを再ロードしてDetectorを更新
-    try {
-      const context = await this.projectContextManager.getContext(
-        this.projectRoot,
-      );
-      const entities = [...context.entities];
-      console.error(`[LSP:DEBUG] Reloaded entities: ${entities.length} total`);
+  /**
+   * デバウンス後にファイル変更を実際に処理
+   */
+  private async processFileChanges(changes: FileEvent[]): Promise<void> {
+    // エンティティファイルの変更のみ抽出
+    const entityChanges = changes.filter((c) => this.isEntityFile(c.uri));
+    const nonEntityChanges = changes.filter((c) => !this.isEntityFile(c.uri));
 
-      // 伏線エンティティのステータスを詳細出力
-      const foreshadowings = entities.filter((e) => e.kind === "foreshadowing");
-      console.error(
-        `[LSP:DEBUG] Foreshadowing entities: ${foreshadowings.length}`,
-      );
-      for (const fs of foreshadowings) {
-        console.error(
-          `[LSP:DEBUG]   - ${fs.id}: status="${fs.status}", name="${fs.name}"`,
-        );
+    // 差分更新を試行
+    if (
+      entityChanges.length > 0 &&
+      entityChanges.length <= this.INCREMENTAL_UPDATE_THRESHOLD
+    ) {
+      // 少数のエンティティファイル変更は差分更新
+      try {
+        for (const change of entityChanges) {
+          const relPath = this.uriToRelativePath(change.uri);
+          const entity = await loadSingleEntity(this.projectRoot, relPath);
+          if (entity) {
+            this.detector.updateSingleEntity(entity);
+          }
+        }
+      } catch {
+        // インクリメンタル更新失敗時はフルリロード
+        await this.fullReload();
       }
-
-      this.detector.updateEntities(entities);
-      console.error(`[LSP:DEBUG] Detector entities updated`);
-    } catch (error) {
-      console.error("[LSP:DEBUG] Failed to update detector entities:", error);
+    } else if (
+      entityChanges.length > this.INCREMENTAL_UPDATE_THRESHOLD ||
+      nonEntityChanges.length > 0
+    ) {
+      // 多数の変更またはエンティティ以外の変更がある場合はフルリロード
+      await this.fullReload();
     }
 
     // 開いているドキュメントの診断を再発行
     const openDocumentUris = this.documentManager.getAllUris();
-    console.error(
-      `[LSP:DEBUG] Republishing diagnostics for ${openDocumentUris.length} open documents`,
-    );
-
     for (const uri of openDocumentUris) {
       try {
         await this.publishDiagnosticsForUri(uri);
-        console.error(`[LSP:DEBUG] Diagnostics published for: ${uri}`);
-      } catch (error) {
-        console.error(
-          `[LSP:DEBUG] Failed to publish diagnostics for ${uri}:`,
-          error,
-        );
+      } catch {
+        // 診断発行失敗時は無視
       }
     }
 
     // セマンティックトークンの再取得をクライアントに要求
-    // LSP仕様: workspace/semanticTokens/refresh はサーバー→クライアントのリクエスト（idが必要）
     try {
       const refreshRequestId = `semantic-refresh-${Date.now()}`;
       await this.transport.writeMessage({
@@ -756,20 +748,56 @@ export class LspServer {
         method: "workspace/semanticTokens/refresh",
         params: {},
       });
-      console.error(
-        "[LSP:DEBUG] semanticTokens/refresh request sent with id:",
-        refreshRequestId,
-      );
-    } catch (error) {
-      console.error(
-        "[LSP:DEBUG] Failed to send semanticTokens/refresh:",
-        error,
-      );
+    } catch {
+      // セマンティックトークンリフレッシュ失敗時は無視
+    }
+  }
+
+  /**
+   * フルリロード（キャッシュクリア + 全エンティティ再読み込み）
+   */
+  private async fullReload(): Promise<void> {
+    try {
+      this.projectContextManager.clearCache();
+    } catch {
+      // キャッシュクリア失敗時は無視
     }
 
-    console.error(
-      `[LSP:DEBUG] ========== File Change Processing Complete ==========`,
+    try {
+      const context = await this.projectContextManager.getContext(
+        this.projectRoot,
+      );
+      const entities = [...context.entities];
+      this.detector.updateEntities(entities);
+    } catch {
+      // エンティティ更新失敗時は無視
+    }
+  }
+
+  /**
+   * URIがエンティティファイルかどうかを判定
+   */
+  private isEntityFile(uri: string): boolean {
+    return (
+      uri.includes("/characters/") ||
+      uri.includes("/settings/") ||
+      uri.includes("/foreshadowings/")
     );
+  }
+
+  /**
+   * file:// URIをプロジェクトルートからの相対パスに変換
+   */
+  private uriToRelativePath(uri: string): string {
+    // file:// プレフィックスを削除
+    const filePath = uri.replace(/^file:\/\//, "");
+    // URLエンコードされた文字をデコード（日本語ファイル名対応）
+    const decodedPath = decodeURIComponent(filePath);
+    // プロジェクトルートを削除して相対パスに
+    const projectRootWithSlash = this.projectRoot.endsWith("/")
+      ? this.projectRoot
+      : this.projectRoot + "/";
+    return decodedPath.replace(projectRootWithSlash, "");
   }
 
   /**

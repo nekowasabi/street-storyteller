@@ -77,6 +77,25 @@ export class PositionedDetector {
   }
 
   /**
+   * 単一エンティティを更新（差分更新用）
+   * 既存のエンティティがあれば置換、なければ追加
+   */
+  updateSingleEntity(entity: DetectableEntity | null): void {
+    if (!entity) return;
+
+    const index = this.entities.findIndex((e) => e.id === entity.id);
+    if (index >= 0) {
+      this.entities[index] = entity;
+    } else {
+      this.entities.push(entity);
+    }
+
+    // キャッシュをクリア
+    this.lastResults = [];
+    this.lastContent = "";
+  }
+
+  /**
    * コンテンツ内のエンティティ参照を位置情報付きで検出
    */
   detectWithPositions(content: string): PositionedMatch[] {

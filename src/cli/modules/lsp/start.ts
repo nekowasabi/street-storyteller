@@ -264,6 +264,78 @@ export async function loadEntities(
 }
 
 /**
+ * 単一のエンティティファイルをロード
+ * 差分更新用: 変更されたファイルのみを再importする
+ *
+ * @param projectRoot プロジェクトルートパス
+ * @param relativeFilePath プロジェクトルートからの相対パス（例: "src/characters/hero.ts"）
+ * @returns エンティティ、またはパス/パースエラー時はnull
+ */
+export async function loadSingleEntity(
+  projectRoot: string,
+  relativeFilePath: string,
+): Promise<DetectableEntity | null> {
+  const { join, toFileUrl, resolve } = await import("@std/path");
+
+  // エンティティ種別を判定
+  let kind: "character" | "setting" | "foreshadowing" | null = null;
+  if (relativeFilePath.includes("/characters/")) {
+    kind = "character";
+  } else if (relativeFilePath.includes("/settings/")) {
+    kind = "setting";
+  } else if (relativeFilePath.includes("/foreshadowings/")) {
+    kind = "foreshadowing";
+  }
+
+  if (!kind) {
+    return null;
+  }
+
+  const absoluteProjectRoot = resolve(projectRoot);
+  const absPath = join(absoluteProjectRoot, relativeFilePath);
+
+  // キャッシュバスター
+  const cacheBuster = Date.now();
+
+  try {
+    const mod = await import(`${toFileUrl(absPath).href}?v=${cacheBuster}`);
+
+    for (const [, value] of Object.entries(mod)) {
+      if (kind === "foreshadowing") {
+        const parsed = parseForeshadowingEntity(value);
+        if (parsed) {
+          return {
+            kind: "foreshadowing",
+            id: parsed.id,
+            name: parsed.name,
+            displayNames: parsed.displayNames,
+            filePath: relativeFilePath,
+            status: parsed.status,
+          };
+        }
+      } else {
+        const parsed = parseEntity(value);
+        if (parsed) {
+          return {
+            kind,
+            id: parsed.id,
+            name: parsed.name,
+            displayNames: parsed.displayNames,
+            aliases: parsed.aliases,
+            filePath: relativeFilePath,
+          };
+        }
+      }
+    }
+  } catch {
+    // ファイルが存在しない、またはimportエラー
+    return null;
+  }
+
+  return null;
+}
+
+/**
  * 伏線エンティティをパース
  */
 export function parseForeshadowingEntity(value: unknown): {

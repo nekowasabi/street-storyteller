@@ -540,3 +540,112 @@ Deno.test("PositionedDetector - updateEntities with empty array clears all entit
   const results2 = detector.detectWithPositions(content);
   assertEquals(results2.length, 0);
 });
+
+// ========================================
+// process3: updateSingleEntity 単一エンティティ部分更新テスト
+// ========================================
+
+Deno.test("PositionedDetector - updateSingleEntity updates only specified entity", () => {
+  const detector = new PositionedDetector(mockForeshadowingEntities);
+
+  // 初期状態でstatus=plantedで検出される
+  const content = "ガラスの靴が輝いていた。";
+  const results1 = detector.detectWithPositions(content);
+  const foreshadowing1 = results1.find((r) => r.id === "glass_slipper");
+  assertExists(foreshadowing1);
+  assertEquals(foreshadowing1.status, "planted");
+
+  // updateSingleEntityでstatusを変更
+  const updatedEntity = {
+    kind: "foreshadowing" as const,
+    id: "glass_slipper",
+    name: "ガラスの靴の伏線",
+    displayNames: ["ガラスの靴", "ガラスの靴の伏線"],
+    aliases: ["輝く靴"],
+    filePath: "src/foreshadowings/glass_slipper.ts",
+    status: "resolved" as const, // planted → resolved に変更
+  };
+  detector.updateSingleEntity(updatedEntity);
+
+  // 更新後: status=resolvedで検出される
+  const results2 = detector.detectWithPositions(content);
+  const foreshadowing2 = results2.find((r) => r.id === "glass_slipper");
+  assertExists(foreshadowing2);
+  assertEquals(foreshadowing2.status, "resolved");
+
+  // 他のエンティティは影響を受けない
+  const content2 = "真夜中の期限が迫る。";
+  const results3 = detector.detectWithPositions(content2);
+  const midnight = results3.find((r) => r.id === "midnight_deadline");
+  assertExists(midnight);
+  assertEquals(midnight.status, "resolved"); // 元のまま
+});
+
+Deno.test("PositionedDetector - updateSingleEntity adds new entity if not exists", () => {
+  const detector = new PositionedDetector(mockEntities);
+
+  // 初期状態: 魔法使いは検出されない
+  const content = "勇者と魔法使いが冒険した。";
+  const results1 = detector.detectWithPositions(content);
+  const mage1 = results1.find((r) => r.id === "mage");
+  assertEquals(mage1, undefined);
+
+  // 新しいエンティティを追加
+  const newEntity = {
+    kind: "character" as const,
+    id: "mage",
+    name: "魔法使い",
+    displayNames: ["魔法使い"],
+    aliases: [],
+    filePath: "src/characters/mage.ts",
+  };
+  detector.updateSingleEntity(newEntity);
+
+  // 更新後: 魔法使いが検出される
+  const results2 = detector.detectWithPositions(content);
+  const mage2 = results2.find((r) => r.id === "mage");
+  assertExists(mage2);
+  assertEquals(mage2.kind, "character");
+});
+
+Deno.test("PositionedDetector - updateSingleEntity with null does nothing", () => {
+  const detector = new PositionedDetector(mockEntities);
+
+  // 初期状態: 勇者が検出される
+  const content = "勇者は剣を抜いた。";
+  const results1 = detector.detectWithPositions(content);
+  assertEquals(results1.length, 1);
+
+  // nullを渡しても何も変わらない
+  detector.updateSingleEntity(null);
+
+  // 更新後も同じ
+  const results2 = detector.detectWithPositions(content);
+  assertEquals(results2.length, 1);
+  assertEquals(results2[0].id, "hero");
+});
+
+Deno.test("PositionedDetector - updateSingleEntity clears internal cache", () => {
+  const detector = new PositionedDetector(mockEntities);
+
+  // 初期検出
+  const content = "勇者は城に向かった。";
+  detector.detectWithPositions(content);
+
+  // 城のdisplayNamesを更新
+  const updatedCastle = {
+    kind: "setting" as const,
+    id: "castle",
+    name: "城",
+    displayNames: ["城", "王城", "大城塞"], // "大城塞" を追加
+    aliases: ["城塞"],
+    filePath: "src/settings/castle.ts",
+  };
+  detector.updateSingleEntity(updatedCastle);
+
+  // 新しいdisplayNamesで検出される
+  const content2 = "勇者は大城塞に向かった。";
+  const results = detector.detectWithPositions(content2);
+  const castleResult = results.find((r) => r.id === "castle");
+  assertExists(castleResult);
+});

@@ -1,12 +1,13 @@
-# title: LSPファイル変更監視機能の実装
+# title: LSPファイル変更監視のパフォーマンス最適化
 
 ## 概要
 
-- 外部ファイル（伏線定義等のエンティティファイル）の変更を検知し、原稿ファイルのセマンティックトークン・診断をリアルタイムで更新する機能を実装
+- キャッシュバスター導入後のパフォーマンス低下を軽減し、ファイル変更時のセマンティックトークン更新を高速化する
 
 ### goal
 
-- 伏線設定ファイルを変更した後、Neovimを再起動せずに原稿ファイルのハイライトが自動更新される
+- 単一ファイル変更時：変更されたファイルのみを再読み込み（現在は全ファイル再読み込み）
+- 連続ファイル変更時（git checkout等）：デバウンスにより1回の処理にまとめる
 
 ## 必須のルール
 
@@ -16,258 +17,283 @@
   - 実装コードを書く前に、失敗するテストを先に作成する
   - テストが通過するまで修正とテスト実行を繰り返す
   - プロセス完了の条件：該当するすべてのテストが通過していること
+    - deno test -A
+    - deno lint
+    - deno fmt --check
 
 ## 開発のゴール
 
-- LSPサーバーが`workspace/didChangeWatchedFiles`通知を処理できるようにする
-- ファイル変更時にProjectContextManagerのキャッシュをクリアする
-- 開いているドキュメントの診断・セマンティックトークンを再計算する
+- デバウンス機能：連続したファイル変更イベント（200ms以内）を1回の処理にまとめる
+- 差分更新機能：変更されたエンティティファイルのみを再読み込みし、Detectorを部分更新する
 
 ## 実装仕様
 
-### LSPプロトコル仕様
+### 現状の問題（調査結果）
 
-- `workspace/didChangeWatchedFiles`:
-  クライアントがファイル変更を検知した際に送信する通知
-- `FileChangeType`: Created(1), Changed(2), Deleted(3)
-- サーバーは`ServerCapabilities.workspace.fileOperations`でファイル監視サポートを宣言
+**`handleDidChangeWatchedFiles` の現在の動作**
+(`src/lsp/server/server.ts`:680-772):
 
-### 監視対象ファイルパターン
+```typescript
+// 問題1: 毎回全キャッシュをクリア
+this.projectContextManager.clearCache();
 
-- `src/characters/**/*.ts` - キャラクター定義
-- `src/settings/**/*.ts` - 設定定義
-- `src/foreshadowings/**/*.ts` - 伏線定義
-- `src/timelines/**/*.ts` - タイムライン定義
+// 問題2: getContext() → loadEntities() で全ファイルを再import
+const context = await this.projectContextManager.getContext(this.projectRoot);
+```
+
+**`loadEntities` の現在の動作** (`src/cli/modules/lsp/start.ts`:149-263):
+
+- 3つのディレクトリ（characters, settings, foreshadowings）を全て走査
+- 各ファイルをキャッシュバスター付きでimport（`?v=${Date.now()}`）
+- N個のファイルがあれば、1ファイル変更でもN回のimportが発生
+
+**パフォーマンス影響**:
+
+| シナリオ                       | 現状               | 処理回数 |
+| ------------------------------ | ------------------ | -------- |
+| 1ファイル編集・保存            | 全ファイル再import | N回      |
+| Ctrl+S連打（5回）              | 5回 × 全ファイル   | 5N回     |
+| git checkout（30ファイル変更） | 30回 × 全ファイル  | 30N回    |
+
+### 最適化アプローチ
+
+**Phase 1: デバウンス**
+
+- ファイル変更イベントを200ms間バッファリング
+- タイマー期間内の変更は1回にまとめて処理
+
+**Phase 2: 差分更新**
+
+- 変更されたファイルのURIからエンティティ種別を判定
+- 単一ファイルのみを再importして該当エンティティを更新
+- Detectorは部分更新（`updateSingleEntity`）
 
 ## 生成AIの学習用コンテキスト
 
 ### LSPサーバー実装
 
 - `src/lsp/server/server.ts`
-  - `LspServer`クラス: メインサーバー実装
-  - `handleNotification()`: 通知ハンドラー（変更対象）
-- `src/lsp/server/capabilities.ts`
-  - `ServerCapabilities`型: サーバー機能定義（変更対象）
-  - `getServerCapabilities()`: キャパビリティ取得（変更対象）
+  - `handleDidChangeWatchedFiles` メソッド（680-772行目）
+  - `LspServer` クラスのプロパティ定義部分
 
-### プロジェクトコンテキスト管理
+### エンティティローダー
+
+- `src/cli/modules/lsp/start.ts`
+  - `loadEntities` 関数（149-263行目）
+  - `parseEntity`, `parseForeshadowingEntity` 関数
+
+### 検出器
+
+- `src/lsp/detection/positioned_detector.ts`
+  - `updateEntities` メソッド（72-76行目）
+  - `PositionedDetector` クラスのプロパティ
+
+### プロジェクトコンテキスト
 
 - `src/lsp/project/project_context_manager.ts`
-  - `ProjectContextManager.clearCache()`: キャッシュクリア（既存、呼び出し追加）
-  - `ProjectContextManager.getContext()`: コンテキスト取得（キャッシュ利用）
+  - `clearCache`, `getContext` メソッド
 
-### 診断・セマンティックトークン
+### 既存テスト
 
-- `src/lsp/diagnostics/diagnostics_publisher.ts`
-  - 診断情報の再発行に使用
-- `src/lsp/providers/semantic_tokens_provider.ts`
-  - セマンティックトークンの再計算
-
-### 既存テスト参照
-
-- `tests/lsp/server/server_test.ts`
-  - サーバーテストパターン参照
+- `tests/lsp/server/server_file_watching_test.ts`
+  - ファイル変更監視の既存テストパターン
 
 ## Process
 
-### process1 FileChangeType型の定義
+### process1 デバウンス機能の実装
 
-@target: `src/lsp/server/capabilities.ts` @ref: LSP仕様
-https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#fileChangeType
+#### sub1 LspServerにデバウンス用プロパティを追加
 
-#### TDD Step 1: Red（失敗するテストを作成）
+@target: `src/lsp/server/server.ts` @ref: `src/lsp/server/capabilities.ts`
+(FileEvent型)
 
-@test: `tests/lsp/server/capabilities_test.ts`
-
-- [x] `FileChangeType`定数が正しい値を持つことを検証
-  - Created = 1
-  - Changed = 2
-  - Deleted = 3
-
-#### TDD Step 2: Green（テストを通過させる最小限の実装）
-
-- [x] `FileChangeType`定数オブジェクトを定義
-- [x] 型エクスポートを追加
-
-#### TDD Step 3: Refactor & Verify
-
-- [x] `deno test tests/lsp/server/capabilities_test.ts` を実行
-- [x] `deno check src/lsp/server/capabilities.ts` で型チェック
-
----
-
-### process2 FileEvent型とDidChangeWatchedFilesParams型の定義
-
-@target: `src/lsp/server/capabilities.ts`
-
-#### TDD Step 1: Red
-
-@test: `tests/lsp/server/capabilities_test.ts`
-
-- [x] `FileEvent`型が`uri`と`type`プロパティを持つことを検証
-- [x] `DidChangeWatchedFilesParams`型が`changes`配列を持つことを検証
-
-#### TDD Step 2: Green
-
-- [x] `FileEvent`型を定義（uri: string, type: FileChangeType）
-- [x] `DidChangeWatchedFilesParams`型を定義（changes: FileEvent[]）
-
-#### TDD Step 3: Refactor & Verify
-
-- [x] `deno test tests/lsp/server/capabilities_test.ts`
-- [x] `deno check src/lsp/server/capabilities.ts`
-
----
-
-### process3 ServerCapabilitiesにworkspaceセクションを追加
-
-@target: `src/lsp/server/capabilities.ts`
-
-#### TDD Step 1: Red
-
-@test: `tests/lsp/server/capabilities_test.ts`
-
-- [x] `getServerCapabilities()`の戻り値に`workspace`プロパティが存在することを検証
-- [x] `workspace.didChangeWatchedFiles`がtrueであることを検証
-
-#### TDD Step 2: Green
-
-- [x] `ServerCapabilities`型に`workspace`セクションを追加
-- [x] `getServerCapabilities()`で`workspace.didChangeWatchedFiles`を返す
-
-#### TDD Step 3: Refactor & Verify
-
-- [x] `deno test tests/lsp/server/capabilities_test.ts`
-- [x] `deno check src/lsp/server/capabilities.ts`
-
----
-
-### process4 handleDidChangeWatchedFilesメソッドの実装
-
-@target: `src/lsp/server/server.ts` @ref:
-`src/lsp/project/project_context_manager.ts`
-
-#### TDD Step 1: Red
+##### TDD Step 1: Red（失敗するテストを作成）
 
 @test: `tests/lsp/server/server_file_watching_test.ts`
 
-- [x] `handleDidChangeWatchedFiles`がキャッシュをクリアすることを検証
-  - モックProjectContextManagerを使用
-  - `clearCache()`が呼ばれることを確認
+- [ ] テストケースを作成（この時点で実装がないため失敗する）
+  - 「LspServer - handleDidChangeWatchedFiles debounces rapid file changes」
+  - 50ms間隔で3回のファイル変更イベントを送信
+  - processFileChangesが1回だけ呼ばれることを検証
 
-#### TDD Step 2: Green
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [x] `LspServer`に`handleDidChangeWatchedFiles`メソッドを追加
-- [x] メソッド内で`projectContextManager.clearCache()`を呼び出し
+- [ ] `LspServer` クラスにプロパティを追加
+  - `private fileChangeDebounceTimer: number | null = null`
+  - `private pendingFileChanges: FileEvent[] = []`
+  - `private readonly DEBOUNCE_DELAY = 200` (ms)
+- [ ] `handleDidChangeWatchedFiles` をデバウンス対応に変更
+  - 変更イベントを `pendingFileChanges` に追加
+  - 既存タイマーがあればクリア
+  - 新しいタイマーをセット（200ms後に `processFileChanges` を呼び出し）
+- [ ] `processFileChanges` メソッドを新規作成
+  - 現在の `handleDidChangeWatchedFiles` の本体処理を移動
+  - バッファをクリア
 
-#### TDD Step 3: Refactor & Verify
+##### TDD Step 3: Refactor & Verify
 
-- [x] `deno test tests/lsp/server/server_file_watching_test.ts --filter "handleDidChangeWatchedFiles"`
-- [x] `deno check src/lsp/server/server.ts`
+- [ ] テストを実行し、通過することを確認
+  - `deno test --allow-all tests/lsp/server/server_file_watching_test.ts`
+- [ ] 既存のファイル監視テストが引き続き通過することを確認
+- [ ] 必要に応じてリファクタリング
 
----
+### process2 単一エンティティローダーの実装
 
-### process5 handleNotificationにworkspace/didChangeWatchedFilesケースを追加
+#### sub1 loadSingleEntity関数の作成
 
-@target: `src/lsp/server/server.ts`
+@target: `src/cli/modules/lsp/start.ts` @ref: `loadEntities`
+関数（同ファイル内）
 
-#### TDD Step 1: Red
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/cli/lsp_start_entities_test.ts`
+
+- [ ] テストケースを作成
+  - 「LspStart helpers: loadSingleEntity loads only specified file」
+  - 単一ファイルのパスを指定して、そのエンティティのみが返されることを検証
+  - 存在しないファイルの場合はnullが返されることを検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `loadSingleEntity` 関数を新規作成
+  ```typescript
+  export async function loadSingleEntity(
+    projectRoot: string,
+    relativeFilePath: string, // 例: "src/foreshadowings/真夜中の期限.ts"
+  ): Promise<DetectableEntity | null>;
+  ```
+- [ ] ファイルパスからエンティティ種別を判定
+  - `/characters/` → kind: "character"
+  - `/settings/` → kind: "setting"
+  - `/foreshadowings/` → kind: "foreshadowing"
+- [ ] キャッシュバスター付きでimport
+- [ ] 適切なparse関数を呼び出してエンティティを返す
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+- [ ] 既存の `loadEntities` テストが通過することを確認
+- [ ] 重複コードがあればヘルパー関数に抽出
+
+### process3 Detector部分更新機能の実装
+
+#### sub1 updateSingleEntityメソッドの追加
+
+@target: `src/lsp/detection/positioned_detector.ts` @ref: `updateEntities`
+メソッド（同ファイル内）
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/lsp/detection/positioned_detector_test.ts`
+
+- [ ] テストケースを作成
+  - 「PositionedDetector - updateSingleEntity updates only specified entity」
+  - 既存エンティティリストに新しいステータスのエンティティを渡す
+  - 該当IDのエンティティのみが更新されることを検証
+  - 「PositionedDetector - updateSingleEntity adds new entity if not exists」
+  - 新しいIDのエンティティを渡す
+  - エンティティリストに追加されることを検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `updateSingleEntity` メソッドを追加
+  ```typescript
+  updateSingleEntity(entity: DetectableEntity | null): void {
+    if (!entity) return;
+    const index = this.entities.findIndex(e => e.id === entity.id);
+    if (index >= 0) {
+      this.entities[index] = entity;
+    } else {
+      this.entities.push(entity);
+    }
+    this.lastResults = [];
+    this.lastContent = "";
+  }
+  ```
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+- [ ] 既存のDetectorテストが通過することを確認
+
+### process4 差分更新処理の統合
+
+#### sub1 processFileChangesを差分更新に対応
+
+@target: `src/lsp/server/server.ts` @ref: `src/cli/modules/lsp/start.ts`
+(`loadSingleEntity`)
+
+##### TDD Step 1: Red（失敗するテストを作成）
 
 @test: `tests/lsp/server/server_file_watching_test.ts`
 
-- [x] `workspace/didChangeWatchedFiles`通知を受信した際に`handleDidChangeWatchedFiles`が呼ばれることを検証
+- [ ] テストケースを作成
+  - 「LspServer - processFileChanges uses incremental update for entity files」
+  - 伏線ファイルの変更イベントを送信
+  - `loadSingleEntity` が呼ばれ、`updateSingleEntity` が呼ばれることを検証
+  - フルリロード（`loadEntities`）が呼ばれないことを検証
 
-#### TDD Step 2: Green
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [x] `handleNotification`のswitch文に`workspace/didChangeWatchedFiles`ケースを追加
-- [x] `handleDidChangeWatchedFiles`を呼び出し
+- [ ] `processFileChanges` メソッドを差分更新対応に変更
+  ```typescript
+  private async processFileChanges(changes: FileEvent[]): Promise<void> {
+    // エンティティファイルの変更のみ抽出
+    const entityChanges = changes.filter(c => this.isEntityFile(c.uri));
 
-#### TDD Step 3: Refactor & Verify
+    if (entityChanges.length === 0) return;
 
-- [x] `deno test tests/lsp/server/server_file_watching_test.ts`
-- [x] `deno check src/lsp/server/server.ts`
+    // 差分更新を試行
+    try {
+      for (const change of entityChanges) {
+        const relPath = this.uriToRelativePath(change.uri);
+        const entity = await loadSingleEntity(this.projectRoot, relPath);
+        this.detector.updateSingleEntity(entity);
+      }
+    } catch (error) {
+      // フォールバック: フルリロード
+      console.error("[LSP:DEBUG] Incremental update failed, falling back to full reload");
+      await this.fullReload();
+    }
 
----
+    // セマンティックトークンリフレッシュ
+    await this.sendSemanticTokensRefresh();
+  }
+  ```
+- [ ] ヘルパーメソッドを追加
+  - `isEntityFile(uri: string): boolean`
+  - `uriToRelativePath(uri: string): string`
 
-### process6 ファイル変更時の診断再発行
+##### TDD Step 3: Refactor & Verify
 
-@target: `src/lsp/server/server.ts`
+- [ ] テストを実行し、通過することを確認
+- [ ] 既存のファイル監視テストが通過することを確認
+- [ ] 手動テスト: Neovimで伏線ファイルを編集して色が変わることを確認
 
-#### TDD Step 1: Red
+### process10 ユニットテスト（追加・統合テスト）
 
-@test: `tests/lsp/server/server_file_watching_test.ts`
-
-- [x] ファイル変更後、開いているドキュメントの診断が再計算されることを検証
-
-#### TDD Step 2: Green
-
-- [x] `handleDidChangeWatchedFiles`内で、`documentManager`から開いているドキュメント一覧を取得
-- [x] 各ドキュメントに対して`publishDiagnosticsForUri`を呼び出し
-
-#### TDD Step 3: Refactor & Verify
-
-- [x] `deno test tests/lsp/server/server_file_watching_test.ts`
-- [x] `deno check src/lsp/server/server.ts`
-
----
-
-### process10 統合テスト
-
-#### sub1 エンドツーエンドテスト
-
-@test: `tests/lsp/server/file_watching_integration_test.ts`
-
-- [x] 伏線ファイル変更 → キャッシュクリア →
-      診断更新の一連の流れをテスト（8シナリオ実装）
-
----
+- [ ] デバウンスタイミングのエッジケーステスト
+  - タイマー期間中に異なるファイルの変更が来た場合
+  - タイマー期間後に変更が来た場合（別のデバウンスサイクル開始）
+- [ ] 差分更新のエラーハンドリングテスト
+  - ファイルが削除された場合
+  - パースに失敗した場合
+- [ ] 統合テスト
+  - デバウンス → 差分更新 → セマンティックトークンリフレッシュのフロー
 
 ### process50 フォローアップ
 
 （実装後に仕様変更などが発生した場合は、ここにProcessを追加する）
 
----
-
 ### process100 リファクタリング
 
-- [x] 重複コードの抽出（不要と判断）
-- [x] エラーハンドリングの強化（try-catch追加）
-- [x] ログ出力の追加（デバッグ用console.debug）
-
----
+- [ ] `handleDidChangeWatchedFiles` 内のデバッグログを適切なログレベルに変更
+- [ ] 差分更新とフルリロードの共通処理を抽出
+- [ ] マジックナンバー（200ms）を定数化
 
 ### process200 ドキュメンテーション
 
-- [x] `docs/lsp.md`にファイル監視機能のセクションを追加（セクション7「ファイル変更監視」）
-- [x] Serena
-      Memoryの`neovim_integration_lessons`を更新（v1.6実装完了ステータス）
-- [x] CLAUDE.mdの「進行中の機能開発」セクションを更新（LSP機能として既に含まれているため追加不要）
-
----
-
-## 調査結果サマリー
-
-### 現状の問題点 → 実装完了
-
-| コンポーネント          | 状態        | 詳細                                          |
-| ----------------------- | ----------- | --------------------------------------------- |
-| `handleNotification`    | ✅ 実装済み | `workspace/didChangeWatchedFiles`ケースを追加 |
-| `ProjectContextManager` | ✅ 統合済み | `clearCache()`がファイル変更時に呼び出される  |
-| `ServerCapabilities`    | ✅ 宣言済み | `workspace.didChangeWatchedFiles`を宣言       |
-
-### 変更ファイル
-
-- `src/lsp/server/server.ts` -
-  `handleDidChangeWatchedFiles`メソッド追加、`handleNotification`拡張
-- `src/lsp/server/capabilities.ts` - FileChangeType, FileEvent,
-  DidChangeWatchedFilesParams型追加、workspace宣言
-- `tests/lsp/server/server_file_watching_test.ts` - 6ユニットテスト（新規）
-- `tests/lsp/server/file_watching_integration_test.ts` - 8統合テスト（新規）
-- `tests/lsp/server/capabilities_test.ts` - 7テスト追加
-- `docs/lsp.md` - ファイル監視セクション追加
-- `.serena/memories/neovim_integration_lessons.md` - 実装完了ステータス更新
-
-### 暫定回避策 → 不要になりました
-
-~~`:LspRestart` コマンドでLSPサーバーを再起動するとキャッシュがクリアされる~~ →
-エンティティファイル変更時に自動でキャッシュクリア・診断再発行が行われます
+- [ ] `docs/lsp.md` にパフォーマンス最適化について追記
+- [ ] Serena Memory `neovim_integration_lessons.md`
+      にデバウンス・差分更新の教訓を追加
+- [ ] CLAUDE.md のLSP関連セクションを更新（必要に応じて）
