@@ -156,6 +156,11 @@ export async function loadEntities(
   // 相対パスを絶対パスに解決
   const absoluteProjectRoot = resolve(projectRoot);
 
+  // キャッシュバスター: Denoはモジュールをキャッシュするため、
+  // ファイル変更後に再読み込みするにはクエリパラメータを変更する必要がある
+  // @see https://github.com/denoland/deno/issues/6946
+  const cacheBuster = Date.now();
+
   // キャラクターをロード
   try {
     const charactersDir = join(absoluteProjectRoot, "src/characters");
@@ -163,7 +168,7 @@ export async function loadEntities(
       if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
       const absPath = join(charactersDir, entry.name);
       try {
-        const mod = await import(toFileUrl(absPath).href);
+        const mod = await import(`${toFileUrl(absPath).href}?v=${cacheBuster}`);
         for (const [, value] of Object.entries(mod)) {
           const parsed = parseEntity(value);
           if (parsed) {
@@ -196,7 +201,7 @@ export async function loadEntities(
       if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
       const absPath = join(settingsDir, entry.name);
       try {
-        const mod = await import(toFileUrl(absPath).href);
+        const mod = await import(`${toFileUrl(absPath).href}?v=${cacheBuster}`);
         for (const [, value] of Object.entries(mod)) {
           const parsed = parseEntity(value);
           if (parsed) {
@@ -229,7 +234,7 @@ export async function loadEntities(
       if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
       const absPath = join(foreshadowingsDir, entry.name);
       try {
-        const mod = await import(toFileUrl(absPath).href);
+        const mod = await import(`${toFileUrl(absPath).href}?v=${cacheBuster}`);
         for (const [, value] of Object.entries(mod)) {
           const parsed = parseForeshadowingEntity(value);
           if (parsed) {

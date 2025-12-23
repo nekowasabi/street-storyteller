@@ -123,7 +123,12 @@ export class SemanticTokensProvider {
 
       // foreshadowingの場合、ステータスモディファイアを追加
       if (match.kind === "foreshadowing" && match.status) {
-        modifierMask |= this.getStatusModifierMask(match.status);
+        const statusMask = this.getStatusModifierMask(match.status);
+        modifierMask |= statusMask;
+        console.error(
+          `[LSP:DEBUG] Foreshadowing token: id="${match.id}", status="${match.status}", ` +
+            `statusMask=${statusMask}, totalMask=${modifierMask}, tokenType=${tokenType}`,
+        );
       }
 
       for (const pos of match.positions) {

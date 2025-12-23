@@ -1,6 +1,6 @@
 # Neovim連携に関する教訓
 
-## 最終更新: 2025-01-22
+## 最終更新: 2025-12-23
 
 ---
 
@@ -240,6 +240,77 @@ Neovim組み込みLSPクライアントはファイル監視を自動的に処�
 
 ---
 
+## 7. Denoモジュールキャッシュと動的リロード
+
+### 問題パターン
+
+伏線ファイル（`src/foreshadowings/*.ts`）のstatusを変更しても、原稿ファイルのセマンティックトークンハイライト（伏線の色）がリアルタイムで更新されない。LSPを再起動すると反映される。
+
+### 原因
+
+**Denoのdynamic import（`import()`）はモジュールをキャッシュする**。
+
+```typescript
+// この呼び出しは最初の1回だけファイルを読み込み、以降はキャッシュから返す
+const module = await import(filePath);
+```
+
+LSPサーバーのプロセス内で`loadEntities()`が呼ばれても、以前にimportしたモジュールはキャッシュされたままで、ファイルの変更が反映されない。
+
+### 解決策
+
+**import
+URLにキャッシュバスター（クエリパラメータ）を追加**して、毎回新しいモジュールとして読み込む。
+
+```typescript
+// Before - キャッシュされる
+const module = await import(filePath);
+
+// After - 毎回新しいモジュールとして読み込み
+const module = await import(`${filePath}?v=${Date.now()}`);
+```
+
+### 実装箇所
+
+`src/cli/modules/lsp/start.ts`の`loadEntities()`関数内でキャッシュバスターを追加。
+
+### デバッグプロセス（参考）
+
+この問題の特定に至った段階的デバッグ手順:
+
+1. **Step 1**: セマンティックトークン自体の動作確認
+   - 結果: オレンジ色表示OK（トークンは送信されている）
+
+2. **Step 2**: Neovimのハイライトグループ定義確認
+   - 結果: `@lsp.type.foreshadowing.markdown`定義OK
+
+3. **Step 3**: `:Inspect`で適用されているハイライト確認
+   - 結果: priority 200-202で適用OK
+   - 注意: `vim.hl.priorities.semantic_tokens = 200`設定が必要
+
+4. **Step 4**: ファイル変更後のLSPログ確認
+   - **発見**: `status=planted`のまま（変更が反映されていない）
+
+5. **Step 5**: 根本原因特定
+   - Denoのモジュールキャッシュ問題を特定
+   - 参考Issue:
+     - https://github.com/denoland/deno/issues/6946
+     - https://github.com/denoland/deno/issues/5548
+
+### 関連知識
+
+- Denoはdynamic importをキャッシュする（プロセス中は永続）
+- Node.jsでは`delete require.cache[modulePath]`でキャッシュクリアできるが、Denoには同等機能がない
+- キャッシュバスターは一般的なワークアラウンド（ブラウザのキャッシュ回避と同じ手法）
+
+### 教訓
+
+1. **LSPサーバーでファイル変更監視+再読み込みを行う場合、Denoモジュールキャッシュに注意**
+2. **問題の切り分けは単純なところから始める**（「動いているか」→「設定されているか」→「データが正しいか」）
+3. **vim.hl.priorities.semantic_tokensの設定が重要**（デフォルトでは他のハイライトに負ける場合がある）
+
+---
+
 ## 教訓サマリー
 
 1. **LSPとNeovimは別レイヤー**:
@@ -248,3 +319,6 @@ Neovim組み込みLSPクライアントはファイル監視を自動的に処�
    render-markdown等がconcealでテキストを隠す場合がある
 3. **設定反映確認を習慣化**: `:lua print(vim.inspect(...))` で実際の設定値を確認
 4. **ColorSchemeリセット対策**: autocmd ColorScheme でハイライト再設定
+5. **Denoモジュールキャッシュに注意**: dynamic
+   importはキャッシュされる。動的リロードには`?v=${Date.now()}`キャッシュバスター必須
+6. **段階的デバッグ**: 「動作確認」→「設定確認」→「データ確認」の順で切り分け
