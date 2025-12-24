@@ -1,13 +1,18 @@
-# title: LSPファイル変更監視のパフォーマンス最適化
+# title: Relationship型システム（キャラクター間人間関係）
 
 ## 概要
 
-- キャッシュバスター導入後のパフォーマンス低下を軽減し、ファイル変更時のセマンティックトークン更新を高速化する
+- キャラクター間の人間関係をクラスと型で表現し、成長や変化の要因となる依存関係を可視化できるようにする
+- perspectives方式により双方向の視点を1つのエンティティで表現
+- 詳細な変化履歴の追跡とネットワークグラフ可視化をサポート
 
 ### goal
 
-- 単一ファイル変更時：変更されたファイルのみを再読み込み（現在は全ファイル再読み込み）
-- 連続ファイル変更時（git checkout等）：デバウンスにより1回の処理にまとめる
+- `storyteller element relationship` で関係性を定義できる
+- `storyteller view relationship --graph` でネットワークグラフを表示できる
+- `storyteller view browser` でHTML上に関係図を可視化できる
+- LSPで原稿内の関係性参照を検出・ハイライトできる
+- LSPで補完候補として関係性を提案できる
 
 ## 必須のルール
 
@@ -17,283 +22,521 @@
   - 実装コードを書く前に、失敗するテストを先に作成する
   - テストが通過するまで修正とテスト実行を繰り返す
   - プロセス完了の条件：該当するすべてのテストが通過していること
-    - deno test -A
-    - deno lint
-    - deno fmt --check
 
 ## 開発のゴール
 
-- デバウンス機能：連続したファイル変更イベント（200ms以内）を1回の処理にまとめる
-- 差分更新機能：変更されたエンティティファイルのみを再読み込みし、Detectorを部分更新する
+- 独立エンティティ方式でRelationshipを管理（`src/relationships/*.ts`）
+- perspectives方式で双方向の視点を1エンティティに含む
+- 詳細履歴で章・理由・強度変化を記録
+- Mermaidネットワークグラフでの可視化
+- LSP統合による原稿内参照検出
 
 ## 実装仕様
 
-### 現状の問題（調査結果）
-
-**`handleDidChangeWatchedFiles` の現在の動作**
-(`src/lsp/server/server.ts`:680-772):
+### Relationship型構造
 
 ```typescript
-// 問題1: 毎回全キャッシュをクリア
-this.projectContextManager.clearCache();
+// カテゴリ（大分類）
+export type RelationshipCategory =
+  | "family" // 家族・血縁
+  | "social" // 社会的つながり
+  | "emotional" // 感情的つながり
+  | "professional" // 職業的・役割的
+  | "mystical"; // 神秘的・運命的
 
-// 問題2: getContext() → loadEntities() で全ファイルを再import
-const context = await this.projectContextManager.getContext(this.projectRoot);
+// 詳細タイプ
+export type RelationshipDetailType =
+  // family
+  | "parent"
+  | "child"
+  | "sibling"
+  | "spouse"
+  | "adoptive"
+  // social
+  | "friend"
+  | "rival"
+  | "ally"
+  | "enemy"
+  | "acquaintance"
+  // emotional
+  | "romantic"
+  | "unrequited_love"
+  | "respect"
+  | "hatred"
+  | "fear"
+  // professional
+  | "mentor"
+  | "student"
+  | "colleague"
+  | "subordinate"
+  | "superior"
+  // mystical
+  | "bound"
+  | "reincarnation"
+  | "destiny";
+
+// 感情の方向性
+export type RelationshipSentiment =
+  | "positive"
+  | "negative"
+  | "neutral"
+  | "ambivalent";
+
+// 一方の視点
+export type Perspective = {
+  type: RelationshipDetailType;
+  category: RelationshipCategory;
+  intensity: number; // 1-10
+  sentiment: RelationshipSentiment;
+  description?: string | { file: string };
+};
+
+// 変化履歴
+export type RelationshipChange = {
+  chapterId: string;
+  eventId?: string;
+  affectedParticipant: string;
+  fromType?: RelationshipDetailType;
+  toType: RelationshipDetailType;
+  intensityDelta?: number;
+  cause: string;
+};
+
+// メインエンティティ
+export type Relationship = {
+  // === 必須 ===
+  id: string;
+  participants: [string, string];
+  perspectives: Record<string, Perspective>;
+  summary: string;
+
+  // === オプション ===
+  startChapter?: string;
+  isSecret?: boolean;
+  history?: RelationshipChange[];
+  displayLabel?: string;
+  visualPriority?: number;
+  details?: RelationshipDetails;
+  detectionHints?: RelationshipDetectionHints;
+};
 ```
 
-**`loadEntities` の現在の動作** (`src/cli/modules/lsp/start.ts`:149-263):
+### 既存型との互換性
 
-- 3つのディレクトリ（characters, settings, foreshadowings）を全て走査
-- 各ファイルをキャッシュバスター付きでimport（`?v=${Date.now()}`）
-- N個のファイルがあれば、1ファイル変更でもN回のimportが発生
-
-**パフォーマンス影響**:
-
-| シナリオ                       | 現状               | 処理回数 |
-| ------------------------------ | ------------------ | -------- |
-| 1ファイル編集・保存            | 全ファイル再import | N回      |
-| Ctrl+S連打（5回）              | 5回 × 全ファイル   | 5N回     |
-| git checkout（30ファイル変更） | 30回 × 全ファイル  | 30N回    |
-
-### 最適化アプローチ
-
-**Phase 1: デバウンス**
-
-- ファイル変更イベントを200ms間バッファリング
-- タイマー期間内の変更は1回にまとめて処理
-
-**Phase 2: 差分更新**
-
-- 変更されたファイルのURIからエンティティ種別を判定
-- 単一ファイルのみを再importして該当エンティティを更新
-- Detectorは部分更新（`updateSingleEntity`）
+- `Character.relationships: Record<string, RelationType>` は維持（簡易表現）
+- 新規追加: `Character.detailedRelationships?: string[]`（Relationship ID参照）
 
 ## 生成AIの学習用コンテキスト
 
-### LSPサーバー実装
+### 既存の型定義（参考パターン）
 
-- `src/lsp/server/server.ts`
-  - `handleDidChangeWatchedFiles` メソッド（680-772行目）
-  - `LspServer` クラスのプロパティ定義部分
+- `src/type/v2/timeline.ts`
+  - 独立エンティティの設計例（Timeline, TimelineEvent）
+  - 必須/オプショナルの分離パターン
+  - `string | { file: string }` のハイブリッド詳細管理
+- `src/type/v2/foreshadowing.ts`
+  - 関連エンティティ参照パターン（relations.characters, relations.settings）
+  - 状態管理（status: planted | resolved | ...）
+- `src/type/v2/character.ts`
+  - 現在のRelationType定義（7種類）
+  - relationships: Record<string, RelationType>
+- `src/type/v2/character_phase.ts`
+  - RelationshipsDelta: 差分追跡の仕組み
 
-### エンティティローダー
+### MCP実装パターン
 
-- `src/cli/modules/lsp/start.ts`
-  - `loadEntities` 関数（149-263行目）
-  - `parseEntity`, `parseForeshadowingEntity` 関数
+- `src/mcp/resources/uri_parser.ts`
+  - URIパース（VALID_TYPESセット）
+- `src/mcp/resources/project_resource_provider.ts`
+  - listResources(), readResource()の実装例
+- `src/mcp/tools/definitions/foreshadowing_create.ts`
+  - MCPツール定義の参考
 
-### 検出器
+### CLI実装パターン
+
+- `src/cli/modules/element/timeline.ts`
+  - elementコマンドの実装例
+- `src/cli/modules/view/timeline.ts`
+  - viewコマンドとMermaid生成の実装例
+
+### HTML可視化
+
+- `src/application/view/html_generator.ts`
+  - カード形式表示
+  - Mermaidフローチャート生成
+  - 統計情報セクション
+
+### LSP実装パターン
 
 - `src/lsp/detection/positioned_detector.ts`
-  - `updateEntities` メソッド（72-76行目）
-  - `PositionedDetector` クラスのプロパティ
+  - エンティティ検出
+- `src/lsp/providers/semantic_tokens_provider.ts`
+  - セマンティックトークン
 
-### プロジェクトコンテキスト
-
-- `src/lsp/project/project_context_manager.ts`
-  - `clearCache`, `getContext` メソッド
-
-### 既存テスト
-
-- `tests/lsp/server/server_file_watching_test.ts`
-  - ファイル変更監視の既存テストパターン
+---
 
 ## Process
 
-### process1 デバウンス機能の実装
+### process1 型定義（基盤）
 
-#### sub1 LspServerにデバウンス用プロパティを追加
+#### sub1 Relationship型の作成
 
-@target: `src/lsp/server/server.ts` @ref: `src/lsp/server/capabilities.ts`
-(FileEvent型)
+@target: `src/type/v2/relationship.ts`（新規作成） @ref:
+`src/type/v2/timeline.ts`, `src/type/v2/foreshadowing.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/lsp/server/server_file_watching_test.ts`
+@test: `tests/type/relationship_test.ts`
 
 - [ ] テストケースを作成（この時点で実装がないため失敗する）
-  - 「LspServer - handleDidChangeWatchedFiles debounces rapid file changes」
-  - 50ms間隔で3回のファイル変更イベントを送信
-  - processFileChangesが1回だけ呼ばれることを検証
+  - Relationship型が正しく定義されていることを検証
+  - 必須フィールド（id, participants, perspectives, summary）の存在確認
+  - perspectives方式の双方向表現が機能することを確認
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `LspServer` クラスにプロパティを追加
-  - `private fileChangeDebounceTimer: number | null = null`
-  - `private pendingFileChanges: FileEvent[] = []`
-  - `private readonly DEBOUNCE_DELAY = 200` (ms)
-- [ ] `handleDidChangeWatchedFiles` をデバウンス対応に変更
-  - 変更イベントを `pendingFileChanges` に追加
-  - 既存タイマーがあればクリア
-  - 新しいタイマーをセット（200ms後に `processFileChanges` を呼び出し）
-- [ ] `processFileChanges` メソッドを新規作成
-  - 現在の `handleDidChangeWatchedFiles` の本体処理を移動
-  - バッファをクリア
+- [ ] `RelationshipCategory` 型を定義（family, social, emotional, professional,
+      mystical）
+- [ ] `RelationshipDetailType` 型を定義（25種類の詳細タイプ）
+- [ ] `RelationshipSentiment` 型を定義（positive, negative, neutral,
+      ambivalent）
+- [ ] `Perspective` 型を定義（type, category, intensity, sentiment,
+      description）
+- [ ] `RelationshipChange` 型を定義（履歴追跡用）
+- [ ] `RelationshipDetails` 型を定義（origin, currentState, future, notes）
+- [ ] `RelationshipDetectionHints` 型を定義（LSP用）
+- [ ] `Relationship` 型を定義（メインエンティティ）
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
-  - `deno test --allow-all tests/lsp/server/server_file_watching_test.ts`
-- [ ] 既存のファイル監視テストが引き続き通過することを確認
 - [ ] 必要に応じてリファクタリング
+- [ ] 再度テストを実行し、通過を確認
 
-### process2 単一エンティティローダーの実装
+---
 
-#### sub1 loadSingleEntity関数の作成
+### process2 アナライザー拡張
 
-@target: `src/cli/modules/lsp/start.ts` @ref: `loadEntities`
-関数（同ファイル内）
+#### sub1 ProjectAnalyzerにRelationshipローダー追加
+
+@target: `src/application/view/project_analyzer.ts` @ref:
+`src/application/view/project_analyzer.ts`（既存のloadTimelines,
+loadForeshadowings）
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/cli/lsp_start_entities_test.ts`
+@test: `tests/application/relationship_loader_test.ts`
 
 - [ ] テストケースを作成
-  - 「LspStart helpers: loadSingleEntity loads only specified file」
-  - 単一ファイルのパスを指定して、そのエンティティのみが返されることを検証
-  - 存在しないファイルの場合はnullが返されることを検証
+  - `loadRelationships()`が正しくファイルを読み込むことを検証
+  - `RelationshipSummary`インターフェースの構造確認
+  - `ProjectAnalysis.relationships`に結果が格納されることを確認
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `loadSingleEntity` 関数を新規作成
-  ```typescript
-  export async function loadSingleEntity(
-    projectRoot: string,
-    relativeFilePath: string, // 例: "src/foreshadowings/真夜中の期限.ts"
-  ): Promise<DetectableEntity | null>;
-  ```
-- [ ] ファイルパスからエンティティ種別を判定
-  - `/characters/` → kind: "character"
-  - `/settings/` → kind: "setting"
-  - `/foreshadowings/` → kind: "foreshadowing"
-- [ ] キャッシュバスター付きでimport
-- [ ] 適切なparse関数を呼び出してエンティティを返す
+- [ ] `RelationshipSummary`インターフェースを定義
+- [ ] `ProjectAnalysis`に`relationships`フィールドを追加
+- [ ] `loadRelationships()`メソッドを実装
+- [ ] `analyzeProject()`内で`loadRelationships()`を呼び出し
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
-- [ ] 既存の `loadEntities` テストが通過することを確認
-- [ ] 重複コードがあればヘルパー関数に抽出
+- [ ] 既存のテストが壊れていないことを確認
 
-### process3 Detector部分更新機能の実装
+---
 
-#### sub1 updateSingleEntityメソッドの追加
+### process3 MCPリソース統合
 
-@target: `src/lsp/detection/positioned_detector.ts` @ref: `updateEntities`
-メソッド（同ファイル内）
+#### sub1 URIパーサー拡張
+
+@target: `src/mcp/resources/uri_parser.ts` @ref:
+`src/mcp/resources/uri_parser.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/lsp/detection/positioned_detector_test.ts`
+@test: `tests/mcp/uri_parser_relationship_test.ts`
 
-- [ ] テストケースを作成
-  - 「PositionedDetector - updateSingleEntity updates only specified entity」
-  - 既存エンティティリストに新しいステータスのエンティティを渡す
-  - 該当IDのエンティティのみが更新されることを検証
-  - 「PositionedDetector - updateSingleEntity adds new entity if not exists」
-  - 新しいIDのエンティティを渡す
-  - エンティティリストに追加されることを検証
+- [ ] `storyteller://relationships`のパース検証
+- [ ] `storyteller://relationship/{id}`のパース検証
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `updateSingleEntity` メソッドを追加
-  ```typescript
-  updateSingleEntity(entity: DetectableEntity | null): void {
-    if (!entity) return;
-    const index = this.entities.findIndex(e => e.id === entity.id);
-    if (index >= 0) {
-      this.entities[index] = entity;
-    } else {
-      this.entities.push(entity);
-    }
-    this.lastResults = [];
-    this.lastContent = "";
-  }
-  ```
+- [ ] `ParsedUri.type`に`"relationships"`, `"relationship"`を追加
+- [ ] `VALID_TYPES`セットに追加
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
-- [ ] 既存のDetectorテストが通過することを確認
 
-### process4 差分更新処理の統合
+#### sub2 ProjectResourceProvider拡張
 
-#### sub1 processFileChangesを差分更新に対応
-
-@target: `src/lsp/server/server.ts` @ref: `src/cli/modules/lsp/start.ts`
-(`loadSingleEntity`)
+@target: `src/mcp/resources/project_resource_provider.ts` @ref:
+`src/mcp/resources/project_resource_provider.ts`
 
 ##### TDD Step 1: Red（失敗するテストを作成）
 
-@test: `tests/lsp/server/server_file_watching_test.ts`
+@test: `tests/mcp/relationship_resource_test.ts`
 
-- [ ] テストケースを作成
-  - 「LspServer - processFileChanges uses incremental update for entity files」
-  - 伏線ファイルの変更イベントを送信
-  - `loadSingleEntity` が呼ばれ、`updateSingleEntity` が呼ばれることを検証
-  - フルリロード（`loadEntities`）が呼ばれないことを検証
+- [ ] `listResources()`がrelationshipsリソースを返すことを検証
+- [ ] `readResource()`がrelationshipsを正しく返すことを検証
 
 ##### TDD Step 2: Green（テストを通過させる最小限の実装）
 
-- [ ] `processFileChanges` メソッドを差分更新対応に変更
-  ```typescript
-  private async processFileChanges(changes: FileEvent[]): Promise<void> {
-    // エンティティファイルの変更のみ抽出
-    const entityChanges = changes.filter(c => this.isEntityFile(c.uri));
-
-    if (entityChanges.length === 0) return;
-
-    // 差分更新を試行
-    try {
-      for (const change of entityChanges) {
-        const relPath = this.uriToRelativePath(change.uri);
-        const entity = await loadSingleEntity(this.projectRoot, relPath);
-        this.detector.updateSingleEntity(entity);
-      }
-    } catch (error) {
-      // フォールバック: フルリロード
-      console.error("[LSP:DEBUG] Incremental update failed, falling back to full reload");
-      await this.fullReload();
-    }
-
-    // セマンティックトークンリフレッシュ
-    await this.sendSemanticTokensRefresh();
-  }
-  ```
-- [ ] ヘルパーメソッドを追加
-  - `isEntityFile(uri: string): boolean`
-  - `uriToRelativePath(uri: string): string`
+- [ ] `listResources()`にrelationshipsリソース定義を追加
+- [ ] `readResource()`にrelationshipsケースを追加
 
 ##### TDD Step 3: Refactor & Verify
 
 - [ ] テストを実行し、通過することを確認
-- [ ] 既存のファイル監視テストが通過することを確認
-- [ ] 手動テスト: Neovimで伏線ファイルを編集して色が変わることを確認
+
+---
+
+### process4 MCPツール実装
+
+#### sub1 relationship_createツール
+
+@target: `src/mcp/tools/definitions/relationship_create.ts`（新規作成） @ref:
+`src/mcp/tools/definitions/foreshadowing_create.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/mcp/tools/relationship_create_test.ts`
+
+- [ ] ツールが正しくRelationshipを作成することを検証
+- [ ] 必須パラメータのバリデーション検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `relationshipCreateTool`を定義
+- [ ] inputSchemaを定義（participants, perspectiveA, perspectiveB, summary）
+- [ ] executeメソッドを実装
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+
+#### sub2 relationship_viewツール
+
+@target: `src/mcp/tools/definitions/relationship_view.ts`（新規作成） @ref:
+`src/mcp/tools/definitions/foreshadowing_view.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/mcp/tools/relationship_view_test.ts`
+
+- [ ] 一覧表示の検証
+- [ ] 個別表示の検証
+- [ ] フィルタ機能の検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `relationshipViewTool`を定義
+- [ ] 一覧/個別表示ロジック実装
+- [ ] キャラクター/カテゴリフィルタ実装
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+
+#### sub3 relationship_graphツール
+
+@target: `src/mcp/tools/definitions/relationship_graph.ts`（新規作成） @ref:
+`src/cli/modules/view/timeline.ts`（Mermaid生成パターン）
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/mcp/tools/relationship_graph_test.ts`
+
+- [ ] Mermaid形式のグラフ生成検証
+- [ ] エッジのスタイル（intensity, sentiment）反映検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `relationshipGraphTool`を定義
+- [ ] Mermaidフローチャート生成ロジック実装
+- [ ] ノード（キャラクター）とエッジ（関係性）の描画
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+
+---
+
+### process5 CLIコマンド実装
+
+#### sub1 element relationshipコマンド
+
+@target: `src/cli/modules/element/relationship.ts`（新規作成） @ref:
+`src/cli/modules/element/timeline.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/cli/element_relationship_test.ts`
+
+- [ ] コマンドが正しくRelationshipファイルを生成することを検証
+- [ ] オプション（--participants, --type-a, --intensity-a等）の検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `ElementRelationshipCommand`クラスを作成
+- [ ] コマンドオプションを定義
+- [ ] ファイル生成ロジックを実装
+- [ ] コマンドレジストリに登録
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+
+#### sub2 view relationshipコマンド
+
+@target: `src/cli/modules/view/relationship.ts`（新規作成） @ref:
+`src/cli/modules/view/timeline.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/cli/view_relationship_test.ts`
+
+- [ ] --list表示の検証
+- [ ] --id個別表示の検証
+- [ ] --graph --format mermaid の検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `ViewRelationshipCommand`クラスを作成
+- [ ] 一覧/個別表示ロジック実装
+- [ ] Mermaidグラフ出力実装
+- [ ] コマンドレジストリに登録
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+
+---
+
+### process6 HTML可視化
+
+#### sub1 HtmlGeneratorにRelationshipセクション追加
+
+@target: `src/application/view/html_generator.ts` @ref:
+`src/application/view/html_generator.ts`（既存のrenderForeshadowings）
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/application/html_relationship_test.ts`
+
+- [ ] `renderRelationships()`がカード形式HTMLを生成することを検証
+- [ ] `renderRelationshipGraph()`がMermaidコードを生成することを検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `renderRelationships()`メソッドを追加
+  - 統計情報（Total, カテゴリ別）
+  - カードグリッド（participants, perspectives, summary）
+- [ ] `renderRelationshipGraph()`メソッドを追加
+  - ノード生成（キャラクター）
+  - エッジ生成（関係性）
+  - スタイル適用（intensity→太さ、sentiment→色）
+- [ ] `generateHtml()`にrelationshipsセクションを追加
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+- [ ] `storyteller view browser`で実際にHTML表示を確認
+
+---
+
+### process7 LSP統合
+
+#### sub1 関係性エンティティの検出対応
+
+@target: `src/lsp/detection/positioned_detector.ts` @ref:
+`src/lsp/detection/positioned_detector.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/lsp/relationship_detection_test.ts`
+
+- [ ] 原稿内のRelationship参照（displayLabel,
+      detectionHints）が検出されることを検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] Relationship検出ロジックを追加
+- [ ] `detectionHints.commonPatterns`を使用したパターンマッチング
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+
+#### sub2 セマンティックトークン対応
+
+@target: `src/lsp/providers/semantic_tokens_provider.ts` @ref:
+`src/lsp/providers/semantic_tokens_provider.ts`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/lsp/relationship_semantic_tokens_test.ts`
+
+- [ ] relationshipトークンタイプが正しく付与されることを検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `relationship`トークンタイプをlegendに追加
+- [ ] Relationship検出時にトークンを付与
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+
+---
+
+### process8 サンプルプロジェクト更新
+
+#### sub1 cinderellaサンプルにRelationship追加
+
+@target: `samples/cinderella/src/relationships/`（新規ディレクトリ） @ref:
+`samples/cinderella/src/characters/`, `samples/cinderella/src/foreshadowings/`
+
+##### TDD Step 1: Red（失敗するテストを作成）
+
+@test: `tests/samples/cinderella_relationships_test.ts`
+
+- [ ] サンプルファイルが正しい型であることを検証
+
+##### TDD Step 2: Green（テストを通過させる最小限の実装）
+
+- [ ] `cinderella_prince.ts` - ロマンチックな関係
+- [ ] `cinderella_stepmother.ts` - 対立関係
+- [ ] `cinderella_fairy.ts` - 保護者関係
+
+##### TDD Step 3: Refactor & Verify
+
+- [ ] テストを実行し、通過することを確認
+- [ ] `storyteller view browser`でサンプルが正しく表示されることを確認
+
+---
 
 ### process10 ユニットテスト（追加・統合テスト）
 
-- [ ] デバウンスタイミングのエッジケーステスト
-  - タイマー期間中に異なるファイルの変更が来た場合
-  - タイマー期間後に変更が来た場合（別のデバウンスサイクル開始）
-- [ ] 差分更新のエラーハンドリングテスト
-  - ファイルが削除された場合
-  - パースに失敗した場合
-- [ ] 統合テスト
-  - デバウンス → 差分更新 → セマンティックトークンリフレッシュのフロー
+- [ ] 全フェーズのテストをまとめて実行
+- [ ] `deno test` で全テストが通過することを確認
+- [ ] カバレッジ確認 `deno test --coverage`
 
 ### process50 フォローアップ
 
-（実装後に仕様変更などが発生した場合は、ここにProcessを追加する）
+{{実装後に仕様変更などが発生した場合は、ここにProcessを追加する}}
 
 ### process100 リファクタリング
 
-- [ ] `handleDidChangeWatchedFiles` 内のデバッグログを適切なログレベルに変更
-- [ ] 差分更新とフルリロードの共通処理を抽出
-- [ ] マジックナンバー（200ms）を定数化
+- [ ] 重複コードの抽出・共通化
+- [ ] 命名の一貫性確認
+- [ ] 不要なコメント・デッドコードの削除
 
 ### process200 ドキュメンテーション
 
-- [ ] `docs/lsp.md` にパフォーマンス最適化について追記
-- [ ] Serena Memory `neovim_integration_lessons.md`
-      にデバウンス・差分更新の教訓を追加
-- [ ] CLAUDE.md のLSP関連セクションを更新（必要に応じて）
+- [ ] `docs/relationship.md` - Relationship機能の詳細ドキュメント作成
+- [ ] `docs/mcp.md` - MCPツール・リソースのドキュメント更新
+- [ ] `docs/cli.md` - CLIコマンドのドキュメント更新
+- [ ] `docs/lsp.md` - LSP機能のドキュメント更新
+- [ ] `CLAUDE.md` - 機能概要の追記
