@@ -12,6 +12,7 @@ export type StoryDirectorFocus =
   | "character"
   | "setting"
   | "plot"
+  | "foreshadowing"
   | "style"
   | "all";
 
@@ -45,6 +46,33 @@ const DIRECTOR_SYSTEM_PROMPT =
 - src/type/: 型定義`;
 
 /**
+ * フォーカス領域をタグにマッピング
+ */
+export function mapFocusToTag(focus?: string): string | undefined {
+  const mapping: Record<string, string> = {
+    character: "character",
+    setting: "setting",
+    plot: "manuscript",
+    foreshadowing: "foreshadowing",
+  };
+  return focus ? mapping[focus] : undefined;
+}
+
+/**
+ * 質問とサーチヒントから検索クエリを構築
+ */
+export function buildSearchQuery(
+  question: string,
+  searchHint?: string,
+): string {
+  const parts = [question];
+  if (searchHint) {
+    parts.push(searchHint);
+  }
+  return parts.filter((p) => p.trim()).join(" ");
+}
+
+/**
  * ユーザープロンプトを構築
  */
 function buildUserPrompt(
@@ -75,7 +103,13 @@ export const storyDirectorPrompt: McpPromptDefinition = {
     },
     {
       name: "focus",
-      description: "フォーカス領域（character/setting/plot/style/all）",
+      description:
+        "フォーカス領域（character/setting/plot/foreshadowing/style/all）",
+      required: false,
+    },
+    {
+      name: "search_hint",
+      description: "RAG検索のヒント（追加キーワード）",
       required: false,
     },
   ],

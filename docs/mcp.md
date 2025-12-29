@@ -252,7 +252,8 @@ Claude: element_createツールを呼び出しています...
 
 - [lsp.md](./lsp.md) - LSP機能詳細
 - [cli.md](./cli.md) - CLIリファレンス
+- [rag.md](./rag.md) - RAG機能ガイド
 
 ---
 
-_Last updated: 2025-12-18 (v1.1)_
+_Last updated: 2025-12-29 (v1.2 - RAG機能追加)_

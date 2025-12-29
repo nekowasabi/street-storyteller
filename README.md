@@ -186,6 +186,26 @@ To install a local git pre-commit hook:
 ./storyteller lsp start --stdio
 ```
 
+#### RAG Command
+
+Generate RAG (Retrieval-Augmented Generation) documents for AI-assisted writing.
+
+```bash
+# Export all elements to RAG documents
+./storyteller rag export
+
+# Export only changed files (incremental)
+./storyteller rag export --incremental
+
+# Update RAG documents + digrag index
+./storyteller rag update
+
+# Install Git hooks for auto-update
+./storyteller rag install-hooks
+```
+
+See `docs/rag.md` for the full guide.
+
 ### Development
 
 ```bash

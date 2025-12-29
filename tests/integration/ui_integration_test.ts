@@ -155,7 +155,14 @@ Deno.test("UI Integration - Claude Code Slash Commands", async (t) => {
 
 Deno.test({
   name: "UI Integration - Denops Plugin Structure",
-  ignore: !Deno.env.get("HOME"), // HOMEが取得できない環境ではスキップ
+  ignore: (() => {
+    try {
+      return !Deno.env.get("HOME");
+    } catch {
+      // 権限がない場合はスキップ
+      return true;
+    }
+  })(),
   permissions: { env: ["HOME"], read: true },
 }, async (t) => {
   const pluginDir = `${

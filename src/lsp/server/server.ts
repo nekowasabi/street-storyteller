@@ -440,7 +440,7 @@ export class LspServer {
 
     try {
       await this.transport.writeMessage(request);
-    } catch (error) {
+    } catch (_error) {
       // ファイルウォッチャー登録失敗時は無視
     }
   }
