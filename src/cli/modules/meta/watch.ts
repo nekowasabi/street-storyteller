@@ -11,6 +11,10 @@ import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 import { MetaGeneratorService } from "@storyteller/application/meta/meta_generator_service.ts";
 import { TypeScriptEmitter } from "@storyteller/application/meta/typescript_emitter.ts";
+import {
+  FrontmatterSyncService,
+} from "@storyteller/application/meta/frontmatter_sync_service.ts";
+import { loadEntities } from "@storyteller/cli/modules/lsp/start.ts";
 
 type WatchOptions = {
   readonly targetPath?: string;
@@ -22,6 +26,7 @@ type WatchOptions = {
   readonly preset?: string;
   readonly characters?: readonly string[];
   readonly settings?: readonly string[];
+  readonly syncFrontmatter?: boolean;
 };
 
 export function extractMarkdownPathsFromWatchEvent(event: {
@@ -118,6 +123,8 @@ function parseWatchOptions(
 
   const force = args.force === true;
   const update = args.update === true || !force;
+  const syncFrontmatter = args["sync-frontmatter"] === true ||
+    args.syncFrontmatter === true;
 
   return {
     targetPath,
@@ -129,12 +136,14 @@ function parseWatchOptions(
     preset,
     characters,
     settings,
+    syncFrontmatter,
   };
 }
 
 export class MetaWatchCommand extends BaseCliCommand {
   override readonly name = "watch" as const;
   override readonly path = ["meta", "watch"] as const;
+  private frontmatterSyncService: FrontmatterSyncService | null = null;
 
   constructor(
     private readonly service: MetaGeneratorService = new MetaGeneratorService(),
@@ -149,6 +158,18 @@ export class MetaWatchCommand extends BaseCliCommand {
       ) => Deno.watchFs([...paths], options),
   ) {
     super([]);
+  }
+
+  private async getFrontmatterSyncService(): Promise<FrontmatterSyncService> {
+    if (!this.frontmatterSyncService) {
+      const projectRoot = Deno.cwd();
+      const entities = await loadEntities(projectRoot);
+      this.frontmatterSyncService = new FrontmatterSyncService(
+        projectRoot,
+        entities,
+      );
+    }
+    return this.frontmatterSyncService;
   }
 
   protected async handle(context: CommandContext) {
@@ -227,6 +248,28 @@ export class MetaWatchCommand extends BaseCliCommand {
             continue;
           }
           context.presenter.showSuccess(`[meta watch] updated: ${outputPath}`);
+
+          // Sync frontmatter if enabled
+          if (parsed.syncFrontmatter) {
+            try {
+              const syncService = await this.getFrontmatterSyncService();
+              const syncResult = await syncService.sync(markdownPath, {
+                mode: "add",
+              });
+              if (syncResult.ok && syncResult.value.changed) {
+                context.presenter.showSuccess(
+                  `[meta watch] frontmatter synced: ${markdownPath}`,
+                );
+              }
+            } catch (syncError) {
+              const syncMessage = syncError instanceof Error
+                ? syncError.message
+                : String(syncError);
+              context.presenter.showError(
+                `[meta watch] frontmatter sync failed: ${syncMessage}`,
+              );
+            }
+          }
         } catch (cause) {
           const message = cause instanceof Error
             ? cause.message
@@ -317,6 +360,11 @@ const META_WATCH_OPTIONS: readonly CommandOptionDescriptor[] = [
   {
     name: "--force",
     summary: "Overwrite output file if it already exists.",
+    type: "boolean",
+  },
+  {
+    name: "--sync-frontmatter",
+    summary: "Auto-sync frontmatter with detected entities on file change.",
     type: "boolean",
   },
 ] as const;

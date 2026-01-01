@@ -10,6 +10,7 @@ import type {
 import { metaCheckCommandDescriptor } from "@storyteller/cli/modules/meta/check.ts";
 import { metaGenerateCommandDescriptor } from "@storyteller/cli/modules/meta/generate.ts";
 import { metaWatchCommandDescriptor } from "@storyteller/cli/modules/meta/watch.ts";
+import { metaSyncCommandDescriptor } from "@storyteller/cli/modules/meta/sync.ts";
 
 class MetaCommand extends BaseCliCommand {
   override readonly name = "meta" as const;
@@ -43,6 +44,7 @@ export function createMetaDescriptor(
       metaGenerateCommandDescriptor,
       metaWatchCommandDescriptor,
       metaCheckCommandDescriptor,
+      metaSyncCommandDescriptor,
     ],
     examples: [
       {

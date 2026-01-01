@@ -64,6 +64,14 @@ export type DidCloseTextDocumentParams = {
 };
 
 /**
+ * DidSaveTextDocumentParams
+ */
+export type DidSaveTextDocumentParams = {
+  readonly textDocument: TextDocumentIdentifier;
+  readonly text?: string;
+};
+
+/**
  * 変更通知コールバック
  */
 type ChangeCallback = (uri: string) => void;

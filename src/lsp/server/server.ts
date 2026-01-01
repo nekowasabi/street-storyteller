@@ -27,6 +27,7 @@ import {
   type DidChangeTextDocumentParams,
   type DidCloseTextDocumentParams,
   type DidOpenTextDocumentParams,
+  type DidSaveTextDocumentParams,
   TextDocumentSyncHandler,
 } from "@storyteller/lsp/handlers/text_document_sync.ts";
 import {
@@ -67,6 +68,7 @@ import {
   ProjectContextManager,
 } from "@storyteller/lsp/project/project_context_manager.ts";
 import { loadSingleEntity } from "@storyteller/cli/modules/lsp/start.ts";
+import { FrontmatterSyncService } from "@storyteller/application/meta/frontmatter_sync_service.ts";
 
 /** サーバー未初期化エラーコード (LSP仕様) */
 const SERVER_NOT_INITIALIZED = -32002;
@@ -176,6 +178,14 @@ export class LspServer {
   private readonly DEBOUNCE_DELAY = 200;
   /** 増分更新を使用するエンティティファイル変更の最大数 */
   private readonly INCREMENTAL_UPDATE_THRESHOLD = 5;
+
+  // FrontMatter自動同期
+  private frontmatterSyncService: FrontmatterSyncService | null = null;
+  private readonly autoSyncConfig = {
+    enabled: true,
+    confidenceThreshold: 0.85,
+    entityTypes: ["characters", "settings", "foreshadowings"] as const,
+  };
 
   constructor(
     transport: LspTransport,
@@ -373,6 +383,11 @@ export class LspServer {
       case "textDocument/didClose":
         await this.handleDidClose(
           notification.params as DidCloseTextDocumentParams,
+        );
+        break;
+      case "textDocument/didSave":
+        await this.handleDidSave(
+          notification.params as DidSaveTextDocumentParams,
         );
         break;
       case "workspace/didChangeWatchedFiles":
@@ -668,6 +683,56 @@ export class LspServer {
     this.textDocumentSyncHandler.handleDidClose(params);
     // 診断をクリア（空の診断配列を発行）
     await this.diagnosticsPublisher.publish(params.textDocument.uri, []);
+  }
+
+
+  /**
+   * textDocument/didSave を処理
+   * 原稿ファイル保存時にFrontMatterを自動更新
+   */
+  private async handleDidSave(
+    params: DidSaveTextDocumentParams,
+  ): Promise<void> {
+    if (!this.autoSyncConfig.enabled) return;
+
+    const uri = params.textDocument.uri;
+    if (!this.isManuscriptFile(uri)) return;
+
+    // 遅延初期化
+    if (!this.frontmatterSyncService) {
+      const context = await this.getProjectContext(uri);
+      this.frontmatterSyncService = new FrontmatterSyncService(
+        this.projectRoot,
+        [...context.entities],
+      );
+    }
+
+    try {
+      const filePath = this.uriToFilePath(uri);
+      await this.frontmatterSyncService.sync(filePath, {
+        mode: "add",
+        confidenceThreshold: this.autoSyncConfig.confidenceThreshold,
+        entityTypes: [...this.autoSyncConfig.entityTypes],
+        dryRun: false,
+      });
+    } catch (error) {
+      // エラーはログに記録するが、クライアントには通知しない
+      console.error(`[didSave] FrontMatter sync failed: ${error}`);
+    }
+  }
+
+  /**
+   * URIが原稿ファイルかどうかを判定
+   */
+  private isManuscriptFile(uri: string): boolean {
+    return uri.endsWith(".md") && uri.includes("/manuscripts/");
+  }
+
+  /**
+   * file:// URIをファイルパスに変換
+   */
+  private uriToFilePath(uri: string): string {
+    return decodeURIComponent(uri.replace(/^file:\/\//, ""));
   }
 
   /**

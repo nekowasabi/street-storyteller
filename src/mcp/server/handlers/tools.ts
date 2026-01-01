@@ -23,6 +23,7 @@ import { timelineAnalyzeTool } from "@storyteller/mcp/tools/definitions/timeline
 import { phaseCreateTool } from "@storyteller/mcp/tools/definitions/phase_create.ts";
 import { phaseViewTool } from "@storyteller/mcp/tools/definitions/phase_view.ts";
 import { manuscriptBindingTool } from "@storyteller/mcp/tools/definitions/manuscript_binding.ts";
+import { manuscriptSyncTool } from "@storyteller/mcp/tools/definitions/manuscript_sync.ts";
 
 /**
  * tools/list リクエストを処理
@@ -81,6 +82,7 @@ export function createDefaultToolRegistry(): ToolRegistry {
 
   // Manuscript（原稿）ツールを登録
   registry.register(manuscriptBindingTool);
+  registry.register(manuscriptSyncTool);
 
   return registry;
 }
