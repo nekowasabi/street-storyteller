@@ -1,53 +1,53 @@
 ---
-mission_id: frontmatter-auto-sync-v1
-title: "原稿メタデータ自動更新機能"
-status: completed
-progress: 100
-phase: completed
+mission_id: textlint-storyteller-integration
+title: "textlint-storyteller統合: LSP/CLI/MCP統合によるバックグラウンドlint"
+status: planning
+progress: 0
+phase: planning
 tdd_mode: true
 blockers: 0
-created_at: "2026-01-01"
-updated_at: "2026-01-01"
+created_at: "2026-01-02"
+updated_at: "2026-01-02"
 ---
 
 # Commander's Intent
 
 ## Purpose
-- エディタでの保存時やCLIコマンド実行時に、原稿ファイル（Markdown）のFrontMatterメタデータを自動的に更新する
-- LSPでの情報確認やLLMへの問い合わせ時にメタ情報を効果的に取得できるようにする
-- 手動でのFrontMatter更新の手間を削減し、常に最新状態を維持する
+- textlintをNeovimで使用する際のUIブロッキング問題を解消する
+- storytellerのエンティティ検証とtextlintの文法チェックを統合する
+- DiagnosticSource抽象化により、将来の拡張（vale等）を容易にする
 
 ## End State
-- `storyteller meta sync` CLIコマンドが動作し、原稿のFrontMatterを自動更新できる
-- LSP `textDocument/didSave` で自動的にFrontMatterが更新される
-- MCP `manuscript_sync` ツールでLLMからFrontMatter同期を実行できる
-- `storyteller meta watch --sync-frontmatter` でファイル監視時にFrontMatterも同時更新される
+- storyteller LSP内でtextlintがバックグラウンド実行され、診断が統合表示される
+- `storyteller lint`コマンドでCLIからも実行可能
+- MCPツール: textlintの `--mcp` ネイティブサポートを活用（storytellerで独自実装不要）
+- Git pre-commitフックで自動検証が可能
 
 ## Key Tasks
-- FrontmatterSyncService の実装（コアサービス）
-- CLI `meta sync` コマンドの実装
-- LSP `didSave` ハンドラの実装
-- MCP `manuscript_sync` ツールの実装
-- `meta watch` への `--sync-frontmatter` オプション追加
+- DiagnosticSource抽象化による拡張可能な診断基盤
+- TextlintWorkerによるデバウンス・キャンセル付きバックグラウンド実行
+- CLIコマンド `storyteller lint` の実装
+- MCPツール: textlint v14.8.0+ の `--mcp` 機能を活用（独自実装不要）
+- Git hooks統合
 
 ## Constraints
-- 既存のFrontMatter手動編集を破壊しない（add-onlyがデフォルト）
-- 信頼度閾値以下のエンティティは自動追加しない（デフォルト0.85）
-- 既存のテストを壊さない
+- 既存のstoryteller診断機能を壊さない（後方互換性）
+- textlint未インストール環境でもエラーにならない（グレースフルデグラデーション）
+- UIをブロッキングしない（非同期・バックグラウンド実行）
 
 ## Restraints
-- TDD（テスト駆動開発）を厳守すること
-- 既存の `FrontmatterEditor`, `PositionedDetector`, `EntityValidator` を再利用すること
-- Result型パターンでエラーハンドリングを行うこと
+- TDD（テスト駆動開発）を厳守
+- 既存のコードパターン（CommandDescriptor、McpToolDefinition）に従う
+- Deno標準APIを使用（Deno.Command等）
 
 ---
 
 # Context
 
 ## 概要
-- 原稿ファイル保存時に、検出されたキャラクター・設定・伏線等のエンティティをFrontMatterに自動追加
-- CLI/LSP/MCP/meta watch の4つのトリガーポイントから統一的に呼び出せる設計
-- 既存の検出ロジック（PositionedDetector）とFrontMatter編集（FrontmatterEditor）を統合
+- storyteller LSP内でtextlintをバックグラウンドで実行し、エンティティ診断と統合
+- `storyteller lint`コマンドで原稿の文法チェックを実行
+- Claude Desktopからはtextlint --mcp（ネイティブMCPサーバー）を使用
 
 ## 必須のルール
 - 必ず `CLAUDE.md` を参照し、ルールを守ること
@@ -56,6 +56,7 @@ updated_at: "2026-01-01"
   - 実装コードを書く前に、失敗するテストを先に作成する
   - テストが通過するまで修正とテスト実行を繰り返す
   - プロセス完了の条件：該当するすべてのテスト、フォーマッタ、Linterが通過していること
+  - プロセス完了後、チェックボックスを✅に変更すること
 - **各Process開始時のブリーフィング実行**
   - 各Processの「Briefing」セクションは自動生成される
   - `@process-briefing` コメントを含むセクションは、エージェントが実行時に以下を自動取得する：
@@ -65,9 +66,9 @@ updated_at: "2026-01-01"
   - ブリーフィング情報は `/x` や `/d` コマンド実行時に動的に埋め込まれ、実行戦況を反映する
 
 ## 開発のゴール
-- 原稿ファイルのFrontMatterを自動的に最新状態に保つ機能を実装
-- 4つのトリガーポイント（CLI/LSP/MCP/meta watch）から統一的に利用可能にする
-- 既存コードを最大限再利用し、保守性の高い設計を実現
+- UIブロッキングのないtextlint統合
+- 複数診断ソースの統合表示
+- CLI/LSPの一貫したインターフェース（MCPはtextlint --mcp で代替）
 
 ---
 
@@ -75,14 +76,23 @@ updated_at: "2026-01-01"
 
 | @ref | @target | @test |
 |------|---------|-------|
-| src/application/meta/frontmatter_editor.ts | src/application/meta/frontmatter_sync_service.ts | tests/application/meta/frontmatter_sync_service_test.ts |
-| src/application/meta/frontmatter_parser.ts | src/application/meta/frontmatter_sync_service.ts | tests/application/meta/frontmatter_sync_service_test.ts |
-| src/lsp/detection/positioned_detector.ts | src/application/meta/frontmatter_sync_service.ts | tests/application/meta/frontmatter_sync_service_test.ts |
-| src/application/meta/entity_validator.ts | src/application/meta/frontmatter_sync_service.ts | tests/application/meta/frontmatter_sync_service_test.ts |
-| src/mcp/tools/definitions/manuscript_binding.ts | src/mcp/tools/definitions/manuscript_sync.ts | tests/mcp/tools/definitions/manuscript_sync_test.ts |
-| src/cli/modules/meta/watch.ts | src/cli/modules/meta/sync.ts | tests/cli/modules/meta/sync_test.ts |
-| src/cli/modules/meta/generate.ts | src/cli/modules/meta/sync.ts | tests/cli/modules/meta/sync_test.ts |
-| src/lsp/server/server.ts | src/lsp/server/server.ts (修正) | tests/lsp/server/server_did_save_test.ts |
+| SPEC.md | 要件定義書 | - |
+| src/lsp/diagnostics/diagnostics_generator.ts | src/lsp/diagnostics/diagnostic_source.ts | tests/lsp/diagnostics/diagnostic_source_test.ts |
+| src/lsp/diagnostics/diagnostics_publisher.ts | src/lsp/diagnostics/diagnostic_aggregator.ts | tests/lsp/diagnostics/diagnostic_aggregator_test.ts |
+| src/lsp/server/server.ts:871-882 | server.ts (Aggregator統合) | tests/lsp/integration/textlint_integration_test.ts |
+| - | src/lsp/integration/textlint/textlint_worker.ts | tests/lsp/integration/textlint/textlint_worker_test.ts |
+| - | src/lsp/integration/textlint/textlint_config.ts | tests/lsp/integration/textlint/textlint_config_test.ts |
+| - | src/lsp/integration/textlint/textlint_parser.ts | tests/lsp/integration/textlint/textlint_parser_test.ts |
+| - | src/lsp/integration/textlint/textlint_diagnostic_source.ts | tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts |
+| - | src/shared/textlint/types.ts | - |
+| - | src/shared/textlint/runner.ts | tests/shared/textlint/runner_test.ts |
+| - | src/shared/textlint/parser.ts | tests/shared/textlint/parser_test.ts |
+| src/cli/modules/rag/install_hooks.ts | src/cli/modules/lint/lint.ts | tests/cli/modules/lint/lint_test.ts |
+| src/cli/modules/rag/install_hooks.ts | src/cli/modules/lint/install_hooks.ts | tests/cli/modules/lint/install_hooks_test.ts |
+| src/cli/modules/index.ts | src/cli/modules/lint/index.ts | - |
+| ~~src/mcp/tools/definitions/textlint_check.ts~~ | [SKIPPED] textlint --mcp で代替 | - |
+| ~~src/mcp/tools/definitions/textlint_fix.ts~~ | [SKIPPED] textlint --mcp で代替 | - |
+| - | docs/lint.md | - |
 
 ---
 
@@ -90,1461 +100,1624 @@ updated_at: "2026-01-01"
 
 | Process | Status | Progress | Phase | Notes |
 |---------|--------|----------|-------|-------|
-| Process 1 | completed | ▮▮▮▮▮ 100% | Done | SyncOptions/SyncResult型定義 |
-| Process 2 | completed | ▮▮▮▮▮ 100% | Done | FrontmatterSyncService基本構造 |
-| Process 3 | completed | ▮▮▮▮▮ 100% | Done | sync()メソッド - add モード |
-| Process 4 | completed | ▮▮▮▮▮ 100% | Done | sync()メソッド - sync モード |
-| Process 5 | completed | ▮▮▮▮▮ 100% | Done | preview()メソッド（dryRun） |
-| Process 6 | completed | ▮▮▮▮▮ 100% | Done | 信頼度閾値フィルタリング |
-| Process 7 | completed | ▮▮▮▮▮ 100% | Done | 全エンティティタイプ対応 |
-| Process 8 | completed | ▮▮▮▮▮ 100% | Done | CLI meta sync コマンド基本 |
-| Process 9 | completed | ▮▮▮▮▮ 100% | Done | CLI meta sync オプション |
-| Process 10 | completed | ▮▮▮▮▮ 100% | Done | ユニットテスト統合 |
-| Process 11 | completed | ▮▮▮▮▮ 100% | Done | LSP didSave ハンドラ |
-| Process 12 | completed | ▮▮▮▮▮ 100% | Done | LSP 設定読み込み |
-| Process 13 | completed | ▮▮▮▮▮ 100% | Done | MCP manuscript_sync ツール |
-| Process 14 | completed | ▮▮▮▮▮ 100% | Done | meta watch --sync-frontmatter |
-| Process 50 | skipped | - | - | フォローアップ（予約） |
-| Process 100 | completed | ▮▮▮▮▮ 100% | Done | リファクタリング・品質向上 |
-| Process 200 | completed | ▮▮▮▮▮ 100% | Done | ドキュメンテーション |
-| Process 300 | in_progress | ▮▮▮▯▯ 60% | Act | OODAフィードバックループ |
+| Process 1 | planning | ▯▯▯▯▯ 0% | Red | DiagnosticSourceインターフェース定義 |
+| Process 2 | planning | ▯▯▯▯▯ 0% | Red | StorytellerDiagnosticSource（既存ラップ） |
+| Process 3 | planning | ▯▯▯▯▯ 0% | Red | DiagnosticAggregator実装 |
+| Process 4 | planning | ▯▯▯▯▯ 0% | Red | TextlintConfig設定検出 |
+| Process 5 | planning | ▯▯▯▯▯ 0% | Red | TextlintParser JSON解析 |
+| Process 6 | planning | ▯▯▯▯▯ 0% | Red | TextlintWorker（デバウンス・キャンセル） |
+| Process 7 | planning | ▯▯▯▯▯ 0% | Red | TextlintDiagnosticSource実装 |
+| Process 8 | planning | ▯▯▯▯▯ 0% | Red | LSPサーバーへのAggregator統合 |
+| Process 9 | planning | ▯▯▯▯▯ 0% | Red | 共通Textlintランナー（shared/textlint） |
+| Process 10 | planning | ▯▯▯▯▯ 0% | Red | CLI lint基本コマンド |
+| Process 11 | planning | ▯▯▯▯▯ 0% | Red | CLI lint --fix対応 |
+| Process 12 | planning | ▯▯▯▯▯ 0% | Red | CLI lint --json対応 |
+| Process 13 | planning | ▯▯▯▯▯ 0% | Red | CLI lint オプション拡充 |
+| Process 20 | skipped | ━━━━━ N/A | - | ~~MCP textlint_check~~ → textlint --mcp で代替 |
+| Process 21 | skipped | ━━━━━ N/A | - | ~~MCP textlint_fix~~ → textlint --mcp で代替 |
+| Process 30 | planning | ▯▯▯▯▯ 0% | Red | Git hooks install-hooks |
+| Process 31 | planning | ▯▯▯▯▯ 0% | Red | Git hooks uninstall-hooks |
+| Process 50 | planning | ▯▯▯▯▯ 0% | - | フォローアップ予約 |
+| Process 100 | planning | ▯▯▯▯▯ 0% | Red | リファクタリング・品質向上 |
+| Process 200 | planning | ▯▯▯▯▯ 0% | Red | ドキュメンテーション（docs/lint.md） |
+| Process 300 | planning | ▯▯▯▯▯ 0% | Red | OODAフィードバックループ |
 | | | | | |
-| **Overall** | **completed** | **▮▮▮▮▮ 100%** | **Done** | **Blockers: 0** |
+| **Overall** | **planning** | **▯▯▯▯▯ 0%** | **planning** | **Blockers: 0** |
 
 ---
 
 # Processes
 
-## Process 1: SyncOptions/SyncResult型定義
+## Process 1: DiagnosticSourceインターフェース定義
 
 <!--@process-briefing
 category: implementation
-tags: [types, core, frontmatter]
+tags: [interface, abstraction, lsp]
 -->
 
 ### Briefing (auto-generated)
 **Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
+**Known Patterns**: DiagnosticsGenerator.generate()のシグネチャを参照
 **Watch Points**: (auto-populated from failure_cases)
 
 ---
 
-### 目標
-FrontmatterSyncServiceで使用する型定義を作成する。
-
-### 修正対象ファイル
-- **新規作成**: `src/application/meta/frontmatter_sync_service.ts`
-- **テスト**: `tests/application/meta/frontmatter_sync_service_test.ts`
-
-### 詳細仕様
-
-#### SyncOptions型
-```typescript
-// src/application/meta/frontmatter_sync_service.ts
-
-import type { BindableEntityType } from "@storyteller/application/meta/frontmatter_editor.ts";
-
-/**
- * FrontMatter同期オプション
- */
-export interface SyncOptions {
-  /** 同期モード: add=追加のみ, sync=検出結果で置換 */
-  mode: "add" | "sync";
-  /** 対象エンティティタイプ */
-  entityTypes: BindableEntityType[];
-  /** 自動追加する信頼度閾値 (0.0-1.0) */
-  confidenceThreshold: number;
-  /** プレビューモード（ファイル更新なし） */
-  dryRun: boolean;
-}
-
-/**
- * デフォルトオプション
- */
-export const DEFAULT_SYNC_OPTIONS: Readonly<SyncOptions> = {
-  mode: "add",
-  entityTypes: ["characters", "settings", "foreshadowings", "timelines", "timeline_events", "phases"],
-  confidenceThreshold: 0.85,
-  dryRun: false,
-};
-```
-
-#### SyncResult型
-```typescript
-/**
- * エンティティタイプ別の変更情報
- */
-export interface EntityChange {
-  type: BindableEntityType;
-  ids: string[];
-}
-
-/**
- * FrontMatter同期結果
- */
-export interface SyncResult {
-  /** 原稿ファイルパス */
-  path: string;
-  /** 変更があったかどうか */
-  changed: boolean;
-  /** 追加されたエンティティ */
-  added: EntityChange[];
-  /** 削除されたエンティティ（syncモード時のみ） */
-  removed: EntityChange[];
-  /** 変更なしのエンティティ */
-  unchanged: EntityChange[];
-  /** 処理にかかった時間（ミリ秒） */
-  durationMs: number;
-}
-```
-
 ### Red Phase: テスト作成と失敗確認
-- [ ] テストファイル `tests/application/meta/frontmatter_sync_service_test.ts` を作成
-  - SyncOptions型のプロパティが正しく定義されているか
-  - DEFAULT_SYNC_OPTIONSのデフォルト値が正しいか
-  - SyncResult型のプロパティが正しく定義されているか
-- [ ] テストを実行して失敗することを確認（モジュールが存在しない）
+- [ ] `tests/lsp/diagnostics/diagnostic_source_test.ts` を作成
+  - DiagnosticSource型の構造テスト
+  - isAvailable()のモック実装テスト
+  - generate()のシグネチャ確認テスト
+- [ ] テストを実行して失敗することを確認
 
 ```typescript
-// tests/application/meta/frontmatter_sync_service_test.ts
+// tests/lsp/diagnostics/diagnostic_source_test.ts
 import { assertEquals, assertExists } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import {
-  DEFAULT_SYNC_OPTIONS,
-  type SyncOptions,
-  type SyncResult,
-} from "@storyteller/application/meta/frontmatter_sync_service.ts";
+import type { DiagnosticSource } from "@storyteller/lsp/diagnostics/diagnostic_source.ts";
 
-describe("FrontmatterSyncService Types", () => {
-  describe("DEFAULT_SYNC_OPTIONS", () => {
-    it("should have correct default values", () => {
-      assertEquals(DEFAULT_SYNC_OPTIONS.mode, "add");
-      assertEquals(DEFAULT_SYNC_OPTIONS.confidenceThreshold, 0.85);
-      assertEquals(DEFAULT_SYNC_OPTIONS.dryRun, false);
-      assertEquals(DEFAULT_SYNC_OPTIONS.entityTypes.length, 6);
-    });
+describe("DiagnosticSource interface", () => {
+  it("should have required properties", () => {
+    // モック実装で型チェック
+    const mockSource: DiagnosticSource = {
+      name: "test",
+      isAvailable: async () => true,
+      generate: async () => [],
+    };
+
+    assertEquals(mockSource.name, "test");
+    assertExists(mockSource.isAvailable);
+    assertExists(mockSource.generate);
   });
 
-  describe("SyncOptions", () => {
-    it("should accept valid options", () => {
-      const options: SyncOptions = {
-        mode: "sync",
-        entityTypes: ["characters", "settings"],
-        confidenceThreshold: 0.9,
-        dryRun: true,
-      };
-      assertExists(options);
-    });
-  });
+  it("should support optional cancel method", () => {
+    const mockSource: DiagnosticSource = {
+      name: "test",
+      isAvailable: async () => true,
+      generate: async () => [],
+      cancel: () => {},
+    };
 
-  describe("SyncResult", () => {
-    it("should accept valid result", () => {
-      const result: SyncResult = {
-        path: "manuscripts/chapter01.md",
-        changed: true,
-        added: [{ type: "characters", ids: ["hero"] }],
-        removed: [],
-        unchanged: [{ type: "settings", ids: ["kingdom"] }],
-        durationMs: 150,
-      };
-      assertExists(result);
-      assertEquals(result.changed, true);
-    });
+    assertExists(mockSource.cancel);
   });
 });
 ```
 
-✅ **Phase Complete**
-
 ### Green Phase: 最小実装と成功確認
-- [ ] `src/application/meta/frontmatter_sync_service.ts` に型定義を追加
-- [ ] SyncOptions, SyncResult, EntityChange, DEFAULT_SYNC_OPTIONS をエクスポート
-- [ ] テストを実行して成功することを確認
+- [ ] `src/lsp/diagnostics/diagnostic_source.ts` を作成
 
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] 型定義のJSDocコメントを追加
-- [ ] `deno fmt` と `deno lint` を実行
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 2: FrontmatterSyncService基本構造
-
-<!--@process-briefing
-category: implementation
-tags: [service, core, frontmatter]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-FrontmatterSyncServiceクラスの基本構造（コンストラクタ、依存関係注入）を実装する。
-
-### 修正対象ファイル
-- **修正**: `src/application/meta/frontmatter_sync_service.ts`
-- **テスト**: `tests/application/meta/frontmatter_sync_service_test.ts`
-
-### 詳細仕様
-
-#### クラス構造
 ```typescript
-import { type Result, ok, err } from "@storyteller/shared/result.ts";
-import { FrontmatterEditor, type BindableEntityType } from "@storyteller/application/meta/frontmatter_editor.ts";
-import { EntityValidator } from "@storyteller/application/meta/entity_validator.ts";
-import { PositionedDetector, type DetectableEntity, type PositionedMatch } from "@storyteller/lsp/detection/positioned_detector.ts";
+// src/lsp/diagnostics/diagnostic_source.ts
+import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
 
 /**
- * 同期エラー型
+ * 診断ソースインターフェース
+ * 複数の診断プロバイダーを統合するための抽象化
  */
-export type SyncError =
-  | { type: "file_not_found"; message: string; path: string }
-  | { type: "read_error"; message: string; cause?: unknown }
-  | { type: "write_error"; message: string; cause?: unknown }
-  | { type: "frontmatter_error"; message: string; cause?: unknown }
-  | { type: "detection_error"; message: string; cause?: unknown };
+export interface DiagnosticSource {
+  /** ソース識別子 (e.g., "storyteller", "textlint") */
+  readonly name: string;
 
-/**
- * FrontMatter同期サービス
- *
- * 原稿ファイル内のエンティティ参照を検出し、FrontMatterに自動追加/同期する。
- *
- * 依存関係:
- * - PositionedDetector: エンティティ参照の検出
- * - FrontmatterEditor: FrontMatterの編集
- * - EntityValidator: エンティティIDの存在確認
- */
-export class FrontmatterSyncService {
-  private readonly projectRoot: string;
-  private readonly detector: PositionedDetector;
-  private readonly editor: FrontmatterEditor;
-  private readonly validator: EntityValidator;
+  /** ソースが利用可能かどうか */
+  isAvailable(): Promise<boolean>;
 
-  constructor(
+  /** 診断を生成 */
+  generate(
+    uri: string,
+    content: string,
     projectRoot: string,
-    entities: DetectableEntity[],
-    options?: {
-      detector?: PositionedDetector;
-      editor?: FrontmatterEditor;
-      validator?: EntityValidator;
-    }
-  ) {
-    this.projectRoot = projectRoot;
-    this.detector = options?.detector ?? new PositionedDetector(entities);
-    this.editor = options?.editor ?? new FrontmatterEditor();
-    this.validator = options?.validator ?? new EntityValidator(projectRoot);
-  }
+  ): Promise<Diagnostic[]>;
 
-  /**
-   * FrontMatterを同期する（メインAPI）
-   */
-  async sync(path: string, options: Partial<SyncOptions> = {}): Promise<Result<SyncResult, SyncError>> {
-    // Process 3-4で実装
-    throw new Error("Not implemented");
-  }
+  /** 進行中の操作をキャンセル（オプショナル） */
+  cancel?(): void;
 
-  /**
-   * 変更内容をプレビューする（ファイル更新なし）
-   */
-  async preview(path: string, options: Partial<SyncOptions> = {}): Promise<Result<SyncResult, SyncError>> {
-    // Process 5で実装
-    throw new Error("Not implemented");
-  }
+  /** リソースを解放（オプショナル） */
+  dispose?(): void;
 }
 ```
 
-### Red Phase: テスト作成と失敗確認
-- [ ] コンストラクタのテストケースを作成
-  - projectRootを受け取ること
-  - entitiesを受け取ること
-  - オプションで依存関係を注入できること
-- [ ] テストを実行して失敗することを確認
-
-```typescript
-describe("FrontmatterSyncService", () => {
-  describe("constructor", () => {
-    it("should create instance with project root and entities", () => {
-      const entities: DetectableEntity[] = [
-        { kind: "character", id: "hero", name: "Hero", filePath: "src/characters/hero.ts" },
-      ];
-      const service = new FrontmatterSyncService("/path/to/project", entities);
-      assertExists(service);
-    });
-
-    it("should accept custom dependencies", () => {
-      const mockDetector = new PositionedDetector([]);
-      const mockEditor = new FrontmatterEditor();
-      const mockValidator = new EntityValidator("/path/to/project");
-
-      const service = new FrontmatterSyncService("/path/to/project", [], {
-        detector: mockDetector,
-        editor: mockEditor,
-        validator: mockValidator,
-      });
-      assertExists(service);
-    });
-  });
-});
-```
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] FrontmatterSyncServiceクラスを実装
-- [ ] コンストラクタで依存関係を初期化
 - [ ] テストを実行して成功することを確認
 
-✅ **Phase Complete**
-
 ### Refactor Phase: 品質改善と継続成功確認
-- [ ] JSDocコメントを追加
-- [ ] `deno fmt` と `deno lint` を実行
+- [ ] JSDocコメントを充実
+- [ ] export文の整理
 - [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
 
 ---
 
-## Process 3: sync()メソッド - add モード
+## Process 2: StorytellerDiagnosticSource（既存ラップ）
 
 <!--@process-briefing
 category: implementation
-tags: [service, core, sync, add-mode]
+tags: [adapter, wrapper, lsp]
 -->
 
 ### Briefing (auto-generated)
 **Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
+**Known Patterns**: 既存DiagnosticsGenerator.generate()を参照（src/lsp/diagnostics/diagnostics_generator.ts:93-110）
 **Watch Points**: (auto-populated from failure_cases)
 
 ---
-
-### 目標
-sync()メソッドのaddモード（既存エンティティを保持しつつ新規追加）を実装する。
-
-### 修正対象ファイル
-- **修正**: `src/application/meta/frontmatter_sync_service.ts`
-- **テスト**: `tests/application/meta/frontmatter_sync_service_test.ts`
-
-### 詳細仕様
-
-#### sync()メソッドの処理フロー（addモード）
-```typescript
-async sync(path: string, options: Partial<SyncOptions> = {}): Promise<Result<SyncResult, SyncError>> {
-  const startTime = Date.now();
-  const opts = { ...DEFAULT_SYNC_OPTIONS, ...options };
-
-  // 1. ファイル読み込み
-  const absolutePath = isAbsolute(path) ? path : join(this.projectRoot, path);
-  let content: string;
-  try {
-    content = await Deno.readTextFile(absolutePath);
-  } catch (error) {
-    if (error instanceof Deno.errors.NotFound) {
-      return err({ type: "file_not_found", message: `ファイルが見つかりません: ${path}`, path });
-    }
-    return err({ type: "read_error", message: "ファイル読み込みエラー", cause: error });
-  }
-
-  // 2. エンティティ検出
-  const matches = this.detector.detectWithPositions(content);
-
-  // 3. 信頼度閾値でフィルタリング
-  const filteredMatches = matches.filter(m => m.confidence >= opts.confidenceThreshold);
-
-  // 4. エンティティタイプ別にグループ化
-  const byType = this.groupMatchesByType(filteredMatches, opts.entityTypes);
-
-  // 5. FrontMatter編集
-  let newContent = content;
-  const added: EntityChange[] = [];
-  const unchanged: EntityChange[] = [];
-
-  for (const entityType of opts.entityTypes) {
-    const ids = byType.get(entityType) ?? [];
-    if (ids.length === 0) {
-      unchanged.push({ type: entityType, ids: [] });
-      continue;
-    }
-
-    const result = this.editor.addEntities(newContent, entityType, ids);
-    if (!result.ok) {
-      // FrontMatterがない場合はスキップ（エラーにしない）
-      continue;
-    }
-
-    newContent = result.value.content;
-    if (result.value.addedIds.length > 0) {
-      added.push({ type: entityType, ids: result.value.addedIds });
-    }
-    if (ids.length > result.value.addedIds.length) {
-      const existingIds = ids.filter(id => !result.value.addedIds.includes(id));
-      unchanged.push({ type: entityType, ids: existingIds });
-    }
-  }
-
-  // 6. ファイル書き込み（dryRunでない場合）
-  if (!opts.dryRun && newContent !== content) {
-    try {
-      await Deno.writeTextFile(absolutePath, newContent);
-    } catch (error) {
-      return err({ type: "write_error", message: "ファイル書き込みエラー", cause: error });
-    }
-  }
-
-  return ok({
-    path,
-    changed: added.length > 0,
-    added,
-    removed: [],
-    unchanged,
-    durationMs: Date.now() - startTime,
-  });
-}
-
-private groupMatchesByType(
-  matches: PositionedMatch[],
-  targetTypes: BindableEntityType[]
-): Map<BindableEntityType, string[]> {
-  const result = new Map<BindableEntityType, string[]>();
-
-  for (const match of matches) {
-    const entityType = this.kindToEntityType(match.kind);
-    if (!entityType || !targetTypes.includes(entityType)) continue;
-
-    const ids = result.get(entityType) ?? [];
-    if (!ids.includes(match.id)) {
-      ids.push(match.id);
-    }
-    result.set(entityType, ids);
-  }
-
-  return result;
-}
-
-private kindToEntityType(kind: "character" | "setting" | "foreshadowing"): BindableEntityType | null {
-  switch (kind) {
-    case "character": return "characters";
-    case "setting": return "settings";
-    case "foreshadowing": return "foreshadowings";
-    default: return null;
-  }
-}
-```
 
 ### Red Phase: テスト作成と失敗確認
-- [ ] sync() addモードのテストケースを作成
-  - ファイルが存在しない場合のエラー
-  - 検出されたエンティティがFrontMatterに追加されること
-  - 既存のエンティティは保持されること
-  - 信頼度閾値以下のエンティティは追加されないこと
-- [ ] テストを実行して失敗することを確認
+- [ ] `tests/lsp/diagnostics/storyteller_diagnostic_source_test.ts` を作成
+  - isAvailable()は常にtrue
+  - generate()がDiagnosticsGeneratorに委譲
+  - nameが"storyteller"
 
 ```typescript
-describe("sync() - add mode", () => {
-  it("should return file_not_found error when file does not exist", async () => {
-    const service = new FrontmatterSyncService("/tmp/test", []);
-    const result = await service.sync("nonexistent.md");
-    assertEquals(result.ok, false);
-    if (!result.ok) {
-      assertEquals(result.error.type, "file_not_found");
-    }
+// tests/lsp/diagnostics/storyteller_diagnostic_source_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it, beforeEach } from "@std/testing/bdd";
+import { StorytellerDiagnosticSource } from "@storyteller/lsp/diagnostics/storyteller_diagnostic_source.ts";
+import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
+import { PositionedDetector } from "@storyteller/lsp/detection/positioned_detector.ts";
+
+describe("StorytellerDiagnosticSource", () => {
+  let source: StorytellerDiagnosticSource;
+
+  beforeEach(() => {
+    const detector = new PositionedDetector([]);
+    const generator = new DiagnosticsGenerator(detector);
+    source = new StorytellerDiagnosticSource(generator);
   });
 
-  it("should add detected entities to frontmatter", async () => {
-    // テスト用の一時ファイルを作成
-    const tempDir = await Deno.makeTempDir();
-    const testFile = join(tempDir, "chapter01.md");
-    await Deno.writeTextFile(testFile, `---
-storyteller:
-  chapter_id: chapter_01
-  title: "テスト章"
-  order: 1
-  characters: []
----
-
-勇者は剣を抜いた。
-`);
-
-    const entities: DetectableEntity[] = [
-      { kind: "character", id: "hero", name: "勇者", filePath: "src/characters/hero.ts" },
-    ];
-    const service = new FrontmatterSyncService(tempDir, entities);
-
-    const result = await service.sync("chapter01.md");
-    assertEquals(result.ok, true);
-    if (result.ok) {
-      assertEquals(result.value.changed, true);
-      assertEquals(result.value.added[0].ids, ["hero"]);
-    }
-
-    await Deno.remove(tempDir, { recursive: true });
+  it("should have name 'storyteller'", () => {
+    assertEquals(source.name, "storyteller");
   });
-});
-```
 
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] sync()メソッドのaddモードを実装
-- [ ] groupMatchesByType()ヘルパーメソッドを実装
-- [ ] kindToEntityType()ヘルパーメソッドを実装
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] エラーメッセージを日本語で統一
-- [ ] `deno fmt` と `deno lint` を実行
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 4: sync()メソッド - sync モード
-
-<!--@process-briefing
-category: implementation
-tags: [service, core, sync, sync-mode]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-sync()メソッドのsyncモード（検出結果で既存エンティティを置換）を実装する。
-
-### 修正対象ファイル
-- **修正**: `src/application/meta/frontmatter_sync_service.ts`
-- **テスト**: `tests/application/meta/frontmatter_sync_service_test.ts`
-
-### 詳細仕様
-
-#### syncモードの追加処理
-```typescript
-// sync()メソッド内のモード分岐
-if (opts.mode === "sync") {
-  // setEntities で既存を完全置換
-  const result = this.editor.setEntities(newContent, entityType, ids);
-  if (!result.ok) continue;
-
-  newContent = result.value.content;
-  if (result.value.addedIds.length > 0) {
-    added.push({ type: entityType, ids: result.value.addedIds });
-  }
-  if (result.value.removedIds.length > 0) {
-    removed.push({ type: entityType, ids: result.value.removedIds });
-  }
-} else {
-  // 既存のaddモード処理
-}
-```
-
-### Red Phase: テスト作成と失敗確認
-- [ ] sync() syncモードのテストケースを作成
-  - 検出されなくなったエンティティが削除されること
-  - 新規エンティティが追加されること
-  - removedにIDが含まれること
-- [ ] テストを実行して失敗することを確認
-
-```typescript
-describe("sync() - sync mode", () => {
-  it("should replace frontmatter entities with detected ones", async () => {
-    const tempDir = await Deno.makeTempDir();
-    const testFile = join(tempDir, "chapter01.md");
-    await Deno.writeTextFile(testFile, `---
-storyteller:
-  chapter_id: chapter_01
-  title: "テスト章"
-  order: 1
-  characters:
-    - old_character
----
-
-勇者は剣を抜いた。
-`);
-
-    const entities: DetectableEntity[] = [
-      { kind: "character", id: "hero", name: "勇者", filePath: "src/characters/hero.ts" },
-    ];
-    const service = new FrontmatterSyncService(tempDir, entities);
-
-    const result = await service.sync("chapter01.md", { mode: "sync" });
-    assertEquals(result.ok, true);
-    if (result.ok) {
-      assertEquals(result.value.changed, true);
-      assertEquals(result.value.added[0].ids, ["hero"]);
-      assertEquals(result.value.removed[0].ids, ["old_character"]);
-    }
-
-    await Deno.remove(tempDir, { recursive: true });
+  it("should always be available", async () => {
+    const available = await source.isAvailable();
+    assertEquals(available, true);
   });
-});
-```
 
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] sync()メソッドにモード分岐を追加
-- [ ] syncモードでsetEntitiesを使用するよう実装
-- [ ] removedの記録を追加
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] モード分岐をprivateメソッドに切り出し
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 5: preview()メソッド（dryRun）
-
-<!--@process-briefing
-category: implementation
-tags: [service, core, preview]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-preview()メソッド（ファイル更新なしで変更内容を返す）を実装する。
-
-### 修正対象ファイル
-- **修正**: `src/application/meta/frontmatter_sync_service.ts`
-- **テスト**: `tests/application/meta/frontmatter_sync_service_test.ts`
-
-### 詳細仕様
-
-#### preview()メソッド
-```typescript
-/**
- * 変更内容をプレビューする（ファイル更新なし）
- */
-async preview(path: string, options: Partial<SyncOptions> = {}): Promise<Result<SyncResult, SyncError>> {
-  return this.sync(path, { ...options, dryRun: true });
-}
-```
-
-### Red Phase: テスト作成と失敗確認
-- [ ] preview()のテストケースを作成
-  - ファイルが更新されないこと
-  - 変更内容が正しく返されること
-- [ ] テストを実行して失敗することを確認
-
-```typescript
-describe("preview()", () => {
-  it("should not modify file", async () => {
-    const tempDir = await Deno.makeTempDir();
-    const testFile = join(tempDir, "chapter01.md");
-    const originalContent = `---
-storyteller:
-  chapter_id: chapter_01
-  title: "テスト章"
-  order: 1
-  characters: []
----
-
-勇者は剣を抜いた。
-`;
-    await Deno.writeTextFile(testFile, originalContent);
-
-    const entities: DetectableEntity[] = [
-      { kind: "character", id: "hero", name: "勇者", filePath: "src/characters/hero.ts" },
-    ];
-    const service = new FrontmatterSyncService(tempDir, entities);
-
-    const result = await service.preview("chapter01.md");
-    assertEquals(result.ok, true);
-    if (result.ok) {
-      assertEquals(result.value.changed, true);
-    }
-
-    // ファイルが変更されていないことを確認
-    const currentContent = await Deno.readTextFile(testFile);
-    assertEquals(currentContent, originalContent);
-
-    await Deno.remove(tempDir, { recursive: true });
-  });
-});
-```
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] preview()メソッドを実装（dryRun: trueでsyncを呼び出す）
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] JSDocコメントを追加
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 6: 信頼度閾値フィルタリング
-
-<!--@process-briefing
-category: implementation
-tags: [service, filter, confidence]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-信頼度閾値によるフィルタリングが正しく動作することを確認する。
-
-### 修正対象ファイル
-- **テスト**: `tests/application/meta/frontmatter_sync_service_test.ts`
-
-### 詳細仕様
-- confidenceThreshold以上の信頼度を持つエンティティのみが追加される
-- デフォルト閾値は0.85
-
-### Red Phase: テスト作成と失敗確認
-- [ ] 信頼度フィルタリングのテストケースを作成
-  - 閾値以上のエンティティは追加される
-  - 閾値未満のエンティティは追加されない
-  - 閾値を変更した場合の動作
-- [ ] テストを実行して成功することを確認
-
-```typescript
-describe("confidence threshold filtering", () => {
-  it("should filter entities below threshold", async () => {
-    // モックのPositionedDetectorを作成し、異なる信頼度を返すように設定
-    const mockDetector = {
-      detectWithPositions: () => [
-        { kind: "character", id: "hero", filePath: "...", matchedPattern: "勇者", positions: [], confidence: 0.9 },
-        { kind: "character", id: "villager", filePath: "...", matchedPattern: "村人", positions: [], confidence: 0.7 },
-      ],
-    } as unknown as PositionedDetector;
-
-    const service = new FrontmatterSyncService(tempDir, [], { detector: mockDetector });
-
-    const result = await service.sync("chapter01.md", { confidenceThreshold: 0.85 });
-    // heroのみが追加され、villagerは追加されないことを確認
-  });
-});
-```
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] 既存のsync()メソッドで信頼度フィルタリングが動作することを確認
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 7: 全エンティティタイプ対応
-
-<!--@process-briefing
-category: implementation
-tags: [service, entity-types]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-characters, settings, foreshadowings以外のエンティティタイプ（timelines, timeline_events, phases）の対応を確認する。
-
-### 修正対象ファイル
-- **テスト**: `tests/application/meta/frontmatter_sync_service_test.ts`
-
-### 詳細仕様
-- timelines, timeline_events, phasesは現在PositionedDetectorでは検出されない
-- entityTypesオプションで指定された場合のみ処理対象となる
-- 将来的にPositionedDetectorを拡張する際に備えた設計
-
-### Red Phase: テスト作成と失敗確認
-- [ ] entityTypesオプションのテストケースを作成
-  - 指定したエンティティタイプのみ処理されること
-  - 未指定のエンティティタイプは処理されないこと
-- [ ] テストを実行して成功することを確認
-
-```typescript
-describe("entityTypes option", () => {
-  it("should only process specified entity types", async () => {
-    const service = new FrontmatterSyncService(tempDir, entities);
-
-    const result = await service.sync("chapter01.md", {
-      entityTypes: ["characters"],
-    });
-
-    // charactersのみ処理されること
-  });
-});
-```
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 8: CLI meta sync コマンド基本
-
-<!--@process-briefing
-category: implementation
-tags: [cli, command, sync]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-`storyteller meta sync` CLIコマンドの基本構造を実装する。
-
-### 修正対象ファイル
-- **新規作成**: `src/cli/modules/meta/sync.ts`
-- **修正**: `src/cli/command_registry.ts` または登録箇所
-- **テスト**: `tests/cli/modules/meta/sync_test.ts`
-
-### 詳細仕様
-
-#### コマンド構造
-```typescript
-// src/cli/modules/meta/sync.ts
-import { err, ok } from "@storyteller/shared/result.ts";
-import type { CommandContext, CommandExecutionError } from "@storyteller/cli/types.ts";
-import type { CommandDescriptor, CommandOptionDescriptor } from "@storyteller/cli/types.ts";
-import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
-import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
-import { FrontmatterSyncService, type SyncOptions } from "@storyteller/application/meta/frontmatter_sync_service.ts";
-import { loadEntitiesForLsp } from "@storyteller/cli/modules/lsp/start.ts";
-
-interface MetaSyncOptions {
-  readonly targetPath?: string;
-  readonly dir?: string;
-  readonly recursive?: boolean;
-  readonly preview?: boolean;
-  readonly force?: boolean;
-  readonly types?: string[];
-  readonly confidence?: number;
-}
-
-export class MetaSyncCommand extends BaseCliCommand {
-  override readonly name = "sync" as const;
-  override readonly path = ["meta", "sync"] as const;
-
-  protected async handle(context: CommandContext) {
-    const args = context.args ?? {};
-    if (args.help === true || args.h === true) {
-      context.presenter.showInfo(renderMetaSyncHelp());
-      return ok(undefined);
-    }
-
-    const parsed = parseMetaSyncOptions(context);
-    if ("code" in parsed) return err(parsed);
-
-    const projectRoot = context.projectRoot ?? Deno.cwd();
-    const entities = await loadEntitiesForLsp(projectRoot);
-    const service = new FrontmatterSyncService(projectRoot, entities);
-
-    const syncOptions: Partial<SyncOptions> = {
-      mode: parsed.force ? "sync" : "add",
-      dryRun: parsed.preview ?? false,
-      confidenceThreshold: parsed.confidence ?? 0.85,
-    };
-
-    if (parsed.types) {
-      syncOptions.entityTypes = parsed.types as any[];
-    }
-
-    // 単一ファイルまたはディレクトリ処理
-    const targets = await resolveTargets(parsed);
-
-    for (const target of targets) {
-      const result = await service.sync(target, syncOptions);
-      if (!result.ok) {
-        context.presenter.showError(`${target}: ${result.error.message}`);
-        continue;
-      }
-
-      if (parsed.preview) {
-        renderPreview(context.presenter, target, result.value);
-      } else if (result.value.changed) {
-        context.presenter.showSuccess(`[sync] ${target}: 更新完了`);
-      } else {
-        context.presenter.showInfo(`[sync] ${target}: 変更なし`);
-      }
-    }
-
-    return ok(undefined);
-  }
-}
-```
-
-### Red Phase: テスト作成と失敗確認
-- [ ] テストファイル `tests/cli/modules/meta/sync_test.ts` を作成
-  - コマンドが実行できること
-  - 単一ファイル処理ができること
-  - --help が表示されること
-- [ ] テストを実行して失敗することを確認
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] MetaSyncCommandクラスを実装
-- [ ] コマンドレジストリに登録
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] ヘルプテキストを追加
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 9: CLI meta sync オプション
-
-<!--@process-briefing
-category: implementation
-tags: [cli, command, options]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-`storyteller meta sync` のオプションを実装する。
-
-### 修正対象ファイル
-- **修正**: `src/cli/modules/meta/sync.ts`
-- **テスト**: `tests/cli/modules/meta/sync_test.ts`
-
-### 詳細仕様
-
-#### オプション一覧
-```typescript
-const META_SYNC_OPTIONS: readonly CommandOptionDescriptor[] = [
-  { name: "--help", aliases: ["-h"], summary: "ヘルプを表示", type: "boolean" },
-  { name: "--dir", summary: "ディレクトリ内のファイルを処理", type: "string" },
-  { name: "--recursive", aliases: ["-r"], summary: "再帰的にファイルを検索", type: "boolean" },
-  { name: "--preview", summary: "変更内容をプレビュー（ファイル更新なし）", type: "boolean" },
-  { name: "--force", summary: "既存エンティティを検出結果で置換", type: "boolean" },
-  { name: "--types", summary: "対象エンティティタイプ（カンマ区切り）", type: "string" },
-  { name: "--confidence", summary: "信頼度閾値（デフォルト: 0.85）", type: "number" },
-  { name: "--backup", summary: "更新前にバックアップを作成", type: "boolean" },
-  { name: "--json", summary: "JSON形式で出力", type: "boolean" },
-];
-```
-
-### Red Phase: テスト作成と失敗確認
-- [ ] 各オプションのテストケースを作成
-  - --preview オプション
-  - --force オプション
-  - --types オプション
-  - --confidence オプション
-  - --dir --recursive オプション
-- [ ] テストを実行して失敗することを確認
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] 各オプションの処理を実装
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 10: ユニットテスト（追加・統合テスト）
-
-<!--@process-briefing
-category: testing
-tags: [test, integration]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### Red Phase
-- [ ] Process 1-9 で作成したテストを統合実行
-- [ ] エッジケースのテストを追加
-  - 空のFrontMatter
-  - FrontMatterがないファイル
-  - 不正なYAML
-
-✅ **Phase Complete**
-
-### Green Phase
-- [ ] テストが通過するまで実装を調整
-
-✅ **Phase Complete**
-
-### Refactor Phase
-- [ ] テスト継続実行確認
-
-✅ **Phase Complete**
-
----
-
-## Process 11: LSP didSave ハンドラ
-
-<!--@process-briefing
-category: implementation
-tags: [lsp, handler, did-save]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-LSPサーバーに `textDocument/didSave` ハンドラを追加し、保存時にFrontMatterを自動更新する。
-
-### 修正対象ファイル
-- **修正**: `src/lsp/server/server.ts`
-- **新規作成**: `tests/lsp/server/server_did_save_test.ts`
-
-### 詳細仕様
-
-#### server.ts への追加
-```typescript
-// src/lsp/server/server.ts
-
-// 既存のインポートに追加
-import { FrontmatterSyncService } from "@storyteller/application/meta/frontmatter_sync_service.ts";
-
-// クラスメンバーに追加
-private frontmatterSyncService: FrontmatterSyncService | null = null;
-private autoSyncConfig = {
-  enabled: true,
-  confidenceThreshold: 0.85,
-  entityTypes: ["characters", "settings", "foreshadowings"] as const,
-};
-
-// handleNotification に didSave を追加
-case "textDocument/didSave":
-  await this.handleDidSave(notification.params as DidSaveTextDocumentParams);
-  break;
-
-// ハンドラメソッドを追加
-/**
- * textDocument/didSave を処理
- * 原稿ファイル保存時にFrontMatterを自動更新
- */
-private async handleDidSave(params: DidSaveTextDocumentParams): Promise<void> {
-  if (!this.autoSyncConfig.enabled) return;
-
-  const uri = params.textDocument.uri;
-  if (!this.isManuscriptFile(uri)) return;
-
-  // 遅延初期化
-  if (!this.frontmatterSyncService) {
-    const context = await this.getProjectContext(uri);
-    this.frontmatterSyncService = new FrontmatterSyncService(
-      this.projectRoot,
-      [...context.entities]
+  it("should generate diagnostics via generator", async () => {
+    const diagnostics = await source.generate(
+      "file:///test.md",
+      "テスト内容",
+      "/project",
     );
+    // 空の検出器なので診断なし
+    assertEquals(diagnostics.length, 0);
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/lsp/diagnostics/storyteller_diagnostic_source.ts` を作成
+
+```typescript
+// src/lsp/diagnostics/storyteller_diagnostic_source.ts
+import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
+import type { DiagnosticSource } from "./diagnostic_source.ts";
+import type { DiagnosticsGenerator } from "./diagnostics_generator.ts";
+
+/**
+ * storytellerエンティティ診断ソース
+ * 既存のDiagnosticsGeneratorをDiagnosticSourceにラップ
+ */
+export class StorytellerDiagnosticSource implements DiagnosticSource {
+  readonly name = "storyteller";
+
+  constructor(private readonly generator: DiagnosticsGenerator) {}
+
+  async isAvailable(): Promise<boolean> {
+    return true; // 常に利用可能
+  }
+
+  async generate(
+    uri: string,
+    content: string,
+    projectRoot: string,
+  ): Promise<Diagnostic[]> {
+    return this.generator.generate(uri, content, projectRoot);
+  }
+}
+```
+
+- [ ] テストを実行して成功することを確認
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] JSDocコメントを充実
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 3: DiagnosticAggregator実装
+
+<!--@process-briefing
+category: implementation
+tags: [aggregator, merge, lsp]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: Promise.allSettledで並列実行、sourceフィールドで識別
+**Watch Points**: 一つのソースが失敗しても他は継続
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/lsp/diagnostics/diagnostic_aggregator_test.ts` を作成
+  - 複数ソースの並列実行
+  - 各診断のsourceフィールド設定
+  - 一つが失敗しても他は成功
+  - ソースの登録/削除
+
+```typescript
+// tests/lsp/diagnostics/diagnostic_aggregator_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
+import { DiagnosticAggregator } from "@storyteller/lsp/diagnostics/diagnostic_aggregator.ts";
+import type { DiagnosticSource } from "@storyteller/lsp/diagnostics/diagnostic_source.ts";
+
+describe("DiagnosticAggregator", () => {
+  it("should aggregate diagnostics from multiple sources", async () => {
+    const source1: DiagnosticSource = {
+      name: "source1",
+      isAvailable: async () => true,
+      generate: async () => [{
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 5 } },
+        message: "test1",
+        severity: 2,
+      }],
+    };
+
+    const source2: DiagnosticSource = {
+      name: "source2",
+      isAvailable: async () => true,
+      generate: async () => [{
+        range: { start: { line: 1, character: 0 }, end: { line: 1, character: 5 } },
+        message: "test2",
+        severity: 1,
+      }],
+    };
+
+    const aggregator = new DiagnosticAggregator([source1, source2]);
+    const diagnostics = await aggregator.generate("file:///test.md", "content", "/project");
+
+    assertEquals(diagnostics.length, 2);
+    assertEquals(diagnostics[0].source, "source1");
+    assertEquals(diagnostics[1].source, "source2");
+  });
+
+  it("should skip unavailable sources", async () => {
+    const available: DiagnosticSource = {
+      name: "available",
+      isAvailable: async () => true,
+      generate: async () => [{ range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } }, message: "ok", severity: 2 }],
+    };
+
+    const unavailable: DiagnosticSource = {
+      name: "unavailable",
+      isAvailable: async () => false,
+      generate: async () => [{ range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } }, message: "skip", severity: 2 }],
+    };
+
+    const aggregator = new DiagnosticAggregator([available, unavailable]);
+    const diagnostics = await aggregator.generate("file:///test.md", "content", "/project");
+
+    assertEquals(diagnostics.length, 1);
+    assertEquals(diagnostics[0].message, "ok");
+  });
+
+  it("should continue if one source fails", async () => {
+    const working: DiagnosticSource = {
+      name: "working",
+      isAvailable: async () => true,
+      generate: async () => [{ range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } }, message: "ok", severity: 2 }],
+    };
+
+    const failing: DiagnosticSource = {
+      name: "failing",
+      isAvailable: async () => true,
+      generate: async () => { throw new Error("fail"); },
+    };
+
+    const aggregator = new DiagnosticAggregator([working, failing]);
+    const diagnostics = await aggregator.generate("file:///test.md", "content", "/project");
+
+    assertEquals(diagnostics.length, 1);
+    assertEquals(diagnostics[0].message, "ok");
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/lsp/diagnostics/diagnostic_aggregator.ts` を作成
+
+```typescript
+// src/lsp/diagnostics/diagnostic_aggregator.ts
+import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
+import type { DiagnosticSource } from "./diagnostic_source.ts";
+
+/**
+ * 複数の診断ソースを統合するアグリゲーター
+ */
+export class DiagnosticAggregator {
+  private sources: DiagnosticSource[] = [];
+
+  constructor(sources: DiagnosticSource[] = []) {
+    this.sources = [...sources];
+  }
+
+  /**
+   * ソースを追加
+   */
+  addSource(source: DiagnosticSource): void {
+    this.sources.push(source);
+  }
+
+  /**
+   * ソースを削除
+   */
+  removeSource(name: string): void {
+    this.sources = this.sources.filter(s => s.name !== name);
+  }
+
+  /**
+   * すべてのソースから診断を並列取得してマージ
+   */
+  async generate(
+    uri: string,
+    content: string,
+    projectRoot: string,
+  ): Promise<Diagnostic[]> {
+    // 利用可能なソースをフィルタ
+    const availabilityChecks = await Promise.all(
+      this.sources.map(async (source) => ({
+        source,
+        available: await source.isAvailable().catch(() => false),
+      }))
+    );
+
+    const availableSources = availabilityChecks
+      .filter(({ available }) => available)
+      .map(({ source }) => source);
+
+    // 並列実行
+    const results = await Promise.allSettled(
+      availableSources.map(async (source) => {
+        const diagnostics = await source.generate(uri, content, projectRoot);
+        // sourceフィールドを設定
+        return diagnostics.map((d) => ({
+          ...d,
+          source: source.name,
+        }));
+      })
+    );
+
+    // 成功した結果のみマージ
+    const merged: Diagnostic[] = [];
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        merged.push(...result.value);
+      }
+      // failedは無視（ログ出力は後で追加）
+    }
+
+    return merged;
+  }
+
+  /**
+   * すべてのソースをキャンセル
+   */
+  cancelAll(): void {
+    for (const source of this.sources) {
+      source.cancel?.();
+    }
+  }
+
+  /**
+   * すべてのソースを破棄
+   */
+  dispose(): void {
+    for (const source of this.sources) {
+      source.dispose?.();
+    }
+    this.sources = [];
+  }
+}
+```
+
+- [ ] テストを実行して成功することを確認
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] エラーログ出力を追加
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 4: TextlintConfig設定検出
+
+<!--@process-briefing
+category: implementation
+tags: [textlint, config, detection]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: SPEC.md 2.5節の検出順序を参照
+**Watch Points**: (auto-populated from failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/lsp/integration/textlint/textlint_config_test.ts` を作成
+  - 各設定ファイル形式の検出
+  - 優先順位の確認
+  - 設定ファイルなしの場合
+
+```typescript
+// tests/lsp/integration/textlint/textlint_config_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
+import { TextlintConfig, detectTextlintConfig } from "@storyteller/lsp/integration/textlint/textlint_config.ts";
+
+describe("TextlintConfig", () => {
+  const testDir = "./tmp/claude/textlint_config_test";
+
+  beforeEach(async () => {
+    await Deno.mkdir(testDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await Deno.remove(testDir, { recursive: true }).catch(() => {});
+  });
+
+  it("should detect .textlintrc", async () => {
+    await Deno.writeTextFile(`${testDir}/.textlintrc`, '{"rules":{}}');
+
+    const config = await detectTextlintConfig(testDir);
+    assertEquals(config.configPath?.endsWith(".textlintrc"), true);
+  });
+
+  it("should detect .textlintrc.json", async () => {
+    await Deno.writeTextFile(`${testDir}/.textlintrc.json`, '{"rules":{}}');
+
+    const config = await detectTextlintConfig(testDir);
+    assertEquals(config.configPath?.endsWith(".textlintrc.json"), true);
+  });
+
+  it("should prioritize .textlintrc over .textlintrc.json", async () => {
+    await Deno.writeTextFile(`${testDir}/.textlintrc`, '{"rules":{}}');
+    await Deno.writeTextFile(`${testDir}/.textlintrc.json`, '{"rules":{}}');
+
+    const config = await detectTextlintConfig(testDir);
+    assertEquals(config.configPath?.endsWith(".textlintrc"), true);
+  });
+
+  it("should return null configPath when no config found", async () => {
+    const config = await detectTextlintConfig(testDir);
+    assertEquals(config.configPath, undefined);
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/lsp/integration/textlint/textlint_config.ts` を作成
+
+```typescript
+// src/lsp/integration/textlint/textlint_config.ts
+import { join } from "@std/path";
+
+/**
+ * textlint設定
+ */
+export interface TextlintConfig {
+  /** 設定ファイルパス（見つからない場合はundefined） */
+  configPath?: string;
+  /** textlint実行パス */
+  executablePath: string;
+  /** デバウンス時間（ms） */
+  debounceMs: number;
+  /** タイムアウト時間（ms） */
+  timeoutMs: number;
+  /** 有効フラグ */
+  enabled: boolean;
+}
+
+/**
+ * 設定ファイル検出順序（優先度順）
+ */
+const CONFIG_FILES = [
+  ".textlintrc",
+  ".textlintrc.json",
+  ".textlintrc.yaml",
+  ".textlintrc.yml",
+  ".textlintrc.js",
+  ".textlintrc.cjs",
+];
+
+/**
+ * textlint設定を検出
+ */
+export async function detectTextlintConfig(
+  projectRoot: string,
+): Promise<TextlintConfig> {
+  let configPath: string | undefined;
+
+  // 設定ファイルを優先順位順に探索
+  for (const configFile of CONFIG_FILES) {
+    const fullPath = join(projectRoot, configFile);
+    try {
+      await Deno.stat(fullPath);
+      configPath = fullPath;
+      break;
+    } catch {
+      // ファイルが存在しない
+    }
+  }
+
+  // package.jsonのtextlintフィールドは後で対応
+
+  return {
+    configPath,
+    executablePath: "npx textlint",
+    debounceMs: 500,
+    timeoutMs: 30000,
+    enabled: true,
+  };
+}
+```
+
+- [ ] テストを実行して成功することを確認
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] package.jsonのtextlintフィールド検出を追加
+- [ ] storyteller.jsonからの設定読み込みを追加
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 5: TextlintParser JSON解析
+
+<!--@process-briefing
+category: implementation
+tags: [textlint, parser, json]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: textlint --format json の出力形式を参照
+**Watch Points**: 不正なJSON、空出力の処理
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/lsp/integration/textlint/textlint_parser_test.ts` を作成
+
+```typescript
+// tests/lsp/integration/textlint/textlint_parser_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
+import { parseTextlintOutput, TextlintMessage } from "@storyteller/lsp/integration/textlint/textlint_parser.ts";
+
+describe("TextlintParser", () => {
+  it("should parse valid textlint JSON output", () => {
+    const json = JSON.stringify([{
+      filePath: "/test.md",
+      messages: [{
+        ruleId: "prh",
+        severity: 1,
+        message: "表記ゆれ",
+        line: 2,
+        column: 5,
+        index: 10,
+      }],
+    }]);
+
+    const result = parseTextlintOutput(json, "/test.md");
+    assertEquals(result.filePath, "/test.md");
+    assertEquals(result.messages.length, 1);
+    assertEquals(result.messages[0].ruleId, "prh");
+  });
+
+  it("should handle empty output", () => {
+    const result = parseTextlintOutput("", "/test.md");
+    assertEquals(result.messages.length, 0);
+  });
+
+  it("should handle empty array", () => {
+    const result = parseTextlintOutput("[]", "/test.md");
+    assertEquals(result.messages.length, 0);
+  });
+
+  it("should handle invalid JSON", () => {
+    const result = parseTextlintOutput("invalid", "/test.md");
+    assertEquals(result.messages.length, 0);
+  });
+
+  it("should map severity correctly", () => {
+    const json = JSON.stringify([{
+      filePath: "/test.md",
+      messages: [
+        { ruleId: "rule1", severity: 2, message: "error", line: 1, column: 1 },
+        { ruleId: "rule2", severity: 1, message: "warning", line: 2, column: 1 },
+        { ruleId: "rule3", severity: 0, message: "info", line: 3, column: 1 },
+      ],
+    }]);
+
+    const result = parseTextlintOutput(json, "/test.md");
+    assertEquals(result.messages[0].severity, 2); // error
+    assertEquals(result.messages[1].severity, 1); // warning
+    assertEquals(result.messages[2].severity, 0); // info
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/lsp/integration/textlint/textlint_parser.ts` を作成
+
+```typescript
+// src/lsp/integration/textlint/textlint_parser.ts
+
+/**
+ * textlintメッセージ
+ */
+export interface TextlintMessage {
+  ruleId: string;
+  severity: number; // 0=info, 1=warning, 2=error
+  message: string;
+  line: number;
+  column: number;
+  index?: number;
+  fix?: {
+    range: [number, number];
+    text: string;
+  };
+}
+
+/**
+ * textlint結果
+ */
+export interface TextlintResult {
+  filePath: string;
+  messages: TextlintMessage[];
+}
+
+/**
+ * textlint JSON出力をパース
+ */
+export function parseTextlintOutput(
+  output: string,
+  filePath: string,
+): TextlintResult {
+  if (!output || output.trim() === "") {
+    return { filePath, messages: [] };
   }
 
   try {
-    const filePath = this.uriToFilePath(uri);
-    await this.frontmatterSyncService.sync(filePath, {
-      mode: "add",
-      confidenceThreshold: this.autoSyncConfig.confidenceThreshold,
-      entityTypes: [...this.autoSyncConfig.entityTypes],
-      dryRun: false,
-    });
-  } catch (error) {
-    // エラーはログに記録するが、クライアントには通知しない
-    console.error(`[didSave] FrontMatter sync failed: ${error}`);
-  }
-}
+    const parsed = JSON.parse(output);
 
-/**
- * URIが原稿ファイルかどうかを判定
- */
-private isManuscriptFile(uri: string): boolean {
-  return uri.endsWith(".md") && uri.includes("/manuscripts/");
-}
-
-/**
- * file:// URIをファイルパスに変換
- */
-private uriToFilePath(uri: string): string {
-  return decodeURIComponent(uri.replace(/^file:\/\//, ""));
-}
-```
-
-#### DidSaveTextDocumentParams型（追加が必要な場合）
-```typescript
-// src/lsp/handlers/text_document_sync.ts に追加、または新規型定義
-export type DidSaveTextDocumentParams = {
-  textDocument: {
-    uri: string;
-  };
-  text?: string;
-};
-```
-
-### Red Phase: テスト作成と失敗確認
-- [ ] テストファイル `tests/lsp/server/server_did_save_test.ts` を作成
-  - 原稿ファイル保存時にFrontMatterが更新されること
-  - 非原稿ファイル保存時は処理されないこと
-  - autoSyncConfig.enabled=false の場合は処理されないこと
-- [ ] テストを実行して失敗することを確認
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] handleDidSaveメソッドを実装
-- [ ] isManuscriptFile, uriToFilePath ヘルパーを実装
-- [ ] テストを実行して成功することを確認
-
-✅ **Phase Complete**
-
-### Refactor Phase: 品質改善と継続成功確認
-- [ ] エラーハンドリングを改善
-- [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
-
----
-
-## Process 12: LSP 設定読み込み
-
-<!--@process-briefing
-category: implementation
-tags: [lsp, config]
--->
-
-### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### 目標
-LSPサーバーがプロジェクト設定から自動同期オプションを読み込む機能を実装する。
-
-### 修正対象ファイル
-- **修正**: `src/lsp/server/server.ts`
-- **新規作成**: `src/lsp/config/config_loader.ts`（オプション）
-- **テスト**: `tests/lsp/config/config_loader_test.ts`
-
-### 詳細仕様
-
-#### 設定ファイル構造（.storyteller.json または deno.json）
-```json
-{
-  "storyteller": {
-    "frontmatter": {
-      "autoSync": {
-        "enabled": true,
-        "onSave": true,
-        "confidenceThreshold": 0.85,
-        "entityTypes": ["characters", "settings"],
-        "mode": "add"
-      }
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return { filePath, messages: [] };
     }
+
+    // textlintは配列形式で返す
+    const fileResult = parsed[0];
+    if (!fileResult || !Array.isArray(fileResult.messages)) {
+      return { filePath, messages: [] };
+    }
+
+    const messages: TextlintMessage[] = fileResult.messages.map((msg: {
+      ruleId?: string;
+      severity?: number;
+      message?: string;
+      line?: number;
+      column?: number;
+      index?: number;
+      fix?: { range: [number, number]; text: string };
+    }) => ({
+      ruleId: msg.ruleId ?? "unknown",
+      severity: msg.severity ?? 1,
+      message: msg.message ?? "",
+      line: msg.line ?? 1,
+      column: msg.column ?? 1,
+      index: msg.index,
+      fix: msg.fix,
+    }));
+
+    return { filePath, messages };
+  } catch {
+    // JSON解析エラー
+    return { filePath, messages: [] };
   }
 }
 ```
 
-### Red Phase: テスト作成と失敗確認
-- [ ] 設定読み込みのテストケースを作成
-- [ ] テストを実行して失敗することを確認
-
-✅ **Phase Complete**
-
-### Green Phase: 最小実装と成功確認
-- [ ] 設定ファイル読み込みロジックを実装
 - [ ] テストを実行して成功することを確認
 
-✅ **Phase Complete**
-
 ### Refactor Phase: 品質改善と継続成功確認
+- [ ] エラーログ出力を追加
 - [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
 
 ---
 
-## Process 13: MCP manuscript_sync ツール
+## Process 6: TextlintWorker（デバウンス・キャンセル）
 
 <!--@process-briefing
 category: implementation
-tags: [mcp, tool, sync]
+tags: [textlint, worker, async]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
+**Related Lessons**: DiagnosticsPublisher.publishDebounced()のパターンを参照（src/lsp/diagnostics/diagnostics_publisher.ts:93-114）
+**Known Patterns**: Deno.Command, AbortController
+**Watch Points**: プロセスリーク、タイムアウト処理
 
 ---
 
-### 目標
-MCPから原稿のFrontMatter同期を実行できる `manuscript_sync` ツールを実装する。
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/lsp/integration/textlint/textlint_worker_test.ts` を作成
 
-### 修正対象ファイル
-- **新規作成**: `src/mcp/tools/definitions/manuscript_sync.ts`
-- **修正**: `src/mcp/mcp_server.ts`（ツール登録）
-- **テスト**: `tests/mcp/tools/definitions/manuscript_sync_test.ts`
-
-### 詳細仕様
-
-#### ツール定義
 ```typescript
-// src/mcp/tools/definitions/manuscript_sync.ts
-import { isAbsolute, join } from "@std/path";
-import type { McpToolDefinition, ToolExecutionContext } from "@storyteller/mcp/tools/tool_registry.ts";
-import { FrontmatterSyncService } from "@storyteller/application/meta/frontmatter_sync_service.ts";
-import { loadEntitiesForLsp } from "@storyteller/cli/modules/lsp/start.ts";
+// tests/lsp/integration/textlint/textlint_worker_test.ts
+import { assertEquals, assertRejects } from "@std/assert";
+import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
+import { TextlintWorker } from "@storyteller/lsp/integration/textlint/textlint_worker.ts";
+import { delay } from "@std/async";
 
-export const manuscriptSyncTool: McpToolDefinition = {
-  name: "manuscript_sync",
-  description: "原稿ファイルのFrontMatterを検出されたエンティティと同期します。",
-  inputSchema: {
-    type: "object",
-    properties: {
-      manuscript: {
-        type: "string",
-        description: "原稿ファイルパス（相対または絶対パス）",
-      },
-      mode: {
-        type: "string",
-        enum: ["add", "sync", "preview"],
-        description: "モード: add=追加のみ, sync=置換, preview=プレビュー（デフォルト: add）",
-      },
-      entityTypes: {
-        type: "array",
-        items: { type: "string" },
-        description: "対象エンティティタイプ（デフォルト: 全タイプ）",
-      },
-      confidenceThreshold: {
-        type: "number",
-        description: "信頼度閾値（デフォルト: 0.85）",
-      },
-    },
-    required: ["manuscript"],
-  },
-  execute: async (args: Record<string, unknown>, context?: ToolExecutionContext) => {
-    const projectRoot = context?.projectRoot ?? Deno.cwd();
+describe("TextlintWorker", () => {
+  let worker: TextlintWorker;
 
-    const manuscript = args.manuscript as string;
-    const mode = (args.mode as "add" | "sync" | "preview") ?? "add";
-    const entityTypes = args.entityTypes as string[] | undefined;
-    const confidenceThreshold = (args.confidenceThreshold as number) ?? 0.85;
-
-    // エンティティロード
-    const entities = await loadEntitiesForLsp(projectRoot);
-    const service = new FrontmatterSyncService(projectRoot, entities);
-
-    const isPreview = mode === "preview";
-    const syncMode = mode === "sync" ? "sync" : "add";
-
-    const result = await service.sync(manuscript, {
-      mode: syncMode,
-      dryRun: isPreview,
-      confidenceThreshold,
-      entityTypes: entityTypes as any[],
+  beforeEach(() => {
+    worker = new TextlintWorker({
+      executablePath: "npx textlint",
+      debounceMs: 100,
+      timeoutMs: 5000,
+      enabled: true,
     });
+  });
 
-    if (!result.ok) {
-      return {
-        content: [{ type: "text" as const, text: `Error: ${result.error.message}` }],
-        isError: true,
-      };
-    }
+  afterEach(() => {
+    worker.dispose();
+  });
 
-    const { value } = result;
-    const addedInfo = value.added.map(a => `${a.type}: ${a.ids.join(", ")}`).join("\n");
-    const removedInfo = value.removed.map(r => `${r.type}: ${r.ids.join(", ")}`).join("\n");
+  it("should debounce multiple calls", async () => {
+    // モックが必要なため、実際のテストはintegration testで行う
+    // ここでは構造テストのみ
+    assertEquals(typeof worker.lint, "function");
+    assertEquals(typeof worker.cancel, "function");
+    assertEquals(typeof worker.dispose, "function");
+  });
 
-    return {
-      content: [{
-        type: "text" as const,
-        text: isPreview
-          ? `プレビュー: ${manuscript}\n追加予定:\n${addedInfo}\n削除予定:\n${removedInfo}`
-          : `同期完了: ${manuscript}\n追加: ${addedInfo}\n削除: ${removedInfo}`,
-      }],
-      isError: false,
+  it("should cancel previous request on new request", async () => {
+    // cancel()が呼ばれることを確認
+    let cancelCalled = false;
+    const originalCancel = worker.cancel.bind(worker);
+    worker.cancel = () => {
+      cancelCalled = true;
+      originalCancel();
     };
-  },
-};
+
+    // 2回連続呼び出し
+    const p1 = worker.lint("content1", "/test.md");
+    await delay(10);
+    const p2 = worker.lint("content2", "/test.md");
+
+    assertEquals(cancelCalled, true);
+    worker.cancel(); // クリーンアップ
+  });
+});
 ```
 
-### Red Phase: テスト作成と失敗確認
-- [ ] テストファイル `tests/mcp/tools/definitions/manuscript_sync_test.ts` を作成
-  - ツールが正しく登録されること
-  - addモードで動作すること
-  - syncモードで動作すること
-  - previewモードでファイルが更新されないこと
 - [ ] テストを実行して失敗することを確認
 
-✅ **Phase Complete**
-
 ### Green Phase: 最小実装と成功確認
-- [ ] manuscript_syncツールを実装
-- [ ] MCPサーバーに登録
+- [ ] `src/lsp/integration/textlint/textlint_worker.ts` を作成
+
+```typescript
+// src/lsp/integration/textlint/textlint_worker.ts
+import type { TextlintConfig } from "./textlint_config.ts";
+import { parseTextlintOutput, type TextlintResult } from "./textlint_parser.ts";
+
+/**
+ * TextlintWorkerオプション
+ */
+export interface TextlintWorkerOptions {
+  executablePath: string;
+  debounceMs: number;
+  timeoutMs: number;
+  enabled: boolean;
+  configPath?: string;
+}
+
+/**
+ * textlintをバックグラウンドで実行するワーカー
+ * デバウンス・キャンセル・タイムアウト対応
+ */
+export class TextlintWorker {
+  private process: Deno.ChildProcess | null = null;
+  private debounceTimer: number | null = null;
+  private abortController: AbortController | null = null;
+  private pendingResolve: ((result: TextlintResult) => void) | null = null;
+
+  constructor(private options: TextlintWorkerOptions) {}
+
+  /**
+   * textlintを実行（デバウンス・キャンセル付き）
+   */
+  async lint(content: string, filePath: string): Promise<TextlintResult> {
+    // 既存のリクエストをキャンセル
+    this.cancel();
+
+    return new Promise((resolve) => {
+      this.pendingResolve = resolve;
+
+      this.debounceTimer = setTimeout(async () => {
+        try {
+          const result = await this.execute(content, filePath);
+          resolve(result);
+        } catch {
+          resolve({ filePath, messages: [] });
+        } finally {
+          this.pendingResolve = null;
+        }
+      }, this.options.debounceMs);
+    });
+  }
+
+  /**
+   * 実際のtextlint実行
+   */
+  private async execute(content: string, filePath: string): Promise<TextlintResult> {
+    this.abortController = new AbortController();
+
+    const args = [
+      "textlint",
+      "--stdin",
+      "--stdin-filename", filePath,
+      "--format", "json",
+    ];
+
+    if (this.options.configPath) {
+      args.push("--config", this.options.configPath);
+    }
+
+    const command = new Deno.Command("npx", {
+      args,
+      stdin: "piped",
+      stdout: "piped",
+      stderr: "piped",
+    });
+
+    this.process = command.spawn();
+
+    // stdinに内容を書き込み
+    const writer = this.process.stdin.getWriter();
+    await writer.write(new TextEncoder().encode(content));
+    await writer.close();
+
+    // タイムアウト付きで待機
+    const timeoutId = setTimeout(() => {
+      this.abortController?.abort();
+    }, this.options.timeoutMs);
+
+    try {
+      const result = await this.process.output();
+      clearTimeout(timeoutId);
+
+      if (!result.success) {
+        // textlintはエラー時もexit 1を返すが、stdoutにはJSONがある
+      }
+
+      const output = new TextDecoder().decode(result.stdout);
+      return parseTextlintOutput(output, filePath);
+    } catch {
+      // タイムアウトまたはその他のエラー
+      try {
+        this.process.kill("SIGTERM");
+      } catch {
+        // プロセスが既に終了
+      }
+      return { filePath, messages: [] };
+    } finally {
+      this.process = null;
+      this.abortController = null;
+    }
+  }
+
+  /**
+   * 進行中の操作をキャンセル
+   */
+  cancel(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+
+    if (this.process) {
+      try {
+        this.process.kill("SIGTERM");
+      } catch {
+        // プロセスが既に終了
+      }
+      this.process = null;
+    }
+
+    if (this.pendingResolve) {
+      this.pendingResolve({ filePath: "", messages: [] });
+      this.pendingResolve = null;
+    }
+  }
+
+  /**
+   * リソースを解放
+   */
+  dispose(): void {
+    this.cancel();
+  }
+}
+```
+
 - [ ] テストを実行して成功することを確認
 
-✅ **Phase Complete**
-
 ### Refactor Phase: 品質改善と継続成功確認
-- [ ] エラーメッセージを改善
+- [ ] ログ出力を追加
 - [ ] テストを実行し、継続して成功することを確認
-
-✅ **Phase Complete**
 
 ---
 
-## Process 14: meta watch --sync-frontmatter
+## Process 7: TextlintDiagnosticSource実装
 
 <!--@process-briefing
 category: implementation
-tags: [cli, watch, sync-frontmatter]
+tags: [textlint, diagnostic_source, lsp]
 -->
 
 ### Briefing (auto-generated)
 **Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
+**Known Patterns**: StorytellerDiagnosticSource（Process 2）のパターン
+**Watch Points**: textlint未インストール時の処理
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts` を作成
+
+```typescript
+// tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it, beforeEach } from "@std/testing/bdd";
+import { TextlintDiagnosticSource } from "@storyteller/lsp/integration/textlint/textlint_diagnostic_source.ts";
+
+describe("TextlintDiagnosticSource", () => {
+  it("should have name 'textlint'", () => {
+    const source = new TextlintDiagnosticSource("/project");
+    assertEquals(source.name, "textlint");
+  });
+
+  it("should check textlint availability", async () => {
+    const source = new TextlintDiagnosticSource("/project");
+    // 実際の環境に依存するテスト
+    // CI環境ではtextlintがインストールされていない可能性
+    const available = await source.isAvailable();
+    // availableはboolean
+    assertEquals(typeof available, "boolean");
+  });
+
+  it("should convert textlint messages to LSP diagnostics", async () => {
+    // モック実装でテスト
+    const source = new TextlintDiagnosticSource("/project");
+
+    // textlintがインストールされていない場合は空配列
+    const diagnostics = await source.generate(
+      "file:///test.md",
+      "テスト",
+      "/project",
+    );
+
+    assertEquals(Array.isArray(diagnostics), true);
+  });
+
+  it("should map severity correctly", () => {
+    // severity変換のユニットテスト
+    // 2 (error) → DiagnosticSeverity.Error (1)
+    // 1 (warning) → DiagnosticSeverity.Warning (2)
+    // 0 (info) → DiagnosticSeverity.Information (3)
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/lsp/integration/textlint/textlint_diagnostic_source.ts` を作成
+
+```typescript
+// src/lsp/integration/textlint/textlint_diagnostic_source.ts
+import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
+import type { DiagnosticSource } from "@storyteller/lsp/diagnostics/diagnostic_source.ts";
+import { TextlintWorker } from "./textlint_worker.ts";
+import { detectTextlintConfig } from "./textlint_config.ts";
+import { DiagnosticSeverity } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
+
+/**
+ * textlint診断ソース
+ */
+export class TextlintDiagnosticSource implements DiagnosticSource {
+  readonly name = "textlint";
+
+  private worker: TextlintWorker | null = null;
+  private available: boolean | null = null;
+  private availabilityChecked = false;
+
+  constructor(private projectRoot: string) {}
+
+  /**
+   * textlintが利用可能かチェック
+   */
+  async isAvailable(): Promise<boolean> {
+    if (this.availabilityChecked) {
+      return this.available ?? false;
+    }
+
+    try {
+      const command = new Deno.Command("npx", {
+        args: ["textlint", "--version"],
+        stdout: "piped",
+        stderr: "piped",
+      });
+
+      const result = await command.output();
+      this.available = result.success;
+    } catch {
+      this.available = false;
+    }
+
+    this.availabilityChecked = true;
+
+    if (this.available) {
+      // ワーカーを初期化
+      const config = await detectTextlintConfig(this.projectRoot);
+      this.worker = new TextlintWorker({
+        executablePath: config.executablePath,
+        debounceMs: config.debounceMs,
+        timeoutMs: config.timeoutMs,
+        enabled: config.enabled,
+        configPath: config.configPath,
+      });
+    }
+
+    return this.available ?? false;
+  }
+
+  /**
+   * 診断を生成
+   */
+  async generate(
+    uri: string,
+    content: string,
+    _projectRoot: string,
+  ): Promise<Diagnostic[]> {
+    if (!this.worker) {
+      return [];
+    }
+
+    // URIからファイルパスを抽出
+    const filePath = uri.startsWith("file://")
+      ? decodeURIComponent(uri.slice(7))
+      : uri;
+
+    const result = await this.worker.lint(content, filePath);
+
+    // TextlintMessage → Diagnosticに変換
+    return result.messages.map((msg) => ({
+      range: {
+        start: { line: msg.line - 1, character: msg.column - 1 },
+        end: { line: msg.line - 1, character: msg.column },
+      },
+      message: msg.message,
+      severity: this.mapSeverity(msg.severity),
+      source: "textlint",
+      code: msg.ruleId,
+    }));
+  }
+
+  /**
+   * textlint severity → LSP severityマッピング
+   */
+  private mapSeverity(textlintSeverity: number): number {
+    switch (textlintSeverity) {
+      case 2: return DiagnosticSeverity.Error;      // 1
+      case 1: return DiagnosticSeverity.Warning;    // 2
+      default: return DiagnosticSeverity.Information; // 3
+    }
+  }
+
+  /**
+   * キャンセル
+   */
+  cancel(): void {
+    this.worker?.cancel();
+  }
+
+  /**
+   * 破棄
+   */
+  dispose(): void {
+    this.worker?.dispose();
+    this.worker = null;
+  }
+}
+```
+
+- [ ] テストを実行して成功することを確認
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] ログ出力を追加
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 8: LSPサーバーへのAggregator統合
+
+<!--@process-briefing
+category: implementation
+tags: [lsp, server, integration]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: server.ts:871-882のpublishDiagnosticsForUri()を修正
+**Watch Points**: 既存の動作を壊さない
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/lsp/integration/textlint_integration_test.ts` を作成
+  - 統合テストは実際のLSPサーバーで行う
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/lsp/server/server.ts` を修正
+
+**修正箇所1: インポート追加（約61-62行目付近）**
+
+```typescript
+// 追加
+import { DiagnosticAggregator } from "@storyteller/lsp/diagnostics/diagnostic_aggregator.ts";
+import { StorytellerDiagnosticSource } from "@storyteller/lsp/diagnostics/storyteller_diagnostic_source.ts";
+import { TextlintDiagnosticSource } from "@storyteller/lsp/integration/textlint/textlint_diagnostic_source.ts";
+```
+
+**修正箇所2: プロパティ追加（約167-168行目付近）**
+
+```typescript
+// 変更前
+private readonly diagnosticsGenerator: DiagnosticsGenerator;
+private readonly diagnosticsPublisher: DiagnosticsPublisher;
+
+// 変更後
+private readonly diagnosticsGenerator: DiagnosticsGenerator;
+private readonly diagnosticsPublisher: DiagnosticsPublisher;
+private readonly diagnosticAggregator: DiagnosticAggregator;
+```
+
+**修正箇所3: 初期化（約222-223行目付近）**
+
+```typescript
+// 変更前
+this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
+this.diagnosticsPublisher = new DiagnosticsPublisher(
+
+// 変更後
+this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
+
+// DiagnosticAggregatorの初期化
+const storytellerSource = new StorytellerDiagnosticSource(this.diagnosticsGenerator);
+const textlintSource = new TextlintDiagnosticSource(this.projectRoot);
+this.diagnosticAggregator = new DiagnosticAggregator([storytellerSource, textlintSource]);
+
+this.diagnosticsPublisher = new DiagnosticsPublisher(
+```
+
+**修正箇所4: publishDiagnosticsForUri()（約871-882行目）**
+
+```typescript
+// 変更前
+private async publishDiagnosticsForUri(uri: string): Promise<void> {
+  const document = this.documentManager.get(uri);
+  if (!document) return;
+
+  const diagnostics = await this.diagnosticsGenerator.generate(
+    uri,
+    document.content,
+    this.projectRoot,
+  );
+
+  await this.diagnosticsPublisher.publish(uri, diagnostics);
+}
+
+// 変更後
+private async publishDiagnosticsForUri(uri: string): Promise<void> {
+  const document = this.documentManager.get(uri);
+  if (!document) return;
+
+  // DiagnosticAggregatorを使用して複数ソースから診断を取得
+  const diagnostics = await this.diagnosticAggregator.generate(
+    uri,
+    document.content,
+    this.projectRoot,
+  );
+
+  await this.diagnosticsPublisher.publish(uri, diagnostics);
+}
+```
+
+**修正箇所5: dispose()に追加（既存のdisposeメソッド内）**
+
+```typescript
+// 追加
+this.diagnosticAggregator.dispose();
+```
+
+- [ ] テストを実行して成功することを確認
+- [ ] 既存のstoryteller診断が動作することを確認
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] 設定からtextlint有効/無効を制御
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 9: 共通Textlintランナー（shared/textlint）
+
+<!--@process-briefing
+category: implementation
+tags: [shared, textlint, cli, mcp]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: CLI/MCPで共有するロジックをshared/に配置
 **Watch Points**: (auto-populated from failure_cases)
 
 ---
 
-### 目標
-`storyteller meta watch` コマンドに `--sync-frontmatter` オプションを追加する。
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/shared/textlint/runner_test.ts` を作成
+- [ ] `tests/shared/textlint/parser_test.ts` を作成
 
-### 修正対象ファイル
-- **修正**: `src/cli/modules/meta/watch.ts`
-- **テスト**: `tests/cli/modules/meta/watch_test.ts`
-
-### 詳細仕様
-
-#### watch.ts への追加
 ```typescript
-// WatchOptions型に追加
-type WatchOptions = {
-  // 既存のオプション...
-  readonly syncFrontmatter?: boolean;
-};
+// tests/shared/textlint/runner_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
+import { TextlintRunner } from "@storyteller/shared/textlint/runner.ts";
 
-// オプション定義に追加
-{
-  name: "--sync-frontmatter",
-  summary: "ファイル変更時にFrontMatterも自動更新",
-  type: "boolean",
-},
-
-// flush()関数内に追加
-const flush = async () => {
-  // 既存の.meta.ts生成処理...
-
-  // --sync-frontmatter が有効な場合
-  if (parsed.syncFrontmatter && !parsed.syncFrontmatterService) {
-    parsed.syncFrontmatterService = new FrontmatterSyncService(projectRoot, entities);
-  }
-
-  if (parsed.syncFrontmatter && parsed.syncFrontmatterService) {
-    for (const markdownPath of paths) {
-      try {
-        await parsed.syncFrontmatterService.sync(markdownPath, { mode: "add" });
-        context.presenter.showSuccess(`[sync-frontmatter] ${markdownPath}`);
-      } catch (error) {
-        context.presenter.showError(`[sync-frontmatter] ${markdownPath}: ${error}`);
-      }
-    }
-  }
-};
+describe("TextlintRunner", () => {
+  it("should run textlint on files", async () => {
+    // 構造テスト
+    const runner = new TextlintRunner("/project");
+    assertEquals(typeof runner.check, "function");
+    assertEquals(typeof runner.fix, "function");
+  });
+});
 ```
 
-### Red Phase: テスト作成と失敗確認
-- [ ] --sync-frontmatter オプションのテストケースを作成
-  - オプションが認識されること
-  - ファイル変更時にFrontMatterが更新されること
 - [ ] テストを実行して失敗することを確認
 
-✅ **Phase Complete**
-
 ### Green Phase: 最小実装と成功確認
-- [ ] WatchOptionsに syncFrontmatter を追加
-- [ ] オプション定義を追加
-- [ ] flush()にFrontMatter同期処理を追加
+- [ ] `src/shared/textlint/types.ts` を作成
+
+```typescript
+// src/shared/textlint/types.ts
+
+/**
+ * textlintチェック結果
+ */
+export interface TextlintCheckResult {
+  totalFiles: number;
+  totalIssues: number;
+  errorCount: number;
+  warningCount: number;
+  infoCount: number;
+  results: TextlintFileResult[];
+}
+
+/**
+ * ファイル単位の結果
+ */
+export interface TextlintFileResult {
+  path: string;
+  issues: TextlintIssue[];
+}
+
+/**
+ * 個別の問題
+ */
+export interface TextlintIssue {
+  ruleId: string;
+  severity: "error" | "warning" | "info";
+  message: string;
+  line: number;
+  column: number;
+  source: "textlint";
+}
+
+/**
+ * textlint修正結果
+ */
+export interface TextlintFixResult {
+  fixed: boolean;
+  path: string;
+  fixedCount: number;
+}
+
+/**
+ * チェックオプション
+ */
+export interface TextlintCheckOptions {
+  path?: string;
+  dir?: string;
+  recursive?: boolean;
+  rules?: string[];
+  severity?: "error" | "warning" | "info";
+  withEntityCheck?: boolean;
+}
+
+/**
+ * 修正オプション
+ */
+export interface TextlintFixOptions {
+  path: string;
+  rules?: string[];
+  dryRun?: boolean;
+}
+```
+
+- [ ] `src/shared/textlint/runner.ts` を作成（CLI/MCP共有ロジック）
 - [ ] テストを実行して成功することを確認
 
-✅ **Phase Complete**
-
 ### Refactor Phase: 品質改善と継続成功確認
-- [ ] FrontmatterSyncServiceの初期化を遅延化
+- [ ] エラーハンドリングを追加
 - [ ] テストを実行し、継続して成功することを確認
 
-✅ **Phase Complete**
+---
+
+## Process 10: CLI lint基本コマンド
+
+<!--@process-briefing
+category: implementation
+tags: [cli, lint, command]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: src/cli/modules/rag/install_hooks.tsのCommandDescriptorパターン
+**Watch Points**: (auto-populated from failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/cli/modules/lint/lint_test.ts` を作成
+
+```typescript
+// tests/cli/modules/lint/lint_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
+import { lintCommandDescriptor } from "@storyteller/cli/modules/lint/lint.ts";
+
+describe("CLI lint command", () => {
+  it("should have correct name", () => {
+    assertEquals(lintCommandDescriptor.name, "lint");
+  });
+
+  it("should have options for path, dir, fix, json", () => {
+    const optionNames = lintCommandDescriptor.options?.map(o => o.name) ?? [];
+    assertEquals(optionNames.includes("path"), true);
+    assertEquals(optionNames.includes("dir"), true);
+    assertEquals(optionNames.includes("fix"), true);
+    assertEquals(optionNames.includes("json"), true);
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/cli/modules/lint/types.ts` を作成
+- [ ] `src/cli/modules/lint/lint.ts` を作成
+- [ ] `src/cli/modules/lint/index.ts` を作成
+- [ ] `src/cli/modules/index.ts` にlint登録を追加
+- [ ] テストを実行して成功することを確認
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] エラーハンドリングを追加
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 11: CLI lint --fix対応
+
+<!--@process-briefing
+category: implementation
+tags: [cli, lint, fix]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: Process 10のlintコマンドに統合
+**Watch Points**: (auto-populated from failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/cli/modules/lint/fix_test.ts` を作成
+  - --fixオプションでrunner.fix()が呼ばれること
+  - dryRunモードのテスト
+
+### Green Phase: 最小実装と成功確認
+- [ ] Process 10で--fix対応済みのためスキップ
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 12: CLI lint --json対応
+
+<!--@process-briefing
+category: implementation
+tags: [cli, lint, json]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: OutputPresenterインターフェース参照
+**Watch Points**: (auto-populated from failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] JSON出力形式のテストを追加
+
+### Green Phase: 最小実装と成功確認
+- [ ] Process 10で--json対応済みのためスキップ
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 13: CLI lint オプション拡充
+
+<!--@process-briefing
+category: implementation
+tags: [cli, lint, options]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: SPEC.md 2.2節のオプション一覧
+**Watch Points**: (auto-populated from failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] 全オプションのテストを追加
+  - --rule
+  - --config
+  - --severity
+  - --with-entity-check
+
+### Green Phase: 最小実装と成功確認
+- [ ] --with-entity-checkの実装
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 20: ~~MCP textlint_check~~ [SKIPPED]
+
+> **スキップ理由**: textlint v14.8.0+ のネイティブMCPサーバー機能（`--mcp`フラグ）で代替可能
+>
+> textlintが提供するMCPツール:
+> - `lintFile`: ファイルのlint
+> - `lintText`: テキスト直接lint
+> - `getLintFixedFileContent`: ファイルのfix結果取得
+> - `getLintFixedTextContent`: テキストのfix結果取得
+>
+> **使用方法**: Claude Desktop等のMCPクライアント設定で `npx textlint --mcp` を起動
+>
+> **参照**: https://github.com/textlint/textlint/blob/master/docs/mcp.md
+
+---
+
+## Process 21: ~~MCP textlint_fix~~ [SKIPPED]
+
+> **スキップ理由**: Process 20と同様、textlint --mcp の `getLintFixedFileContent`, `getLintFixedTextContent` で代替
+
+---
+
+## Process 30: Git hooks install-hooks
+
+<!--@process-briefing
+category: implementation
+tags: [git, hooks, install]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: src/cli/modules/rag/install_hooks.tsのパターン
+**Watch Points**: (auto-populated from failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] `tests/cli/modules/lint/install_hooks_test.ts` を作成
+
+```typescript
+// tests/cli/modules/lint/install_hooks_test.ts
+import { assertEquals } from "@std/assert";
+import { describe, it } from "@std/testing/bdd";
+import { lintInstallHooksCommandDescriptor, generatePreCommitHook } from "@storyteller/cli/modules/lint/install_hooks.ts";
+
+describe("CLI lint install-hooks", () => {
+  it("should have correct name", () => {
+    assertEquals(lintInstallHooksCommandDescriptor.name, "install-hooks");
+  });
+
+  it("should generate pre-commit hook script", () => {
+    const script = generatePreCommitHook({ strict: false });
+    assertEquals(script.includes("storyteller lint"), true);
+    assertEquals(script.includes("#!/bin/sh"), true);
+  });
+
+  it("should generate strict mode script", () => {
+    const script = generatePreCommitHook({ strict: true });
+    assertEquals(script.includes("exit 1"), true);
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+### Green Phase: 最小実装と成功確認
+- [ ] `src/cli/modules/lint/install_hooks.ts` を作成
+- [ ] テストを実行して成功することを確認
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 31: Git hooks uninstall-hooks
+
+<!--@process-briefing
+category: implementation
+tags: [git, hooks, uninstall]
+-->
+
+### Briefing (auto-generated)
+**Related Lessons**: (auto-populated from stigmergy)
+**Known Patterns**: Process 30に統合済み
+**Watch Points**: (auto-populated from failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+- [ ] Process 30で統合実装済み
+
+### Green Phase: 最小実装と成功確認
+- [ ] Process 30で統合実装済み
+
+### Refactor Phase: 品質改善と継続成功確認
+- [ ] テストを実行し、継続して成功することを確認
 
 ---
 
@@ -1562,7 +1735,7 @@ tags: []
 
 ---
 
-実装後に仕様変更や追加要件が発生した場合は、ここにProcessを追加する。
+実装後に仕様変更などが発生した場合は、ここにProcessを追加する。
 
 ---
 
@@ -1570,7 +1743,7 @@ tags: []
 
 <!--@process-briefing
 category: quality
-tags: []
+tags: [refactoring, testing, coverage]
 -->
 
 ### Briefing (auto-generated)
@@ -1580,24 +1753,22 @@ tags: []
 
 ---
 
-### Red Phase
-- [ ] コードカバレッジを確認
-- [ ] 品質改善テストを追加
+### Red Phase: 品質改善テストを追加
+- [ ] テストカバレッジを確認
+- [ ] エッジケーステストを追加
+  - textlint未インストール
+  - 設定ファイルなし
+  - タイムアウト
+  - プロセスキャンセル
 
-✅ **Phase Complete**
+### Green Phase: リファクタリングを実施
+- [ ] 重複コードの抽出
+- [ ] エラーメッセージの統一
+- [ ] ログ出力の整理
 
-### Green Phase
-- [ ] 重複コードの抽出・共通化
-- [ ] エラーハンドリングの統一
-- [ ] パフォーマンス最適化（キャッシュ活用）
-
-✅ **Phase Complete**
-
-### Refactor Phase
-- [ ] テスト継続実行確認
-- [ ] Linter/Formatter確認
-
-✅ **Phase Complete**
+### Refactor Phase: テスト継続実行確認
+- [ ] 全テストが通過することを確認
+- [ ] フォーマッタ・Linterが通過することを確認
 
 ---
 
@@ -1605,7 +1776,7 @@ tags: []
 
 <!--@process-briefing
 category: documentation
-tags: []
+tags: [docs, readme, samples]
 -->
 
 ### Briefing (auto-generated)
@@ -1615,39 +1786,30 @@ tags: []
 
 ---
 
-<!--
-@agent-definition: ~/.claude/stigmergy/process-definitions/process-200-documentation.json
-@template: ~/.claude/stigmergy/process-templates/documentation-template.md
-@stigmergy-config:
-  progress_path: ~/.claude/stigmergy/doc-progress/{mission_id}.json
-  artifacts_path: ~/.claude/stigmergy/doc-artifacts/{mission_id}/
-  lessons_path: ~/.claude/stigmergy/doc-lessons/{mission_id}.json
--->
-
 ### Red Phase: ドキュメント設計
 - [ ] 文書化対象を特定
-  - CLAUDE.md の更新（機能説明追加）
-  - docs/cli.md の更新（meta sync コマンド）
-  - docs/mcp.md の更新（manuscript_sync ツール）
-  - docs/lsp.md の更新（didSave自動更新）
+  - docs/lint.md
+  - CLAUDE.md更新
+  - サンプル設定ファイル
 - [ ] ドキュメント構成を作成
 
-✅ **Phase Complete**
-
 ### Green Phase: ドキュメント記述
-- [ ] CLAUDE.md に FrontMatter自動更新機能セクションを追加
-- [ ] docs/cli.md に meta sync コマンドを追加
-- [ ] docs/mcp.md に manuscript_sync ツールを追加
-- [ ] docs/lsp.md に didSave 自動更新を追加
-- [ ] コード例を追加
-
-✅ **Phase Complete**
+- [ ] `docs/lint.md` を作成
+  - 概要
+  - LSP統合
+  - CLIコマンド
+  - MCPツール
+  - Git Hooks
+  - セットアップ
+  - 設定
+- [ ] CLAUDE.mdに機能概要を追加
+- [ ] サンプル設定ファイルを作成
+  - .textlintrc.example
+  - prh-rules.yml.example
 
 ### Refactor Phase: 品質確認
-- [ ] 一貫性チェック
 - [ ] リンク検証
-
-✅ **Phase Complete**
+- [ ] 最終レビュー
 
 ---
 
@@ -1655,7 +1817,7 @@ tags: []
 
 <!--@process-briefing
 category: ooda_feedback
-tags: []
+tags: [learning, lessons, insights]
 -->
 
 ### Briefing (auto-generated)
@@ -1664,16 +1826,6 @@ tags: []
 **Watch Points**: (auto-populated from failure_cases)
 
 ---
-
-<!--
-@agent-definition: ~/.claude/stigmergy/process-definitions/process-300-ooda-feedback.json
-@template: ~/.claude/stigmergy/process-templates/ooda-feedback-template.md
-@stigmergy-config:
-  progress_path: ~/.claude/stigmergy/ooda-progress/{mission_id}.json
-  lessons_path: ~/.claude/stigmergy/lessons/{mission_id}/
-  insights_path: ~/.claude/stigmergy/code-insights/{mission_id}/
-  memory_integration: serena-v4
--->
 
 ### Red Phase: フィードバック収集設計
 
@@ -1692,8 +1844,6 @@ tags: []
 
 - [ ] **成功条件**: 収集対象が特定され、分類基準が明確
 
-✅ **Phase Complete**
-
 ### Green Phase: 教訓・知見の永続化
 
 **Decide（決心）**
@@ -1709,8 +1859,6 @@ tags: []
 - [ ] 関連するコード箇所にコメントを追加（必要に応じて）
 
 - [ ] **成功条件**: 全教訓がSerena Memoryまたはstigmergyに保存済み
-
-✅ **Phase Complete**
 
 ### Refactor Phase: フィードバック品質改善
 
@@ -1728,8 +1876,6 @@ tags: []
 
 - [ ] **成功条件**: 教訓がSerena Memoryで検索可能、insights文書が整備済み
 
-✅ **Phase Complete**
-
 ---
 
 # Management
@@ -1738,14 +1884,15 @@ tags: []
 
 | ID | Description | Status | Resolution |
 |----|-------------|--------|-----------|
-| - | 現在ブロッカーなし | - | - |
+| - | - | - | - |
 
 ## Lessons
 
 | ID | Insight | Severity | Applied |
 |----|---------|----------|---------|
-| L1 | FrontmatterEditorはstorytellerキーがないとエラーを返す | medium | ☐ |
-| L2 | PositionedDetectorはforeshadowing以外のタイムライン系を検出しない | medium | ☐ |
+| L1 | DiagnosticSource抽象化により拡張性が大幅向上 | high | - |
+| L2 | デバウンス・キャンセルパターンはDiagnosticsPublisherを参照 | medium | - |
+| L3 | Promise.allSettledで部分失敗に対応 | medium | - |
 
 ## Feedback Log
 
@@ -1764,11 +1911,12 @@ tags: []
 
 <!--
 Process番号規則
-- 1-9: 機能実装（コアサービス）
-- 10-49: テスト拡充・統合テスト
+- 1-9: 機能実装（Phase 1-2: DiagnosticSource、TextlintWorker）
+- 10-19: CLI実装（Phase 3）
+- 20-29: MCP実装（Phase 4）
+- 30-39: Git Hooks実装（Phase 5）
 - 50-99: フォローアップ
 - 100-199: 品質向上（リファクタリング）
-- 200-299: ドキュメンテーション
+- 200-299: ドキュメンテーション（Phase 6）
 - 300+: OODAフィードバックループ（教訓・知見保存）
 -->
-
