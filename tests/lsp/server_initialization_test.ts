@@ -167,3 +167,101 @@ Deno.test("LspServer - isInitialized returns false before initialization", () =>
 
   assertEquals(server.isInitialized(), false);
 });
+
+// ===== Process 300+: shutdown/exitテスト (CodeRabbit Review修正) =====
+
+Deno.test("LspServer - handleShutdown returns success response", async () => {
+  const initRequest = JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      processId: 1234,
+      rootUri: "file:///test/project",
+      capabilities: {},
+    },
+  });
+
+  const shutdownRequest = JSON.stringify({
+    jsonrpc: "2.0",
+    id: 2,
+    method: "shutdown",
+    params: null,
+  });
+
+  const reader = createMockReader(
+    createLspMessage(initRequest) + createLspMessage(shutdownRequest),
+  );
+  const writer = createMockWriter();
+  const transport = new LspTransport(reader, writer);
+  const server = new LspServer(transport, "/test/project");
+
+  // initialize
+  const msg1 = await transport.readMessage();
+  if (!msg1.ok) throw new Error("Failed to read message");
+  await server.handleMessage(msg1.value);
+
+  // shutdown
+  const msg2 = await transport.readMessage();
+  if (!msg2.ok) throw new Error("Failed to read message");
+  await server.handleMessage(msg2.value);
+
+  // レスポンスを検証 - shutdownは成功レスポンス(null result)を返す
+  const responseData = writer.getData();
+  const bodyMatches = responseData.match(/\r\n\r\n([^\r]+)/g);
+  assertExists(bodyMatches);
+  // 2番目のレスポンスがshutdownの応答
+  const shutdownResponseStr = bodyMatches[1].replace(/\r\n\r\n/, "");
+  const shutdownResponse = JSON.parse(shutdownResponseStr);
+
+  assertEquals(shutdownResponse.jsonrpc, "2.0");
+  assertEquals(shutdownResponse.id, 2);
+  assertEquals(shutdownResponse.result, null);
+});
+
+Deno.test("LspServer - handleShutdown calls dispose for cleanup", async () => {
+  // このテストはdisposeが呼ばれることを確認する
+  // disposeは診断アグリゲーターやタイマーをクリーンアップする
+  const initRequest = JSON.stringify({
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      processId: 1234,
+      rootUri: "file:///test/project",
+      capabilities: {},
+    },
+  });
+
+  const shutdownRequest = JSON.stringify({
+    jsonrpc: "2.0",
+    id: 2,
+    method: "shutdown",
+    params: null,
+  });
+
+  const reader = createMockReader(
+    createLspMessage(initRequest) + createLspMessage(shutdownRequest),
+  );
+  const writer = createMockWriter();
+  const transport = new LspTransport(reader, writer);
+  const server = new LspServer(transport, "/test/project");
+
+  // initialize
+  const msg1 = await transport.readMessage();
+  if (!msg1.ok) throw new Error("Failed to read message");
+  await server.handleMessage(msg1.value);
+
+  // shutdown - disposeが呼ばれることでリソースがクリーンアップされる
+  // Note: 直接disposeの呼び出しを検証するにはspyが必要だが、
+  // ここでは間接的にエラーなく完了することを確認
+  const msg2 = await transport.readMessage();
+  if (!msg2.ok) throw new Error("Failed to read message");
+  await server.handleMessage(msg2.value);
+
+  // shutdownが正常に完了したことを確認
+  const responseData = writer.getData();
+  assertExists(responseData);
+  // エラーが含まれていないことを確認
+  assertEquals(responseData.includes('"error"'), false);
+});

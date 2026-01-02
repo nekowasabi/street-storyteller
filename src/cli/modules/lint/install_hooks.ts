@@ -5,6 +5,7 @@
  * Git pre-commit hookのインストール/アンインストール
  */
 import type {
+  CommandContext,
   CommandDescriptor,
   CommandOptionDescriptor,
 } from "../../types.ts";
@@ -107,9 +108,9 @@ export const lintInstallHooksCommandDescriptor: CommandDescriptor = {
   ],
   handler: {
     name: "lint:install-hooks",
-    execute: async (args) => {
+    execute: async (context: CommandContext) => {
       const options = parseInstallHooksOptions(
-        args as InstallHooksCliOptions,
+        context.args as InstallHooksCliOptions,
       );
 
       // .git/hooks ディレクトリのパスを取得
@@ -189,7 +190,7 @@ export const lintUninstallHooksCommandDescriptor: CommandDescriptor = {
   ],
   handler: {
     name: "lint:uninstall-hooks",
-    execute: async () => {
+    execute: async (_context: CommandContext) => {
       const hookPath = ".git/hooks/pre-commit";
 
       try {

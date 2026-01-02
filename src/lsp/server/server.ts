@@ -479,6 +479,9 @@ export class LspServer {
    * shutdown リクエストを処理
    */
   private async handleShutdown(request: JsonRpcRequest): Promise<void> {
+    // リソースのクリーンアップ（タイマー、診断アグリゲーター等）
+    this.dispose();
+
     const response = createSuccessResponse(request.id, null);
     await this.transport.writeMessage(response);
   }

@@ -246,10 +246,12 @@ export class TextlintRunner {
         return [];
       }
 
+      // CodeRabbit Review: applyingMessages は実際に適用された修正を含む
+      // messages は検出された問題、applyingMessages は適用された修正
       return parsed.map((fileResult) => ({
-        fixed: fileResult.messages?.length > 0 || false,
+        fixed: (fileResult.applyingMessages?.length ?? 0) > 0,
         path: fileResult.filePath || options.path,
-        fixedCount: fileResult.messages?.length || 0,
+        fixedCount: fileResult.applyingMessages?.length ?? 0,
       }));
     } catch {
       return [];
