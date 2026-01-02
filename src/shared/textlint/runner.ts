@@ -189,7 +189,16 @@ export class TextlintRunner {
               source: "textlint" as const,
             };
           })
-          .filter((issue): issue is TextlintIssue => issue !== null);
+          .filter((
+            issue: {
+              ruleId: string;
+              severity: "error" | "warning" | "info";
+              message: string;
+              line: number;
+              column: number;
+              source: "textlint";
+            } | null,
+          ): issue is TextlintIssue => issue !== null);
 
         if (issues.length > 0) {
           results.push({

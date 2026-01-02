@@ -123,9 +123,10 @@ export const lintInstallHooksCommandDescriptor: CommandDescriptor = {
         } catch {
           return {
             ok: false,
-            error: new Error(
-              ".git directory not found. Are you in a git repository?",
-            ),
+            error: {
+              code: "GIT_NOT_FOUND",
+              message: ".git directory not found. Are you in a git repository?",
+            },
           };
         }
 
@@ -162,9 +163,10 @@ export const lintInstallHooksCommandDescriptor: CommandDescriptor = {
       } catch (error) {
         return {
           ok: false,
-          error: error instanceof Error
-            ? error
-            : new Error(String(error)),
+          error: {
+            code: "INSTALL_FAILED",
+            message: error instanceof Error ? error.message : String(error),
+          },
         };
       }
     },
@@ -177,8 +179,7 @@ export const lintInstallHooksCommandDescriptor: CommandDescriptor = {
 export const lintUninstallHooksCommandDescriptor: CommandDescriptor = {
   name: "uninstall-hooks",
   summary: "Git pre-commit hookをアンインストール",
-  description:
-    "storytellerが作成したGit pre-commit hookを削除します。",
+  description: "storytellerが作成したGit pre-commit hookを削除します。",
   options: [],
   examples: [
     {
@@ -202,9 +203,11 @@ export const lintUninstallHooksCommandDescriptor: CommandDescriptor = {
         ) {
           return {
             ok: false,
-            error: new Error(
-              "Pre-commit hook exists but was not created by storyteller lint. Refusing to delete.",
-            ),
+            error: {
+              code: "INVALID_HOOK",
+              message:
+                "Pre-commit hook exists but was not created by storyteller lint. Refusing to delete.",
+            },
           };
         }
 
@@ -219,16 +222,18 @@ export const lintUninstallHooksCommandDescriptor: CommandDescriptor = {
         if (error instanceof Deno.errors.NotFound) {
           return {
             ok: false,
-            error: new Error(
-              "Pre-commit hook not found. Nothing to uninstall.",
-            ),
+            error: {
+              code: "HOOK_NOT_FOUND",
+              message: "Pre-commit hook not found. Nothing to uninstall.",
+            },
           };
         }
         return {
           ok: false,
-          error: error instanceof Error
-            ? error
-            : new Error(String(error)),
+          error: {
+            code: "UNINSTALL_FAILED",
+            message: error instanceof Error ? error.message : String(error),
+          },
         };
       }
     },
