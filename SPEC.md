@@ -5,22 +5,23 @@
 ### 1.1 背景と目的
 
 **課題**:
+
 - textlintをNeovimで使用する際、フォアグラウンド実行のためUIがブロッキングされる
 - efm-langserver、ALE等の既存統合は同期的にtextlintを実行
 - storytellerのエンティティ検証とtextlintの文法チェックが別々のLSPで分散
 
-**解決策**:
-storyteller LSP内でtextlintをバックグラウンドサブプロセスとして実行し、診断を統合する。
+**解決策**: storyteller
+LSP内でtextlintをバックグラウンドサブプロセスとして実行し、診断を統合する。
 
 ### 1.2 スコープ
 
-| 機能 | 含まれる |
-|------|----------|
-| LSPバックグラウンドlint | ✅ |
-| CLIコマンド `storyteller lint` | ✅ |
-| MCPツール `textlint_check/fix` | ✅ |
-| Git hooks (pre-commit) | ✅ |
-| ドキュメント | ✅ |
+| 機能                           | 含まれる |
+| ------------------------------ | -------- |
+| LSPバックグラウンドlint        | ✅       |
+| CLIコマンド `storyteller lint` | ✅       |
+| MCPツール `textlint_check/fix` | ✅       |
+| Git hooks (pre-commit)         | ✅       |
+| ドキュメント                   | ✅       |
 
 ### 1.3 前提条件
 
@@ -36,19 +37,20 @@ storyteller LSP内でtextlintをバックグラウンドサブプロセスとし
 ### 2.1 F1: LSPバックグラウンドlint
 
 #### 概要
+
 `textDocument/didChange`イベント時にtextlintをバックグラウンドで実行し、診断を発行する。
 
 #### 詳細仕様
 
-| 項目 | 仕様 |
-|------|------|
-| トリガー | `textDocument/didChange`（ドキュメント変更時） |
-| デバウンス | 500ms（設定可能） |
-| 実行方式 | `Deno.Command`によるサブプロセス |
-| 入力方式 | `--stdin --stdin-filename <path>` |
-| 出力形式 | `--format json` |
-| キャンセル | 新リクエスト到着時に古いプロセスをSIGTERM |
-| タイムアウト | 30秒 |
+| 項目         | 仕様                                           |
+| ------------ | ---------------------------------------------- |
+| トリガー     | `textDocument/didChange`（ドキュメント変更時） |
+| デバウンス   | 500ms（設定可能）                              |
+| 実行方式     | `Deno.Command`によるサブプロセス               |
+| 入力方式     | `--stdin --stdin-filename <path>`              |
+| 出力形式     | `--format json`                                |
+| キャンセル   | 新リクエスト到着時に古いプロセスをSIGTERM      |
+| タイムアウト | 30秒                                           |
 
 #### 診断マージ
 
@@ -70,10 +72,10 @@ storyteller LSP内でtextlintをバックグラウンドサブプロセスとし
 #### 重要度マッピング
 
 | textlint severity | LSP DiagnosticSeverity |
-|-------------------|------------------------|
-| 2 (error) | 1 (Error) |
-| 1 (warning) | 2 (Warning) |
-| 3 (info) | 3 (Information) |
+| ----------------- | ---------------------- |
+| 2 (error)         | 1 (Error)              |
+| 1 (warning)       | 2 (Warning)            |
+| 3 (info)          | 3 (Information)        |
 
 ### 2.2 F2: CLIコマンド `storyteller lint`
 
@@ -96,21 +98,22 @@ storyteller lint --with-entity-check      # storyteller診断も実行
 
 #### オプション一覧
 
-| オプション | 型 | デフォルト | 説明 |
-|-----------|-----|-----------|------|
-| `--path` | string | - | 対象ファイルパス |
-| `--dir` | string | manuscripts/ | 対象ディレクトリ |
-| `--recursive` | boolean | true | サブディレクトリを再帰検索 |
-| `--fix` | boolean | false | 自動修正を適用 |
-| `--json` | boolean | false | JSON形式で出力 |
-| `--rule` | string | - | 実行するルール（カンマ区切り） |
-| `--config` | string | auto | 設定ファイルパス |
-| `--severity` | string | - | 重要度フィルタ (error/warning/info) |
-| `--with-entity-check` | boolean | false | storyteller診断も実行 |
+| オプション            | 型      | デフォルト   | 説明                                |
+| --------------------- | ------- | ------------ | ----------------------------------- |
+| `--path`              | string  | -            | 対象ファイルパス                    |
+| `--dir`               | string  | manuscripts/ | 対象ディレクトリ                    |
+| `--recursive`         | boolean | true         | サブディレクトリを再帰検索          |
+| `--fix`               | boolean | false        | 自動修正を適用                      |
+| `--json`              | boolean | false        | JSON形式で出力                      |
+| `--rule`              | string  | -            | 実行するルール（カンマ区切り）      |
+| `--config`            | string  | auto         | 設定ファイルパス                    |
+| `--severity`          | string  | -            | 重要度フィルタ (error/warning/info) |
+| `--with-entity-check` | boolean | false        | storyteller診断も実行               |
 
 #### 出力形式
 
 **Human readable**:
+
 ```
 manuscripts/chapter01.md
   2:15  warning  表記ゆれ: "プログラム" -> "プログラム"  prh
@@ -120,6 +123,7 @@ manuscripts/chapter01.md
 ```
 
 **JSON** (`--json`):
+
 ```json
 {
   "type": "success",
@@ -155,6 +159,7 @@ manuscripts/chapter01.md
 **概要**: 原稿ファイルに対してtextlintを実行し、問題を検出する。
 
 **入力スキーマ**:
+
 ```json
 {
   "type": "object",
@@ -194,6 +199,7 @@ manuscripts/chapter01.md
 ```
 
 **出力例**:
+
 ```json
 {
   "totalFiles": 3,
@@ -210,6 +216,7 @@ manuscripts/chapter01.md
 **概要**: textlintで検出された問題を自動修正する。
 
 **入力スキーマ**:
+
 ```json
 {
   "type": "object",
@@ -237,6 +244,7 @@ manuscripts/chapter01.md
 ```
 
 **出力例（実行時）**:
+
 ```json
 {
   "fixed": true,
@@ -246,6 +254,7 @@ manuscripts/chapter01.md
 ```
 
 **出力例（dryRun時）**:
+
 ```json
 {
   "dryRun": true,
@@ -343,33 +352,33 @@ rules:
 
 ### 3.1 パフォーマンス
 
-| 要件 | 仕様 |
-|------|------|
-| UIブロッキング | なし（バックグラウンド実行） |
-| デバウンス | 500ms（設定可能） |
-| タイムアウト | 30秒 |
-| プロセスキャンセル | 新リクエスト到着時に即座にキャンセル |
-| メモリ使用量 | 1プロセスのみ同時実行（前のプロセスはキャンセル） |
+| 要件               | 仕様                                              |
+| ------------------ | ------------------------------------------------- |
+| UIブロッキング     | なし（バックグラウンド実行）                      |
+| デバウンス         | 500ms（設定可能）                                 |
+| タイムアウト       | 30秒                                              |
+| プロセスキャンセル | 新リクエスト到着時に即座にキャンセル              |
+| メモリ使用量       | 1プロセスのみ同時実行（前のプロセスはキャンセル） |
 
 ### 3.2 互換性
 
-| 項目 | 要件 |
-|------|------|
+| 項目     | 要件       |
+| -------- | ---------- |
 | textlint | v12.x 以上 |
-| Node.js | v18 以上 |
-| Neovim | v0.9 以上 |
-| Deno | v2.x |
+| Node.js  | v18 以上   |
+| Neovim   | v0.9 以上  |
+| Deno     | v2.x       |
 
 ### 3.3 エラーハンドリング
 
-| シナリオ | 対応 |
-|----------|------|
+| シナリオ               | 対応                                         |
+| ---------------------- | -------------------------------------------- |
 | textlint未インストール | 警告ログ出力、空診断を返却、以後ソース無効化 |
-| 設定ファイルなし | textlintデフォルト設定で実行 |
-| JSONパースエラー | エラーログ出力、空診断を返却 |
-| プロセスタイムアウト | SIGTERMでkill、空診断を返却 |
-| 権限エラー | ユーザーにエラーを返却 |
-| ファイル不存在 | ユーザーにエラーを返却 |
+| 設定ファイルなし       | textlintデフォルト設定で実行                 |
+| JSONパースエラー       | エラーログ出力、空診断を返却                 |
+| プロセスタイムアウト   | SIGTERMでkill、空診断を返却                  |
+| 権限エラー             | ユーザーにエラーを返却                       |
+| ファイル不存在         | ユーザーにエラーを返却                       |
 
 ### 3.4 設定可能項目
 
@@ -541,12 +550,17 @@ export class TextlintWorker {
   /**
    * 実際の実行
    */
-  private async execute(content: string, filePath: string): Promise<TextlintResult> {
+  private async execute(
+    content: string,
+    filePath: string,
+  ): Promise<TextlintResult> {
     const args = [
       "textlint",
       "--stdin",
-      "--stdin-filename", filePath,
-      "--format", "json",
+      "--stdin-filename",
+      filePath,
+      "--format",
+      "json",
     ];
 
     if (this.config.configPath) {
@@ -623,27 +637,29 @@ export class TextlintWorker {
 
 ### 5.1 フェーズ分割
 
-| フェーズ | 内容 | 工数 | 成果物 |
-|---------|------|------|--------|
-| Phase 1 | DiagnosticSource抽象化 | 1日 | インターフェース、Aggregator |
-| Phase 2 | TextlintWorker | 2日 | バックグラウンド実行基盤 |
-| Phase 3 | CLIコマンド | 1日 | `storyteller lint` |
-| Phase 4 | MCPツール | 1日 | `textlint_check/fix` |
-| Phase 5 | Git Hooks | 0.5日 | pre-commitフック |
-| Phase 6 | ドキュメント | 0.5日 | docs/lint.md |
-| **合計** | | **6日** | |
+| フェーズ | 内容                   | 工数    | 成果物                       |
+| -------- | ---------------------- | ------- | ---------------------------- |
+| Phase 1  | DiagnosticSource抽象化 | 1日     | インターフェース、Aggregator |
+| Phase 2  | TextlintWorker         | 2日     | バックグラウンド実行基盤     |
+| Phase 3  | CLIコマンド            | 1日     | `storyteller lint`           |
+| Phase 4  | MCPツール              | 1日     | `textlint_check/fix`         |
+| Phase 5  | Git Hooks              | 0.5日   | pre-commitフック             |
+| Phase 6  | ドキュメント           | 0.5日   | docs/lint.md                 |
+| **合計** |                        | **6日** |                              |
 
 ### 5.2 Phase 1: DiagnosticSource抽象化
 
 **目標**: 複数の診断ソースを統合するための基盤を構築
 
 **タスク**:
+
 1. `DiagnosticSource`インターフェース定義
 2. `DiagnosticAggregator`実装（並列実行・マージ）
 3. 既存の`DiagnosticsGenerator`を`StorytellerDiagnosticSource`にラップ
 4. `LspServer`をAggregator使用に変更
 
 **完了条件**:
+
 - 既存のstoryteller診断が動作する
 - テストが通る
 
@@ -652,6 +668,7 @@ export class TextlintWorker {
 **目標**: textlintをバックグラウンドで実行する基盤を構築
 
 **タスク**:
+
 1. `TextlintConfig`: 設定ファイル検出
 2. `TextlintParser`: JSON出力パース
 3. `TextlintWorker`: デバウンス・キャンセル付き実行
@@ -659,6 +676,7 @@ export class TextlintWorker {
 5. LSPサーバーへの統合
 
 **完了条件**:
+
 - Neovimでtextlint診断が表示される
 - UIブロッキングがない
 - textlint未インストール時に警告のみ
@@ -668,6 +686,7 @@ export class TextlintWorker {
 **目標**: `storyteller lint`コマンドを実装
 
 **タスク**:
+
 1. コマンドディスクリプタ定義
 2. ファイル収集ロジック
 3. textlint実行・結果表示
@@ -675,6 +694,7 @@ export class TextlintWorker {
 5. `--json`出力対応
 
 **完了条件**:
+
 - `storyteller lint`が動作する
 - `--fix`で自動修正される
 - `--json`でJSON出力される
@@ -684,11 +704,13 @@ export class TextlintWorker {
 **目標**: MCPツール `textlint_check/fix`を実装
 
 **タスク**:
+
 1. `textlint_check`ツール定義
 2. `textlint_fix`ツール定義
 3. ツールレジストリへの登録
 
 **完了条件**:
+
 - Claude Desktopから`textlint_check`が実行できる
 - `textlint_fix`で修正できる
 
@@ -697,11 +719,13 @@ export class TextlintWorker {
 **目標**: pre-commitフックを実装
 
 **タスク**:
+
 1. フックスクリプト生成
 2. `storyteller lint install-hooks`コマンド
 3. `--strict`オプション対応
 
 **完了条件**:
+
 - `git commit`時にlintが実行される
 - エラー時にコミットがブロックされる（strictモード）
 
@@ -710,11 +734,13 @@ export class TextlintWorker {
 **目標**: 使用方法のドキュメントを作成
 
 **タスク**:
+
 1. `docs/lint.md`作成
 2. サンプル`.textlintrc`
 3. サンプル`prh-rules.yml`
 
 **完了条件**:
+
 - ドキュメントが完成している
 
 ---
@@ -723,21 +749,21 @@ export class TextlintWorker {
 
 ### 6.1 ユニットテスト
 
-| テスト対象 | テストケース |
-|-----------|-------------|
-| TextlintParser | JSON正常パース、不正JSON、空出力 |
-| TextlintConfig | 各設定ファイル形式の検出 |
-| DiagnosticAggregator | 複数ソースのマージ、キャンセル |
-| 重要度マッピング | textlint severity → LSP severity |
+| テスト対象           | テストケース                     |
+| -------------------- | -------------------------------- |
+| TextlintParser       | JSON正常パース、不正JSON、空出力 |
+| TextlintConfig       | 各設定ファイル形式の検出         |
+| DiagnosticAggregator | 複数ソースのマージ、キャンセル   |
+| 重要度マッピング     | textlint severity → LSP severity |
 
 ### 6.2 統合テスト
 
-| テスト対象 | テストケース |
-|-----------|-------------|
+| テスト対象     | テストケース                               |
+| -------------- | ------------------------------------------ |
 | TextlintWorker | サブプロセス実行、タイムアウト、キャンセル |
-| LSP統合 | didChange → 診断発行 |
-| CLIコマンド | lint実行、fix実行、JSON出力 |
-| Git Hooks | pre-commitフック動作 |
+| LSP統合        | didChange → 診断発行                       |
+| CLIコマンド    | lint実行、fix実行、JSON出力                |
+| Git Hooks      | pre-commitフック動作                       |
 
 ### 6.3 モック戦略
 
@@ -749,23 +775,23 @@ export class TextlintWorker {
 
 ## 7. リスクと対策
 
-| リスク | 影響度 | 対策 |
-|--------|--------|------|
-| textlintバージョン互換性 | 中 | サポートバージョン明確化、フォールバック |
-| プロセス管理の複雑化 | 中 | 堅牢なエラーハンドリング、タイムアウト |
-| 大規模ファイルでのパフォーマンス | 低 | タイムアウト設定、将来的にインクリメンタルlint |
-| Windows環境での動作 | 低 | npx経由で互換性確保 |
+| リスク                           | 影響度 | 対策                                           |
+| -------------------------------- | ------ | ---------------------------------------------- |
+| textlintバージョン互換性         | 中     | サポートバージョン明確化、フォールバック       |
+| プロセス管理の複雑化             | 中     | 堅牢なエラーハンドリング、タイムアウト         |
+| 大規模ファイルでのパフォーマンス | 低     | タイムアウト設定、将来的にインクリメンタルlint |
+| Windows環境での動作              | 低     | npx経由で互換性確保                            |
 
 ---
 
 ## 8. 将来拡張
 
-| 機能 | 説明 | 優先度 |
-|------|------|--------|
-| vale統合 | 別のlinterをDiagnosticSourceとして追加 | 中 |
-| インクリメンタルlint | 変更行のみを検証 | 低 |
-| AI修正提案 | textlint + LLMによる修正提案 | 低 |
-| ルール推奨 | プロジェクトに適したルールをAIが提案 | 低 |
+| 機能                 | 説明                                   | 優先度 |
+| -------------------- | -------------------------------------- | ------ |
+| vale統合             | 別のlinterをDiagnosticSourceとして追加 | 中     |
+| インクリメンタルlint | 変更行のみを検証                       | 低     |
+| AI修正提案           | textlint + LLMによる修正提案           | 低     |
+| ルール推奨           | プロジェクトに適したルールをAIが提案   | 低     |
 
 ---
 
@@ -780,6 +806,6 @@ export class TextlintWorker {
 
 ## 10. 変更履歴
 
-| 日付 | バージョン | 変更内容 |
-|------|-----------|----------|
-| 2026-01-02 | 0.1 | 初版作成 |
+| 日付       | バージョン | 変更内容 |
+| ---------- | ---------- | -------- |
+| 2026-01-02 | 0.1        | 初版作成 |

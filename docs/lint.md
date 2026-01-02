@@ -1,6 +1,7 @@
 # textlint統合ドキュメント
 
-Street Storytellerは、textlintと統合することで、原稿（Markdown）の文法・表記ゆれを検出・修正する機能を提供します。
+Street
+Storytellerは、textlintと統合することで、原稿（Markdown）の文法・表記ゆれを検出・修正する機能を提供します。
 
 ## 概要
 
@@ -9,11 +10,13 @@ Street Storytellerは、textlintと統合することで、原稿（Markdown）�
 - **執筆品質の向上**: 文法ミス、表記ゆれ、スタイルの不統一を自動検出
 - **エディタ統合**: LSPサーバー内でバックグラウンド実行、UIブロッキングなし
 - **CI/CD統合**: Git hooksやCLIコマンドで自動チェック
-- **拡張可能な診断基盤**: DiagnosticSource抽象化により、将来の拡張（vale等）が容易
+- **拡張可能な診断基盤**:
+  DiagnosticSource抽象化により、将来の拡張（vale等）が容易
 
 ### DiagnosticSource抽象化
 
-storyteller LSPは、複数の診断ソース（storytellerエンティティ検証、textlint文法チェック等）を統合して表示する仕組みを提供します。
+storyteller
+LSPは、複数の診断ソース（storytellerエンティティ検証、textlint文法チェック等）を統合して表示する仕組みを提供します。
 
 ```
 ┌─────────────────────────────────┐
@@ -36,7 +39,11 @@ storyteller LSPは、複数の診断ソース（storytellerエンティティ検
 interface DiagnosticSource {
   readonly name: string;
   isAvailable(): Promise<boolean>;
-  generate(uri: string, content: string, projectRoot: string): Promise<Diagnostic[]>;
+  generate(
+    uri: string,
+    content: string,
+    projectRoot: string,
+  ): Promise<Diagnostic[]>;
   cancel?(): void;
   dispose?(): void;
 }
@@ -46,7 +53,8 @@ interface DiagnosticSource {
 
 - **並列実行**: 複数の診断ソースを並列で実行し、結果をマージ
 - **部分的な失敗への対応**: 一つのソースがエラーでも、他のソースは正常動作
-- **グレースフルデグラデーション**: textlint未インストール環境でもstoryteller診断は動作
+- **グレースフルデグラデーション**:
+  textlint未インストール環境でもstoryteller診断は動作
 
 ## LSP統合
 
@@ -86,10 +94,10 @@ storytellerのエンティティ検証とtextlintの文法チェックが、同�
 
 **診断の種類：**
 
-| 診断ソース | 内容                                 | sourceフィールド |
-|------------|--------------------------------------|------------------|
-| storyteller| キャラクター・設定参照の検証         | `storyteller`    |
-| textlint   | 文法・表記ゆれ・スタイルの検証       | `textlint`       |
+| 診断ソース  | 内容                           | sourceフィールド |
+| ----------- | ------------------------------ | ---------------- |
+| storyteller | キャラクター・設定参照の検証   | `storyteller`    |
+| textlint    | 文法・表記ゆれ・スタイルの検証 | `textlint`       |
 
 **表示例（neovim/VSCode）:**
 
@@ -154,17 +162,17 @@ storyteller lint --dir manuscripts --recursive
 
 #### オプション一覧
 
-| オプション           | 説明                                    | デフォルト    |
-|----------------------|-----------------------------------------|---------------|
-| `--path <file>`      | 対象ファイルパス                        | -             |
-| `--dir <directory>`  | 対象ディレクトリ                        | manuscripts   |
-| `--recursive`        | サブディレクトリも含める                | true          |
-| `--fix`              | 自動修正を実行（--path必須）            | false         |
-| `--json`             | JSON形式で出力                          | false         |
-| `--severity <level>` | 表示する重要度（error/warning/info）    | すべて        |
-| `--rule <rules>`     | 特定ルールのみ有効化（カンマ区切り）    | すべて        |
-| `--config <file>`    | 設定ファイルパス                        | 自動検出      |
-| `--with-entity-check`| storytellerエンティティチェックも実行   | false         |
+| オプション            | 説明                                  | デフォルト  |
+| --------------------- | ------------------------------------- | ----------- |
+| `--path <file>`       | 対象ファイルパス                      | -           |
+| `--dir <directory>`   | 対象ディレクトリ                      | manuscripts |
+| `--recursive`         | サブディレクトリも含める              | true        |
+| `--fix`               | 自動修正を実行（--path必須）          | false       |
+| `--json`              | JSON形式で出力                        | false       |
+| `--severity <level>`  | 表示する重要度（error/warning/info）  | すべて      |
+| `--rule <rules>`      | 特定ルールのみ有効化（カンマ区切り）  | すべて      |
+| `--config <file>`     | 設定ファイルパス                      | 自動検出    |
+| `--with-entity-check` | storytellerエンティティチェックも実行 | false       |
 
 #### 使用例
 
@@ -258,23 +266,24 @@ storytellerのキャラクター・設定参照検証とtextlintの文法チェ�
 
 ## MCPツール
 
-storytellerは独自のMCP textlintツールを**実装していません**。
-代わりに、textlint v14.8.0+が提供するネイティブMCPサーバー機能（`--mcp`フラグ）を使用します。
+storytellerは独自のMCP textlintツールを**実装していません**。 代わりに、textlint
+v14.8.0+が提供するネイティブMCPサーバー機能（`--mcp`フラグ）を使用します。
 
 ### textlint --mcp の使用方法
 
 textlintが提供するMCPツール：
 
-| ツール名                    | 説明                         |
-|-----------------------------|------------------------------|
-| `lintFile`                  | ファイルのlint実行           |
-| `lintText`                  | テキスト直接lint             |
-| `getLintFixedFileContent`   | ファイルのfix結果取得        |
-| `getLintFixedTextContent`   | テキストのfix結果取得        |
+| ツール名                  | 説明                  |
+| ------------------------- | --------------------- |
+| `lintFile`                | ファイルのlint実行    |
+| `lintText`                | テキスト直接lint      |
+| `getLintFixedFileContent` | ファイルのfix結果取得 |
+| `getLintFixedTextContent` | テキストのfix結果取得 |
 
 ### Claude Desktop設定例
 
-Claude Desktopの設定ファイル（`claude_desktop_config.json`）に、textlint MCPサーバーを追加します。
+Claude Desktopの設定ファイル（`claude_desktop_config.json`）に、textlint
+MCPサーバーを追加します。
 
 #### macOS/Linux
 
@@ -334,7 +343,8 @@ Claude: textlintで修正します。
 
 ### install-hooks
 
-Git pre-commit hookをインストールして、コミット時に自動的にlintチェックを実行します。
+Git pre-commit
+hookをインストールして、コミット時に自動的にlintチェックを実行します。
 
 #### 基本的なインストール
 

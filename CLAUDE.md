@@ -676,11 +676,14 @@ storyteller rag install-hooks
 
 #### 概要
 
-- **LSP統合**: storyteller LSP内でtextlintをバックグラウンド実行し、診断を統合表示
-- **DiagnosticSource抽象化**: 複数の診断ソース（storyteller、textlint等）を統合する拡張可能な基盤
+- **LSP統合**: storyteller
+  LSP内でtextlintをバックグラウンド実行し、診断を統合表示
+- **DiagnosticSource抽象化**:
+  複数の診断ソース（storyteller、textlint等）を統合する拡張可能な基盤
 - **CLIコマンド**: `storyteller lint` コマンドによるワンショット検証・修正
 - **Git Hooks**: pre-commit hookによる自動チェック
-- **グレースフルデグラデーション**: textlint未インストール環境でもstoryteller診断は動作
+- **グレースフルデグラデーション**:
+  textlint未インストール環境でもstoryteller診断は動作
 
 #### CLIコマンド
 
@@ -713,7 +716,11 @@ storyteller lint install-hooks --strict  # strictモード
 interface DiagnosticSource {
   readonly name: string;
   isAvailable(): Promise<boolean>;
-  generate(uri: string, content: string, projectRoot: string): Promise<Diagnostic[]>;
+  generate(
+    uri: string,
+    content: string,
+    projectRoot: string,
+  ): Promise<Diagnostic[]>;
   cancel?(): void;
   dispose?(): void;
 }
@@ -738,8 +745,8 @@ interface DiagnosticSource {
 
 #### MCPツール
 
-storytellerは独自のMCP textlintツールを実装していません。
-textlint v14.8.0+のネイティブMCPサーバー（`--mcp`フラグ）を使用します。
+storytellerは独自のMCP textlintツールを実装していません。 textlint
+v14.8.0+のネイティブMCPサーバー（`--mcp`フラグ）を使用します。
 
 Claude Desktop設定例：
 

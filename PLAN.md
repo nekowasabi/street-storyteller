@@ -14,17 +14,21 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
 # Commander's Intent
 
 ## Purpose
+
 - textlintをNeovimで使用する際のUIブロッキング問題を解消する
 - storytellerのエンティティ検証とtextlintの文法チェックを統合する
 - DiagnosticSource抽象化により、将来の拡張（vale等）を容易にする
 
 ## End State
+
 - storyteller LSP内でtextlintがバックグラウンド実行され、診断が統合表示される
 - `storyteller lint`コマンドでCLIからも実行可能
-- MCPツール: textlintの `--mcp` ネイティブサポートを活用（storytellerで独自実装不要）
+- MCPツール: textlintの `--mcp`
+  ネイティブサポートを活用（storytellerで独自実装不要）
 - Git pre-commitフックで自動検証が可能
 
 ## Key Tasks
+
 - DiagnosticSource抽象化による拡張可能な診断基盤
 - TextlintWorkerによるデバウンス・キャンセル付きバックグラウンド実行
 - CLIコマンド `storyteller lint` の実装
@@ -32,11 +36,13 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
 - Git hooks統合
 
 ## Constraints
+
 - 既存のstoryteller診断機能を壊さない（後方互換性）
 - textlint未インストール環境でもエラーにならない（グレースフルデグラデーション）
 - UIをブロッキングしない（非同期・バックグラウンド実行）
 
 ## Restraints
+
 - TDD（テスト駆動開発）を厳守
 - 既存のコードパターン（CommandDescriptor、McpToolDefinition）に従う
 - Deno標準APIを使用（Deno.Command等）
@@ -46,11 +52,13 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
 # Context
 
 ## 概要
+
 - storyteller LSP内でtextlintをバックグラウンドで実行し、エンティティ診断と統合
 - `storyteller lint`コマンドで原稿の文法チェックを実行
 - Claude Desktopからはtextlint --mcp（ネイティブMCPサーバー）を使用
 
 ## 必須のルール
+
 - 必ず `CLAUDE.md` を参照し、ルールを守ること
 - **TDD（テスト駆動開発）を厳守すること**
   - 各プロセスは必ずテストファーストで開始する（Red → Green → Refactor）
@@ -60,13 +68,16 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
   - プロセス完了後、チェックボックスを✅に変更すること
 - **各Process開始時のブリーフィング実行**
   - 各Processの「Briefing」セクションは自動生成される
-  - `@process-briefing` コメントを含むセクションは、エージェントが実行時に以下を自動取得する：
+  - `@process-briefing`
+    コメントを含むセクションは、エージェントが実行時に以下を自動取得する：
     - **Related Lessons**: stigmergy/doctrine-memoriesから関連教訓を取得
     - **Known Patterns**: プロジェクト固有パターン・テンプレートから自動取得
     - **Watch Points**: 過去の失敗事例・注意点から自動取得
-  - ブリーフィング情報は `/x` や `/d` コマンド実行時に動的に埋め込まれ、実行戦況を反映する
+  - ブリーフィング情報は `/x` や `/d`
+    コマンド実行時に動的に埋め込まれ、実行戦況を反映する
 
 ## 開発のゴール
+
 - UIブロッキングのないtextlint統合
 - 複数診断ソースの統合表示
 - CLI/LSPの一貫したインターフェース（MCPはtextlint --mcp で代替）
@@ -75,55 +86,55 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
 
 # References
 
-| @ref | @target | @test |
-|------|---------|-------|
-| SPEC.md | 要件定義書 | - |
-| src/lsp/diagnostics/diagnostics_generator.ts | src/lsp/diagnostics/diagnostic_source.ts | tests/lsp/diagnostics/diagnostic_source_test.ts |
-| src/lsp/diagnostics/diagnostics_publisher.ts | src/lsp/diagnostics/diagnostic_aggregator.ts | tests/lsp/diagnostics/diagnostic_aggregator_test.ts |
-| src/lsp/server/server.ts:871-882 | server.ts (Aggregator統合) | tests/lsp/integration/textlint_integration_test.ts |
-| - | src/lsp/integration/textlint/textlint_worker.ts | tests/lsp/integration/textlint/textlint_worker_test.ts |
-| - | src/lsp/integration/textlint/textlint_config.ts | tests/lsp/integration/textlint/textlint_config_test.ts |
-| - | src/lsp/integration/textlint/textlint_parser.ts | tests/lsp/integration/textlint/textlint_parser_test.ts |
-| - | src/lsp/integration/textlint/textlint_diagnostic_source.ts | tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts |
-| - | src/shared/textlint/types.ts | - |
-| - | src/shared/textlint/runner.ts | tests/shared/textlint/runner_test.ts |
-| - | src/shared/textlint/parser.ts | tests/shared/textlint/parser_test.ts |
-| src/cli/modules/rag/install_hooks.ts | src/cli/modules/lint/lint.ts | tests/cli/modules/lint/lint_test.ts |
-| src/cli/modules/rag/install_hooks.ts | src/cli/modules/lint/install_hooks.ts | tests/cli/modules/lint/install_hooks_test.ts |
-| src/cli/modules/index.ts | src/cli/modules/lint/index.ts | - |
-| ~~src/mcp/tools/definitions/textlint_check.ts~~ | [SKIPPED] textlint --mcp で代替 | - |
-| ~~src/mcp/tools/definitions/textlint_fix.ts~~ | [SKIPPED] textlint --mcp で代替 | - |
-| - | docs/lint.md | - |
+| @ref                                            | @target                                                    | @test                                                             |
+| ----------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- |
+| SPEC.md                                         | 要件定義書                                                 | -                                                                 |
+| src/lsp/diagnostics/diagnostics_generator.ts    | src/lsp/diagnostics/diagnostic_source.ts                   | tests/lsp/diagnostics/diagnostic_source_test.ts                   |
+| src/lsp/diagnostics/diagnostics_publisher.ts    | src/lsp/diagnostics/diagnostic_aggregator.ts               | tests/lsp/diagnostics/diagnostic_aggregator_test.ts               |
+| src/lsp/server/server.ts:871-882                | server.ts (Aggregator統合)                                 | tests/lsp/integration/textlint_integration_test.ts                |
+| -                                               | src/lsp/integration/textlint/textlint_worker.ts            | tests/lsp/integration/textlint/textlint_worker_test.ts            |
+| -                                               | src/lsp/integration/textlint/textlint_config.ts            | tests/lsp/integration/textlint/textlint_config_test.ts            |
+| -                                               | src/lsp/integration/textlint/textlint_parser.ts            | tests/lsp/integration/textlint/textlint_parser_test.ts            |
+| -                                               | src/lsp/integration/textlint/textlint_diagnostic_source.ts | tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts |
+| -                                               | src/shared/textlint/types.ts                               | -                                                                 |
+| -                                               | src/shared/textlint/runner.ts                              | tests/shared/textlint/runner_test.ts                              |
+| -                                               | src/shared/textlint/parser.ts                              | tests/shared/textlint/parser_test.ts                              |
+| src/cli/modules/rag/install_hooks.ts            | src/cli/modules/lint/lint.ts                               | tests/cli/modules/lint/lint_test.ts                               |
+| src/cli/modules/rag/install_hooks.ts            | src/cli/modules/lint/install_hooks.ts                      | tests/cli/modules/lint/install_hooks_test.ts                      |
+| src/cli/modules/index.ts                        | src/cli/modules/lint/index.ts                              | -                                                                 |
+| ~~src/mcp/tools/definitions/textlint_check.ts~~ | [SKIPPED] textlint --mcp で代替                            | -                                                                 |
+| ~~src/mcp/tools/definitions/textlint_fix.ts~~   | [SKIPPED] textlint --mcp で代替                            | -                                                                 |
+| -                                               | docs/lint.md                                               | -                                                                 |
 
 ---
 
 # Progress Map
 
-| Process | Status | Progress | Phase | Notes |
-|---------|--------|----------|-------|-------|
-| Process 1 | completed | ■■■■■ 100% | Green | DiagnosticSourceインターフェース定義 ✅ |
-| Process 2 | completed | ■■■■■ 100% | Green | StorytellerDiagnosticSource（既存ラップ） ✅ |
-| Process 3 | completed | ■■■■■ 100% | Green | DiagnosticAggregator実装 ✅ |
-| Process 4 | completed | ■■■■■ 100% | Green | TextlintConfig設定検出 ✅ |
-| Process 5 | completed | ■■■■■ 100% | Green | TextlintParser JSON解析 ✅ |
-| Process 6 | completed | ■■■■■ 100% | Green | TextlintWorker（デバウンス・キャンセル） ✅ |
-| Process 7 | completed | ■■■■■ 100% | Green | TextlintDiagnosticSource実装 ✅ |
-| Process 8 | completed | ■■■■■ 100% | Green | LSPサーバーへのAggregator統合 ✅ |
-| Process 9 | completed | ■■■■■ 100% | Green | 共通Textlintランナー（shared/textlint） ✅ |
-| Process 10 | completed | ■■■■■ 100% | Green | CLI lint基本コマンド ✅ |
-| Process 11 | completed | ■■■■■ 100% | Green | CLI lint --fix対応 ✅ |
-| Process 12 | completed | ■■■■■ 100% | Green | CLI lint --json対応 ✅ |
-| Process 13 | completed | ■■■■■ 100% | Green | CLI lint オプション拡充 ✅ |
-| Process 20 | skipped | ━━━━━ N/A | - | ~~MCP textlint_check~~ → textlint --mcp で代替 |
-| Process 21 | skipped | ━━━━━ N/A | - | ~~MCP textlint_fix~~ → textlint --mcp で代替 |
-| Process 30 | completed | ■■■■■ 100% | Green | Git hooks install-hooks ✅ |
-| Process 31 | completed | ■■■■■ 100% | Green | Git hooks uninstall-hooks ✅ |
-| Process 50 | skipped | ━━━━━ N/A | - | フォローアップ不要 |
-| Process 100 | completed | ■■■■■ 100% | Green | リファクタリング・品質向上 ✅ |
-| Process 200 | in_progress | ■■■▯▯ 60% | Yellow | ドキュメンテーション（docs/lint.md作成待ち） |
-| Process 300 | completed | ■■■■■ 100% | Green | OODAフィードバックループ ✅ |
-| | | | | |
-| **Overall** | **nearly_complete** | **■■■■▯ 95%** | **green** | **Blockers: 0, docs/lint.md作成待ち** |
+| Process     | Status              | Progress      | Phase     | Notes                                          |
+| ----------- | ------------------- | ------------- | --------- | ---------------------------------------------- |
+| Process 1   | completed           | ■■■■■ 100%    | Green     | DiagnosticSourceインターフェース定義 ✅        |
+| Process 2   | completed           | ■■■■■ 100%    | Green     | StorytellerDiagnosticSource（既存ラップ） ✅   |
+| Process 3   | completed           | ■■■■■ 100%    | Green     | DiagnosticAggregator実装 ✅                    |
+| Process 4   | completed           | ■■■■■ 100%    | Green     | TextlintConfig設定検出 ✅                      |
+| Process 5   | completed           | ■■■■■ 100%    | Green     | TextlintParser JSON解析 ✅                     |
+| Process 6   | completed           | ■■■■■ 100%    | Green     | TextlintWorker（デバウンス・キャンセル） ✅    |
+| Process 7   | completed           | ■■■■■ 100%    | Green     | TextlintDiagnosticSource実装 ✅                |
+| Process 8   | completed           | ■■■■■ 100%    | Green     | LSPサーバーへのAggregator統合 ✅               |
+| Process 9   | completed           | ■■■■■ 100%    | Green     | 共通Textlintランナー（shared/textlint） ✅     |
+| Process 10  | completed           | ■■■■■ 100%    | Green     | CLI lint基本コマンド ✅                        |
+| Process 11  | completed           | ■■■■■ 100%    | Green     | CLI lint --fix対応 ✅                          |
+| Process 12  | completed           | ■■■■■ 100%    | Green     | CLI lint --json対応 ✅                         |
+| Process 13  | completed           | ■■■■■ 100%    | Green     | CLI lint オプション拡充 ✅                     |
+| Process 20  | skipped             | ━━━━━ N/A     | -         | ~~MCP textlint_check~~ → textlint --mcp で代替 |
+| Process 21  | skipped             | ━━━━━ N/A     | -         | ~~MCP textlint_fix~~ → textlint --mcp で代替   |
+| Process 30  | completed           | ■■■■■ 100%    | Green     | Git hooks install-hooks ✅                     |
+| Process 31  | completed           | ■■■■■ 100%    | Green     | Git hooks uninstall-hooks ✅                   |
+| Process 50  | skipped             | ━━━━━ N/A     | -         | フォローアップ不要                             |
+| Process 100 | completed           | ■■■■■ 100%    | Green     | リファクタリング・品質向上 ✅                  |
+| Process 200 | in_progress         | ■■■▯▯ 60%     | Yellow    | ドキュメンテーション（docs/lint.md作成待ち）   |
+| Process 300 | completed           | ■■■■■ 100%    | Green     | OODAフィードバックループ ✅                    |
+|             |                     |               |           |                                                |
+| **Overall** | **nearly_complete** | **■■■■▯ 95%** | **green** | **Blockers: 0, docs/lint.md作成待ち**          |
 
 ---
 
@@ -137,13 +148,15 @@ tags: [interface, abstraction, lsp]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: DiagnosticsGenerator.generate()のシグネチャを参照
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+DiagnosticsGenerator.generate()のシグネチャを参照 **Watch Points**:
+(auto-populated from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/diagnostics/diagnostic_source_test.ts` を作成
   - DiagnosticSource型の構造テスト
   - isAvailable()のモック実装テスト
@@ -184,6 +197,7 @@ describe("DiagnosticSource interface", () => {
 ```
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/diagnostics/diagnostic_source.ts` を作成
 
 ```typescript
@@ -219,6 +233,7 @@ export interface DiagnosticSource {
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] JSDocコメントを充実
 - [ ] export文の整理
 - [ ] テストを実行し、継続して成功することを確認
@@ -233,13 +248,15 @@ tags: [adapter, wrapper, lsp]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: 既存DiagnosticsGenerator.generate()を参照（src/lsp/diagnostics/diagnostics_generator.ts:93-110）
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+既存DiagnosticsGenerator.generate()を参照（src/lsp/diagnostics/diagnostics_generator.ts:93-110）
 **Watch Points**: (auto-populated from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/diagnostics/storyteller_diagnostic_source_test.ts` を作成
   - isAvailable()は常にtrue
   - generate()がDiagnosticsGeneratorに委譲
@@ -248,7 +265,7 @@ tags: [adapter, wrapper, lsp]
 ```typescript
 // tests/lsp/diagnostics/storyteller_diagnostic_source_test.ts
 import { assertEquals } from "@std/assert";
-import { describe, it, beforeEach } from "@std/testing/bdd";
+import { beforeEach, describe, it } from "@std/testing/bdd";
 import { StorytellerDiagnosticSource } from "@storyteller/lsp/diagnostics/storyteller_diagnostic_source.ts";
 import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import { PositionedDetector } from "@storyteller/lsp/detection/positioned_detector.ts";
@@ -286,6 +303,7 @@ describe("StorytellerDiagnosticSource", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/diagnostics/storyteller_diagnostic_source.ts` を作成
 
 ```typescript
@@ -320,6 +338,7 @@ export class StorytellerDiagnosticSource implements DiagnosticSource {
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] JSDocコメントを充実
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -333,13 +352,15 @@ tags: [aggregator, merge, lsp]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: Promise.allSettledで並列実行、sourceフィールドで識別
-**Watch Points**: 一つのソースが失敗しても他は継続
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+Promise.allSettledで並列実行、sourceフィールドで識別 **Watch Points**:
+一つのソースが失敗しても他は継続
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/diagnostics/diagnostic_aggregator_test.ts` を作成
   - 複数ソースの並列実行
   - 各診断のsourceフィールド設定
@@ -359,7 +380,10 @@ describe("DiagnosticAggregator", () => {
       name: "source1",
       isAvailable: async () => true,
       generate: async () => [{
-        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 5 } },
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 5 },
+        },
         message: "test1",
         severity: 2,
       }],
@@ -369,14 +393,21 @@ describe("DiagnosticAggregator", () => {
       name: "source2",
       isAvailable: async () => true,
       generate: async () => [{
-        range: { start: { line: 1, character: 0 }, end: { line: 1, character: 5 } },
+        range: {
+          start: { line: 1, character: 0 },
+          end: { line: 1, character: 5 },
+        },
         message: "test2",
         severity: 1,
       }],
     };
 
     const aggregator = new DiagnosticAggregator([source1, source2]);
-    const diagnostics = await aggregator.generate("file:///test.md", "content", "/project");
+    const diagnostics = await aggregator.generate(
+      "file:///test.md",
+      "content",
+      "/project",
+    );
 
     assertEquals(diagnostics.length, 2);
     assertEquals(diagnostics[0].source, "source1");
@@ -387,17 +418,35 @@ describe("DiagnosticAggregator", () => {
     const available: DiagnosticSource = {
       name: "available",
       isAvailable: async () => true,
-      generate: async () => [{ range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } }, message: "ok", severity: 2 }],
+      generate: async () => [{
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 1 },
+        },
+        message: "ok",
+        severity: 2,
+      }],
     };
 
     const unavailable: DiagnosticSource = {
       name: "unavailable",
       isAvailable: async () => false,
-      generate: async () => [{ range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } }, message: "skip", severity: 2 }],
+      generate: async () => [{
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 1 },
+        },
+        message: "skip",
+        severity: 2,
+      }],
     };
 
     const aggregator = new DiagnosticAggregator([available, unavailable]);
-    const diagnostics = await aggregator.generate("file:///test.md", "content", "/project");
+    const diagnostics = await aggregator.generate(
+      "file:///test.md",
+      "content",
+      "/project",
+    );
 
     assertEquals(diagnostics.length, 1);
     assertEquals(diagnostics[0].message, "ok");
@@ -407,17 +456,30 @@ describe("DiagnosticAggregator", () => {
     const working: DiagnosticSource = {
       name: "working",
       isAvailable: async () => true,
-      generate: async () => [{ range: { start: { line: 0, character: 0 }, end: { line: 0, character: 1 } }, message: "ok", severity: 2 }],
+      generate: async () => [{
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 1 },
+        },
+        message: "ok",
+        severity: 2,
+      }],
     };
 
     const failing: DiagnosticSource = {
       name: "failing",
       isAvailable: async () => true,
-      generate: async () => { throw new Error("fail"); },
+      generate: async () => {
+        throw new Error("fail");
+      },
     };
 
     const aggregator = new DiagnosticAggregator([working, failing]);
-    const diagnostics = await aggregator.generate("file:///test.md", "content", "/project");
+    const diagnostics = await aggregator.generate(
+      "file:///test.md",
+      "content",
+      "/project",
+    );
 
     assertEquals(diagnostics.length, 1);
     assertEquals(diagnostics[0].message, "ok");
@@ -428,6 +490,7 @@ describe("DiagnosticAggregator", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/diagnostics/diagnostic_aggregator.ts` を作成
 
 ```typescript
@@ -456,7 +519,7 @@ export class DiagnosticAggregator {
    * ソースを削除
    */
   removeSource(name: string): void {
-    this.sources = this.sources.filter(s => s.name !== name);
+    this.sources = this.sources.filter((s) => s.name !== name);
   }
 
   /**
@@ -472,7 +535,7 @@ export class DiagnosticAggregator {
       this.sources.map(async (source) => ({
         source,
         available: await source.isAvailable().catch(() => false),
-      }))
+      })),
     );
 
     const availableSources = availabilityChecks
@@ -488,7 +551,7 @@ export class DiagnosticAggregator {
           ...d,
           source: source.name,
         }));
-      })
+      }),
     );
 
     // 成功した結果のみマージ
@@ -527,6 +590,7 @@ export class DiagnosticAggregator {
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] エラーログ出力を追加
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -540,13 +604,14 @@ tags: [textlint, config, detection]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: SPEC.md 2.5節の検出順序を参照
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: SPEC.md
+2.5節の検出順序を参照 **Watch Points**: (auto-populated from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/integration/textlint/textlint_config_test.ts` を作成
   - 各設定ファイル形式の検出
   - 優先順位の確認
@@ -555,8 +620,11 @@ tags: [textlint, config, detection]
 ```typescript
 // tests/lsp/integration/textlint/textlint_config_test.ts
 import { assertEquals } from "@std/assert";
-import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
-import { TextlintConfig, detectTextlintConfig } from "@storyteller/lsp/integration/textlint/textlint_config.ts";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
+import {
+  detectTextlintConfig,
+  TextlintConfig,
+} from "@storyteller/lsp/integration/textlint/textlint_config.ts";
 
 describe("TextlintConfig", () => {
   const testDir = "./tmp/claude/textlint_config_test";
@@ -601,6 +669,7 @@ describe("TextlintConfig", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/integration/textlint/textlint_config.ts` を作成
 
 ```typescript
@@ -670,6 +739,7 @@ export async function detectTextlintConfig(
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] package.jsonのtextlintフィールド検出を追加
 - [ ] storyteller.jsonからの設定読み込みを追加
 - [ ] テストを実行し、継続して成功することを確認
@@ -684,20 +754,25 @@ tags: [textlint, parser, json]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: textlint --format json の出力形式を参照
-**Watch Points**: 不正なJSON、空出力の処理
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+textlint --format json の出力形式を参照 **Watch Points**:
+不正なJSON、空出力の処理
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/integration/textlint/textlint_parser_test.ts` を作成
 
 ```typescript
 // tests/lsp/integration/textlint/textlint_parser_test.ts
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { parseTextlintOutput, TextlintMessage } from "@storyteller/lsp/integration/textlint/textlint_parser.ts";
+import {
+  parseTextlintOutput,
+  TextlintMessage,
+} from "@storyteller/lsp/integration/textlint/textlint_parser.ts";
 
 describe("TextlintParser", () => {
   it("should parse valid textlint JSON output", () => {
@@ -739,7 +814,13 @@ describe("TextlintParser", () => {
       filePath: "/test.md",
       messages: [
         { ruleId: "rule1", severity: 2, message: "error", line: 1, column: 1 },
-        { ruleId: "rule2", severity: 1, message: "warning", line: 2, column: 1 },
+        {
+          ruleId: "rule2",
+          severity: 1,
+          message: "warning",
+          line: 2,
+          column: 1,
+        },
         { ruleId: "rule3", severity: 0, message: "info", line: 3, column: 1 },
       ],
     }]);
@@ -755,6 +836,7 @@ describe("TextlintParser", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/integration/textlint/textlint_parser.ts` を作成
 
 ```typescript
@@ -837,6 +919,7 @@ export function parseTextlintOutput(
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] エラーログ出力を追加
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -850,19 +933,22 @@ tags: [textlint, worker, async]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: DiagnosticsPublisher.publishDebounced()のパターンを参照（src/lsp/diagnostics/diagnostics_publisher.ts:93-114）
-**Known Patterns**: Deno.Command, AbortController
-**Watch Points**: プロセスリーク、タイムアウト処理
+
+**Related Lessons**:
+DiagnosticsPublisher.publishDebounced()のパターンを参照（src/lsp/diagnostics/diagnostics_publisher.ts:93-114）
+**Known Patterns**: Deno.Command, AbortController **Watch Points**:
+プロセスリーク、タイムアウト処理
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/integration/textlint/textlint_worker_test.ts` を作成
 
 ```typescript
 // tests/lsp/integration/textlint/textlint_worker_test.ts
 import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import { TextlintWorker } from "@storyteller/lsp/integration/textlint/textlint_worker.ts";
 import { delay } from "@std/async";
 
@@ -913,6 +999,7 @@ describe("TextlintWorker", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/integration/textlint/textlint_worker.ts` を作成
 
 ```typescript
@@ -969,14 +1056,19 @@ export class TextlintWorker {
   /**
    * 実際のtextlint実行
    */
-  private async execute(content: string, filePath: string): Promise<TextlintResult> {
+  private async execute(
+    content: string,
+    filePath: string,
+  ): Promise<TextlintResult> {
     this.abortController = new AbortController();
 
     const args = [
       "textlint",
       "--stdin",
-      "--stdin-filename", filePath,
-      "--format", "json",
+      "--stdin-filename",
+      filePath,
+      "--format",
+      "json",
     ];
 
     if (this.options.configPath) {
@@ -1067,6 +1159,7 @@ export class TextlintWorker {
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] ログ出力を追加
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -1080,19 +1173,21 @@ tags: [textlint, diagnostic_source, lsp]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: StorytellerDiagnosticSource（Process 2）のパターン
-**Watch Points**: textlint未インストール時の処理
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+StorytellerDiagnosticSource（Process 2）のパターン **Watch Points**:
+textlint未インストール時の処理
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts` を作成
 
 ```typescript
 // tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts
 import { assertEquals } from "@std/assert";
-import { describe, it, beforeEach } from "@std/testing/bdd";
+import { beforeEach, describe, it } from "@std/testing/bdd";
 import { TextlintDiagnosticSource } from "@storyteller/lsp/integration/textlint/textlint_diagnostic_source.ts";
 
 describe("TextlintDiagnosticSource", () => {
@@ -1136,6 +1231,7 @@ describe("TextlintDiagnosticSource", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/integration/textlint/textlint_diagnostic_source.ts` を作成
 
 ```typescript
@@ -1233,9 +1329,12 @@ export class TextlintDiagnosticSource implements DiagnosticSource {
    */
   private mapSeverity(textlintSeverity: number): number {
     switch (textlintSeverity) {
-      case 2: return DiagnosticSeverity.Error;      // 1
-      case 1: return DiagnosticSeverity.Warning;    // 2
-      default: return DiagnosticSeverity.Information; // 3
+      case 2:
+        return DiagnosticSeverity.Error; // 1
+      case 1:
+        return DiagnosticSeverity.Warning; // 2
+      default:
+        return DiagnosticSeverity.Information; // 3
     }
   }
 
@@ -1259,6 +1358,7 @@ export class TextlintDiagnosticSource implements DiagnosticSource {
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] ログ出力を追加
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -1272,18 +1372,21 @@ tags: [lsp, server, integration]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: server.ts:871-882のpublishDiagnosticsForUri()を修正
-**Watch Points**: 既存の動作を壊さない
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+server.ts:871-882のpublishDiagnosticsForUri()を修正 **Watch Points**:
+既存の動作を壊さない
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/lsp/integration/textlint_integration_test.ts` を作成
   - 統合テストは実際のLSPサーバーで行う
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/lsp/server/server.ts` を修正
 
 **修正箇所1: インポート追加（約61-62行目付近）**
@@ -1370,6 +1473,7 @@ this.diagnosticAggregator.dispose();
 - [ ] 既存のstoryteller診断が動作することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] 設定からtextlint有効/無効を制御
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -1383,13 +1487,15 @@ tags: [shared, textlint, cli, mcp]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: CLI/MCPで共有するロジックをshared/に配置
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+CLI/MCPで共有するロジックをshared/に配置 **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/shared/textlint/runner_test.ts` を作成
 - [ ] `tests/shared/textlint/parser_test.ts` を作成
 
@@ -1412,6 +1518,7 @@ describe("TextlintRunner", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/shared/textlint/types.ts` を作成
 
 ```typescript
@@ -1484,6 +1591,7 @@ export interface TextlintFixOptions {
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] エラーハンドリングを追加
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -1497,13 +1605,15 @@ tags: [cli, lint, command]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: src/cli/modules/rag/install_hooks.tsのCommandDescriptorパターン
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+src/cli/modules/rag/install_hooks.tsのCommandDescriptorパターン **Watch
+Points**: (auto-populated from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/cli/modules/lint/lint_test.ts` を作成
 
 ```typescript
@@ -1518,7 +1628,7 @@ describe("CLI lint command", () => {
   });
 
   it("should have options for path, dir, fix, json", () => {
-    const optionNames = lintCommandDescriptor.options?.map(o => o.name) ?? [];
+    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
     assertEquals(optionNames.includes("path"), true);
     assertEquals(optionNames.includes("dir"), true);
     assertEquals(optionNames.includes("fix"), true);
@@ -1530,6 +1640,7 @@ describe("CLI lint command", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/cli/modules/lint/types.ts` を作成
 - [ ] `src/cli/modules/lint/lint.ts` を作成
 - [ ] `src/cli/modules/lint/index.ts` を作成
@@ -1537,6 +1648,7 @@ describe("CLI lint command", () => {
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] エラーハンドリングを追加
 - [ ] テストを実行し、継続して成功することを確認
 
@@ -1550,21 +1662,24 @@ tags: [cli, lint, fix]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: Process 10のlintコマンドに統合
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: Process
+10のlintコマンドに統合 **Watch Points**: (auto-populated from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/cli/modules/lint/fix_test.ts` を作成
   - --fixオプションでrunner.fix()が呼ばれること
   - dryRunモードのテスト
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] Process 10で--fix対応済みのためスキップ
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
@@ -1577,19 +1692,23 @@ tags: [cli, lint, json]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: OutputPresenterインターフェース参照
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+OutputPresenterインターフェース参照 **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] JSON出力形式のテストを追加
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] Process 10で--json対応済みのためスキップ
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
@@ -1602,13 +1721,14 @@ tags: [cli, lint, options]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: SPEC.md 2.2節のオプション一覧
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: SPEC.md
+2.2節のオプション一覧 **Watch Points**: (auto-populated from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] 全オプションのテストを追加
   - --rule
   - --config
@@ -1616,24 +1736,29 @@ tags: [cli, lint, options]
   - --with-entity-check
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] --with-entity-checkの実装
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
 
 ## Process 20: ~~MCP textlint_check~~ [SKIPPED]
 
-> **スキップ理由**: textlint v14.8.0+ のネイティブMCPサーバー機能（`--mcp`フラグ）で代替可能
+> **スキップ理由**: textlint v14.8.0+
+> のネイティブMCPサーバー機能（`--mcp`フラグ）で代替可能
 >
 > textlintが提供するMCPツール:
+>
 > - `lintFile`: ファイルのlint
 > - `lintText`: テキスト直接lint
 > - `getLintFixedFileContent`: ファイルのfix結果取得
 > - `getLintFixedTextContent`: テキストのfix結果取得
 >
-> **使用方法**: Claude Desktop等のMCPクライアント設定で `npx textlint --mcp` を起動
+> **使用方法**: Claude Desktop等のMCPクライアント設定で `npx textlint --mcp`
+> を起動
 >
 > **参照**: https://github.com/textlint/textlint/blob/master/docs/mcp.md
 
@@ -1641,7 +1766,8 @@ tags: [cli, lint, options]
 
 ## Process 21: ~~MCP textlint_fix~~ [SKIPPED]
 
-> **スキップ理由**: Process 20と同様、textlint --mcp の `getLintFixedFileContent`, `getLintFixedTextContent` で代替
+> **スキップ理由**: Process 20と同様、textlint --mcp の
+> `getLintFixedFileContent`, `getLintFixedTextContent` で代替
 
 ---
 
@@ -1653,20 +1779,25 @@ tags: [git, hooks, install]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: src/cli/modules/rag/install_hooks.tsのパターン
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+src/cli/modules/rag/install_hooks.tsのパターン **Watch Points**: (auto-populated
+from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] `tests/cli/modules/lint/install_hooks_test.ts` を作成
 
 ```typescript
 // tests/cli/modules/lint/install_hooks_test.ts
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { lintInstallHooksCommandDescriptor, generatePreCommitHook } from "@storyteller/cli/modules/lint/install_hooks.ts";
+import {
+  generatePreCommitHook,
+  lintInstallHooksCommandDescriptor,
+} from "@storyteller/cli/modules/lint/install_hooks.ts";
 
 describe("CLI lint install-hooks", () => {
   it("should have correct name", () => {
@@ -1689,10 +1820,12 @@ describe("CLI lint install-hooks", () => {
 - [ ] テストを実行して失敗することを確認
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] `src/cli/modules/lint/install_hooks.ts` を作成
 - [ ] テストを実行して成功することを確認
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
@@ -1705,19 +1838,22 @@ tags: [git, hooks, uninstall]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: Process 30に統合済み
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: Process
+30に統合済み **Watch Points**: (auto-populated from failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
+
 - [ ] Process 30で統合実装済み
 
 ### Green Phase: 最小実装と成功確認
+
 - [ ] Process 30で統合実装済み
 
 ### Refactor Phase: 品質改善と継続成功確認
+
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
@@ -1730,9 +1866,10 @@ tags: []
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
@@ -1748,13 +1885,15 @@ tags: [refactoring, testing, coverage]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
 ### Red Phase: 品質改善テストを追加
+
 - [ ] テストカバレッジを確認
 - [ ] エッジケーステストを追加
   - textlint未インストール
@@ -1763,11 +1902,13 @@ tags: [refactoring, testing, coverage]
   - プロセスキャンセル
 
 ### Green Phase: リファクタリングを実施
+
 - [ ] 重複コードの抽出
 - [ ] エラーメッセージの統一
 - [ ] ログ出力の整理
 
 ### Refactor Phase: テスト継続実行確認
+
 - [ ] 全テストが通過することを確認
 - [ ] フォーマッタ・Linterが通過することを確認
 
@@ -1781,13 +1922,15 @@ tags: [docs, readme, samples]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
 ### Red Phase: ドキュメント設計
+
 - [ ] 文書化対象を特定
   - docs/lint.md
   - CLAUDE.md更新
@@ -1795,6 +1938,7 @@ tags: [docs, readme, samples]
 - [ ] ドキュメント構成を作成
 
 ### Green Phase: ドキュメント記述
+
 - [ ] `docs/lint.md` を作成
   - 概要
   - LSP統合
@@ -1809,6 +1953,7 @@ tags: [docs, readme, samples]
   - prh-rules.yml.example
 
 ### Refactor Phase: 品質確認
+
 - [ ] リンク検証
 - [ ] 最終レビュー
 
@@ -1822,20 +1967,23 @@ tags: [learning, lessons, insights]
 -->
 
 ### Briefing (auto-generated)
-**Related Lessons**: (auto-populated from stigmergy)
-**Known Patterns**: (auto-populated from patterns)
-**Watch Points**: (auto-populated from failure_cases)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
 ### Red Phase: フィードバック収集設計
 
 **Observe（観察）**
+
 - [x] 実装過程で発生した問題・課題を収集 ✅
 - [x] テスト結果から得られた知見を記録 ✅
 - [x] コードレビューのフィードバックを整理 ✅
 
 **Orient（方向付け）**
+
 - [x] 収集した情報をカテゴリ別に分類 ✅
   - Technical: 技術的な知見・パターン (L1-L7)
   - Process: プロセス改善に関する教訓 (P1-P4)
@@ -1848,6 +1996,7 @@ tags: [learning, lessons, insights]
 ### Green Phase: 教訓・知見の永続化
 
 **Decide（決心）**
+
 - [x] 保存すべき教訓・知見を選定 ✅
 - [x] 各項目の保存先を決定 ✅
   - ~~Serena Memory~~: 今回はPLAN.md Lessonsセクションに集約
@@ -1855,6 +2004,7 @@ tags: [learning, lessons, insights]
   - Feedback Log: 実装マイルストーン記録
 
 **Act（行動）**
+
 - [x] PLAN.md Lessonsセクションに教訓を永続化 ✅
 - [x] Feedback Logに実装マイルストーンを記録 ✅
 - [x] Progress Mapを更新（全Process完了状態を反映） ✅
@@ -1866,6 +2016,7 @@ tags: [learning, lessons, insights]
 ### Refactor Phase: フィードバック品質改善
 
 **Feedback Loop**
+
 - [x] 保存した教訓の品質を検証 ✅
   - 再現可能性: DiagnosticSourceパターンは他の診断ソースにも適用可能 ✅
   - 明確性: カテゴリ・重要度・具体例を明記 ✅
@@ -1874,6 +2025,7 @@ tags: [learning, lessons, insights]
 - [x] メタ学習: TDDプロセスの有効性を確認（P1） ✅
 
 **Cross-Feedback**
+
 - [x] 他のProcess（100, 200）との連携を確認 ✅
 - [x] 将来のミッションへの引き継ぎ事項を整理 ✅
   - docs/lint.md作成（Process 200）が残タスク
@@ -1888,64 +2040,65 @@ tags: [learning, lessons, insights]
 ## Blockers
 
 | ID | Description | Status | Resolution |
-|----|-------------|--------|-----------|
-| - | - | - | - |
+| -- | ----------- | ------ | ---------- |
+| -  | -           | -      | -          |
 
 ## Lessons
 
 ### Technical Insights
 
-| ID | Insight | Category | Severity | Applied |
-|----|---------|----------|----------|---------|
-| L1 | DiagnosticSource抽象化により拡張性が大幅向上 | Architecture | high | ✅ |
-| L2 | Promise.allSettledで部分失敗に対応（グレースフルデグラデーション） | Resilience | high | ✅ |
-| L3 | デバウンス・キャンセルパターンの確立（pendingResolveパターン） | Async | high | ✅ |
-| L4 | textlintの非ゼロ終了コード処理（exit 1でもstdoutに有効なJSON） | Integration | medium | ✅ |
-| L5 | cancel/disposeをオプショナルメソッドとして定義し柔軟性確保 | API Design | medium | ✅ |
-| L6 | タイムアウト付きプロセス実行でリソースリーク防止 | Resource Mgmt | high | ✅ |
-| L7 | sourceフィールドで診断ソースを識別（Aggregatorパターン） | Integration | medium | ✅ |
+| ID | Insight                                                            | Category      | Severity | Applied |
+| -- | ------------------------------------------------------------------ | ------------- | -------- | ------- |
+| L1 | DiagnosticSource抽象化により拡張性が大幅向上                       | Architecture  | high     | ✅      |
+| L2 | Promise.allSettledで部分失敗に対応（グレースフルデグラデーション） | Resilience    | high     | ✅      |
+| L3 | デバウンス・キャンセルパターンの確立（pendingResolveパターン）     | Async         | high     | ✅      |
+| L4 | textlintの非ゼロ終了コード処理（exit 1でもstdoutに有効なJSON）     | Integration   | medium   | ✅      |
+| L5 | cancel/disposeをオプショナルメソッドとして定義し柔軟性確保         | API Design    | medium   | ✅      |
+| L6 | タイムアウト付きプロセス実行でリソースリーク防止                   | Resource Mgmt | high     | ✅      |
+| L7 | sourceフィールドで診断ソースを識別（Aggregatorパターン）           | Integration   | medium   | ✅      |
 
 ### Process Insights
 
-| ID | Insight | Category | Severity | Applied |
-|----|---------|----------|----------|---------|
-| P1 | TDDによる設計品質向上（インターフェースファースト） | Process | high | ✅ |
-| P2 | 既存コードラップパターンで後方互換性維持 | Migration | high | ✅ |
-| P3 | 外部ツールのネイティブ機能活用（textlint --mcp）で重複実装回避 | Strategy | medium | ✅ |
-| P4 | publishDiagnosticsForUri()の変更最小化で既存機能保護 | Refactoring | medium | ✅ |
+| ID | Insight                                                        | Category    | Severity | Applied |
+| -- | -------------------------------------------------------------- | ----------- | -------- | ------- |
+| P1 | TDDによる設計品質向上（インターフェースファースト）            | Process     | high     | ✅      |
+| P2 | 既存コードラップパターンで後方互換性維持                       | Migration   | high     | ✅      |
+| P3 | 外部ツールのネイティブ機能活用（textlint --mcp）で重複実装回避 | Strategy    | medium   | ✅      |
+| P4 | publishDiagnosticsForUri()の変更最小化で既存機能保護           | Refactoring | medium   | ✅      |
 
 ### Implementation Patterns
 
-| ID | Pattern | Use Case | Example |
-|----|---------|----------|---------|
-| PT1 | DiagnosticSourceインターフェース | 複数診断ソース統合 | storyteller + textlint |
-| PT2 | Promise.allSettled | 部分失敗許容の並列実行 | Aggregator.generate() |
-| PT3 | pendingResolveパターン | デバウンス付きキャンセル | TextlintWorker.lint() |
-| PT4 | Adapterパターン | 既存機能のラップ | StorytellerDiagnosticSource |
-| PT5 | タイムアウト付きプロセス実行 | 外部コマンド実行 | TextlintWorker.execute() |
+| ID  | Pattern                          | Use Case                 | Example                     |
+| --- | -------------------------------- | ------------------------ | --------------------------- |
+| PT1 | DiagnosticSourceインターフェース | 複数診断ソース統合       | storyteller + textlint      |
+| PT2 | Promise.allSettled               | 部分失敗許容の並列実行   | Aggregator.generate()       |
+| PT3 | pendingResolveパターン           | デバウンス付きキャンセル | TextlintWorker.lint()       |
+| PT4 | Adapterパターン                  | 既存機能のラップ         | StorytellerDiagnosticSource |
+| PT5 | タイムアウト付きプロセス実行     | 外部コマンド実行         | TextlintWorker.execute()    |
 
 ### Anti-Patterns (避けるべきパターン)
 
-| ID | Anti-Pattern | Problem | Solution |
-|----|--------------|---------|----------|
-| A1 | Promise.allでの部分失敗時の全体失敗 | 一つのソースエラーで全体が失敗 | Promise.allSettledを使用 |
-| A2 | デバウンスなしの即時実行 | UIブロッキング | デバウンス + バックグラウンド実行 |
-| A3 | プロセス終了待ちなし | リソースリーク | dispose()での明示的クリーンアップ |
-| A4 | 外部ツールの重複実装 | メンテナンスコスト増大 | ネイティブ機能（textlint --mcp）活用 |
+| ID | Anti-Pattern                        | Problem                        | Solution                             |
+| -- | ----------------------------------- | ------------------------------ | ------------------------------------ |
+| A1 | Promise.allでの部分失敗時の全体失敗 | 一つのソースエラーで全体が失敗 | Promise.allSettledを使用             |
+| A2 | デバウンスなしの即時実行            | UIブロッキング                 | デバウンス + バックグラウンド実行    |
+| A3 | プロセス終了待ちなし                | リソースリーク                 | dispose()での明示的クリーンアップ    |
+| A4 | 外部ツールの重複実装                | メンテナンスコスト増大         | ネイティブ機能（textlint --mcp）活用 |
 
 ## Feedback Log
 
-| Date | Type | Content | Status |
-|------|------|---------|--------|
-| 2026-01-02 | Implementation | DiagnosticSource抽象化の導入完了 | ✅ Completed |
-| 2026-01-02 | Implementation | TextlintWorker（デバウンス・キャンセル）実装完了 | ✅ Completed |
-| 2026-01-02 | Implementation | DiagnosticAggregator統合完了 | ✅ Completed |
-| 2026-01-02 | Implementation | CLI lint/install-hooks完了 | ✅ Completed |
-| 2026-01-02 | Decision | Process 20-21スキップ（textlint --mcp活用） | ✅ Decided |
-| 2026-01-02 | Quality | テストファイル実装完了（TDD完遂） | ✅ Completed |
-| 2026-01-02 | Pending | docs/lint.md作成待ち | ⏳ In Progress |
+| Date       | Type           | Content                                          | Status         |
+| ---------- | -------------- | ------------------------------------------------ | -------------- |
+| 2026-01-02 | Implementation | DiagnosticSource抽象化の導入完了                 | ✅ Completed   |
+| 2026-01-02 | Implementation | TextlintWorker（デバウンス・キャンセル）実装完了 | ✅ Completed   |
+| 2026-01-02 | Implementation | DiagnosticAggregator統合完了                     | ✅ Completed   |
+| 2026-01-02 | Implementation | CLI lint/install-hooks完了                       | ✅ Completed   |
+| 2026-01-02 | Decision       | Process 20-21スキップ（textlint --mcp活用）      | ✅ Decided     |
+| 2026-01-02 | Quality        | テストファイル実装完了（TDD完遂）                | ✅ Completed   |
+| 2026-01-02 | Pending        | docs/lint.md作成待ち                             | ⏳ In Progress |
 
 ## Completion Checklist
+
 - [x] すべてのProcess完了（Process 200を除く）
 - [x] すべてのテスト合格（実装済み、未コミット）
 - [x] コードレビュー完了（セルフレビュー）
@@ -1953,12 +2106,14 @@ tags: [learning, lessons, insights]
 - [ ] マージ可能な状態（実装ファイルのコミット + docs/lint.md作成後）
 
 ## 次のアクション
+
 1. **実装ファイルのコミット**
    ```bash
    git add src/lsp/diagnostics/ src/lsp/integration/ src/shared/textlint/ src/cli/modules/lint/
    git add tests/lsp/diagnostics/ tests/lsp/integration/textlint/ tests/shared/textlint/ tests/cli/modules/lint/
    git add src/cli/modules/index.ts src/lsp/server/server.ts
    git commit -m "feat(lint): textlint-storyteller統合の完全実装
+   ```
 
 - DiagnosticSource抽象化による拡張可能な診断基盤
 - TextlintWorkerによるデバウンス・キャンセル付きバックグラウンド実行
@@ -1967,14 +2122,14 @@ tags: [learning, lessons, insights]
 - TDD完遂（全テスト実装済み）
 
 Processes 1-13, 30-31, 100, 300完了"
-   ```
 
+```
 2. **docs/lint.md作成（Process 200完了）**
-   - 概要、LSP統合、CLIコマンド、Git Hooks、セットアップ、設定を記載
-   - サンプル設定ファイル（.textlintrc.example）を追加
+- 概要、LSP統合、CLIコマンド、Git Hooks、セットアップ、設定を記載
+- サンプル設定ファイル（.textlintrc.example）を追加
 
 3. **CLAUDE.md更新**
-   - textlint統合機能の概要を追加
+- textlint統合機能の概要を追加
 
 ---
 
@@ -1989,3 +2144,4 @@ Process番号規則
 - 200-299: ドキュメンテーション（Phase 6）
 - 300+: OODAフィードバックループ（教訓・知見保存）
 -->
+```
