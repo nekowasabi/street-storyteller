@@ -670,6 +670,102 @@ storyteller rag install-hooks
 
 詳細は `docs/rag.md` を参照してください。
 
+### 9. textlint統合機能 - 実装済み
+
+原稿（Markdown）の文法・表記ゆれを検出・修正する機能が実装されました。
+
+#### 概要
+
+- **LSP統合**: storyteller LSP内でtextlintをバックグラウンド実行し、診断を統合表示
+- **DiagnosticSource抽象化**: 複数の診断ソース（storyteller、textlint等）を統合する拡張可能な基盤
+- **CLIコマンド**: `storyteller lint` コマンドによるワンショット検証・修正
+- **Git Hooks**: pre-commit hookによる自動チェック
+- **グレースフルデグラデーション**: textlint未インストール環境でもstoryteller診断は動作
+
+#### CLIコマンド
+
+```bash
+# 基本的なチェック
+storyteller lint
+
+# 特定ファイルをチェック
+storyteller lint --path manuscripts/chapter01.md
+
+# 自動修正
+storyteller lint --path manuscripts/chapter01.md --fix
+
+# JSON形式で出力
+storyteller lint --json
+
+# エラーのみ表示
+storyteller lint --severity error
+
+# Git hooks インストール
+storyteller lint install-hooks
+storyteller lint install-hooks --strict  # strictモード
+```
+
+#### DiagnosticSource抽象化
+
+複数の診断ソースを統合する設計：
+
+```typescript
+interface DiagnosticSource {
+  readonly name: string;
+  isAvailable(): Promise<boolean>;
+  generate(uri: string, content: string, projectRoot: string): Promise<Diagnostic[]>;
+  cancel?(): void;
+  dispose?(): void;
+}
+```
+
+実装済み診断ソース：
+
+- **StorytellerDiagnosticSource**: キャラクター・設定参照の検証
+- **TextlintDiagnosticSource**: 文法・表記ゆれの検証
+
+将来の拡張：
+
+- **ValeSource**: 技術文書スタイルガイドの検証
+- **カスタムルール**: プロジェクト固有の検証ルール
+
+#### textlintの特徴
+
+- **デバウンス処理**: 500msのデバウンスで過剰な実行を防止
+- **キャンセル機能**: 新しいリクエストが来たら前のリクエストを自動キャンセル
+- **タイムアウト**: 30秒のタイムアウトで長時間実行を回避
+- **UIブロッキングなし**: 非同期実行によりエディタ操作を妨げない
+
+#### MCPツール
+
+storytellerは独自のMCP textlintツールを実装していません。
+textlint v14.8.0+のネイティブMCPサーバー（`--mcp`フラグ）を使用します。
+
+Claude Desktop設定例：
+
+```json
+{
+  "mcpServers": {
+    "storyteller": {
+      "command": "storyteller",
+      "args": ["mcp", "start", "--stdio"]
+    },
+    "textlint": {
+      "command": "npx",
+      "args": ["textlint", "--mcp"],
+      "cwd": "/path/to/your/story-project"
+    }
+  }
+}
+```
+
+#### サンプル設定ファイル
+
+- `.textlintrc.example` - textlint設定のサンプル
+- `prh-rules.yml.example` - 表記ゆれルールのサンプル
+
+詳細は `docs/lint.md` を参照してください。
+
 ## 技術的な考慮事項
 
 - **文脈解析**: 日本語の文法パターン（助詞、動詞活用）を考慮した検出

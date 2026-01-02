@@ -1,0 +1,169 @@
+version: 1
+
+# 表記ゆれルール
+# storyteller プロジェクトで使用する表記統一ルールのサンプルです
+#
+# 使い方:
+#   1. このファイルを prh-rules.yml にコピー
+#   2. プロジェクトに合わせてルールを追加・編集
+#   3. .textlintrc で rulePaths: ["./prh-rules.yml"] を設定
+
+rules:
+  # ========================================
+  # 基本的な表記ゆれ
+  # ========================================
+
+  - expected: 美味しい
+    patterns:
+      - おいしい
+      - うまい
+    specs:
+      - from: 美味しそう
+        to: 美味しそう
+
+  - expected: 綺麗
+    patterns:
+      - きれい
+      - キレイ
+
+  - expected: ください
+    pattern: 下さい
+
+  - expected: 事
+    pattern: こと
+    specs:
+      - from: 〜する事ができる
+        to: 〜する事ができる
+
+  - expected: 時
+    pattern: とき
+
+  # ========================================
+  # 物語執筆固有の表記
+  # ========================================
+
+  - expected: 見る
+    patterns:
+      - 観る
+      - 視る
+    specs:
+      - from: 映画を見る
+        to: 映画を観る
+
+  - expected: 聞く
+    pattern: 聴く
+    specs:
+      - from: 音楽を聞く
+        to: 音楽を聴く
+
+  # ========================================
+  # 技術用語・固有名詞
+  # ========================================
+
+  - expected: JavaScript
+    patterns:
+      - javascript
+      - java script
+      - JS
+    specs:
+      - from: TypeScript
+        to: TypeScript
+
+  - expected: TypeScript
+    patterns:
+      - typescript
+      - type script
+      - TS
+
+  - expected: GitHub
+    patterns:
+      - Github
+      - github
+
+  - expected: Markdown
+    patterns:
+      - markdown
+      - MD
+
+  - expected: VSCode
+    patterns:
+      - vscode
+      - VS Code
+      - Visual Studio Code
+
+  # ========================================
+  # 半角・全角の統一（全角を推奨）
+  # ========================================
+
+  - expected: "！"
+    pattern: "!"
+    specs:
+      - from: URL末尾の!
+        to: "!"
+
+  - expected: "？"
+    pattern: "?"
+    specs:
+      - from: URL末尾の?
+        to: "?"
+
+  # ========================================
+  # 送り仮名の統一
+  # ========================================
+
+  - expected: 問い合わせ
+    patterns:
+      - 問合せ
+      - 問合わせ
+
+  - expected: 打ち合わせ
+    patterns:
+      - 打合せ
+      - 打合わせ
+
+  - expected: 受け取る
+    pattern: 受取る
+
+  - expected: 引き継ぐ
+    pattern: 引継ぐ
+
+  # ========================================
+  # カタカナ語の統一
+  # ========================================
+
+  - expected: サーバー
+    patterns:
+      - サーバ
+      - server
+
+  - expected: ユーザー
+    patterns:
+      - ユーザ
+      - user
+
+  - expected: コンピューター
+    patterns:
+      - コンピュータ
+      - computer
+
+  - expected: エディター
+    patterns:
+      - エディタ
+      - editor
+
+  # ========================================
+  # プロジェクト固有の用語
+  # （必要に応じて追加してください）
+  # ========================================
+
+  # 例: 物語のキャラクター名の統一
+  # - expected: 勇者
+  #   patterns:
+  #     - 勇者さま
+  #     - 勇者様
+
+  # 例: 世界観用語の統一
+  # - expected: 王都
+  #   patterns:
+  #     - 王国の都
+  #     - 王の都

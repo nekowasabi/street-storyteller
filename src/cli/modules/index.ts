@@ -7,6 +7,7 @@ import { createLspDescriptor } from "@storyteller/cli/modules/lsp/index.ts";
 import { createElementDescriptor } from "@storyteller/cli/modules/element/index.ts";
 import { viewCommandDescriptor } from "@storyteller/cli/modules/view.ts";
 import { createMcpDescriptor } from "@storyteller/cli/modules/mcp/index.ts";
+import { lintCommandDescriptor } from "@storyteller/cli/modules/lint/index.ts";
 
 export function registerCoreModules(registry: CommandRegistry): void {
   registerCommandDescriptor(registry, generateCommandDescriptor);
@@ -19,6 +20,7 @@ export function registerCoreModules(registry: CommandRegistry): void {
   registerCommandDescriptor(registry, viewCommandDescriptor);
   const mcpDescriptor = createMcpDescriptor(registry);
   registerCommandDescriptor(registry, mcpDescriptor);
+  registerCommandDescriptor(registry, lintCommandDescriptor);
   const helpDescriptor = createHelpDescriptor(registry);
   registerCommandDescriptor(registry, helpDescriptor);
 }

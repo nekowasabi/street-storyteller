@@ -60,6 +60,9 @@ import type {
 } from "@storyteller/lsp/providers/lsp_types.ts";
 import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import { DiagnosticsPublisher } from "@storyteller/lsp/diagnostics/diagnostics_publisher.ts";
+import { DiagnosticAggregator } from "@storyteller/lsp/diagnostics/diagnostic_aggregator.ts";
+import { StorytellerDiagnosticSource } from "@storyteller/lsp/diagnostics/storyteller_diagnostic_source.ts";
+import { TextlintDiagnosticSource } from "@storyteller/lsp/integration/textlint/textlint_diagnostic_source.ts";
 import { LiteralTypeHoverProvider } from "@storyteller/lsp/providers/literal_type_hover_provider.ts";
 import { CodeLensProvider } from "@storyteller/lsp/providers/code_lens_provider.ts";
 import { ProjectDetector } from "@storyteller/lsp/project/project_detector.ts";
@@ -166,6 +169,7 @@ export class LspServer {
   // 診断
   private readonly diagnosticsGenerator: DiagnosticsGenerator;
   private readonly diagnosticsPublisher: DiagnosticsPublisher;
+  private readonly diagnosticAggregator: DiagnosticAggregator;
 
   // マルチプロジェクト対応
   private readonly projectDetector: ProjectDetector;
@@ -220,6 +224,12 @@ export class LspServer {
 
     // 診断機能の初期化
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
+
+    // DiagnosticAggregatorの初期化
+    const storytellerSource = new StorytellerDiagnosticSource(this.diagnosticsGenerator);
+    const textlintSource = new TextlintDiagnosticSource(this.projectRoot);
+    this.diagnosticAggregator = new DiagnosticAggregator([storytellerSource, textlintSource]);
+
     this.diagnosticsPublisher = new DiagnosticsPublisher(
       { write: (p) => transport.writeRaw(p) },
       { debounceMs: options?.diagnosticsDebounceMs ?? 0 },
@@ -872,7 +882,8 @@ export class LspServer {
     const document = this.documentManager.get(uri);
     if (!document) return;
 
-    const diagnostics = await this.diagnosticsGenerator.generate(
+    // DiagnosticAggregatorを使用して複数ソースから診断を取得
+    const diagnostics = await this.diagnosticAggregator.generate(
       uri,
       document.content,
       this.projectRoot,
@@ -930,5 +941,12 @@ export class LspServer {
 
     const response = createSuccessResponse(request.id, result);
     await this.transport.writeMessage(response);
+  }
+
+  /**
+   * リソースを解放
+   */
+  dispose(): void {
+    this.diagnosticAggregator.dispose();
   }
 }
