@@ -1,6 +1,6 @@
 // tests/lsp/integration/textlint/textlint_worker_test.ts
-import { assertEquals, assertRejects } from "@std/assert";
-import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
+import { assertEquals } from "@std/assert";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import { TextlintWorker } from "@storyteller/lsp/integration/textlint/textlint_worker.ts";
 import { delay } from "@std/async";
 
@@ -38,9 +38,9 @@ describe("TextlintWorker", () => {
     };
 
     // 2回連続呼び出し
-    const p1 = worker.lint("content1", "/test.md");
+    const _p1 = worker.lint("content1", "/test.md");
     await delay(10);
-    const p2 = worker.lint("content2", "/test.md");
+    const _p2 = worker.lint("content2", "/test.md");
 
     assertEquals(cancelCalled, true);
     worker.cancel(); // クリーンアップ

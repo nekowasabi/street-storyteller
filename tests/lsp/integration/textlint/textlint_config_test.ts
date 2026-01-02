@@ -1,7 +1,7 @@
 // tests/lsp/integration/textlint/textlint_config_test.ts
 import { assertEquals } from "@std/assert";
-import { describe, it, beforeEach, afterEach } from "@std/testing/bdd";
-import { TextlintConfig, detectTextlintConfig } from "@storyteller/lsp/integration/textlint/textlint_config.ts";
+import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
+import { detectTextlintConfig } from "@storyteller/lsp/integration/textlint/textlint_config.ts";
 
 describe("TextlintConfig", () => {
   const testDir = "./tmp/claude/textlint_config_test";
@@ -57,14 +57,14 @@ describe("TextlintConfig", () => {
   });
 
   it("should detect .textlintrc.yaml", async () => {
-    await Deno.writeTextFile(`${testDir}/.textlintrc.yaml`, 'rules: {}');
+    await Deno.writeTextFile(`${testDir}/.textlintrc.yaml`, "rules: {}");
 
     const config = await detectTextlintConfig(testDir);
     assertEquals(config.configPath?.endsWith(".textlintrc.yaml"), true);
   });
 
   it("should detect .textlintrc.yml", async () => {
-    await Deno.writeTextFile(`${testDir}/.textlintrc.yml`, 'rules: {}');
+    await Deno.writeTextFile(`${testDir}/.textlintrc.yml`, "rules: {}");
 
     const config = await detectTextlintConfig(testDir);
     assertEquals(config.configPath?.endsWith(".textlintrc.yml"), true);
@@ -73,7 +73,7 @@ describe("TextlintConfig", () => {
   it("should prioritize config files in correct order", async () => {
     // Create multiple config files
     await Deno.writeTextFile(`${testDir}/.textlintrc.json`, '{"rules":{}}');
-    await Deno.writeTextFile(`${testDir}/.textlintrc.yaml`, 'rules: {}');
+    await Deno.writeTextFile(`${testDir}/.textlintrc.yaml`, "rules: {}");
     await Deno.writeTextFile(`${testDir}/.textlintrc`, '{"rules":{}}');
 
     const config = await detectTextlintConfig(testDir);

@@ -226,9 +226,14 @@ export class LspServer {
     this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
 
     // DiagnosticAggregatorの初期化
-    const storytellerSource = new StorytellerDiagnosticSource(this.diagnosticsGenerator);
+    const storytellerSource = new StorytellerDiagnosticSource(
+      this.diagnosticsGenerator,
+    );
     const textlintSource = new TextlintDiagnosticSource(this.projectRoot);
-    this.diagnosticAggregator = new DiagnosticAggregator([storytellerSource, textlintSource]);
+    this.diagnosticAggregator = new DiagnosticAggregator([
+      storytellerSource,
+      textlintSource,
+    ]);
 
     this.diagnosticsPublisher = new DiagnosticsPublisher(
       { write: (p) => transport.writeRaw(p) },
@@ -695,7 +700,6 @@ export class LspServer {
     await this.diagnosticsPublisher.publish(params.textDocument.uri, []);
   }
 
-
   /**
    * textDocument/didSave を処理
    * 原稿ファイル保存時にFrontMatterを自動更新
@@ -947,6 +951,13 @@ export class LspServer {
    * リソースを解放
    */
   dispose(): void {
+    // デバウンスタイマーをクリア
+    if (this.fileChangeDebounceTimer !== null) {
+      clearTimeout(this.fileChangeDebounceTimer);
+      this.fileChangeDebounceTimer = null;
+    }
+    this.pendingFileChanges = [];
+
     this.diagnosticAggregator.dispose();
   }
 }

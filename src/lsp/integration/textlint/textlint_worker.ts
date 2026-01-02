@@ -1,5 +1,4 @@
 // src/lsp/integration/textlint/textlint_worker.ts
-import type { TextlintConfig } from "./textlint_config.ts";
 import { parseTextlintOutput, type TextlintResult } from "./textlint_parser.ts";
 
 /**

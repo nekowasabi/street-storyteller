@@ -1,5 +1,8 @@
 // src/lsp/integration/textlint/textlint_diagnostic_source.ts
-import type { Diagnostic } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
+import type {
+  Diagnostic,
+  DiagnosticSeverityType,
+} from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
 import type { DiagnosticSource } from "@storyteller/lsp/diagnostics/diagnostic_source.ts";
 import { TextlintWorker } from "./textlint_worker.ts";
 import { detectTextlintConfig } from "./textlint_config.ts";
@@ -133,7 +136,7 @@ export class TextlintDiagnosticSource implements DiagnosticSource {
    * @param textlintSeverity textlintの重要度 (0-2)
    * @returns LSP DiagnosticSeverity (1-4)
    */
-  private mapSeverity(textlintSeverity: number): number {
+  private mapSeverity(textlintSeverity: number): DiagnosticSeverityType {
     switch (textlintSeverity) {
       case 2:
         return DiagnosticSeverity.Error; // 1

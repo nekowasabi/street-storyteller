@@ -23,8 +23,7 @@ describe("CLI lint command", () => {
   });
 
   it("should have options for path, dir, fix, json", () => {
-    const optionNames =
-      lintCommandDescriptor.options?.map((o) => o.name) ?? [];
+    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
     assertEquals(optionNames.includes("path"), true);
     assertEquals(optionNames.includes("dir"), true);
     assertEquals(optionNames.includes("fix"), true);
@@ -32,32 +31,27 @@ describe("CLI lint command", () => {
   });
 
   it("should have recursive option", () => {
-    const optionNames =
-      lintCommandDescriptor.options?.map((o) => o.name) ?? [];
+    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
     assertEquals(optionNames.includes("recursive"), true);
   });
 
   it("should have rule option (Process 13)", () => {
-    const optionNames =
-      lintCommandDescriptor.options?.map((o) => o.name) ?? [];
+    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
     assertEquals(optionNames.includes("rule"), true);
   });
 
   it("should have config option (Process 13)", () => {
-    const optionNames =
-      lintCommandDescriptor.options?.map((o) => o.name) ?? [];
+    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
     assertEquals(optionNames.includes("config"), true);
   });
 
   it("should have severity option (Process 13)", () => {
-    const optionNames =
-      lintCommandDescriptor.options?.map((o) => o.name) ?? [];
+    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
     assertEquals(optionNames.includes("severity"), true);
   });
 
   it("should have with-entity-check option (Process 13)", () => {
-    const optionNames =
-      lintCommandDescriptor.options?.map((o) => o.name) ?? [];
+    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
     assertEquals(optionNames.includes("with-entity-check"), true);
   });
 

@@ -1,7 +1,7 @@
 // tests/lsp/integration/textlint/textlint_parser_test.ts
 import { assertEquals } from "@std/assert";
 import { describe, it } from "@std/testing/bdd";
-import { parseTextlintOutput, TextlintMessage } from "@storyteller/lsp/integration/textlint/textlint_parser.ts";
+import { parseTextlintOutput } from "@storyteller/lsp/integration/textlint/textlint_parser.ts";
 
 describe("TextlintParser", () => {
   it("should parse valid textlint JSON output", () => {
@@ -43,7 +43,13 @@ describe("TextlintParser", () => {
       filePath: "/test.md",
       messages: [
         { ruleId: "rule1", severity: 2, message: "error", line: 1, column: 1 },
-        { ruleId: "rule2", severity: 1, message: "warning", line: 2, column: 1 },
+        {
+          ruleId: "rule2",
+          severity: 1,
+          message: "warning",
+          line: 2,
+          column: 1,
+        },
         { ruleId: "rule3", severity: 0, message: "info", line: 3, column: 1 },
       ],
     }]);
@@ -64,8 +70,8 @@ describe("TextlintParser", () => {
       '{"incomplete":',
       '[{"messages": "not-an-array"}]',
       '[{"filePath": "/test.md"}]', // missing messages
-      'null',
-      'undefined',
+      "null",
+      "undefined",
     ];
 
     for (const malformed of malformedCases) {
@@ -78,7 +84,7 @@ describe("TextlintParser", () => {
     const json = JSON.stringify([{
       filePath: "/test.md",
       messages: [
-        { }, // all fields missing
+        {}, // all fields missing
         { ruleId: "rule1" }, // missing severity, message, line, column
         { severity: 2 }, // missing ruleId, message, line, column
       ],

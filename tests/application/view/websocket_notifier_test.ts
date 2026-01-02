@@ -25,8 +25,9 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
 
         ws.onopen = () => {
           clearTimeout(timeout);
+          // oncloseの完了を待つ
+          ws.onclose = () => resolve();
           ws.close();
-          resolve();
         };
 
         ws.onerror = (e) => {
@@ -92,10 +93,13 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
         "クライアント2がメッセージを受信すべき",
       );
 
-      // クリーンアップ
-      for (const ws of connections) {
-        ws.close();
-      }
+      // クリーンアップ - oncloseの完了を待つ
+      await Promise.all(connections.map((ws) => {
+        return new Promise<void>((resolve) => {
+          ws.onclose = () => resolve();
+          ws.close();
+        });
+      }));
     } finally {
       await server.stop();
     }
@@ -127,8 +131,11 @@ Deno.test("WebSocket通知 - 基本機能", async (t) => {
         };
       });
 
-      // 接続を閉じる
-      ws.close();
+      // 接続を閉じる - oncloseの完了を待つ
+      await new Promise<void>((resolve) => {
+        ws.onclose = () => resolve();
+        ws.close();
+      });
 
       // 待機
       await new Promise((resolve) => setTimeout(resolve, 100));
