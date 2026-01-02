@@ -42,7 +42,7 @@ export class DiagnosticAggregator {
    * @param name 削除するソースの識別子
    */
   removeSource(name: string): void {
-    this.sources = this.sources.filter(s => s.name !== name);
+    this.sources = this.sources.filter((s) => s.name !== name);
   }
 
   /**
@@ -66,7 +66,7 @@ export class DiagnosticAggregator {
       this.sources.map(async (source) => ({
         source,
         available: await source.isAvailable().catch(() => false),
-      }))
+      })),
     );
 
     const availableSources = availabilityChecks
@@ -82,7 +82,7 @@ export class DiagnosticAggregator {
           ...d,
           source: source.name,
         }));
-      })
+      }),
     );
 
     // 成功した結果のみマージ
@@ -96,7 +96,7 @@ export class DiagnosticAggregator {
         const sourceName = availableSources[i]?.name ?? "unknown";
         if (Deno.env.get("STORYTELLER_DEBUG")) {
           console.error(
-            `[DiagnosticAggregator] Failed to generate diagnostics from source "${sourceName}": ${result.reason}`
+            `[DiagnosticAggregator] Failed to generate diagnostics from source "${sourceName}": ${result.reason}`,
           );
         }
       }

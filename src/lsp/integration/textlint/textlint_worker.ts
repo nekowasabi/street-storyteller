@@ -80,14 +80,19 @@ export class TextlintWorker {
    * @returns textlint実行結果
    * @private
    */
-  private async execute(content: string, filePath: string): Promise<TextlintResult> {
+  private async execute(
+    content: string,
+    filePath: string,
+  ): Promise<TextlintResult> {
     this.abortController = new AbortController();
 
     const args = [
       "textlint",
       "--stdin",
-      "--stdin-filename", filePath,
-      "--format", "json",
+      "--stdin-filename",
+      filePath,
+      "--format",
+      "json",
     ];
 
     if (this.options.configPath) {
@@ -134,7 +139,9 @@ export class TextlintWorker {
       } catch (killError) {
         // プロセスが既に終了している場合は無視
         if (Deno.env.get("STORYTELLER_DEBUG")) {
-          console.error(`[TextlintWorker] Failed to kill process: ${killError}`);
+          console.error(
+            `[TextlintWorker] Failed to kill process: ${killError}`,
+          );
         }
       }
       return { filePath, messages: [] };

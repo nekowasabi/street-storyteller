@@ -8,4 +8,8 @@ export type { LintCliOptions, LintCommandOptions } from "./types.ts";
 export { LINT_OPTIONS, parseLintOptions } from "./types.ts";
 
 // コマンド実装の再エクスポート
-export { executeLint, formatLintResult, lintCommandDescriptor } from "./lint.ts";
+export {
+  executeLint,
+  formatLintResult,
+  lintCommandDescriptor,
+} from "./lint.ts";

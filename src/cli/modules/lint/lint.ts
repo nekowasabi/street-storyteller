@@ -86,7 +86,9 @@ function formatCheckResult(result: TextlintCheckResult): void {
     return;
   }
 
-  console.log(`\nFound ${result.totalIssues} issues in ${result.totalFiles} files:`);
+  console.log(
+    `\nFound ${result.totalIssues} issues in ${result.totalFiles} files:`,
+  );
   console.log(`  Errors: ${result.errorCount}`);
   console.log(`  Warnings: ${result.warningCount}`);
   console.log(`  Info: ${result.infoCount}\n`);
@@ -192,7 +194,10 @@ export const lintCommandDescriptor: CommandDescriptor = {
       if (
         result && !Array.isArray(result) && result.errorCount > 0
       ) {
-        return { ok: false, error: { code: "LINT_ERROR", message: "Lint errors found" } };
+        return {
+          ok: false,
+          error: { code: "LINT_ERROR", message: "Lint errors found" },
+        };
       }
 
       return { ok: true, value: result };

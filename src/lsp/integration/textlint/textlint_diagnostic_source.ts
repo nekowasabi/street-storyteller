@@ -51,13 +51,17 @@ export class TextlintDiagnosticSource implements DiagnosticSource {
 
       if (!result.success && Deno.env.get("STORYTELLER_DEBUG")) {
         const stderr = new TextDecoder().decode(result.stderr);
-        console.error(`[TextlintDiagnosticSource] textlint --version failed:\n${stderr}`);
+        console.error(
+          `[TextlintDiagnosticSource] textlint --version failed:\n${stderr}`,
+        );
       }
     } catch (error) {
       this.available = false;
 
       if (Deno.env.get("STORYTELLER_DEBUG")) {
-        console.error(`[TextlintDiagnosticSource] Failed to check textlint availability: ${error}`);
+        console.error(
+          `[TextlintDiagnosticSource] Failed to check textlint availability: ${error}`,
+        );
       }
     }
 

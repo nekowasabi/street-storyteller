@@ -106,7 +106,9 @@ export function parseTextlintOutput(
     // JSON解析エラー
     if (Deno.env.get("STORYTELLER_DEBUG")) {
       console.error(
-        `[TextlintParser] Failed to parse textlint output: ${error}\nOutput: ${output.substring(0, 200)}`
+        `[TextlintParser] Failed to parse textlint output: ${error}\nOutput: ${
+          output.substring(0, 200)
+        }`,
       );
     }
     return { filePath, messages: [] };
