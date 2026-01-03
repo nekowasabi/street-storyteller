@@ -35,8 +35,8 @@ Deno.test("LocalViewServer - HTTPサーバー機能", async (t) => {
     const server = new LocalViewServer();
     server.setContent("<html><body>Test</body></html>");
 
-    // ランダムなポートで起動
-    const port = 48000 + Math.floor(Math.random() * 1000);
+    // より広いポート範囲でランダム選択（衝突回避）
+    const port = 40000 + Math.floor(Math.random() * 5000);
     await server.start(port);
 
     // サーバーが起動していることを確認
@@ -55,7 +55,7 @@ Deno.test("LocalViewServer - HTTPサーバー機能", async (t) => {
     const htmlContent = "<!DOCTYPE html><html><body>Hello World</body></html>";
     server.setContent(htmlContent);
 
-    const port = 48000 + Math.floor(Math.random() * 1000);
+    const port = 42000 + Math.floor(Math.random() * 5000);
     await server.start(port);
 
     try {
@@ -79,7 +79,7 @@ Deno.test("LocalViewServer - HTTPサーバー機能", async (t) => {
     const server = new LocalViewServer();
     server.setContent("<html></html>");
 
-    const port = 48000 + Math.floor(Math.random() * 1000);
+    const port = 43000 + Math.floor(Math.random() * 5000);
     await server.start(port);
 
     try {
@@ -94,8 +94,9 @@ Deno.test("LocalViewServer - HTTPサーバー機能", async (t) => {
 
         ws.onopen = () => {
           clearTimeout(timeout);
+          // oncloseの完了を待つ
+          ws.onclose = () => resolve();
           ws.close();
-          resolve();
         };
 
         ws.onerror = (e) => {
@@ -114,7 +115,7 @@ Deno.test("LocalViewServer - コンテンツ更新", async (t) => {
     const server = new LocalViewServer();
     server.setContent("<html><body>Initial</body></html>");
 
-    const port = 48000 + Math.floor(Math.random() * 1000);
+    const port = 44000 + Math.floor(Math.random() * 5000);
     await server.start(port);
 
     try {
