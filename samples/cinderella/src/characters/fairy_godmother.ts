@@ -13,7 +13,9 @@ export const fairy_godmother: Character = {
     "魔法使い",
     "神秘的",
   ],
-  "relationships": {},
+  "relationships": {
+    "cinderella": "ally",
+  },
   "appearingChapters": [],
   "summary": "シンデレラを助ける魔法使い",
 };

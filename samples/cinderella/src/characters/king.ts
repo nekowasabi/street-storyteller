@@ -12,7 +12,9 @@ export const king: Character = {
     "威厳がある",
     "息子思い",
   ],
-  "relationships": {},
+  "relationships": {
+    "prince": "ally",
+  },
   "appearingChapters": [],
   "summary": "王子の父、威厳ある国王",
 };

@@ -143,6 +143,20 @@ export function buildTimelineGraphFromSummary(
         }
       }
     }
+
+    if (event.causedBy) {
+      for (const sourceId of event.causedBy) {
+        if (eventIds.has(sourceId)) {
+          edges.push({
+            from: sourceId,
+            to: event.id,
+            arrows: "to",
+            color: { color: "#34495e" },
+            width: 2,
+          });
+        }
+      }
+    }
   }
 
   return {
@@ -167,23 +181,85 @@ export function buildForeshadowingGraphFromSummary(
     return { nodes: [], edges: [] };
   }
 
-  const nodes: VisNode[] = foreshadowings.map((f) => ({
-    id: f.id,
-    label: f.name,
-    title: `${f.name}\n${f.summary || ""}\nStatus: ${f.status}`,
-    shape: TYPE_SHAPES[f.type] || "dot",
-    color: {
-      background: STATUS_COLORS[f.status] || "#95a5a6",
-      border: "#2c3e50",
-    },
-  }));
+  const nodes: VisNode[] = [];
+  const edges: VisEdge[] = [];
+  const chapterNodeIds = new Set<string>();
 
-  // ForeshadowingSummaryには relatedForeshadowings がないため、エッジは生成しない
-  // 必要であれば、将来的にForeshadowingSummaryを拡張する
+  // 伏線ノードを作成
+  for (const f of foreshadowings) {
+    nodes.push({
+      id: f.id,
+      label: f.name,
+      title: `${f.name}\n${f.summary || ""}\nStatus: ${f.status}`,
+      shape: TYPE_SHAPES[f.type] || "dot",
+      color: {
+        background: STATUS_COLORS[f.status] || "#95a5a6",
+        border: "#2c3e50",
+      },
+    });
+
+    // 設置チャプターノードを作成
+    if (f.plantingChapter) {
+      const plantingNodeId = `chapter_${f.plantingChapter}`;
+      if (!chapterNodeIds.has(plantingNodeId)) {
+        nodes.push({
+          id: plantingNodeId,
+          label: f.plantingChapter,
+          title: `Chapter: ${f.plantingChapter}`,
+          shape: "box",
+          color: {
+            background: "#ecf0f1",
+            border: "#34495e",
+          },
+        });
+        chapterNodeIds.add(plantingNodeId);
+      }
+
+      // 設置チャプター → 伏線のエッジを作成
+      edges.push({
+        from: plantingNodeId,
+        to: f.id,
+        label: "設置",
+        color: { color: "#f39c12" }, // オレンジ
+        arrows: "to",
+        width: 2,
+      });
+    }
+
+    // 回収チャプターノードと回収エッジを作成
+    for (const resolution of f.resolutions) {
+      if (resolution.chapter) {
+        const resolutionNodeId = `chapter_${resolution.chapter}`;
+        if (!chapterNodeIds.has(resolutionNodeId)) {
+          nodes.push({
+            id: resolutionNodeId,
+            label: resolution.chapter,
+            title: `Chapter: ${resolution.chapter}`,
+            shape: "box",
+            color: {
+              background: "#ecf0f1",
+              border: "#34495e",
+            },
+          });
+          chapterNodeIds.add(resolutionNodeId);
+        }
+
+        // 伏線 → 回収チャプターのエッジを作成
+        edges.push({
+          from: f.id,
+          to: resolutionNodeId,
+          label: `回収 (${Math.round(resolution.completeness * 100)}%)`,
+          color: { color: "#27ae60" }, // 緑
+          arrows: "to",
+          width: 2,
+        });
+      }
+    }
+  }
 
   return {
     nodes,
-    edges: [],
+    edges,
     options: {
       nodes: { font: { size: 12 } },
       edges: { smooth: true },

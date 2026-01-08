@@ -12,7 +12,11 @@ export const stepsister_elder: Character = {
     "傲慢",
     "嫉妬深い",
   ],
-  "relationships": {},
+  "relationships": {
+    "cinderella": "enemy",
+    "stepmother": "ally",
+    "stepsister_younger": "ally",
+  },
   "appearingChapters": [],
   "summary": "傲慢な姉義姉",
 };

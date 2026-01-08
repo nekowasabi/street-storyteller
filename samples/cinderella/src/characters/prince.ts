@@ -13,7 +13,10 @@ export const prince: Character = {
     "優雅",
     "ロマンチスト",
   ],
-  "relationships": {},
+  "relationships": {
+    "cinderella": "romantic",
+    "king": "respect",
+  },
   "appearingChapters": [],
   "summary": "真実の愛を求める王国の王子",
 };

@@ -13,7 +13,11 @@ export const stepmother: Character = {
     "虚栄心が強い",
     "計算高い",
   ],
-  "relationships": {},
+  "relationships": {
+    "cinderella": "enemy",
+    "stepsister_elder": "ally",
+    "stepsister_younger": "ally",
+  },
   "appearingChapters": [],
   "summary": "シンデレラを虐げる冷酷な継母",
 };

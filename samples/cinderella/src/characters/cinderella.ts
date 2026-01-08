@@ -14,7 +14,13 @@ export const cinderella: Character = {
     "美しい",
     "夢見がち",
   ],
-  "relationships": {},
+  "relationships": {
+    "stepmother": "enemy",
+    "stepsister_elder": "enemy",
+    "stepsister_younger": "enemy",
+    "fairy_godmother": "ally",
+    "prince": "romantic",
+  },
   "appearingChapters": [],
   "summary": "継母にいじめられながらも優しさを失わない少女",
   "details": {

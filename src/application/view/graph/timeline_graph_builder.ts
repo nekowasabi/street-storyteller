@@ -70,7 +70,7 @@ export class TimelineGraphBuilder
 
   /**
    * イベント間の因果関係からエッジを構築する
-   * causesプロパティから順方向のエッジを生成
+   * causesプロパティと causedByプロパティからエッジを生成
    */
   private buildEdges(events: readonly TimelineEvent[]): readonly VisEdge[] {
     const edges: VisEdge[] = [];
@@ -84,6 +84,21 @@ export class TimelineGraphBuilder
             edges.push({
               from: event.id,
               to: targetId,
+              arrows: "to",
+              color: { color: "#34495e" },
+              width: 2,
+            });
+          }
+        }
+      }
+
+      // causedByから逆方向エッジを生成
+      if (event.causedBy) {
+        for (const sourceId of event.causedBy) {
+          if (eventIds.has(sourceId)) {
+            edges.push({
+              from: sourceId,
+              to: event.id,
               arrows: "to",
               color: { color: "#34495e" },
               width: 2,

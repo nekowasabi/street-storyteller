@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Story Project Overview</title>
+  <link rel="stylesheet" href="https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.css">
+  <script src="https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.js"></script>
   <style>
 
     :root {
@@ -470,6 +472,127 @@
       font-size: 0.9rem;
     }
 
+
+    /* Graph Styles */
+    .graphs {
+      margin-bottom: 2rem;
+    }
+
+    .graph-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .graph-panel {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .graph-panel h3 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      font-size: 1.1rem;
+    }
+
+    .graph-canvas {
+      width: 100%;
+      height: 400px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: #fafafa;
+    }
+
+    /* グラフのノードホバー時のカーソル */
+    .graph-canvas canvas {
+      cursor: pointer;
+    }
+
+
+    /* Consistency Check Styles */
+    .consistency-ok {
+      color: #27ae60;
+      font-weight: bold;
+      padding: 1rem;
+      background: #e8f5e9;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .issue-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .issue-item {
+      background: var(--card-background);
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .issue-warning {
+      border-left: 4px solid #f39c12;
+    }
+
+    .issue-error {
+      border-left: 4px solid #e74c3c;
+    }
+
+    .issue-info {
+      border-left: 4px solid #3498db;
+    }
+
+    .issue-header {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .issue-severity {
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .severity-warning {
+      background: #f39c12;
+      color: white;
+    }
+
+    .severity-error {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .severity-info {
+      background: #3498db;
+      color: white;
+    }
+
+    .issue-type {
+      background: var(--border-color);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .issue-message {
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
+    }
+
+    .issue-suggestion {
+      color: #666;
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
   </style>
 </head>
 <body>
@@ -479,6 +602,27 @@
     </header>
 
     <main>
+      <section class="graphs">
+        <h2>Visualizations</h2>
+        <div class="graph-container">
+          
+      <div class="graph-panel">
+        <h3>Character Relationships</h3>
+        <div id="character-graph" class="graph-canvas"></div>
+      </div>
+          
+      <div class="graph-panel">
+        <h3>Timeline Causality</h3>
+        <div id="timeline-graph" class="graph-canvas"></div>
+      </div>
+          
+      <div class="graph-panel">
+        <h3>Foreshadowing Flow</h3>
+        <div id="foreshadowing-graph" class="graph-canvas"></div>
+      </div>
+        </div>
+      </section>
+
       <section class="characters">
         <h2>Characters</h2>
         <div class="card-grid">
@@ -730,7 +874,7 @@
           <p class="summary">妖精の魔法で作られた特別な靴。持ち主を証明する鍵。</p>
           <div class="display-names">
             <span class="label">Names:</span>
-            <span class="tag">ガラスの靴</span> <span class="tag">靴</span>
+            <span class="tag">ガラスの靴</span>
           </div>
           <div class="file-path">
             <code>src/settings/glass_slipper.ts</code>
@@ -740,7 +884,202 @@
 
       <section class="timelines">
         <h2>Timelines</h2>
-        <p class="empty">No timelines found.</p>
+        <div class="timeline-list">
+        <div class="card timeline-card">
+          <h3>シンデレラ物語タイムライン</h3>
+          <div class="meta">
+            <span class="scope">story</span>
+            <span class="id">main_story</span>
+          </div>
+          
+          
+          <p class="summary">シンデレラの物語全体の時系列</p>
+          <div class="timeline-events event-list">
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">1</span>
+          <span class="event-title">実母の死</span>
+          <span class="event-category">backstory</span>
+        </div>
+        <div class="event-summary">シンデレラの実母が亡くなる</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
+        
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">2</span>
+          <span class="event-title">父の再婚</span>
+          <span class="event-category">backstory</span>
+        </div>
+        <div class="event-summary">父が継母と再婚し、義姉たちが家に来る</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">stepmother</span> <span class="ref character">stepsister_elder</span> <span class="ref character">stepsister_younger</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
+        
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_mother_death</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">3</span>
+          <span class="event-title">父の死</span>
+          <span class="event-category">backstory</span>
+        </div>
+        <div class="event-summary">父が亡くなり、シンデレラは継母のもとに残される</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">stepmother</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
+        
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_remarriage</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">4</span>
+          <span class="event-title">継母による虐待開始</span>
+          <span class="event-category">character_event</span>
+        </div>
+        <div class="event-summary">継母による使用人扱い・虐待が始まる</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">stepmother</span> <span class="ref character">stepsister_elder</span> <span class="ref character">stepsister_younger</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_01</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_father_death</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">5</span>
+          <span class="event-title">舞踏会の告知</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">王子の花嫁探しの舞踏会が告知される</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">prince</span> <span class="ref character">king</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">kingdom</span> <span class="ref setting">castle</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_01</span></div>
+        
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">6</span>
+          <span class="event-title">妖精登場</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">シンデレラの前にフェアリーゴッドマザーが現れる</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">fairy_godmother</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_02</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_mistreatment</span> <span class="ref causality">event_ball_announcement</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">7</span>
+          <span class="event-title">魔法による変身</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">魔法でドレスとガラスの靴を与えられる</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">fairy_godmother</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_02</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_fairy_appears</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">8</span>
+          <span class="event-title">王子との踊り</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">舞踏会で王子とシンデレラが踊り、惹かれ合う</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">prince</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">castle</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_03</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_transformation</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">9</span>
+          <span class="event-title">真夜中の逃走</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">12時の鐘が鳴り、魔法が解ける前に逃げ出す</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">prince</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">castle</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_03</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_ball_dance</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">10</span>
+          <span class="event-title">ガラスの靴を落とす</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">階段でガラスの靴を落としていく</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">castle</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_04</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_midnight_escape</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">11</span>
+          <span class="event-title">王子の捜索</span>
+          <span class="event-category">plot_point</span>
+        </div>
+        <div class="event-summary">王子がガラスの靴に合う娘を探して国中を回る</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">prince</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">kingdom</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_05</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_glass_slipper_left</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">12</span>
+          <span class="event-title">ガラスの靴が合う</span>
+          <span class="event-category">climax</span>
+        </div>
+        <div class="event-summary">シンデレラの足にガラスの靴がぴったり合う</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">prince</span> <span class="ref character">stepmother</span> <span class="ref character">stepsister_elder</span> <span class="ref character">stepsister_younger</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_05</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_prince_search</span></div>
+        
+      </div>
+
+      <div class="event-item">
+        <div class="event-header">
+          <span class="event-order">13</span>
+          <span class="event-title">結婚・ハッピーエンド</span>
+          <span class="event-category">resolution</span>
+        </div>
+        <div class="event-summary">王子とシンデレラが結婚し、幸せに暮らす</div>
+        <div class="event-refs"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">prince</span></div>
+        <div class="event-refs"><span class="label">Settings:</span> <span class="ref setting">castle</span> <span class="ref setting">kingdom</span></div>
+        <div class="event-refs"><span class="label">Chapters:</span> <span class="ref chapter">chapter_06</span></div>
+        <div class="event-causality caused-by"><span class="label">Caused by:</span> <span class="ref causality">event_slipper_fits</span></div>
+        
+      </div></div>
+          <div class="file-path">
+            <code>src/timelines/main_story_timeline.ts</code>
+          </div>
+        </div></div>
       </section>
 
       <section class="foreshadowings">
@@ -748,76 +1087,91 @@
         
         <div class="foreshadowing-stats">
           <span class="stat">Total: <strong>3</strong></span>
-          <span class="stat">Planted: <strong>3</strong></span>
-          <span class="stat">Resolved: <strong>0</strong></span>
-          <span class="stat">Resolution Rate: <strong>0%</strong></span>
+          <span class="stat">Planted: <strong>0</strong></span>
+          <span class="stat">Resolved: <strong>3</strong></span>
+          <span class="stat">Resolution Rate: <strong>100%</strong></span>
         </div><div class="card-grid">
-        <div class="card foreshadowing-card status-planted">
-          <h3>ガラスの靴の伏線</h3>
+        <div class="card foreshadowing-card status-resolved">
+          <h3>シンデレラの優しさ</h3>
           <div class="meta">
-            <span class="type">chekhov</span>
-            <span class="status">planted</span>
-            <span class="importance">major</span>
-            <span class="id">ガラスの靴の伏線</span>
+            <span class="type">symbol</span>
+            <span class="status">resolved</span>
+            <span class="importance">minor</span>
+            <span class="id">kind_heart</span>
           </div>
-          <p class="summary">ガラスの靴の伏線の概要（要追加）</p>
-          <div class="planting-info">
-            <span class="label">Planted:</span> chapter_02
-          </div>
-          
-          
-      <div class="related-entities">
-        <div class="related-characters"><span class="label">Characters:</span> <span class="ref character">fairy_godmother</span> <span class="ref character">cinderella</span></div>
-        <div class="related-settings"><span class="label">Settings:</span> <span class="ref setting">glass_slipper</span></div>
-      </div>
-          <div class="file-path">
-            <code>src/foreshadowings/ガラスの靴の伏線.ts</code>
-          </div>
-        </div>
-
-        <div class="card foreshadowing-card status-planted">
-          <h3>継母の嫉妬の理由</h3>
-          <div class="meta">
-            <span class="type">mystery</span>
-            <span class="status">planted</span>
-            
-            <span class="id">継母の嫉妬の理由</span>
-          </div>
-          <p class="summary">継母の嫉妬の理由の概要（要追加）</p>
+          <p class="summary">虐待されても優しさを失わないシンデレラの美徳。最終的に幸せを掴む資格の象徴</p>
           <div class="planting-info">
             <span class="label">Planted:</span> chapter_01
           </div>
-          
+          <div class="resolution-info">
+      <div class="resolution-item">
+        <span class="chapter">chapter_06</span>
+        <span class="description">優しい心を持ち続けたシンデレラが王子と結ばれ、幸せを掴む</span>
+        <span class="completeness">100%</span>
+      </div></div>
           
       <div class="related-entities">
-        <div class="related-characters"><span class="label">Characters:</span> <span class="ref character">stepmother</span> <span class="ref character">cinderella</span></div>
+        <div class="related-characters"><span class="label">Characters:</span> <span class="ref character">cinderella</span></div>
         <div class="related-settings"><span class="label">Settings:</span> <span class="ref setting">mansion</span></div>
       </div>
           <div class="file-path">
-            <code>src/foreshadowings/継母の嫉妬の理由.ts</code>
+            <code>src/foreshadowings/kind_heart.ts</code>
           </div>
         </div>
 
-        <div class="card foreshadowing-card status-planted">
+        <div class="card foreshadowing-card status-resolved">
           <h3>真夜中の期限</h3>
           <div class="meta">
             <span class="type">prophecy</span>
-            <span class="status">planted</span>
+            <span class="status">resolved</span>
             <span class="importance">major</span>
-            <span class="id">真夜中の期限</span>
+            <span class="id">midnight_deadline</span>
           </div>
-          <p class="summary">真夜中の期限の概要（要追加）</p>
+          <p class="summary">12時で魔法が解けるという制約。緊張感を生み、逃走の原因となる</p>
           <div class="planting-info">
             <span class="label">Planted:</span> chapter_02
           </div>
-          
+          <div class="resolution-info">
+      <div class="resolution-item">
+        <span class="chapter">chapter_03</span>
+        <span class="description">12時の鐘が鳴り、シンデレラは慌てて逃げ出す</span>
+        <span class="completeness">100%</span>
+      </div></div>
           
       <div class="related-entities">
-        <div class="related-characters"><span class="label">Characters:</span> <span class="ref character">fairy_godmother</span> <span class="ref character">cinderella</span></div>
-        <div class="related-settings"><span class="label">Settings:</span> <span class="ref setting">magic_system</span></div>
+        <div class="related-characters"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">fairy_godmother</span></div>
+        <div class="related-settings"><span class="label">Settings:</span> <span class="ref setting">castle</span></div>
       </div>
           <div class="file-path">
-            <code>src/foreshadowings/真夜中の期限.ts</code>
+            <code>src/foreshadowings/midnight_deadline.ts</code>
+          </div>
+        </div>
+
+        <div class="card foreshadowing-card status-resolved">
+          <h3>ガラスの靴</h3>
+          <div class="meta">
+            <span class="type">chekhov</span>
+            <span class="status">resolved</span>
+            <span class="importance">major</span>
+            <span class="id">glass_slipper</span>
+          </div>
+          <p class="summary">魔法で与えられた特別な靴。後にシンデレラを見つける決め手となる</p>
+          <div class="planting-info">
+            <span class="label">Planted:</span> chapter_02
+          </div>
+          <div class="resolution-info">
+      <div class="resolution-item">
+        <span class="chapter">chapter_05</span>
+        <span class="description">シンデレラの足にガラスの靴がぴったり合い、正体が判明する</span>
+        <span class="completeness">100%</span>
+      </div></div>
+          
+      <div class="related-entities">
+        <div class="related-characters"><span class="label">Characters:</span> <span class="ref character">cinderella</span> <span class="ref character">fairy_godmother</span> <span class="ref character">prince</span></div>
+        <div class="related-settings"><span class="label">Settings:</span> <span class="ref setting">castle</span> <span class="ref setting">mansion</span></div>
+      </div>
+          <div class="file-path">
+            <code>src/foreshadowings/glass_slipper.ts</code>
           </div>
         </div></div>
       </section>
@@ -832,7 +1186,7 @@
           </div>
           <div class="references">
             <span class="label">References:</span>
-            <span class="ref character">stepsister_younger (2)</span> <span class="ref character">stepsister_elder (2)</span> <span class="ref character">cinderella (10)</span> <span class="ref character">prince (6)</span> <span class="ref character">king (2)</span> <span class="ref character">stepmother (8)</span> <span class="ref setting">kingdom (3)</span> <span class="ref setting">mansion (2)</span> <span class="ref setting">castle (4)</span> <span class="ref setting">glass_slipper (15)</span> <span class="ref foreshadowing planted">ガラスの靴の伏線 (4)</span>
+            <span class="ref character">stepsister_younger (2)</span> <span class="ref character">stepsister_elder (2)</span> <span class="ref character">cinderella (10)</span> <span class="ref character">prince (6)</span> <span class="ref character">king (2)</span> <span class="ref character">stepmother (8)</span> <span class="ref setting">kingdom (3)</span> <span class="ref setting">mansion (2)</span> <span class="ref setting">castle (4)</span> <span class="ref setting">glass_slipper (8)</span> <span class="ref foreshadowing resolved">glass_slipper (8)</span>
           </div>
         </div>
 
@@ -843,7 +1197,7 @@
           </div>
           <div class="references">
             <span class="label">References:</span>
-            <span class="ref character">stepsister_younger (2)</span> <span class="ref character">stepsister_elder (2)</span> <span class="ref character">fairy_godmother (6)</span> <span class="ref character">cinderella (6)</span> <span class="ref character">prince (2)</span> <span class="ref character">stepmother (4)</span> <span class="ref setting">kingdom (1)</span> <span class="ref setting">mansion (2)</span> <span class="ref setting">magic_system (5)</span> <span class="ref setting">glass_slipper (4)</span> <span class="ref foreshadowing planted">ガラスの靴の伏線 (1)</span> <span class="ref foreshadowing planted">真夜中の期限 (3)</span>
+            <span class="ref character">stepsister_younger (2)</span> <span class="ref character">stepsister_elder (2)</span> <span class="ref character">fairy_godmother (6)</span> <span class="ref character">cinderella (6)</span> <span class="ref character">prince (2)</span> <span class="ref character">stepmother (4)</span> <span class="ref setting">kingdom (1)</span> <span class="ref setting">mansion (2)</span> <span class="ref setting">magic_system (5)</span> <span class="ref setting">glass_slipper (4)</span> <span class="ref foreshadowing resolved">midnight_deadline (2)</span> <span class="ref foreshadowing resolved">glass_slipper (4)</span>
           </div>
         </div>
 
@@ -854,7 +1208,7 @@
           </div>
           <div class="references">
             <span class="label">References:</span>
-            <span class="ref character">fairy_godmother (2)</span> <span class="ref character">cinderella (12)</span> <span class="ref character">prince (6)</span> <span class="ref setting">castle (4)</span> <span class="ref setting">magic_system (6)</span> <span class="ref setting">glass_slipper (9)</span> <span class="ref foreshadowing planted">ガラスの靴の伏線 (3)</span> <span class="ref foreshadowing planted">真夜中の期限 (2)</span>
+            <span class="ref character">fairy_godmother (2)</span> <span class="ref character">cinderella (12)</span> <span class="ref character">prince (6)</span> <span class="ref setting">castle (4)</span> <span class="ref setting">magic_system (6)</span> <span class="ref setting">glass_slipper (6)</span> <span class="ref foreshadowing resolved">glass_slipper (6)</span>
           </div>
         </div>
 
@@ -869,11 +1223,89 @@
           </div>
         </div></div>
       </section>
+
+      <section class="consistency">
+        <h2>整合性チェック</h2>
+        <div class="issue-list">
+      <div class="issue-item issue-warning">
+        <div class="issue-header">
+          <span class="issue-severity severity-warning">warning</span>
+          <span class="issue-type">orphan_character</span>
+        </div>
+        <p class="issue-message">キャラクター &#039;太郎&#039; (taro) は他のキャラクターと関係がありません</p>
+        <p class="issue-suggestion">他のキャラクターとの関係性を追加してください</p>
+      </div>
+
+      <div class="issue-item issue-warning">
+        <div class="issue-header">
+          <span class="issue-severity severity-warning">warning</span>
+          <span class="issue-type">orphan_character</span>
+        </div>
+        <p class="issue-message">キャラクター &#039;次郎&#039; (jiro) は他のキャラクターと関係がありません</p>
+        <p class="issue-suggestion">他のキャラクターとの関係性を追加してください</p>
+      </div>
+
+      <div class="issue-item issue-warning">
+        <div class="issue-header">
+          <span class="issue-severity severity-warning">warning</span>
+          <span class="issue-type">orphan_character</span>
+        </div>
+        <p class="issue-message">キャラクター &#039;John&#039; (john) は他のキャラクターと関係がありません</p>
+        <p class="issue-suggestion">他のキャラクターとの関係性を追加してください</p>
+      </div>
+
+      <div class="issue-item issue-warning">
+        <div class="issue-header">
+          <span class="issue-severity severity-warning">warning</span>
+          <span class="issue-type">orphan_character</span>
+        </div>
+        <p class="issue-message">キャラクター &#039;The protagonist of our story&#039; (main_character) は他のキャラクターと関係がありません</p>
+        <p class="issue-suggestion">他のキャラクターとの関係性を追加してください</p>
+      </div></div>
+      </section>
     </main>
 
     <footer>
       <p>Generated by storyteller</p>
     </footer>
   </div>
+  
+  <script>
+    // グラフ初期化
+    document.addEventListener('DOMContentLoaded', function() {
+      // キャラクター関係グラフ
+      const characterContainer = document.getElementById('character-graph');
+      if (characterContainer) {
+        const characterData = {"nodes":[{"id":"stepsister_younger","label":"アナスタシア","group":"supporting","title":"アナスタシア\nわがままな妹義姉"},{"id":"taro","label":"太郎","group":"protagonist","title":"太郎\n主人公の少年"},{"id":"stepsister_elder","label":"ドリゼラ","group":"supporting","title":"ドリゼラ\n傲慢な姉義姉"},{"id":"jiro","label":"次郎","group":"supporting","title":"次郎\n太郎の弟"},{"id":"fairy_godmother","label":"妖精のおばあさん","group":"supporting","title":"妖精のおばあさん\nシンデレラを助ける魔法使い"},{"id":"john","label":"John","group":"supporting","title":"John\nJohnという名前の登場人物"},{"id":"cinderella","label":"シンデレラ","group":"protagonist","title":"シンデレラ\n継母にいじめられながらも優しさを失わない少女"},{"id":"prince","label":"王子","group":"protagonist","title":"王子\n真実の愛を求める王国の王子"},{"id":"king","label":"国王","group":"guest","title":"国王\n王子の父、威厳ある国王"},{"id":"stepmother","label":"継母","group":"antagonist","title":"継母\nシンデレラを虐げる冷酷な継母"},{"id":"main_character","label":"The protagonist of our story","group":"protagonist","title":"The protagonist of our story\nTemplate character"}],"edges":[{"from":"stepsister_younger","to":"cinderella","label":"enemy","color":{"color":"#e74c3c"},"width":2},{"from":"stepsister_younger","to":"stepmother","label":"ally","color":{"color":"#27ae60"},"width":2},{"from":"stepsister_younger","to":"stepsister_elder","label":"ally","color":{"color":"#27ae60"},"width":2},{"from":"stepsister_elder","to":"cinderella","label":"enemy","color":{"color":"#e74c3c"},"width":2},{"from":"stepsister_elder","to":"stepmother","label":"ally","color":{"color":"#27ae60"},"width":2},{"from":"fairy_godmother","to":"cinderella","label":"ally","color":{"color":"#27ae60"},"width":2},{"from":"cinderella","to":"stepmother","label":"enemy","color":{"color":"#e74c3c"},"width":2},{"from":"cinderella","to":"prince","label":"romantic","color":{"color":"#e91e63"},"width":2},{"from":"prince","to":"king","label":"respect","color":{"color":"#3498db"},"width":2}],"options":{"nodes":{"shape":"dot","font":{"size":14}},"edges":{"smooth":{"type":"curvedCW"}},"physics":{"stabilization":{"iterations":100}},"interaction":{"hover":true,"tooltipDelay":200}}};
+        const characterNetwork = new vis.Network(
+          characterContainer,
+          { nodes: new vis.DataSet(characterData.nodes), edges: new vis.DataSet(characterData.edges) },
+          characterData.options || {}
+        );
+      }
+
+      // タイムライン因果グラフ
+      const timelineContainer = document.getElementById('timeline-graph');
+      if (timelineContainer) {
+        const timelineData = {"nodes":[{"id":"event_mother_death","label":"実母の死","title":"実母の死\nシンデレラの実母が亡くなる\nOrder: 1","group":"backstory","color":{"background":"#95a5a6","border":"#2c3e50"}},{"id":"event_remarriage","label":"父の再婚","title":"父の再婚\n父が継母と再婚し、義姉たちが家に来る\nOrder: 2","group":"backstory","color":{"background":"#95a5a6","border":"#2c3e50"}},{"id":"event_father_death","label":"父の死","title":"父の死\n父が亡くなり、シンデレラは継母のもとに残される\nOrder: 3","group":"backstory","color":{"background":"#95a5a6","border":"#2c3e50"}},{"id":"event_mistreatment","label":"継母による虐待開始","title":"継母による虐待開始\n継母による使用人扱い・虐待が始まる\nOrder: 4","group":"character_event","color":{"background":"#27ae60","border":"#2c3e50"}},{"id":"event_ball_announcement","label":"舞踏会の告知","title":"舞踏会の告知\n王子の花嫁探しの舞踏会が告知される\nOrder: 5","group":"plot_point","color":{"background":"#3498db","border":"#2c3e50"}},{"id":"event_fairy_appears","label":"妖精登場","title":"妖精登場\nシンデレラの前にフェアリーゴッドマザーが現れる\nOrder: 6","group":"plot_point","color":{"background":"#3498db","border":"#2c3e50"}},{"id":"event_transformation","label":"魔法による変身","title":"魔法による変身\n魔法でドレスとガラスの靴を与えられる\nOrder: 7","group":"plot_point","color":{"background":"#3498db","border":"#2c3e50"}},{"id":"event_ball_dance","label":"王子との踊り","title":"王子との踊り\n舞踏会で王子とシンデレラが踊り、惹かれ合う\nOrder: 8","group":"plot_point","color":{"background":"#3498db","border":"#2c3e50"}},{"id":"event_midnight_escape","label":"真夜中の逃走","title":"真夜中の逃走\n12時の鐘が鳴り、魔法が解ける前に逃げ出す\nOrder: 9","group":"plot_point","color":{"background":"#3498db","border":"#2c3e50"}},{"id":"event_glass_slipper_left","label":"ガラスの靴を落とす","title":"ガラスの靴を落とす\n階段でガラスの靴を落としていく\nOrder: 10","group":"plot_point","color":{"background":"#3498db","border":"#2c3e50"}},{"id":"event_prince_search","label":"王子の捜索","title":"王子の捜索\n王子がガラスの靴に合う娘を探して国中を回る\nOrder: 11","group":"plot_point","color":{"background":"#3498db","border":"#2c3e50"}},{"id":"event_slipper_fits","label":"ガラスの靴が合う","title":"ガラスの靴が合う\nシンデレラの足にガラスの靴がぴったり合う\nOrder: 12","group":"climax","color":{"background":"#e74c3c","border":"#2c3e50"}},{"id":"event_happy_ending","label":"結婚・ハッピーエンド","title":"結婚・ハッピーエンド\n王子とシンデレラが結婚し、幸せに暮らす\nOrder: 13","group":"resolution","color":{"background":"#1abc9c","border":"#2c3e50"}}],"edges":[{"from":"event_mother_death","to":"event_remarriage","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_remarriage","to":"event_father_death","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_father_death","to":"event_mistreatment","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_mistreatment","to":"event_fairy_appears","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_ball_announcement","to":"event_fairy_appears","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_fairy_appears","to":"event_transformation","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_transformation","to":"event_ball_dance","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_ball_dance","to":"event_midnight_escape","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_midnight_escape","to":"event_glass_slipper_left","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_glass_slipper_left","to":"event_prince_search","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_prince_search","to":"event_slipper_fits","arrows":"to","color":{"color":"#34495e"},"width":2},{"from":"event_slipper_fits","to":"event_happy_ending","arrows":"to","color":{"color":"#34495e"},"width":2}],"options":{"nodes":{"shape":"box","font":{"size":12}},"edges":{"smooth":{"type":"cubicBezier"}},"physics":{"enabled":true},"interaction":{"hover":true}}};
+        const timelineNetwork = new vis.Network(
+          timelineContainer,
+          { nodes: new vis.DataSet(timelineData.nodes), edges: new vis.DataSet(timelineData.edges) },
+          timelineData.options || {}
+        );
+      }
+
+      // 伏線フローグラフ
+      const foreshadowingContainer = document.getElementById('foreshadowing-graph');
+      if (foreshadowingContainer) {
+        const foreshadowingData = {"nodes":[{"id":"kind_heart","label":"シンデレラの優しさ","title":"シンデレラの優しさ\n虐待されても優しさを失わないシンデレラの美徳。最終的に幸せを掴む資格の象徴\nStatus: resolved","shape":"ellipse","color":{"background":"#27ae60","border":"#2c3e50"}},{"id":"chapter_chapter_01","label":"chapter_01","title":"Chapter: chapter_01","shape":"box","color":{"background":"#ecf0f1","border":"#34495e"}},{"id":"chapter_chapter_06","label":"chapter_06","title":"Chapter: chapter_06","shape":"box","color":{"background":"#ecf0f1","border":"#34495e"}},{"id":"midnight_deadline","label":"真夜中の期限","title":"真夜中の期限\n12時で魔法が解けるという制約。緊張感を生み、逃走の原因となる\nStatus: resolved","shape":"star","color":{"background":"#27ae60","border":"#2c3e50"}},{"id":"chapter_chapter_02","label":"chapter_02","title":"Chapter: chapter_02","shape":"box","color":{"background":"#ecf0f1","border":"#34495e"}},{"id":"chapter_chapter_03","label":"chapter_03","title":"Chapter: chapter_03","shape":"box","color":{"background":"#ecf0f1","border":"#34495e"}},{"id":"glass_slipper","label":"ガラスの靴","title":"ガラスの靴\n魔法で与えられた特別な靴。後にシンデレラを見つける決め手となる\nStatus: resolved","shape":"diamond","color":{"background":"#27ae60","border":"#2c3e50"}},{"id":"chapter_chapter_05","label":"chapter_05","title":"Chapter: chapter_05","shape":"box","color":{"background":"#ecf0f1","border":"#34495e"}}],"edges":[{"from":"chapter_chapter_01","to":"kind_heart","label":"設置","color":{"color":"#f39c12"},"arrows":"to","width":2},{"from":"kind_heart","to":"chapter_chapter_06","label":"回収 (100%)","color":{"color":"#27ae60"},"arrows":"to","width":2},{"from":"chapter_chapter_02","to":"midnight_deadline","label":"設置","color":{"color":"#f39c12"},"arrows":"to","width":2},{"from":"midnight_deadline","to":"chapter_chapter_03","label":"回収 (100%)","color":{"color":"#27ae60"},"arrows":"to","width":2},{"from":"chapter_chapter_02","to":"glass_slipper","label":"設置","color":{"color":"#f39c12"},"arrows":"to","width":2},{"from":"glass_slipper","to":"chapter_chapter_05","label":"回収 (100%)","color":{"color":"#27ae60"},"arrows":"to","width":2}],"options":{"nodes":{"font":{"size":12}},"edges":{"smooth":true},"physics":{"enabled":true},"interaction":{"hover":true}}};
+        const foreshadowingNetwork = new vis.Network(
+          foreshadowingContainer,
+          { nodes: new vis.DataSet(foreshadowingData.nodes), edges: new vis.DataSet(foreshadowingData.edges) },
+          foreshadowingData.options || {}
+        );
+      }
+    });
+  </script>
 </body>
 </html>
