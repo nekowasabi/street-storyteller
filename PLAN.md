@@ -1,51 +1,51 @@
 ---
-mission_id: textlint-storyteller-integration
-title: "textlint-storyteller統合: LSP/CLI/MCP統合によるバックグラウンドlint"
-status: nearly_complete
-progress: 95
-phase: documentation
+mission_id: html-visualization-enhancement
+title: "HTML可視化機能拡張 - グラフ可視化と整合性チェック"
+status: planning
+progress: 0
+phase: planning
 tdd_mode: true
 blockers: 0
-created_at: "2026-01-02"
-updated_at: "2026-01-02"
-remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
+created_at: "2026-01-09"
+updated_at: "2026-01-09"
 ---
 
 # Commander's Intent
 
 ## Purpose
 
-- textlintをNeovimで使用する際のUIブロッキング問題を解消する
-- storytellerのエンティティ検証とtextlintの文法チェックを統合する
-- DiagnosticSource抽象化により、将来の拡張（vale等）を容易にする
+- storyteller view
+  browserコマンドのHTML出力を強化し、物語要素間の関係性をビジュアル化する
+- 作者が物語構造を俯瞰的に把握できるようにする
+- 整合性チェック機能により、構造的な問題を早期に発見できるようにする
 
 ## End State
 
-- storyteller LSP内でtextlintがバックグラウンド実行され、診断が統合表示される
-- `storyteller lint`コマンドでCLIからも実行可能
-- MCPツール: textlintの `--mcp`
-  ネイティブサポートを活用（storytellerで独自実装不要）
-- Git pre-commitフックで自動検証が可能
+- vis.jsを使用したインタラクティブなグラフ表示が動作している
+- キャラクター関係図、タイムライン因果図、伏線フロー図が表示される
+- 整合性チェック結果がHTML内に表示される
+- 既存のHTMLセクションと統合されている
 
 ## Key Tasks
 
-- DiagnosticSource抽象化による拡張可能な診断基盤
-- TextlintWorkerによるデバウンス・キャンセル付きバックグラウンド実行
-- CLIコマンド `storyteller lint` の実装
-- MCPツール: textlint v14.8.0+ の `--mcp` 機能を活用（独自実装不要）
-- Git hooks統合
+- vis.js CDN統合とグラフ描画基盤の構築
+- キャラクター関係グラフの実装
+- タイムライン因果関係グラフの実装
+- 伏線設置・回収フローグラフの実装
+- 整合性チェックエンジンの実装
+- HTML統合とUI/UX改善
 
 ## Constraints
 
-- 既存のstoryteller診断機能を壊さない（後方互換性）
-- textlint未インストール環境でもエラーにならない（グレースフルデグラデーション）
-- UIをブロッキングしない（非同期・バックグラウンド実行）
+- 外部ライブラリはCDNから読み込む（ビルド複雑化を避ける）
+- スタンドアロンHTML（インターネット接続時のみグラフ表示）
+- 既存のHtmlGenerator APIを破壊しない
 
 ## Restraints
 
-- TDD（テスト駆動開発）を厳守
-- 既存のコードパターン（CommandDescriptor、McpToolDefinition）に従う
-- Deno標準APIを使用（Deno.Command等）
+- TDD（テスト駆動開発）を厳守すること
+- vis.jsを使用すること
+- 既存テストが全て通過すること
 
 ---
 
@@ -53,9 +53,10 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
 
 ## 概要
 
-- storyteller LSP内でtextlintをバックグラウンドで実行し、エンティティ診断と統合
-- `storyteller lint`コマンドで原稿の文法チェックを実行
-- Claude Desktopからはtextlint --mcp（ネイティブMCPサーバー）を使用
+- storyteller view
+  browserコマンドが生成するHTMLに、グラフ可視化と整合性チェック機能を追加
+- 作者は物語の構造（キャラクター関係、イベント因果、伏線フロー）を視覚的に確認可能
+- 不整合（孤立キャラクター、循環因果、未回収伏線など）を自動検出
 
 ## 必須のルール
 
@@ -65,7 +66,7 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
   - 実装コードを書く前に、失敗するテストを先に作成する
   - テストが通過するまで修正とテスト実行を繰り返す
   - プロセス完了の条件：該当するすべてのテスト、フォーマッタ、Linterが通過していること
-  - プロセス完了後、チェックボックスを✅に変更すること
+  - プロセス完了後、チェックボックスを更新すること
 - **各Process開始時のブリーフィング実行**
   - 各Processの「Briefing」セクションは自動生成される
   - `@process-briefing`
@@ -78,1783 +79,1692 @@ remaining_tasks: "docs/lint.md作成、実装ファイルのコミット"
 
 ## 開発のゴール
 
-- UIブロッキングのないtextlint統合
-- 複数診断ソースの統合表示
-- CLI/LSPの一貫したインターフェース（MCPはtextlint --mcp で代替）
+- インタラクティブなグラフ表示により、物語構造の視覚的理解を実現
+- 自動整合性チェックにより、構造的問題の早期発見を実現
 
 ---
 
 # References
 
-| @ref                                            | @target                                                    | @test                                                             |
-| ----------------------------------------------- | ---------------------------------------------------------- | ----------------------------------------------------------------- |
-| SPEC.md                                         | 要件定義書                                                 | -                                                                 |
-| src/lsp/diagnostics/diagnostics_generator.ts    | src/lsp/diagnostics/diagnostic_source.ts                   | tests/lsp/diagnostics/diagnostic_source_test.ts                   |
-| src/lsp/diagnostics/diagnostics_publisher.ts    | src/lsp/diagnostics/diagnostic_aggregator.ts               | tests/lsp/diagnostics/diagnostic_aggregator_test.ts               |
-| src/lsp/server/server.ts:871-882                | server.ts (Aggregator統合)                                 | tests/lsp/integration/textlint_integration_test.ts                |
-| -                                               | src/lsp/integration/textlint/textlint_worker.ts            | tests/lsp/integration/textlint/textlint_worker_test.ts            |
-| -                                               | src/lsp/integration/textlint/textlint_config.ts            | tests/lsp/integration/textlint/textlint_config_test.ts            |
-| -                                               | src/lsp/integration/textlint/textlint_parser.ts            | tests/lsp/integration/textlint/textlint_parser_test.ts            |
-| -                                               | src/lsp/integration/textlint/textlint_diagnostic_source.ts | tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts |
-| -                                               | src/shared/textlint/types.ts                               | -                                                                 |
-| -                                               | src/shared/textlint/runner.ts                              | tests/shared/textlint/runner_test.ts                              |
-| -                                               | src/shared/textlint/parser.ts                              | tests/shared/textlint/parser_test.ts                              |
-| src/cli/modules/rag/install_hooks.ts            | src/cli/modules/lint/lint.ts                               | tests/cli/modules/lint/lint_test.ts                               |
-| src/cli/modules/rag/install_hooks.ts            | src/cli/modules/lint/install_hooks.ts                      | tests/cli/modules/lint/install_hooks_test.ts                      |
-| src/cli/modules/index.ts                        | src/cli/modules/lint/index.ts                              | -                                                                 |
-| ~~src/mcp/tools/definitions/textlint_check.ts~~ | [SKIPPED] textlint --mcp で代替                            | -                                                                 |
-| ~~src/mcp/tools/definitions/textlint_fix.ts~~   | [SKIPPED] textlint --mcp で代替                            | -                                                                 |
-| -                                               | docs/lint.md                                               | -                                                                 |
+| @ref                                     | @target                                                   | @test                                                            |
+| ---------------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------- |
+| src/type/v2/character.ts                 | src/application/view/graph/character_graph_builder.ts     | tests/application/view/graph/character_graph_builder_test.ts     |
+| src/type/v2/timeline.ts                  | src/application/view/graph/timeline_graph_builder.ts      | tests/application/view/graph/timeline_graph_builder_test.ts      |
+| src/type/v2/foreshadowing.ts             | src/application/view/graph/foreshadowing_graph_builder.ts | tests/application/view/graph/foreshadowing_graph_builder_test.ts |
+| src/application/view/html_generator.ts   | src/application/view/html_generator.ts (拡張)             | tests/application/view/html_generator_graph_test.ts              |
+| src/application/meta/entity_validator.ts | src/application/view/consistency/consistency_checker.ts   | tests/application/view/consistency/consistency_checker_test.ts   |
 
 ---
 
 # Progress Map
 
-| Process     | Status              | Progress      | Phase     | Notes                                          |
-| ----------- | ------------------- | ------------- | --------- | ---------------------------------------------- |
-| Process 1   | completed           | ■■■■■ 100%    | Green     | DiagnosticSourceインターフェース定義 ✅        |
-| Process 2   | completed           | ■■■■■ 100%    | Green     | StorytellerDiagnosticSource（既存ラップ） ✅   |
-| Process 3   | completed           | ■■■■■ 100%    | Green     | DiagnosticAggregator実装 ✅                    |
-| Process 4   | completed           | ■■■■■ 100%    | Green     | TextlintConfig設定検出 ✅                      |
-| Process 5   | completed           | ■■■■■ 100%    | Green     | TextlintParser JSON解析 ✅                     |
-| Process 6   | completed           | ■■■■■ 100%    | Green     | TextlintWorker（デバウンス・キャンセル） ✅    |
-| Process 7   | completed           | ■■■■■ 100%    | Green     | TextlintDiagnosticSource実装 ✅                |
-| Process 8   | completed           | ■■■■■ 100%    | Green     | LSPサーバーへのAggregator統合 ✅               |
-| Process 9   | completed           | ■■■■■ 100%    | Green     | 共通Textlintランナー（shared/textlint） ✅     |
-| Process 10  | completed           | ■■■■■ 100%    | Green     | CLI lint基本コマンド ✅                        |
-| Process 11  | completed           | ■■■■■ 100%    | Green     | CLI lint --fix対応 ✅                          |
-| Process 12  | completed           | ■■■■■ 100%    | Green     | CLI lint --json対応 ✅                         |
-| Process 13  | completed           | ■■■■■ 100%    | Green     | CLI lint オプション拡充 ✅                     |
-| Process 20  | skipped             | ━━━━━ N/A     | -         | ~~MCP textlint_check~~ → textlint --mcp で代替 |
-| Process 21  | skipped             | ━━━━━ N/A     | -         | ~~MCP textlint_fix~~ → textlint --mcp で代替   |
-| Process 30  | completed           | ■■■■■ 100%    | Green     | Git hooks install-hooks ✅                     |
-| Process 31  | completed           | ■■■■■ 100%    | Green     | Git hooks uninstall-hooks ✅                   |
-| Process 50  | skipped             | ━━━━━ N/A     | -         | フォローアップ不要                             |
-| Process 100 | completed           | ■■■■■ 100%    | Green     | リファクタリング・品質向上 ✅                  |
-| Process 200 | in_progress         | ■■■▯▯ 60%     | Yellow    | ドキュメンテーション（docs/lint.md作成待ち）   |
-| Process 300 | completed           | ■■■■■ 100%    | Green     | OODAフィードバックループ ✅                    |
-|             |                     |               |           |                                                |
-| **Overall** | **nearly_complete** | **■■■■▯ 95%** | **green** | **Blockers: 0, docs/lint.md作成待ち**          |
+| Process     | Status       | Progress | Phase        | Notes                                 |
+| ----------- | ------------ | -------- | ------------ | ------------------------------------- |
+| Process 1   | planning     | 0%       | Red          | vis.js統合基盤（CDN・型定義）         |
+| Process 2   | planning     | 0%       | Red          | GraphDataBuilder抽象インターフェース  |
+| Process 3   | planning     | 0%       | Red          | CharacterGraphBuilder実装             |
+| Process 4   | planning     | 0%       | Red          | TimelineGraphBuilder実装              |
+| Process 5   | planning     | 0%       | Red          | ForeshadowingGraphBuilder実装         |
+| Process 6   | planning     | 0%       | Red          | HtmlGenerator拡張（グラフセクション） |
+| Process 7   | planning     | 0%       | Red          | ConsistencyChecker基盤                |
+| Process 8   | planning     | 0%       | Red          | 各種整合性ルール実装                  |
+| Process 9   | planning     | 0%       | Red          | HTML整合性表示統合                    |
+| Process 10  | planning     | 0%       | Red          | 統合テスト                            |
+| Process 50  | planning     | 0%       | Red          | フォローアップ（未定義）              |
+| Process 100 | planning     | 0%       | Red          | リファクタリング・品質向上            |
+| Process 200 | planning     | 0%       | Red          | ドキュメンテーション                  |
+| Process 300 | planning     | 0%       | Red          | OODAフィードバックループ              |
+|             |              |          |              |                                       |
+| **Overall** | **planning** | **0%**   | **planning** | **Blockers: 0**                       |
 
 ---
 
 # Processes
 
-## Process 1: DiagnosticSourceインターフェース定義
+## Process 1: vis.js統合基盤（CDN・型定義）
 
 <!--@process-briefing
 category: implementation
-tags: [interface, abstraction, lsp]
+tags: [vis.js, cdn, types, foundation]
 -->
 
 ### Briefing (auto-generated)
 
 **Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-DiagnosticsGenerator.generate()のシグネチャを参照 **Watch Points**:
-(auto-populated from failure_cases)
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
 
-- [ ] `tests/lsp/diagnostics/diagnostic_source_test.ts` を作成
-  - DiagnosticSource型の構造テスト
-  - isAvailable()のモック実装テスト
-  - generate()のシグネチャ確認テスト
+- [ ] ブリーフィング
+- [ ] テストケースを作成（この時点で実装がないため失敗する）
+  - `tests/application/view/graph/vis_types_test.ts` を作成
+  - vis.js向けデータ構造（Node, Edge, Options）の型定義テスト
+  - CDNリンク定数のテスト
 - [ ] テストを実行して失敗することを確認
 
+**テストコード例**:
+
 ```typescript
-// tests/lsp/diagnostics/diagnostic_source_test.ts
+// tests/application/view/graph/vis_types_test.ts
 import { assertEquals, assertExists } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import type { DiagnosticSource } from "@storyteller/lsp/diagnostics/diagnostic_source.ts";
-
-describe("DiagnosticSource interface", () => {
-  it("should have required properties", () => {
-    // モック実装で型チェック
-    const mockSource: DiagnosticSource = {
-      name: "test",
-      isAvailable: async () => true,
-      generate: async () => [],
-    };
-
-    assertEquals(mockSource.name, "test");
-    assertExists(mockSource.isAvailable);
-    assertExists(mockSource.generate);
-  });
-
-  it("should support optional cancel method", () => {
-    const mockSource: DiagnosticSource = {
-      name: "test",
-      isAvailable: async () => true,
-      generate: async () => [],
-      cancel: () => {},
-    };
-
-    assertExists(mockSource.cancel);
-  });
-});
-```
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] `src/lsp/diagnostics/diagnostic_source.ts` を作成
-
-```typescript
-// src/lsp/diagnostics/diagnostic_source.ts
-import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
-
-/**
- * 診断ソースインターフェース
- * 複数の診断プロバイダーを統合するための抽象化
- */
-export interface DiagnosticSource {
-  /** ソース識別子 (e.g., "storyteller", "textlint") */
-  readonly name: string;
-
-  /** ソースが利用可能かどうか */
-  isAvailable(): Promise<boolean>;
-
-  /** 診断を生成 */
-  generate(
-    uri: string,
-    content: string,
-    projectRoot: string,
-  ): Promise<Diagnostic[]>;
-
-  /** 進行中の操作をキャンセル（オプショナル） */
-  cancel?(): void;
-
-  /** リソースを解放（オプショナル） */
-  dispose?(): void;
-}
-```
-
-- [ ] テストを実行して成功することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] JSDocコメントを充実
-- [ ] export文の整理
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 2: StorytellerDiagnosticSource（既存ラップ）
-
-<!--@process-briefing
-category: implementation
-tags: [adapter, wrapper, lsp]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-既存DiagnosticsGenerator.generate()を参照（src/lsp/diagnostics/diagnostics_generator.ts:93-110）
-**Watch Points**: (auto-populated from failure_cases)
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/lsp/diagnostics/storyteller_diagnostic_source_test.ts` を作成
-  - isAvailable()は常にtrue
-  - generate()がDiagnosticsGeneratorに委譲
-  - nameが"storyteller"
-
-```typescript
-// tests/lsp/diagnostics/storyteller_diagnostic_source_test.ts
-import { assertEquals } from "@std/assert";
-import { beforeEach, describe, it } from "@std/testing/bdd";
-import { StorytellerDiagnosticSource } from "@storyteller/lsp/diagnostics/storyteller_diagnostic_source.ts";
-import { DiagnosticsGenerator } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
-import { PositionedDetector } from "@storyteller/lsp/detection/positioned_detector.ts";
-
-describe("StorytellerDiagnosticSource", () => {
-  let source: StorytellerDiagnosticSource;
-
-  beforeEach(() => {
-    const detector = new PositionedDetector([]);
-    const generator = new DiagnosticsGenerator(detector);
-    source = new StorytellerDiagnosticSource(generator);
-  });
-
-  it("should have name 'storyteller'", () => {
-    assertEquals(source.name, "storyteller");
-  });
-
-  it("should always be available", async () => {
-    const available = await source.isAvailable();
-    assertEquals(available, true);
-  });
-
-  it("should generate diagnostics via generator", async () => {
-    const diagnostics = await source.generate(
-      "file:///test.md",
-      "テスト内容",
-      "/project",
-    );
-    // 空の検出器なので診断なし
-    assertEquals(diagnostics.length, 0);
-  });
-});
-```
-
-- [ ] テストを実行して失敗することを確認
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] `src/lsp/diagnostics/storyteller_diagnostic_source.ts` を作成
-
-```typescript
-// src/lsp/diagnostics/storyteller_diagnostic_source.ts
-import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
-import type { DiagnosticSource } from "./diagnostic_source.ts";
-import type { DiagnosticsGenerator } from "./diagnostics_generator.ts";
-
-/**
- * storytellerエンティティ診断ソース
- * 既存のDiagnosticsGeneratorをDiagnosticSourceにラップ
- */
-export class StorytellerDiagnosticSource implements DiagnosticSource {
-  readonly name = "storyteller";
-
-  constructor(private readonly generator: DiagnosticsGenerator) {}
-
-  async isAvailable(): Promise<boolean> {
-    return true; // 常に利用可能
-  }
-
-  async generate(
-    uri: string,
-    content: string,
-    projectRoot: string,
-  ): Promise<Diagnostic[]> {
-    return this.generator.generate(uri, content, projectRoot);
-  }
-}
-```
-
-- [ ] テストを実行して成功することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] JSDocコメントを充実
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 3: DiagnosticAggregator実装
-
-<!--@process-briefing
-category: implementation
-tags: [aggregator, merge, lsp]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-Promise.allSettledで並列実行、sourceフィールドで識別 **Watch Points**:
-一つのソースが失敗しても他は継続
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/lsp/diagnostics/diagnostic_aggregator_test.ts` を作成
-  - 複数ソースの並列実行
-  - 各診断のsourceフィールド設定
-  - 一つが失敗しても他は成功
-  - ソースの登録/削除
-
-```typescript
-// tests/lsp/diagnostics/diagnostic_aggregator_test.ts
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { DiagnosticAggregator } from "@storyteller/lsp/diagnostics/diagnostic_aggregator.ts";
-import type { DiagnosticSource } from "@storyteller/lsp/diagnostics/diagnostic_source.ts";
-
-describe("DiagnosticAggregator", () => {
-  it("should aggregate diagnostics from multiple sources", async () => {
-    const source1: DiagnosticSource = {
-      name: "source1",
-      isAvailable: async () => true,
-      generate: async () => [{
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 5 },
-        },
-        message: "test1",
-        severity: 2,
-      }],
-    };
-
-    const source2: DiagnosticSource = {
-      name: "source2",
-      isAvailable: async () => true,
-      generate: async () => [{
-        range: {
-          start: { line: 1, character: 0 },
-          end: { line: 1, character: 5 },
-        },
-        message: "test2",
-        severity: 1,
-      }],
-    };
-
-    const aggregator = new DiagnosticAggregator([source1, source2]);
-    const diagnostics = await aggregator.generate(
-      "file:///test.md",
-      "content",
-      "/project",
-    );
-
-    assertEquals(diagnostics.length, 2);
-    assertEquals(diagnostics[0].source, "source1");
-    assertEquals(diagnostics[1].source, "source2");
-  });
-
-  it("should skip unavailable sources", async () => {
-    const available: DiagnosticSource = {
-      name: "available",
-      isAvailable: async () => true,
-      generate: async () => [{
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 1 },
-        },
-        message: "ok",
-        severity: 2,
-      }],
-    };
-
-    const unavailable: DiagnosticSource = {
-      name: "unavailable",
-      isAvailable: async () => false,
-      generate: async () => [{
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 1 },
-        },
-        message: "skip",
-        severity: 2,
-      }],
-    };
-
-    const aggregator = new DiagnosticAggregator([available, unavailable]);
-    const diagnostics = await aggregator.generate(
-      "file:///test.md",
-      "content",
-      "/project",
-    );
-
-    assertEquals(diagnostics.length, 1);
-    assertEquals(diagnostics[0].message, "ok");
-  });
-
-  it("should continue if one source fails", async () => {
-    const working: DiagnosticSource = {
-      name: "working",
-      isAvailable: async () => true,
-      generate: async () => [{
-        range: {
-          start: { line: 0, character: 0 },
-          end: { line: 0, character: 1 },
-        },
-        message: "ok",
-        severity: 2,
-      }],
-    };
-
-    const failing: DiagnosticSource = {
-      name: "failing",
-      isAvailable: async () => true,
-      generate: async () => {
-        throw new Error("fail");
-      },
-    };
-
-    const aggregator = new DiagnosticAggregator([working, failing]);
-    const diagnostics = await aggregator.generate(
-      "file:///test.md",
-      "content",
-      "/project",
-    );
-
-    assertEquals(diagnostics.length, 1);
-    assertEquals(diagnostics[0].message, "ok");
-  });
-});
-```
-
-- [ ] テストを実行して失敗することを確認
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] `src/lsp/diagnostics/diagnostic_aggregator.ts` を作成
-
-```typescript
-// src/lsp/diagnostics/diagnostic_aggregator.ts
-import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
-import type { DiagnosticSource } from "./diagnostic_source.ts";
-
-/**
- * 複数の診断ソースを統合するアグリゲーター
- */
-export class DiagnosticAggregator {
-  private sources: DiagnosticSource[] = [];
-
-  constructor(sources: DiagnosticSource[] = []) {
-    this.sources = [...sources];
-  }
-
-  /**
-   * ソースを追加
-   */
-  addSource(source: DiagnosticSource): void {
-    this.sources.push(source);
-  }
-
-  /**
-   * ソースを削除
-   */
-  removeSource(name: string): void {
-    this.sources = this.sources.filter((s) => s.name !== name);
-  }
-
-  /**
-   * すべてのソースから診断を並列取得してマージ
-   */
-  async generate(
-    uri: string,
-    content: string,
-    projectRoot: string,
-  ): Promise<Diagnostic[]> {
-    // 利用可能なソースをフィルタ
-    const availabilityChecks = await Promise.all(
-      this.sources.map(async (source) => ({
-        source,
-        available: await source.isAvailable().catch(() => false),
-      })),
-    );
-
-    const availableSources = availabilityChecks
-      .filter(({ available }) => available)
-      .map(({ source }) => source);
-
-    // 並列実行
-    const results = await Promise.allSettled(
-      availableSources.map(async (source) => {
-        const diagnostics = await source.generate(uri, content, projectRoot);
-        // sourceフィールドを設定
-        return diagnostics.map((d) => ({
-          ...d,
-          source: source.name,
-        }));
-      }),
-    );
-
-    // 成功した結果のみマージ
-    const merged: Diagnostic[] = [];
-    for (const result of results) {
-      if (result.status === "fulfilled") {
-        merged.push(...result.value);
-      }
-      // failedは無視（ログ出力は後で追加）
-    }
-
-    return merged;
-  }
-
-  /**
-   * すべてのソースをキャンセル
-   */
-  cancelAll(): void {
-    for (const source of this.sources) {
-      source.cancel?.();
-    }
-  }
-
-  /**
-   * すべてのソースを破棄
-   */
-  dispose(): void {
-    for (const source of this.sources) {
-      source.dispose?.();
-    }
-    this.sources = [];
-  }
-}
-```
-
-- [ ] テストを実行して成功することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] エラーログ出力を追加
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 4: TextlintConfig設定検出
-
-<!--@process-briefing
-category: implementation
-tags: [textlint, config, detection]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: SPEC.md
-2.5節の検出順序を参照 **Watch Points**: (auto-populated from failure_cases)
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/lsp/integration/textlint/textlint_config_test.ts` を作成
-  - 各設定ファイル形式の検出
-  - 優先順位の確認
-  - 設定ファイルなしの場合
-
-```typescript
-// tests/lsp/integration/textlint/textlint_config_test.ts
-import { assertEquals } from "@std/assert";
-import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
 import {
-  detectTextlintConfig,
-  TextlintConfig,
-} from "@storyteller/lsp/integration/textlint/textlint_config.ts";
+  VIS_CDN_LINKS,
+  type VisEdge,
+  type VisNode,
+} from "@storyteller/application/view/graph/vis_types.ts";
 
-describe("TextlintConfig", () => {
-  const testDir = "./tmp/claude/textlint_config_test";
-
-  beforeEach(async () => {
-    await Deno.mkdir(testDir, { recursive: true });
+Deno.test("vis_types - CDN links", async (t) => {
+  await t.step("VIS_CDN_LINKSが定義されている", () => {
+    assertExists(VIS_CDN_LINKS);
+    assertExists(VIS_CDN_LINKS.network);
+    assertExists(VIS_CDN_LINKS.css);
   });
+});
 
-  afterEach(async () => {
-    await Deno.remove(testDir, { recursive: true }).catch(() => {});
+Deno.test("vis_types - Node型", async (t) => {
+  await t.step("VisNode型が正しく構成できる", () => {
+    const node: VisNode = {
+      id: "hero",
+      label: "勇者",
+      group: "protagonist",
+    };
+    assertEquals(node.id, "hero");
   });
+});
+```
 
-  it("should detect .textlintrc", async () => {
-    await Deno.writeTextFile(`${testDir}/.textlintrc`, '{"rules":{}}');
+**成功条件**:
 
-    const config = await detectTextlintConfig(testDir);
-    assertEquals(config.configPath?.endsWith(".textlintrc"), true);
-  });
+- テストファイルが作成され、実行時にモジュール未発見エラーで失敗する
 
-  it("should detect .textlintrc.json", async () => {
-    await Deno.writeTextFile(`${testDir}/.textlintrc.json`, '{"rules":{}}');
+---
 
-    const config = await detectTextlintConfig(testDir);
-    assertEquals(config.configPath?.endsWith(".textlintrc.json"), true);
-  });
+### Green Phase: 最小実装と成功確認
 
-  it("should prioritize .textlintrc over .textlintrc.json", async () => {
-    await Deno.writeTextFile(`${testDir}/.textlintrc`, '{"rules":{}}');
-    await Deno.writeTextFile(`${testDir}/.textlintrc.json`, '{"rules":{}}');
+- [ ] ブリーフィング
+- [ ] `src/application/view/graph/vis_types.ts` を作成
+  - vis.js CDNリンク定数を定義
+  - VisNode, VisEdge, VisOptions型を定義
+  - グラフデータ構造（VisGraphData）を定義
 
-    const config = await detectTextlintConfig(testDir);
-    assertEquals(config.configPath?.endsWith(".textlintrc"), true);
-  });
+**実装コード例**:
 
-  it("should return null configPath when no config found", async () => {
-    const config = await detectTextlintConfig(testDir);
-    assertEquals(config.configPath, undefined);
+```typescript
+// src/application/view/graph/vis_types.ts
+
+/** vis.js CDNリンク */
+export const VIS_CDN_LINKS = {
+  network: "https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.js",
+  css: "https://unpkg.com/vis-network@9.1.9/dist/vis-network.min.css",
+} as const;
+
+/** vis.jsノード型 */
+export type VisNode = {
+  readonly id: string;
+  readonly label: string;
+  readonly group?: string;
+  readonly title?: string; // ホバー時のツールチップ
+  readonly color?: {
+    readonly background?: string;
+    readonly border?: string;
+  };
+  readonly shape?:
+    | "dot"
+    | "box"
+    | "ellipse"
+    | "circle"
+    | "diamond"
+    | "star"
+    | "triangle";
+};
+
+/** vis.jsエッジ型 */
+export type VisEdge = {
+  readonly from: string;
+  readonly to: string;
+  readonly label?: string;
+  readonly arrows?: "to" | "from" | "to, from";
+  readonly dashes?: boolean;
+  readonly color?: {
+    readonly color?: string;
+    readonly highlight?: string;
+  };
+  readonly width?: number;
+};
+
+/** vis.jsグラフオプション型 */
+export type VisOptions = {
+  readonly nodes?: {
+    readonly shape?: string;
+    readonly font?: { readonly size?: number };
+  };
+  readonly edges?: {
+    readonly smooth?: boolean | { readonly type?: string };
+  };
+  readonly physics?: {
+    readonly enabled?: boolean;
+    readonly stabilization?: { readonly iterations?: number };
+  };
+  readonly interaction?: {
+    readonly hover?: boolean;
+    readonly tooltipDelay?: number;
+  };
+};
+
+/** グラフデータ */
+export type VisGraphData = {
+  readonly nodes: readonly VisNode[];
+  readonly edges: readonly VisEdge[];
+  readonly options?: VisOptions;
+};
+```
+
+- [ ] テストを実行して成功することを確認
+
+**成功条件**:
+
+- `deno test tests/application/view/graph/vis_types_test.ts` が通過する
+
+---
+
+### Refactor Phase: 品質改善と継続成功確認
+
+- [ ] ブリーフィング
+- [ ] 型定義のJSDocコメント追加
+- [ ] deno lintとdeno fmtの実行
+- [ ] テストを実行し、継続して成功することを確認
+
+**成功条件**:
+
+- `deno lint` と `deno fmt --check` が通過する
+
+---
+
+## Process 2: GraphDataBuilder抽象インターフェース
+
+<!--@process-briefing
+category: implementation
+tags: [interface, abstraction, graph]
+-->
+
+### Briefing (auto-generated)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+
+- [ ] ブリーフィング
+- [ ] テストケースを作成
+  - `tests/application/view/graph/graph_data_builder_test.ts` を作成
+  - GraphDataBuilder型のインターフェース準拠テスト
+
+**テストコード例**:
+
+```typescript
+// tests/application/view/graph/graph_data_builder_test.ts
+import { assertExists } from "@std/assert";
+import type { GraphDataBuilder } from "@storyteller/application/view/graph/graph_data_builder.ts";
+import type { VisGraphData } from "@storyteller/application/view/graph/vis_types.ts";
+
+Deno.test("GraphDataBuilder - インターフェース定義", async (t) => {
+  await t.step("GraphDataBuilder型が存在する", () => {
+    // 型チェックのみ - コンパイル通過で成功
+    const _builder: GraphDataBuilder<unknown> = {
+      build: (_data: unknown): VisGraphData => ({
+        nodes: [],
+        edges: [],
+      }),
+    };
+    assertExists(_builder);
   });
 });
 ```
 
 - [ ] テストを実行して失敗することを確認
 
+---
+
 ### Green Phase: 最小実装と成功確認
 
-- [ ] `src/lsp/integration/textlint/textlint_config.ts` を作成
+- [ ] ブリーフィング
+- [ ] `src/application/view/graph/graph_data_builder.ts` を作成
+  - GraphDataBuilder<T>インターフェースを定義
+  - build(data: T): VisGraphData メソッドを定義
+
+**実装コード例**:
 
 ```typescript
-// src/lsp/integration/textlint/textlint_config.ts
-import { join } from "@std/path";
+// src/application/view/graph/graph_data_builder.ts
+import type { VisGraphData } from "./vis_types.ts";
 
 /**
- * textlint設定
+ * グラフデータビルダーのインターフェース
+ *
+ * 各エンティティ型（Character, Timeline, Foreshadowing）に対して
+ * vis.js用のグラフデータを構築する
  */
-export interface TextlintConfig {
-  /** 設定ファイルパス（見つからない場合はundefined） */
-  configPath?: string;
-  /** textlint実行パス */
-  executablePath: string;
-  /** デバウンス時間（ms） */
-  debounceMs: number;
-  /** タイムアウト時間（ms） */
-  timeoutMs: number;
-  /** 有効フラグ */
-  enabled: boolean;
+export interface GraphDataBuilder<T> {
+  /**
+   * データからvis.jsグラフデータを構築する
+   * @param data 入力データ
+   * @returns vis.js互換のグラフデータ
+   */
+  build(data: T): VisGraphData;
 }
+```
 
-/**
- * 設定ファイル検出順序（優先度順）
- */
-const CONFIG_FILES = [
-  ".textlintrc",
-  ".textlintrc.json",
-  ".textlintrc.yaml",
-  ".textlintrc.yml",
-  ".textlintrc.js",
-  ".textlintrc.cjs",
+- [ ] テストを実行して成功することを確認
+
+---
+
+### Refactor Phase: 品質改善と継続成功確認
+
+- [ ] ブリーフィング
+- [ ] コードの品質を改善
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 3: CharacterGraphBuilder実装
+
+<!--@process-briefing
+category: implementation
+tags: [character, graph, relationship]
+-->
+
+### Briefing (auto-generated)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+
+- [ ] ブリーフィング
+- [ ] テストケースを作成
+  - `tests/application/view/graph/character_graph_builder_test.ts` を作成
+  - キャラクター関係グラフ生成のテスト
+  - RelationType別のエッジスタイルテスト
+
+**テストコード例**:
+
+```typescript
+// tests/application/view/graph/character_graph_builder_test.ts
+import { assertEquals, assertExists } from "@std/assert";
+import { CharacterGraphBuilder } from "@storyteller/application/view/graph/character_graph_builder.ts";
+import type { Character } from "@storyteller/types/v2/character.ts";
+
+const mockCharacters: readonly Character[] = [
+  {
+    id: "hero",
+    name: "勇者",
+    role: "protagonist",
+    traits: ["勇敢"],
+    relationships: { villain: "enemy", mentor: "respect" },
+    appearingChapters: ["chapter_01"],
+    summary: "主人公",
+  },
+  {
+    id: "villain",
+    name: "魔王",
+    role: "antagonist",
+    traits: ["邪悪"],
+    relationships: { hero: "enemy" },
+    appearingChapters: ["chapter_01"],
+    summary: "敵役",
+  },
+  {
+    id: "mentor",
+    name: "師匠",
+    role: "supporting",
+    traits: ["賢明"],
+    relationships: { hero: "mentor" },
+    appearingChapters: ["chapter_01"],
+    summary: "指導者",
+  },
 ];
 
-/**
- * textlint設定を検出
- */
-export async function detectTextlintConfig(
-  projectRoot: string,
-): Promise<TextlintConfig> {
-  let configPath: string | undefined;
+Deno.test("CharacterGraphBuilder - グラフ生成", async (t) => {
+  const builder = new CharacterGraphBuilder();
 
-  // 設定ファイルを優先順位順に探索
-  for (const configFile of CONFIG_FILES) {
-    const fullPath = join(projectRoot, configFile);
-    try {
-      await Deno.stat(fullPath);
-      configPath = fullPath;
-      break;
-    } catch {
-      // ファイルが存在しない
-    }
-  }
-
-  // package.jsonのtextlintフィールドは後で対応
-
-  return {
-    configPath,
-    executablePath: "npx textlint",
-    debounceMs: 500,
-    timeoutMs: 30000,
-    enabled: true,
-  };
-}
-```
-
-- [ ] テストを実行して成功することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] package.jsonのtextlintフィールド検出を追加
-- [ ] storyteller.jsonからの設定読み込みを追加
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 5: TextlintParser JSON解析
-
-<!--@process-briefing
-category: implementation
-tags: [textlint, parser, json]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-textlint --format json の出力形式を参照 **Watch Points**:
-不正なJSON、空出力の処理
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/lsp/integration/textlint/textlint_parser_test.ts` を作成
-
-```typescript
-// tests/lsp/integration/textlint/textlint_parser_test.ts
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import {
-  parseTextlintOutput,
-  TextlintMessage,
-} from "@storyteller/lsp/integration/textlint/textlint_parser.ts";
-
-describe("TextlintParser", () => {
-  it("should parse valid textlint JSON output", () => {
-    const json = JSON.stringify([{
-      filePath: "/test.md",
-      messages: [{
-        ruleId: "prh",
-        severity: 1,
-        message: "表記ゆれ",
-        line: 2,
-        column: 5,
-        index: 10,
-      }],
-    }]);
-
-    const result = parseTextlintOutput(json, "/test.md");
-    assertEquals(result.filePath, "/test.md");
-    assertEquals(result.messages.length, 1);
-    assertEquals(result.messages[0].ruleId, "prh");
+  await t.step("ノードが全キャラクター分生成される", () => {
+    const result = builder.build(mockCharacters);
+    assertEquals(result.nodes.length, 3);
   });
 
-  it("should handle empty output", () => {
-    const result = parseTextlintOutput("", "/test.md");
-    assertEquals(result.messages.length, 0);
-  });
-
-  it("should handle empty array", () => {
-    const result = parseTextlintOutput("[]", "/test.md");
-    assertEquals(result.messages.length, 0);
-  });
-
-  it("should handle invalid JSON", () => {
-    const result = parseTextlintOutput("invalid", "/test.md");
-    assertEquals(result.messages.length, 0);
-  });
-
-  it("should map severity correctly", () => {
-    const json = JSON.stringify([{
-      filePath: "/test.md",
-      messages: [
-        { ruleId: "rule1", severity: 2, message: "error", line: 1, column: 1 },
-        {
-          ruleId: "rule2",
-          severity: 1,
-          message: "warning",
-          line: 2,
-          column: 1,
-        },
-        { ruleId: "rule3", severity: 0, message: "info", line: 3, column: 1 },
-      ],
-    }]);
-
-    const result = parseTextlintOutput(json, "/test.md");
-    assertEquals(result.messages[0].severity, 2); // error
-    assertEquals(result.messages[1].severity, 1); // warning
-    assertEquals(result.messages[2].severity, 0); // info
-  });
-});
-```
-
-- [ ] テストを実行して失敗することを確認
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] `src/lsp/integration/textlint/textlint_parser.ts` を作成
-
-```typescript
-// src/lsp/integration/textlint/textlint_parser.ts
-
-/**
- * textlintメッセージ
- */
-export interface TextlintMessage {
-  ruleId: string;
-  severity: number; // 0=info, 1=warning, 2=error
-  message: string;
-  line: number;
-  column: number;
-  index?: number;
-  fix?: {
-    range: [number, number];
-    text: string;
-  };
-}
-
-/**
- * textlint結果
- */
-export interface TextlintResult {
-  filePath: string;
-  messages: TextlintMessage[];
-}
-
-/**
- * textlint JSON出力をパース
- */
-export function parseTextlintOutput(
-  output: string,
-  filePath: string,
-): TextlintResult {
-  if (!output || output.trim() === "") {
-    return { filePath, messages: [] };
-  }
-
-  try {
-    const parsed = JSON.parse(output);
-
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return { filePath, messages: [] };
-    }
-
-    // textlintは配列形式で返す
-    const fileResult = parsed[0];
-    if (!fileResult || !Array.isArray(fileResult.messages)) {
-      return { filePath, messages: [] };
-    }
-
-    const messages: TextlintMessage[] = fileResult.messages.map((msg: {
-      ruleId?: string;
-      severity?: number;
-      message?: string;
-      line?: number;
-      column?: number;
-      index?: number;
-      fix?: { range: [number, number]; text: string };
-    }) => ({
-      ruleId: msg.ruleId ?? "unknown",
-      severity: msg.severity ?? 1,
-      message: msg.message ?? "",
-      line: msg.line ?? 1,
-      column: msg.column ?? 1,
-      index: msg.index,
-      fix: msg.fix,
-    }));
-
-    return { filePath, messages };
-  } catch {
-    // JSON解析エラー
-    return { filePath, messages: [] };
-  }
-}
-```
-
-- [ ] テストを実行して成功することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] エラーログ出力を追加
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 6: TextlintWorker（デバウンス・キャンセル）
-
-<!--@process-briefing
-category: implementation
-tags: [textlint, worker, async]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**:
-DiagnosticsPublisher.publishDebounced()のパターンを参照（src/lsp/diagnostics/diagnostics_publisher.ts:93-114）
-**Known Patterns**: Deno.Command, AbortController **Watch Points**:
-プロセスリーク、タイムアウト処理
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/lsp/integration/textlint/textlint_worker_test.ts` を作成
-
-```typescript
-// tests/lsp/integration/textlint/textlint_worker_test.ts
-import { assertEquals, assertRejects } from "@std/assert";
-import { afterEach, beforeEach, describe, it } from "@std/testing/bdd";
-import { TextlintWorker } from "@storyteller/lsp/integration/textlint/textlint_worker.ts";
-import { delay } from "@std/async";
-
-describe("TextlintWorker", () => {
-  let worker: TextlintWorker;
-
-  beforeEach(() => {
-    worker = new TextlintWorker({
-      executablePath: "npx textlint",
-      debounceMs: 100,
-      timeoutMs: 5000,
-      enabled: true,
-    });
-  });
-
-  afterEach(() => {
-    worker.dispose();
-  });
-
-  it("should debounce multiple calls", async () => {
-    // モックが必要なため、実際のテストはintegration testで行う
-    // ここでは構造テストのみ
-    assertEquals(typeof worker.lint, "function");
-    assertEquals(typeof worker.cancel, "function");
-    assertEquals(typeof worker.dispose, "function");
-  });
-
-  it("should cancel previous request on new request", async () => {
-    // cancel()が呼ばれることを確認
-    let cancelCalled = false;
-    const originalCancel = worker.cancel.bind(worker);
-    worker.cancel = () => {
-      cancelCalled = true;
-      originalCancel();
-    };
-
-    // 2回連続呼び出し
-    const p1 = worker.lint("content1", "/test.md");
-    await delay(10);
-    const p2 = worker.lint("content2", "/test.md");
-
-    assertEquals(cancelCalled, true);
-    worker.cancel(); // クリーンアップ
-  });
-});
-```
-
-- [ ] テストを実行して失敗することを確認
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] `src/lsp/integration/textlint/textlint_worker.ts` を作成
-
-```typescript
-// src/lsp/integration/textlint/textlint_worker.ts
-import type { TextlintConfig } from "./textlint_config.ts";
-import { parseTextlintOutput, type TextlintResult } from "./textlint_parser.ts";
-
-/**
- * TextlintWorkerオプション
- */
-export interface TextlintWorkerOptions {
-  executablePath: string;
-  debounceMs: number;
-  timeoutMs: number;
-  enabled: boolean;
-  configPath?: string;
-}
-
-/**
- * textlintをバックグラウンドで実行するワーカー
- * デバウンス・キャンセル・タイムアウト対応
- */
-export class TextlintWorker {
-  private process: Deno.ChildProcess | null = null;
-  private debounceTimer: number | null = null;
-  private abortController: AbortController | null = null;
-  private pendingResolve: ((result: TextlintResult) => void) | null = null;
-
-  constructor(private options: TextlintWorkerOptions) {}
-
-  /**
-   * textlintを実行（デバウンス・キャンセル付き）
-   */
-  async lint(content: string, filePath: string): Promise<TextlintResult> {
-    // 既存のリクエストをキャンセル
-    this.cancel();
-
-    return new Promise((resolve) => {
-      this.pendingResolve = resolve;
-
-      this.debounceTimer = setTimeout(async () => {
-        try {
-          const result = await this.execute(content, filePath);
-          resolve(result);
-        } catch {
-          resolve({ filePath, messages: [] });
-        } finally {
-          this.pendingResolve = null;
-        }
-      }, this.options.debounceMs);
-    });
-  }
-
-  /**
-   * 実際のtextlint実行
-   */
-  private async execute(
-    content: string,
-    filePath: string,
-  ): Promise<TextlintResult> {
-    this.abortController = new AbortController();
-
-    const args = [
-      "textlint",
-      "--stdin",
-      "--stdin-filename",
-      filePath,
-      "--format",
-      "json",
-    ];
-
-    if (this.options.configPath) {
-      args.push("--config", this.options.configPath);
-    }
-
-    const command = new Deno.Command("npx", {
-      args,
-      stdin: "piped",
-      stdout: "piped",
-      stderr: "piped",
-    });
-
-    this.process = command.spawn();
-
-    // stdinに内容を書き込み
-    const writer = this.process.stdin.getWriter();
-    await writer.write(new TextEncoder().encode(content));
-    await writer.close();
-
-    // タイムアウト付きで待機
-    const timeoutId = setTimeout(() => {
-      this.abortController?.abort();
-    }, this.options.timeoutMs);
-
-    try {
-      const result = await this.process.output();
-      clearTimeout(timeoutId);
-
-      if (!result.success) {
-        // textlintはエラー時もexit 1を返すが、stdoutにはJSONがある
-      }
-
-      const output = new TextDecoder().decode(result.stdout);
-      return parseTextlintOutput(output, filePath);
-    } catch {
-      // タイムアウトまたはその他のエラー
-      try {
-        this.process.kill("SIGTERM");
-      } catch {
-        // プロセスが既に終了
-      }
-      return { filePath, messages: [] };
-    } finally {
-      this.process = null;
-      this.abortController = null;
-    }
-  }
-
-  /**
-   * 進行中の操作をキャンセル
-   */
-  cancel(): void {
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
-    }
-
-    if (this.abortController) {
-      this.abortController.abort();
-      this.abortController = null;
-    }
-
-    if (this.process) {
-      try {
-        this.process.kill("SIGTERM");
-      } catch {
-        // プロセスが既に終了
-      }
-      this.process = null;
-    }
-
-    if (this.pendingResolve) {
-      this.pendingResolve({ filePath: "", messages: [] });
-      this.pendingResolve = null;
-    }
-  }
-
-  /**
-   * リソースを解放
-   */
-  dispose(): void {
-    this.cancel();
-  }
-}
-```
-
-- [ ] テストを実行して成功することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] ログ出力を追加
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 7: TextlintDiagnosticSource実装
-
-<!--@process-briefing
-category: implementation
-tags: [textlint, diagnostic_source, lsp]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-StorytellerDiagnosticSource（Process 2）のパターン **Watch Points**:
-textlint未インストール時の処理
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts` を作成
-
-```typescript
-// tests/lsp/integration/textlint/textlint_diagnostic_source_test.ts
-import { assertEquals } from "@std/assert";
-import { beforeEach, describe, it } from "@std/testing/bdd";
-import { TextlintDiagnosticSource } from "@storyteller/lsp/integration/textlint/textlint_diagnostic_source.ts";
-
-describe("TextlintDiagnosticSource", () => {
-  it("should have name 'textlint'", () => {
-    const source = new TextlintDiagnosticSource("/project");
-    assertEquals(source.name, "textlint");
-  });
-
-  it("should check textlint availability", async () => {
-    const source = new TextlintDiagnosticSource("/project");
-    // 実際の環境に依存するテスト
-    // CI環境ではtextlintがインストールされていない可能性
-    const available = await source.isAvailable();
-    // availableはboolean
-    assertEquals(typeof available, "boolean");
-  });
-
-  it("should convert textlint messages to LSP diagnostics", async () => {
-    // モック実装でテスト
-    const source = new TextlintDiagnosticSource("/project");
-
-    // textlintがインストールされていない場合は空配列
-    const diagnostics = await source.generate(
-      "file:///test.md",
-      "テスト",
-      "/project",
+  await t.step("関係性からエッジが生成される", () => {
+    const result = builder.build(mockCharacters);
+    // hero->villain(enemy), hero->mentor(respect), villain->hero(enemy), mentor->hero(mentor)
+    // 双方向の関係は1つのエッジにまとめる
+    assertExists(
+      result.edges.find((e) =>
+        (e.from === "hero" && e.to === "villain") ||
+        (e.from === "villain" && e.to === "hero")
+      ),
     );
-
-    assertEquals(Array.isArray(diagnostics), true);
   });
 
-  it("should map severity correctly", () => {
-    // severity変換のユニットテスト
-    // 2 (error) → DiagnosticSeverity.Error (1)
-    // 1 (warning) → DiagnosticSeverity.Warning (2)
-    // 0 (info) → DiagnosticSeverity.Information (3)
+  await t.step("役割別にグループが設定される", () => {
+    const result = builder.build(mockCharacters);
+    const heroNode = result.nodes.find((n) => n.id === "hero");
+    assertEquals(heroNode?.group, "protagonist");
+  });
+
+  await t.step("敵対関係は赤色エッジ", () => {
+    const result = builder.build(mockCharacters);
+    const enemyEdge = result.edges.find((e) => e.label === "enemy");
+    assertEquals(enemyEdge?.color?.color, "#e74c3c");
+  });
+
+  await t.step("空配列の場合は空グラフを返す", () => {
+    const result = builder.build([]);
+    assertEquals(result.nodes.length, 0);
+    assertEquals(result.edges.length, 0);
   });
 });
 ```
 
 - [ ] テストを実行して失敗することを確認
 
+---
+
 ### Green Phase: 最小実装と成功確認
 
-- [ ] `src/lsp/integration/textlint/textlint_diagnostic_source.ts` を作成
+- [ ] ブリーフィング
+- [ ] `src/application/view/graph/character_graph_builder.ts` を作成
+  - CharacterGraphBuilderクラスを実装
+  - RelationType別のエッジ色マッピングを定義
+  - CharacterRole別のノードグループ設定
+
+**実装コード例**:
 
 ```typescript
-// src/lsp/integration/textlint/textlint_diagnostic_source.ts
-import type { Diagnostic } from "@storyteller/lsp/protocol/types.ts";
-import type { DiagnosticSource } from "@storyteller/lsp/diagnostics/diagnostic_source.ts";
-import { TextlintWorker } from "./textlint_worker.ts";
-import { detectTextlintConfig } from "./textlint_config.ts";
-import { DiagnosticSeverity } from "@storyteller/lsp/diagnostics/diagnostics_generator.ts";
+// src/application/view/graph/character_graph_builder.ts
+import type { GraphDataBuilder } from "./graph_data_builder.ts";
+import type { VisEdge, VisGraphData, VisNode } from "./vis_types.ts";
+import type {
+  Character,
+  RelationType,
+} from "@storyteller/types/v2/character.ts";
+
+/** 関係タイプ別のエッジ色 */
+const RELATION_COLORS: Record<RelationType, string> = {
+  ally: "#27ae60", // 緑
+  enemy: "#e74c3c", // 赤
+  neutral: "#95a5a6", // グレー
+  romantic: "#e91e63", // ピンク
+  respect: "#3498db", // 青
+  competitive: "#f39c12", // オレンジ
+  mentor: "#9b59b6", // 紫
+};
 
 /**
- * textlint診断ソース
+ * キャラクター関係グラフビルダー
  */
-export class TextlintDiagnosticSource implements DiagnosticSource {
-  readonly name = "textlint";
-
-  private worker: TextlintWorker | null = null;
-  private available: boolean | null = null;
-  private availabilityChecked = false;
-
-  constructor(private projectRoot: string) {}
-
-  /**
-   * textlintが利用可能かチェック
-   */
-  async isAvailable(): Promise<boolean> {
-    if (this.availabilityChecked) {
-      return this.available ?? false;
+export class CharacterGraphBuilder
+  implements GraphDataBuilder<readonly Character[]> {
+  build(characters: readonly Character[]): VisGraphData {
+    if (characters.length === 0) {
+      return { nodes: [], edges: [] };
     }
 
-    try {
-      const command = new Deno.Command("npx", {
-        args: ["textlint", "--version"],
-        stdout: "piped",
-        stderr: "piped",
-      });
+    const nodes = this.buildNodes(characters);
+    const edges = this.buildEdges(characters);
 
-      const result = await command.output();
-      this.available = result.success;
-    } catch {
-      this.available = false;
-    }
-
-    this.availabilityChecked = true;
-
-    if (this.available) {
-      // ワーカーを初期化
-      const config = await detectTextlintConfig(this.projectRoot);
-      this.worker = new TextlintWorker({
-        executablePath: config.executablePath,
-        debounceMs: config.debounceMs,
-        timeoutMs: config.timeoutMs,
-        enabled: config.enabled,
-        configPath: config.configPath,
-      });
-    }
-
-    return this.available ?? false;
+    return {
+      nodes,
+      edges,
+      options: {
+        nodes: { shape: "dot", font: { size: 14 } },
+        edges: { smooth: { type: "curvedCW" } },
+        physics: { stabilization: { iterations: 100 } },
+        interaction: { hover: true, tooltipDelay: 200 },
+      },
+    };
   }
 
-  /**
-   * 診断を生成
-   */
-  async generate(
-    uri: string,
-    content: string,
-    _projectRoot: string,
-  ): Promise<Diagnostic[]> {
-    if (!this.worker) {
-      return [];
-    }
-
-    // URIからファイルパスを抽出
-    const filePath = uri.startsWith("file://")
-      ? decodeURIComponent(uri.slice(7))
-      : uri;
-
-    const result = await this.worker.lint(content, filePath);
-
-    // TextlintMessage → Diagnosticに変換
-    return result.messages.map((msg) => ({
-      range: {
-        start: { line: msg.line - 1, character: msg.column - 1 },
-        end: { line: msg.line - 1, character: msg.column },
-      },
-      message: msg.message,
-      severity: this.mapSeverity(msg.severity),
-      source: "textlint",
-      code: msg.ruleId,
+  private buildNodes(characters: readonly Character[]): readonly VisNode[] {
+    return characters.map((char) => ({
+      id: char.id,
+      label: char.name,
+      group: char.role,
+      title: `${char.name}\n${char.summary}`,
     }));
   }
 
-  /**
-   * textlint severity → LSP severityマッピング
-   */
-  private mapSeverity(textlintSeverity: number): number {
-    switch (textlintSeverity) {
-      case 2:
-        return DiagnosticSeverity.Error; // 1
-      case 1:
-        return DiagnosticSeverity.Warning; // 2
-      default:
-        return DiagnosticSeverity.Information; // 3
+  private buildEdges(characters: readonly Character[]): readonly VisEdge[] {
+    const edgeMap = new Map<string, VisEdge>();
+
+    for (const char of characters) {
+      for (
+        const [targetId, relationType] of Object.entries(char.relationships)
+      ) {
+        // 双方向エッジを1つにまとめる（辞書順でキーを作成）
+        const key = [char.id, targetId].sort().join("-");
+
+        if (!edgeMap.has(key)) {
+          edgeMap.set(key, {
+            from: char.id,
+            to: targetId,
+            label: relationType,
+            color: {
+              color: RELATION_COLORS[relationType as RelationType] || "#95a5a6",
+            },
+            width: 2,
+          });
+        }
+      }
     }
-  }
 
-  /**
-   * キャンセル
-   */
-  cancel(): void {
-    this.worker?.cancel();
-  }
-
-  /**
-   * 破棄
-   */
-  dispose(): void {
-    this.worker?.dispose();
-    this.worker = null;
+    return [...edgeMap.values()];
   }
 }
 ```
 
 - [ ] テストを実行して成功することを確認
 
+---
+
 ### Refactor Phase: 品質改善と継続成功確認
 
-- [ ] ログ出力を追加
+- [ ] ブリーフィング
+- [ ] 重複エッジのマージロジック改善
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
 
-## Process 8: LSPサーバーへのAggregator統合
+## Process 4: TimelineGraphBuilder実装
 
 <!--@process-briefing
 category: implementation
-tags: [lsp, server, integration]
+tags: [timeline, graph, causality]
 -->
 
 ### Briefing (auto-generated)
 
 **Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-server.ts:871-882のpublishDiagnosticsForUri()を修正 **Watch Points**:
-既存の動作を壊さない
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/lsp/integration/textlint_integration_test.ts` を作成
-  - 統合テストは実際のLSPサーバーで行う
-- [ ] テストを実行して失敗することを確認
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] `src/lsp/server/server.ts` を修正
-
-**修正箇所1: インポート追加（約61-62行目付近）**
-
-```typescript
-// 追加
-import { DiagnosticAggregator } from "@storyteller/lsp/diagnostics/diagnostic_aggregator.ts";
-import { StorytellerDiagnosticSource } from "@storyteller/lsp/diagnostics/storyteller_diagnostic_source.ts";
-import { TextlintDiagnosticSource } from "@storyteller/lsp/integration/textlint/textlint_diagnostic_source.ts";
-```
-
-**修正箇所2: プロパティ追加（約167-168行目付近）**
-
-```typescript
-// 変更前
-private readonly diagnosticsGenerator: DiagnosticsGenerator;
-private readonly diagnosticsPublisher: DiagnosticsPublisher;
-
-// 変更後
-private readonly diagnosticsGenerator: DiagnosticsGenerator;
-private readonly diagnosticsPublisher: DiagnosticsPublisher;
-private readonly diagnosticAggregator: DiagnosticAggregator;
-```
-
-**修正箇所3: 初期化（約222-223行目付近）**
-
-```typescript
-// 変更前
-this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
-this.diagnosticsPublisher = new DiagnosticsPublisher(
-
-// 変更後
-this.diagnosticsGenerator = new DiagnosticsGenerator(this.detector);
-
-// DiagnosticAggregatorの初期化
-const storytellerSource = new StorytellerDiagnosticSource(this.diagnosticsGenerator);
-const textlintSource = new TextlintDiagnosticSource(this.projectRoot);
-this.diagnosticAggregator = new DiagnosticAggregator([storytellerSource, textlintSource]);
-
-this.diagnosticsPublisher = new DiagnosticsPublisher(
-```
-
-**修正箇所4: publishDiagnosticsForUri()（約871-882行目）**
-
-```typescript
-// 変更前
-private async publishDiagnosticsForUri(uri: string): Promise<void> {
-  const document = this.documentManager.get(uri);
-  if (!document) return;
-
-  const diagnostics = await this.diagnosticsGenerator.generate(
-    uri,
-    document.content,
-    this.projectRoot,
-  );
-
-  await this.diagnosticsPublisher.publish(uri, diagnostics);
-}
-
-// 変更後
-private async publishDiagnosticsForUri(uri: string): Promise<void> {
-  const document = this.documentManager.get(uri);
-  if (!document) return;
-
-  // DiagnosticAggregatorを使用して複数ソースから診断を取得
-  const diagnostics = await this.diagnosticAggregator.generate(
-    uri,
-    document.content,
-    this.projectRoot,
-  );
-
-  await this.diagnosticsPublisher.publish(uri, diagnostics);
-}
-```
-
-**修正箇所5: dispose()に追加（既存のdisposeメソッド内）**
-
-```typescript
-// 追加
-this.diagnosticAggregator.dispose();
-```
-
-- [ ] テストを実行して成功することを確認
-- [ ] 既存のstoryteller診断が動作することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] 設定からtextlint有効/無効を制御
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 9: 共通Textlintランナー（shared/textlint）
-
-<!--@process-briefing
-category: implementation
-tags: [shared, textlint, cli, mcp]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-CLI/MCPで共有するロジックをshared/に配置 **Watch Points**: (auto-populated from
+(auto-populated from patterns) **Watch Points**: (auto-populated from
 failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
 
-- [ ] `tests/shared/textlint/runner_test.ts` を作成
-- [ ] `tests/shared/textlint/parser_test.ts` を作成
+- [ ] ブリーフィング
+- [ ] テストケースを作成
+  - `tests/application/view/graph/timeline_graph_builder_test.ts` を作成
+  - タイムラインイベント因果関係グラフのテスト
+  - causedBy/causesからのエッジ生成テスト
+
+**テストコード例**:
 
 ```typescript
-// tests/shared/textlint/runner_test.ts
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { TextlintRunner } from "@storyteller/shared/textlint/runner.ts";
+// tests/application/view/graph/timeline_graph_builder_test.ts
+import { assertEquals, assertExists } from "@std/assert";
+import { TimelineGraphBuilder } from "@storyteller/application/view/graph/timeline_graph_builder.ts";
+import type {
+  Timeline,
+  TimelineEvent,
+} from "@storyteller/types/v2/timeline.ts";
 
-describe("TextlintRunner", () => {
-  it("should run textlint on files", async () => {
-    // 構造テスト
-    const runner = new TextlintRunner("/project");
-    assertEquals(typeof runner.check, "function");
-    assertEquals(typeof runner.fix, "function");
+const mockTimeline: Timeline = {
+  id: "main",
+  name: "メインストーリー",
+  scope: "story",
+  summary: "物語の主軸",
+  events: [
+    {
+      id: "event_01",
+      title: "王国の滅亡",
+      category: "plot_point",
+      time: { order: 1 },
+      summary: "始まりの事件",
+      characters: ["hero"],
+      settings: ["kingdom"],
+      chapters: ["chapter_01"],
+      causes: ["event_02"],
+    },
+    {
+      id: "event_02",
+      title: "勇者の旅立ち",
+      category: "character_action",
+      time: { order: 2 },
+      summary: "冒険の開始",
+      characters: ["hero"],
+      settings: ["village"],
+      chapters: ["chapter_02"],
+      causedBy: ["event_01"],
+      causes: ["event_03"],
+    },
+    {
+      id: "event_03",
+      title: "魔王との対決",
+      category: "climax",
+      time: { order: 3 },
+      summary: "最終決戦",
+      characters: ["hero", "villain"],
+      settings: ["castle"],
+      chapters: ["chapter_10"],
+      causedBy: ["event_02"],
+    },
+  ],
+};
+
+Deno.test("TimelineGraphBuilder - 因果関係グラフ生成", async (t) => {
+  const builder = new TimelineGraphBuilder();
+
+  await t.step("イベントがノードに変換される", () => {
+    const result = builder.build([mockTimeline]);
+    assertEquals(result.nodes.length, 3);
+  });
+
+  await t.step("causes関係から矢印エッジが生成される", () => {
+    const result = builder.build([mockTimeline]);
+    const edge = result.edges.find((e) =>
+      e.from === "event_01" && e.to === "event_02"
+    );
+    assertExists(edge);
+    assertEquals(edge?.arrows, "to");
+  });
+
+  await t.step("カテゴリ別にノードの色が設定される", () => {
+    const result = builder.build([mockTimeline]);
+    const climaxNode = result.nodes.find((n) => n.id === "event_03");
+    assertExists(climaxNode?.color?.background);
+  });
+
+  await t.step("時系列順にノードが並ぶ（オプション設定）", () => {
+    const result = builder.build([mockTimeline]);
+    assertExists(result.options);
   });
 });
 ```
 
 - [ ] テストを実行して失敗することを確認
 
+---
+
 ### Green Phase: 最小実装と成功確認
 
-- [ ] `src/shared/textlint/types.ts` を作成
+- [ ] ブリーフィング
+- [ ] `src/application/view/graph/timeline_graph_builder.ts` を作成
+  - TimelineGraphBuilderクラスを実装
+  - causes/causedByからエッジを生成
+  - EventCategory別のノード色マッピング
+
+**実装コード例**:
 
 ```typescript
-// src/shared/textlint/types.ts
+// src/application/view/graph/timeline_graph_builder.ts
+import type { GraphDataBuilder } from "./graph_data_builder.ts";
+import type { VisEdge, VisGraphData, VisNode } from "./vis_types.ts";
+import type {
+  EventCategory,
+  Timeline,
+  TimelineEvent,
+} from "@storyteller/types/v2/timeline.ts";
+
+/** イベントカテゴリ別の色 */
+const CATEGORY_COLORS: Record<EventCategory, string> = {
+  plot_point: "#3498db",
+  character_action: "#27ae60",
+  world_event: "#9b59b6",
+  flashback: "#95a5a6",
+  foreshadowing: "#f39c12",
+  climax: "#e74c3c",
+  resolution: "#1abc9c",
+};
 
 /**
- * textlintチェック結果
+ * タイムライン因果関係グラフビルダー
  */
-export interface TextlintCheckResult {
-  totalFiles: number;
-  totalIssues: number;
-  errorCount: number;
-  warningCount: number;
-  infoCount: number;
-  results: TextlintFileResult[];
-}
+export class TimelineGraphBuilder
+  implements GraphDataBuilder<readonly Timeline[]> {
+  build(timelines: readonly Timeline[]): VisGraphData {
+    const allEvents = timelines.flatMap((t) => t.events);
 
-/**
- * ファイル単位の結果
- */
-export interface TextlintFileResult {
-  path: string;
-  issues: TextlintIssue[];
-}
+    if (allEvents.length === 0) {
+      return { nodes: [], edges: [] };
+    }
 
-/**
- * 個別の問題
- */
-export interface TextlintIssue {
-  ruleId: string;
-  severity: "error" | "warning" | "info";
-  message: string;
-  line: number;
-  column: number;
-  source: "textlint";
-}
+    const nodes = this.buildNodes(allEvents);
+    const edges = this.buildEdges(allEvents);
 
-/**
- * textlint修正結果
- */
-export interface TextlintFixResult {
-  fixed: boolean;
-  path: string;
-  fixedCount: number;
-}
+    return {
+      nodes,
+      edges,
+      options: {
+        nodes: { shape: "box", font: { size: 12 } },
+        edges: { smooth: { type: "cubicBezier" } },
+        physics: { enabled: true },
+        interaction: { hover: true },
+      },
+    };
+  }
 
-/**
- * チェックオプション
- */
-export interface TextlintCheckOptions {
-  path?: string;
-  dir?: string;
-  recursive?: boolean;
-  rules?: string[];
-  severity?: "error" | "warning" | "info";
-  withEntityCheck?: boolean;
-}
+  private buildNodes(events: readonly TimelineEvent[]): readonly VisNode[] {
+    return events.map((event) => ({
+      id: event.id,
+      label: event.title,
+      title: `${event.title}\n${event.summary}\nTime: ${event.time.order}`,
+      group: event.category,
+      color: {
+        background: CATEGORY_COLORS[event.category] || "#95a5a6",
+        border: "#2c3e50",
+      },
+    }));
+  }
 
-/**
- * 修正オプション
- */
-export interface TextlintFixOptions {
-  path: string;
-  rules?: string[];
-  dryRun?: boolean;
+  private buildEdges(events: readonly TimelineEvent[]): readonly VisEdge[] {
+    const edges: VisEdge[] = [];
+    const eventIds = new Set(events.map((e) => e.id));
+
+    for (const event of events) {
+      // causesから順方向エッジを生成
+      if (event.causes) {
+        for (const targetId of event.causes) {
+          if (eventIds.has(targetId)) {
+            edges.push({
+              from: event.id,
+              to: targetId,
+              arrows: "to",
+              color: { color: "#34495e" },
+              width: 2,
+            });
+          }
+        }
+      }
+    }
+
+    return edges;
+  }
 }
 ```
 
-- [ ] `src/shared/textlint/runner.ts` を作成（CLI/MCP共有ロジック）
 - [ ] テストを実行して成功することを確認
+
+---
 
 ### Refactor Phase: 品質改善と継続成功確認
 
-- [ ] エラーハンドリングを追加
+- [ ] ブリーフィング
+- [ ] 循環参照の検出ロジック追加を検討
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
 
-## Process 10: CLI lint基本コマンド
+## Process 5: ForeshadowingGraphBuilder実装
 
 <!--@process-briefing
 category: implementation
-tags: [cli, lint, command]
+tags: [foreshadowing, graph, flow]
 -->
 
 ### Briefing (auto-generated)
 
 **Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-src/cli/modules/rag/install_hooks.tsのCommandDescriptorパターン **Watch
-Points**: (auto-populated from failure_cases)
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/cli/modules/lint/lint_test.ts` を作成
-
-```typescript
-// tests/cli/modules/lint/lint_test.ts
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import { lintCommandDescriptor } from "@storyteller/cli/modules/lint/lint.ts";
-
-describe("CLI lint command", () => {
-  it("should have correct name", () => {
-    assertEquals(lintCommandDescriptor.name, "lint");
-  });
-
-  it("should have options for path, dir, fix, json", () => {
-    const optionNames = lintCommandDescriptor.options?.map((o) => o.name) ?? [];
-    assertEquals(optionNames.includes("path"), true);
-    assertEquals(optionNames.includes("dir"), true);
-    assertEquals(optionNames.includes("fix"), true);
-    assertEquals(optionNames.includes("json"), true);
-  });
-});
-```
-
-- [ ] テストを実行して失敗することを確認
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] `src/cli/modules/lint/types.ts` を作成
-- [ ] `src/cli/modules/lint/lint.ts` を作成
-- [ ] `src/cli/modules/lint/index.ts` を作成
-- [ ] `src/cli/modules/index.ts` にlint登録を追加
-- [ ] テストを実行して成功することを確認
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] エラーハンドリングを追加
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 11: CLI lint --fix対応
-
-<!--@process-briefing
-category: implementation
-tags: [cli, lint, fix]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: Process
-10のlintコマンドに統合 **Watch Points**: (auto-populated from failure_cases)
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/cli/modules/lint/fix_test.ts` を作成
-  - --fixオプションでrunner.fix()が呼ばれること
-  - dryRunモードのテスト
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] Process 10で--fix対応済みのためスキップ
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 12: CLI lint --json対応
-
-<!--@process-briefing
-category: implementation
-tags: [cli, lint, json]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-OutputPresenterインターフェース参照 **Watch Points**: (auto-populated from
+(auto-populated from patterns) **Watch Points**: (auto-populated from
 failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
 
-- [ ] JSON出力形式のテストを追加
+- [ ] ブリーフィング
+- [ ] テストケースを作成
+  - `tests/application/view/graph/foreshadowing_graph_builder_test.ts` を作成
+  - 伏線設置・回収フローグラフのテスト
+  - ステータス別のノードスタイルテスト
 
-### Green Phase: 最小実装と成功確認
-
-- [ ] Process 10で--json対応済みのためスキップ
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 13: CLI lint オプション拡充
-
-<!--@process-briefing
-category: implementation
-tags: [cli, lint, options]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: SPEC.md
-2.2節のオプション一覧 **Watch Points**: (auto-populated from failure_cases)
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] 全オプションのテストを追加
-  - --rule
-  - --config
-  - --severity
-  - --with-entity-check
-
-### Green Phase: 最小実装と成功確認
-
-- [ ] --with-entity-checkの実装
-
-### Refactor Phase: 品質改善と継続成功確認
-
-- [ ] テストを実行し、継続して成功することを確認
-
----
-
-## Process 20: ~~MCP textlint_check~~ [SKIPPED]
-
-> **スキップ理由**: textlint v14.8.0+
-> のネイティブMCPサーバー機能（`--mcp`フラグ）で代替可能
->
-> textlintが提供するMCPツール:
->
-> - `lintFile`: ファイルのlint
-> - `lintText`: テキスト直接lint
-> - `getLintFixedFileContent`: ファイルのfix結果取得
-> - `getLintFixedTextContent`: テキストのfix結果取得
->
-> **使用方法**: Claude Desktop等のMCPクライアント設定で `npx textlint --mcp`
-> を起動
->
-> **参照**: https://github.com/textlint/textlint/blob/master/docs/mcp.md
-
----
-
-## Process 21: ~~MCP textlint_fix~~ [SKIPPED]
-
-> **スキップ理由**: Process 20と同様、textlint --mcp の
-> `getLintFixedFileContent`, `getLintFixedTextContent` で代替
-
----
-
-## Process 30: Git hooks install-hooks
-
-<!--@process-briefing
-category: implementation
-tags: [git, hooks, install]
--->
-
-### Briefing (auto-generated)
-
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
-src/cli/modules/rag/install_hooks.tsのパターン **Watch Points**: (auto-populated
-from failure_cases)
-
----
-
-### Red Phase: テスト作成と失敗確認
-
-- [ ] `tests/cli/modules/lint/install_hooks_test.ts` を作成
+**テストコード例**:
 
 ```typescript
-// tests/cli/modules/lint/install_hooks_test.ts
-import { assertEquals } from "@std/assert";
-import { describe, it } from "@std/testing/bdd";
-import {
-  generatePreCommitHook,
-  lintInstallHooksCommandDescriptor,
-} from "@storyteller/cli/modules/lint/install_hooks.ts";
+// tests/application/view/graph/foreshadowing_graph_builder_test.ts
+import { assertEquals, assertExists } from "@std/assert";
+import { ForeshadowingGraphBuilder } from "@storyteller/application/view/graph/foreshadowing_graph_builder.ts";
+import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
 
-describe("CLI lint install-hooks", () => {
-  it("should have correct name", () => {
-    assertEquals(lintInstallHooksCommandDescriptor.name, "install-hooks");
+const mockForeshadowings: readonly Foreshadowing[] = [
+  {
+    id: "sword",
+    name: "古びた剣",
+    type: "chekhov",
+    summary: "床板の下の剣",
+    planting: { chapter: "chapter_01", description: "発見" },
+    status: "resolved",
+    resolutions: [{
+      chapter: "chapter_10",
+      description: "使用",
+      completeness: 1.0,
+    }],
+  },
+  {
+    id: "prophecy",
+    name: "予言",
+    type: "prophecy",
+    summary: "王国の運命",
+    planting: { chapter: "chapter_02", description: "告げられる" },
+    status: "planted",
+    relations: {
+      characters: ["hero"],
+      settings: [],
+      relatedForeshadowings: ["sword"],
+    },
+  },
+];
+
+Deno.test("ForeshadowingGraphBuilder - フローグラフ生成", async (t) => {
+  const builder = new ForeshadowingGraphBuilder();
+
+  await t.step("伏線がノードに変換される", () => {
+    const result = builder.build(mockForeshadowings);
+    assertEquals(result.nodes.length, 2);
   });
 
-  it("should generate pre-commit hook script", () => {
-    const script = generatePreCommitHook({ strict: false });
-    assertEquals(script.includes("storyteller lint"), true);
-    assertEquals(script.includes("#!/bin/sh"), true);
+  await t.step("ステータス別にノード色が設定される", () => {
+    const result = builder.build(mockForeshadowings);
+    const resolvedNode = result.nodes.find((n) => n.id === "sword");
+    const plantedNode = result.nodes.find((n) => n.id === "prophecy");
+    // resolved=緑, planted=オレンジ
+    assertEquals(resolvedNode?.color?.background, "#27ae60");
+    assertEquals(plantedNode?.color?.background, "#f39c12");
   });
 
-  it("should generate strict mode script", () => {
-    const script = generatePreCommitHook({ strict: true });
-    assertEquals(script.includes("exit 1"), true);
+  await t.step("relatedForeshadowingsからエッジが生成される", () => {
+    const result = builder.build(mockForeshadowings);
+    const edge = result.edges.find((e) =>
+      e.from === "prophecy" && e.to === "sword"
+    );
+    assertExists(edge);
+  });
+
+  await t.step("タイプ別にノード形状が設定される", () => {
+    const result = builder.build(mockForeshadowings);
+    const chekhovNode = result.nodes.find((n) => n.id === "sword");
+    const prophecyNode = result.nodes.find((n) => n.id === "prophecy");
+    assertEquals(chekhovNode?.shape, "diamond");
+    assertEquals(prophecyNode?.shape, "star");
   });
 });
 ```
 
 - [ ] テストを実行して失敗することを確認
 
+---
+
 ### Green Phase: 最小実装と成功確認
 
-- [ ] `src/cli/modules/lint/install_hooks.ts` を作成
+- [ ] ブリーフィング
+- [ ] `src/application/view/graph/foreshadowing_graph_builder.ts` を作成
+  - ForeshadowingGraphBuilderクラスを実装
+  - ForeshadowingStatus別のノード色マッピング
+  - ForeshadowingType別のノード形状マッピング
+  - relatedForeshadowingsからエッジを生成
+
+**実装コード例**:
+
+```typescript
+// src/application/view/graph/foreshadowing_graph_builder.ts
+import type { GraphDataBuilder } from "./graph_data_builder.ts";
+import type { VisEdge, VisGraphData, VisNode } from "./vis_types.ts";
+import type {
+  Foreshadowing,
+  ForeshadowingStatus,
+  ForeshadowingType,
+} from "@storyteller/types/v2/foreshadowing.ts";
+
+/** ステータス別の色 */
+const STATUS_COLORS: Record<ForeshadowingStatus, string> = {
+  planted: "#f39c12",
+  partially_resolved: "#f1c40f",
+  resolved: "#27ae60",
+  abandoned: "#95a5a6",
+};
+
+/** タイプ別の形状 */
+const TYPE_SHAPES: Record<ForeshadowingType, VisNode["shape"]> = {
+  hint: "dot",
+  prophecy: "star",
+  mystery: "triangle",
+  symbol: "ellipse",
+  chekhov: "diamond",
+  red_herring: "box",
+};
+
+/**
+ * 伏線フローグラフビルダー
+ */
+export class ForeshadowingGraphBuilder
+  implements GraphDataBuilder<readonly Foreshadowing[]> {
+  build(foreshadowings: readonly Foreshadowing[]): VisGraphData {
+    if (foreshadowings.length === 0) {
+      return { nodes: [], edges: [] };
+    }
+
+    const nodes = this.buildNodes(foreshadowings);
+    const edges = this.buildEdges(foreshadowings);
+
+    return {
+      nodes,
+      edges,
+      options: {
+        nodes: { font: { size: 12 } },
+        edges: { smooth: true, dashes: true },
+        physics: { enabled: true },
+        interaction: { hover: true },
+      },
+    };
+  }
+
+  private buildNodes(
+    foreshadowings: readonly Foreshadowing[],
+  ): readonly VisNode[] {
+    return foreshadowings.map((f) => ({
+      id: f.id,
+      label: f.name,
+      title: `${f.name}\n${f.summary}\nStatus: ${f.status}`,
+      shape: TYPE_SHAPES[f.type] || "dot",
+      color: {
+        background: STATUS_COLORS[f.status],
+        border: "#2c3e50",
+      },
+    }));
+  }
+
+  private buildEdges(
+    foreshadowings: readonly Foreshadowing[],
+  ): readonly VisEdge[] {
+    const edges: VisEdge[] = [];
+    const fIds = new Set(foreshadowings.map((f) => f.id));
+
+    for (const f of foreshadowings) {
+      const related = f.relations?.relatedForeshadowings || [];
+      for (const targetId of related) {
+        if (fIds.has(targetId)) {
+          edges.push({
+            from: f.id,
+            to: targetId,
+            dashes: true,
+            color: { color: "#7f8c8d" },
+            width: 1,
+          });
+        }
+      }
+    }
+
+    return edges;
+  }
+}
+```
+
 - [ ] テストを実行して成功することを確認
+
+---
 
 ### Refactor Phase: 品質改善と継続成功確認
 
+- [ ] ブリーフィング
+- [ ] コードの品質を改善
 - [ ] テストを実行し、継続して成功することを確認
 
 ---
 
-## Process 31: Git hooks uninstall-hooks
+## Process 6: HtmlGenerator拡張（グラフセクション）
 
 <!--@process-briefing
 category: implementation
-tags: [git, hooks, uninstall]
+tags: [html, integration, vis.js]
 -->
 
 ### Briefing (auto-generated)
 
-**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**: Process
-30に統合済み **Watch Points**: (auto-populated from failure_cases)
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
 
 ---
 
 ### Red Phase: テスト作成と失敗確認
 
-- [ ] Process 30で統合実装済み
+- [ ] ブリーフィング
+- [ ] テストケースを作成
+  - `tests/application/view/html_generator_graph_test.ts` を作成
+  - グラフセクションがHTMLに含まれることのテスト
+  - vis.js CDNリンクが埋め込まれることのテスト
+
+**テストコード例**:
+
+```typescript
+// tests/application/view/html_generator_graph_test.ts
+import { assertEquals, assertStringIncludes } from "@std/assert";
+import { HtmlGenerator } from "@storyteller/application/view/html_generator.ts";
+import { VIS_CDN_LINKS } from "@storyteller/application/view/graph/vis_types.ts";
+import type { ProjectAnalysis } from "@storyteller/application/types.ts";
+
+const mockAnalysis: ProjectAnalysis = {
+  characters: [
+    {
+      id: "hero",
+      name: "勇者",
+      role: "protagonist",
+      traits: [],
+      relationships: { villain: "enemy" },
+      appearingChapters: [],
+      summary: "主人公",
+    },
+    {
+      id: "villain",
+      name: "魔王",
+      role: "antagonist",
+      traits: [],
+      relationships: { hero: "enemy" },
+      appearingChapters: [],
+      summary: "敵",
+    },
+  ],
+  settings: [],
+  timelines: [],
+  foreshadowings: [],
+  manuscripts: [],
+};
+
+Deno.test("HtmlGenerator - グラフ統合", async (t) => {
+  const generator = new HtmlGenerator();
+
+  await t.step("vis.js CDNリンクが含まれる", () => {
+    const html = generator.generate(mockAnalysis);
+    assertStringIncludes(html, VIS_CDN_LINKS.network);
+    assertStringIncludes(html, VIS_CDN_LINKS.css);
+  });
+
+  await t.step("キャラクター関係グラフセクションが含まれる", () => {
+    const html = generator.generate(mockAnalysis);
+    assertStringIncludes(html, 'id="character-graph"');
+    assertStringIncludes(html, "Character Relationships");
+  });
+
+  await t.step("グラフ初期化スクリプトが含まれる", () => {
+    const html = generator.generate(mockAnalysis);
+    assertStringIncludes(html, "new vis.Network");
+  });
+
+  await t.step("グラフデータがJSON形式で埋め込まれる", () => {
+    const html = generator.generate(mockAnalysis);
+    assertStringIncludes(html, '"nodes"');
+    assertStringIncludes(html, '"edges"');
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+---
 
 ### Green Phase: 最小実装と成功確認
 
-- [ ] Process 30で統合実装済み
+- [ ] ブリーフィング
+- [ ] `src/application/view/html_generator.ts` を拡張
+  - VIS_CDN_LINKSをhead内に追加
+  - 各グラフビルダーを使用してデータ生成
+  - グラフセクションのHTML生成（div + script）
+  - vis.Network初期化コードを生成
+
+**修正対象**: `src/application/view/html_generator.ts`
+
+**主な変更点**:
+
+1. import追加:
+   - `VIS_CDN_LINKS`
+   - `CharacterGraphBuilder`
+   - `TimelineGraphBuilder`
+   - `ForeshadowingGraphBuilder`
+
+2. `generate`メソッド拡張:
+   - グラフセクションを追加
+   - vis.js CDNリンクをheadに追加
+   - 初期化スクリプトをbody末尾に追加
+
+3. 新規メソッド追加:
+   - `renderCharacterGraph(characters): string`
+   - `renderTimelineGraph(timelines): string`
+   - `renderForeshadowingGraph(foreshadowings): string`
+   - `renderGraphScript(): string`
+
+- [ ] テストを実行して成功することを確認
+
+---
 
 ### Refactor Phase: 品質改善と継続成功確認
 
+- [ ] ブリーフィング
+- [ ] グラフ描画コードの共通化
 - [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 7: ConsistencyChecker基盤
+
+<!--@process-briefing
+category: implementation
+tags: [consistency, validation, foundation]
+-->
+
+### Briefing (auto-generated)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+
+- [ ] ブリーフィング
+- [ ] テストケースを作成
+  - `tests/application/view/consistency/consistency_checker_test.ts` を作成
+  - ConsistencyCheckerインターフェースのテスト
+  - ConsistencyIssue型のテスト
+
+**テストコード例**:
+
+```typescript
+// tests/application/view/consistency/consistency_checker_test.ts
+import { assertEquals, assertExists } from "@std/assert";
+import { ConsistencyChecker } from "@storyteller/application/view/consistency/consistency_checker.ts";
+import type {
+  ConsistencyIssue,
+  IssueSeverity,
+} from "@storyteller/application/view/consistency/types.ts";
+import type { ProjectAnalysis } from "@storyteller/application/types.ts";
+
+const emptyAnalysis: ProjectAnalysis = {
+  characters: [],
+  settings: [],
+  timelines: [],
+  foreshadowings: [],
+  manuscripts: [],
+};
+
+Deno.test("ConsistencyChecker - 基盤", async (t) => {
+  await t.step("ConsistencyCheckerクラスが存在する", () => {
+    const checker = new ConsistencyChecker();
+    assertExists(checker);
+  });
+
+  await t.step("checkメソッドがConsistencyIssue配列を返す", () => {
+    const checker = new ConsistencyChecker();
+    const issues = checker.check(emptyAnalysis);
+    assertEquals(Array.isArray(issues), true);
+  });
+
+  await t.step("空のデータでは問題が検出されない", () => {
+    const checker = new ConsistencyChecker();
+    const issues = checker.check(emptyAnalysis);
+    assertEquals(issues.length, 0);
+  });
+});
+
+Deno.test("ConsistencyIssue - 型定義", async (t) => {
+  await t.step("ConsistencyIssue型が正しく構成できる", () => {
+    const issue: ConsistencyIssue = {
+      id: "issue_01",
+      type: "orphan_character",
+      severity: "warning",
+      message: "キャラクター 'hero' は他のキャラクターと関係がありません",
+      entityId: "hero",
+      entityType: "character",
+      suggestion: "関係性を追加してください",
+    };
+    assertEquals(issue.severity, "warning");
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+---
+
+### Green Phase: 最小実装と成功確認
+
+- [ ] ブリーフィング
+- [ ] `src/application/view/consistency/types.ts` を作成
+  - ConsistencyIssue型を定義
+  - IssueSeverity型（error, warning, info）を定義
+  - IssueType型を定義
+- [ ] `src/application/view/consistency/consistency_checker.ts` を作成
+  - ConsistencyCheckerクラスの基本実装
+
+**実装コード例**:
+
+```typescript
+// src/application/view/consistency/types.ts
+
+/** 問題の重大度 */
+export type IssueSeverity = "error" | "warning" | "info";
+
+/** 問題の種類 */
+export type IssueType =
+  | "orphan_character" // 孤立キャラクター
+  | "orphan_setting" // 孤立設定
+  | "cyclic_causality" // 循環因果
+  | "unresolved_foreshadowing" // 未回収伏線
+  | "missing_reference" // 参照先不明
+  | "timeline_inconsistency" // 時系列矛盾
+  | "duplicate_id"; // ID重複
+
+/** 整合性問題 */
+export type ConsistencyIssue = {
+  readonly id: string;
+  readonly type: IssueType;
+  readonly severity: IssueSeverity;
+  readonly message: string;
+  readonly entityId?: string;
+  readonly entityType?:
+    | "character"
+    | "setting"
+    | "timeline"
+    | "foreshadowing"
+    | "event";
+  readonly suggestion?: string;
+};
+```
+
+```typescript
+// src/application/view/consistency/consistency_checker.ts
+import type { ConsistencyIssue } from "./types.ts";
+import type { ProjectAnalysis } from "@storyteller/application/types.ts";
+
+/**
+ * 整合性チェッカー
+ */
+export class ConsistencyChecker {
+  private rules: ConsistencyRule[] = [];
+
+  constructor() {
+    // ルールは後から追加
+  }
+
+  /**
+   * ルールを追加する
+   */
+  addRule(rule: ConsistencyRule): void {
+    this.rules.push(rule);
+  }
+
+  /**
+   * 整合性チェックを実行する
+   */
+  check(analysis: ProjectAnalysis): readonly ConsistencyIssue[] {
+    const issues: ConsistencyIssue[] = [];
+
+    for (const rule of this.rules) {
+      const ruleIssues = rule.check(analysis);
+      issues.push(...ruleIssues);
+    }
+
+    return issues;
+  }
+}
+
+/**
+ * 整合性ルールのインターフェース
+ */
+export interface ConsistencyRule {
+  readonly name: string;
+  check(analysis: ProjectAnalysis): readonly ConsistencyIssue[];
+}
+```
+
+- [ ] テストを実行して成功することを確認
+
+---
+
+### Refactor Phase: 品質改善と継続成功確認
+
+- [ ] ブリーフィング
+- [ ] コードの品質を改善
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 8: 各種整合性ルール実装
+
+<!--@process-briefing
+category: implementation
+tags: [consistency, rules, validation]
+-->
+
+### Briefing (auto-generated)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+
+- [ ] ブリーフィング
+- [ ] テストケースを作成（各ルール別）
+  - `tests/application/view/consistency/rules/orphan_character_rule_test.ts`
+  - `tests/application/view/consistency/rules/unresolved_foreshadowing_rule_test.ts`
+  - `tests/application/view/consistency/rules/cyclic_causality_rule_test.ts`
+  - `tests/application/view/consistency/rules/missing_reference_rule_test.ts`
+
+**テストコード例（孤立キャラクター）**:
+
+```typescript
+// tests/application/view/consistency/rules/orphan_character_rule_test.ts
+import { assertEquals } from "@std/assert";
+import { OrphanCharacterRule } from "@storyteller/application/view/consistency/rules/orphan_character_rule.ts";
+import type { ProjectAnalysis } from "@storyteller/application/types.ts";
+
+Deno.test("OrphanCharacterRule - 孤立キャラクター検出", async (t) => {
+  const rule = new OrphanCharacterRule();
+
+  await t.step("関係のないキャラクターを検出する", () => {
+    const analysis: ProjectAnalysis = {
+      characters: [
+        {
+          id: "hero",
+          name: "勇者",
+          role: "protagonist",
+          traits: [],
+          relationships: {},
+          appearingChapters: [],
+          summary: "",
+        },
+        {
+          id: "villain",
+          name: "魔王",
+          role: "antagonist",
+          traits: [],
+          relationships: { hero: "enemy" },
+          appearingChapters: [],
+          summary: "",
+        },
+      ],
+      settings: [],
+      timelines: [],
+      foreshadowings: [],
+      manuscripts: [],
+    };
+    const issues = rule.check(analysis);
+    assertEquals(issues.length, 1);
+    assertEquals(issues[0].entityId, "hero");
+  });
+
+  await t.step("全員に関係がある場合は問題なし", () => {
+    const analysis: ProjectAnalysis = {
+      characters: [
+        {
+          id: "hero",
+          name: "勇者",
+          role: "protagonist",
+          traits: [],
+          relationships: { villain: "enemy" },
+          appearingChapters: [],
+          summary: "",
+        },
+        {
+          id: "villain",
+          name: "魔王",
+          role: "antagonist",
+          traits: [],
+          relationships: { hero: "enemy" },
+          appearingChapters: [],
+          summary: "",
+        },
+      ],
+      settings: [],
+      timelines: [],
+      foreshadowings: [],
+      manuscripts: [],
+    };
+    const issues = rule.check(analysis);
+    assertEquals(issues.length, 0);
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+---
+
+### Green Phase: 最小実装と成功確認
+
+- [ ] ブリーフィング
+- [ ] 各ルールを実装
+  - `src/application/view/consistency/rules/orphan_character_rule.ts`
+  - `src/application/view/consistency/rules/unresolved_foreshadowing_rule.ts`
+  - `src/application/view/consistency/rules/cyclic_causality_rule.ts`
+  - `src/application/view/consistency/rules/missing_reference_rule.ts`
+
+**各ルールの検出内容**:
+
+| ルール                      | 検出内容                                        | 重大度  |
+| --------------------------- | ----------------------------------------------- | ------- |
+| OrphanCharacterRule         | 他キャラとの関係がないキャラクター              | warning |
+| UnresolvedForeshadowingRule | status=planted で plannedResolutionChapter 超過 | warning |
+| CyclicCausalityRule         | causedBy/causes の循環参照                      | error   |
+| MissingReferenceRule        | 存在しないID参照                                | error   |
+
+- [ ] テストを実行して成功することを確認
+
+---
+
+### Refactor Phase: 品質改善と継続成功確認
+
+- [ ] ブリーフィング
+- [ ] ルール間の共通処理を抽出
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 9: HTML整合性表示統合
+
+<!--@process-briefing
+category: implementation
+tags: [html, consistency, display]
+-->
+
+### Briefing (auto-generated)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+
+- [ ] ブリーフィング
+- [ ] テストケースを作成
+  - `tests/application/view/html_generator_consistency_test.ts` を作成
+  - 整合性チェック結果がHTMLに表示されることのテスト
+
+**テストコード例**:
+
+```typescript
+// tests/application/view/html_generator_consistency_test.ts
+import { assertNotMatch, assertStringIncludes } from "@std/assert";
+import { HtmlGenerator } from "@storyteller/application/view/html_generator.ts";
+import type { ProjectAnalysis } from "@storyteller/application/types.ts";
+
+Deno.test("HtmlGenerator - 整合性表示", async (t) => {
+  const generator = new HtmlGenerator();
+
+  await t.step("整合性セクションが含まれる", () => {
+    const analysis: ProjectAnalysis = {
+      characters: [
+        {
+          id: "hero",
+          name: "勇者",
+          role: "protagonist",
+          traits: [],
+          relationships: {},
+          appearingChapters: [],
+          summary: "",
+        },
+      ],
+      settings: [],
+      timelines: [],
+      foreshadowings: [],
+      manuscripts: [],
+    };
+    const html = generator.generate(analysis);
+    assertStringIncludes(html, "Consistency Check");
+  });
+
+  await t.step("警告がある場合は警告アイコンが表示される", () => {
+    const analysis: ProjectAnalysis = {
+      characters: [
+        {
+          id: "hero",
+          name: "勇者",
+          role: "protagonist",
+          traits: [],
+          relationships: {},
+          appearingChapters: [],
+          summary: "",
+        },
+      ],
+      settings: [],
+      timelines: [],
+      foreshadowings: [],
+      manuscripts: [],
+    };
+    const html = generator.generate(analysis);
+    assertStringIncludes(html, "warning");
+  });
+
+  await t.step("問題がない場合は成功メッセージが表示される", () => {
+    const analysis: ProjectAnalysis = {
+      characters: [],
+      settings: [],
+      timelines: [],
+      foreshadowings: [],
+      manuscripts: [],
+    };
+    const html = generator.generate(analysis);
+    assertStringIncludes(html, "No issues found");
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+---
+
+### Green Phase: 最小実装と成功確認
+
+- [ ] ブリーフィング
+- [ ] `src/application/view/html_generator.ts` を拡張
+  - ConsistencyCheckerを使用
+  - 整合性結果セクションを生成
+  - 問題の重大度別にスタイリング
+
+**新規メソッド追加**:
+
+- `renderConsistencySection(analysis: ProjectAnalysis): string`
+- `renderIssue(issue: ConsistencyIssue): string`
+
+**表示要素**:
+
+- サマリー（エラー数、警告数、情報数）
+- 問題リスト（重大度別アイコン、メッセージ、提案）
+- 問題なしの場合のメッセージ
+
+- [ ] テストを実行して成功することを確認
+
+---
+
+### Refactor Phase: 品質改善と継続成功確認
+
+- [ ] ブリーフィング
+- [ ] コードの品質を改善
+- [ ] テストを実行し、継続して成功することを確認
+
+---
+
+## Process 10: 統合テスト
+
+<!--@process-briefing
+category: testing
+tags: [integration, e2e]
+-->
+
+### Briefing (auto-generated)
+
+**Related Lessons**: (auto-populated from stigmergy) **Known Patterns**:
+(auto-populated from patterns) **Watch Points**: (auto-populated from
+failure_cases)
+
+---
+
+### Red Phase: テスト作成と失敗確認
+
+- [ ] ブリーフィング
+- [ ] 統合テストケースを作成
+  - `tests/application/view/html_generator_integration_test.ts` を作成
+  - 全機能を含む完全なHTMLの生成テスト
+  - サンプルプロジェクト（cinderella）を使用したE2Eテスト
+
+**テストコード例**:
+
+```typescript
+// tests/application/view/html_generator_integration_test.ts
+import { assertEquals, assertStringIncludes } from "@std/assert";
+import { HtmlGenerator } from "@storyteller/application/view/html_generator.ts";
+import type { ProjectAnalysis } from "@storyteller/application/types.ts";
+
+// 完全なテストデータ
+const fullAnalysis: ProjectAnalysis = {
+  characters: [
+    {
+      id: "cinderella",
+      name: "シンデレラ",
+      role: "protagonist",
+      traits: ["優しい", "勤勉"],
+      relationships: { prince: "romantic", stepmother: "enemy" },
+      appearingChapters: ["chapter_01", "chapter_02"],
+      summary: "主人公の少女",
+    },
+    {
+      id: "prince",
+      name: "王子",
+      role: "supporting",
+      traits: ["高貴"],
+      relationships: { cinderella: "romantic" },
+      appearingChapters: ["chapter_02"],
+      summary: "王国の王子",
+    },
+  ],
+  settings: [
+    { id: "castle", name: "城", type: "location", summary: "王国の城" },
+  ],
+  timelines: [
+    {
+      id: "main",
+      name: "メインストーリー",
+      scope: "story",
+      summary: "物語の流れ",
+      events: [
+        {
+          id: "ball",
+          title: "舞踏会",
+          category: "plot_point",
+          time: { order: 1 },
+          summary: "王子との出会い",
+          characters: ["cinderella", "prince"],
+          settings: ["castle"],
+          chapters: ["chapter_02"],
+          causes: ["glass_slipper"],
+        },
+        {
+          id: "glass_slipper",
+          title: "ガラスの靴",
+          category: "foreshadowing",
+          time: { order: 2 },
+          summary: "残されたガラスの靴",
+          characters: ["cinderella"],
+          settings: ["castle"],
+          chapters: ["chapter_02"],
+          causedBy: ["ball"],
+        },
+      ],
+    },
+  ],
+  foreshadowings: [
+    {
+      id: "magic",
+      name: "魔法の力",
+      type: "hint",
+      summary: "妖精の力",
+      planting: { chapter: "chapter_01", description: "妖精の登場" },
+      status: "resolved",
+      resolutions: [{
+        chapter: "chapter_02",
+        description: "変身",
+        completeness: 1.0,
+      }],
+    },
+  ],
+  manuscripts: [
+    {
+      path: "manuscripts/chapter_01.md",
+      title: "第1章",
+      characters: ["cinderella"],
+    },
+  ],
+};
+
+Deno.test("HtmlGenerator - 統合テスト", async (t) => {
+  const generator = new HtmlGenerator();
+
+  await t.step("完全なHTMLが生成される", () => {
+    const html = generator.generate(fullAnalysis);
+
+    // 基本構造
+    assertStringIncludes(html, "<!DOCTYPE html>");
+    assertStringIncludes(html, '<html lang="ja">');
+
+    // vis.js
+    assertStringIncludes(html, "vis-network");
+
+    // グラフセクション
+    assertStringIncludes(html, "character-graph");
+    assertStringIncludes(html, "timeline-graph");
+    assertStringIncludes(html, "foreshadowing-graph");
+
+    // 整合性セクション
+    assertStringIncludes(html, "Consistency Check");
+
+    // データが埋め込まれている
+    assertStringIncludes(html, "シンデレラ");
+    assertStringIncludes(html, "王子");
+  });
+
+  await t.step("ブラウザで開けるスタンドアロンHTML", () => {
+    const html = generator.generate(fullAnalysis);
+
+    // CSSが埋め込まれている
+    assertStringIncludes(html, "<style>");
+
+    // 外部依存はCDNのみ
+    const cdnPattern = /https:\/\/unpkg\.com/g;
+    const matches = html.match(cdnPattern) || [];
+    assertEquals(matches.length >= 2, true); // network + css
+  });
+});
+```
+
+- [ ] テストを実行して失敗することを確認
+
+---
+
+### Green Phase: 最小実装と成功確認
+
+- [ ] ブリーフィング
+- [ ] 必要に応じて追加修正
+- [ ] テストを実行して成功することを確認
+
+---
+
+### Refactor Phase: 品質改善と継続成功確認
+
+- [ ] ブリーフィング
+- [ ] 全テストを実行
+- [ ] `deno lint` と `deno fmt --check` の実行
 
 ---
 
@@ -1873,7 +1783,7 @@ failure_cases)
 
 ---
 
-実装後に仕様変更などが発生した場合は、ここにProcessを追加する。
+実装後に仕様変更などが発生した場合は、ここにProcessを追加する
 
 ---
 
@@ -1881,7 +1791,7 @@ failure_cases)
 
 <!--@process-briefing
 category: quality
-tags: [refactoring, testing, coverage]
+tags: [refactoring, optimization]
 -->
 
 ### Briefing (auto-generated)
@@ -1892,25 +1802,28 @@ failure_cases)
 
 ---
 
-### Red Phase: 品質改善テストを追加
+### Red Phase: 品質改善テスト追加
 
-- [ ] テストカバレッジを確認
-- [ ] エッジケーステストを追加
-  - textlint未インストール
-  - 設定ファイルなし
-  - タイムアウト
-  - プロセスキャンセル
+- [ ] ブリーフィング
+- [ ] パフォーマンステスト追加（大規模データ）
+- [ ] エッジケーステスト追加
 
-### Green Phase: リファクタリングを実施
+---
 
-- [ ] 重複コードの抽出
-- [ ] エラーメッセージの統一
-- [ ] ログ出力の整理
+### Green Phase: リファクタリング実施
 
-### Refactor Phase: テスト継続実行確認
+- [ ] ブリーフィング
+- [ ] グラフビルダー間の共通処理抽出
+- [ ] 整合性ルールの設計改善
+- [ ] HTML生成コードの整理
 
-- [ ] 全テストが通過することを確認
-- [ ] フォーマッタ・Linterが通過することを確認
+---
+
+### Refactor Phase: 最終確認
+
+- [ ] ブリーフィング
+- [ ] 全テスト通過確認
+- [ ] lint/fmt確認
 
 ---
 
@@ -1918,7 +1831,7 @@ failure_cases)
 
 <!--@process-briefing
 category: documentation
-tags: [docs, readme, samples]
+tags: []
 -->
 
 ### Briefing (auto-generated)
@@ -1931,29 +1844,27 @@ failure_cases)
 
 ### Red Phase: ドキュメント設計
 
+- [ ] ブリーフィング
 - [ ] 文書化対象を特定
-  - docs/lint.md
+  - README.md更新
+  - docs/ui-guide.md更新
   - CLAUDE.md更新
-  - サンプル設定ファイル
 - [ ] ドキュメント構成を作成
+
+---
 
 ### Green Phase: ドキュメント記述
 
-- [ ] `docs/lint.md` を作成
-  - 概要
-  - LSP統合
-  - CLIコマンド
-  - MCPツール
-  - Git Hooks
-  - セットアップ
-  - 設定
-- [ ] CLAUDE.mdに機能概要を追加
-- [ ] サンプル設定ファイルを作成
-  - .textlintrc.example
-  - prh-rules.yml.example
+- [ ] README.mdにグラフ可視化機能を追記
+- [ ] docs/ui-guide.mdにグラフ操作方法を追記
+- [ ] CLAUDE.mdに実装済み機能として記載
+- [ ] コード例を追加
+
+---
 
 ### Refactor Phase: 品質確認
 
+- [ ] 一貫性チェック
 - [ ] リンク検証
 - [ ] 最終レビュー
 
@@ -1963,7 +1874,7 @@ failure_cases)
 
 <!--@process-briefing
 category: ooda_feedback
-tags: [learning, lessons, insights]
+tags: []
 -->
 
 ### Briefing (auto-generated)
@@ -1978,60 +1889,60 @@ failure_cases)
 
 **Observe（観察）**
 
-- [x] 実装過程で発生した問題・課題を収集 ✅
-- [x] テスト結果から得られた知見を記録 ✅
-- [x] コードレビューのフィードバックを整理 ✅
+- [ ] ブリーフィング
+- [ ] 実装過程で発生した問題・課題を収集
+- [ ] テスト結果から得られた知見を記録
+- [ ] コードレビューのフィードバックを整理
 
 **Orient（方向付け）**
 
-- [x] 収集した情報をカテゴリ別に分類 ✅
-  - Technical: 技術的な知見・パターン (L1-L7)
-  - Process: プロセス改善に関する教訓 (P1-P4)
-  - Antipattern: 避けるべきパターン (A1-A4)
-  - Best Practice: 推奨パターン (PT1-PT5)
-- [x] 重要度（Critical/High/Medium/Low）を設定 ✅
+- [ ] ブリーフィング
+- [ ] 収集した情報をカテゴリ別に分類
+  - Technical: 技術的な知見・パターン
+  - Process: プロセス改善に関する教訓
+  - Antipattern: 避けるべきパターン
+  - Best Practice: 推奨パターン
+- [ ] 重要度（Critical/High/Medium/Low）を設定
 
-- [x] **成功条件**: 収集対象が特定され、分類基準が明確 ✅
+---
 
 ### Green Phase: 教訓・知見の永続化
 
 **Decide（決心）**
 
-- [x] 保存すべき教訓・知見を選定 ✅
-- [x] 各項目の保存先を決定 ✅
-  - ~~Serena Memory~~: 今回はPLAN.md Lessonsセクションに集約
-  - PLAN.md Lessons: プロジェクト固有の教訓（L1-L7, P1-P4, PT1-PT5, A1-A4）
-  - Feedback Log: 実装マイルストーン記録
+- [ ] ブリーフィング
+- [ ] 保存すべき教訓・知見を選定
+- [ ] 各項目の保存先を決定
+  - Serena Memory: 組織的な知見
+  - stigmergy/lessons: プロジェクト固有の教訓
+  - stigmergy/code-insights: コードパターン・実装知見
 
 **Act（行動）**
 
-- [x] PLAN.md Lessonsセクションに教訓を永続化 ✅
-- [x] Feedback Logに実装マイルストーンを記録 ✅
-- [x] Progress Mapを更新（全Process完了状態を反映） ✅
-- [x] Completion Checklistを更新 ✅
-- [x] 次のアクション（コミット手順、docs/lint.md作成）を明記 ✅
+- [ ] ブリーフィング
+- [ ] serena-v4のmcp__serena__write_memoryで教訓を永続化
+- [ ] コードに関する知見をMarkdownで記録
+- [ ] 関連するコード箇所にコメントを追加（必要に応じて）
 
-- [x] **成功条件**: 全教訓がPLAN.md Lessonsに保存済み ✅
+---
 
 ### Refactor Phase: フィードバック品質改善
 
 **Feedback Loop**
 
-- [x] 保存した教訓の品質を検証 ✅
-  - 再現可能性: DiagnosticSourceパターンは他の診断ソースにも適用可能 ✅
-  - 明確性: カテゴリ・重要度・具体例を明記 ✅
-  - 実用性: 実装から直接抽出した実用的パターン ✅
-- [x] 重複・矛盾する教訓を統合・整理 ✅
-- [x] メタ学習: TDDプロセスの有効性を確認（P1） ✅
+- [ ] ブリーフィング
+- [ ] 保存した教訓の品質を検証
+  - 再現可能性: 他のプロジェクトで適用可能か
+  - 明確性: 内容が明確で理解しやすいか
+  - 実用性: 実際に役立つ情報か
+- [ ] 重複・矛盾する教訓を統合・整理
+- [ ] メタ学習: OODAプロセス自体の改善点を記録
 
 **Cross-Feedback**
 
-- [x] 他のProcess（100, 200）との連携を確認 ✅
-- [x] 将来のミッションへの引き継ぎ事項を整理 ✅
-  - docs/lint.md作成（Process 200）が残タスク
-  - 実装ファイルのコミットが必要
-
-- [x] **成功条件**: 教訓がPLAN.md Lessonsで検索可能、次のアクションが明確 ✅
+- [ ] ブリーフィング
+- [ ] 他のProcess（100, 200）との連携を確認
+- [ ] 将来のミッションへの引き継ぎ事項を整理
 
 ---
 
@@ -2039,109 +1950,39 @@ failure_cases)
 
 ## Blockers
 
-| ID | Description | Status | Resolution |
-| -- | ----------- | ------ | ---------- |
-| -  | -           | -      | -          |
+| ID | Description        | Status | Resolution |
+| -- | ------------------ | ------ | ---------- |
+| -  | 現在ブロッカーなし | -      | -          |
 
 ## Lessons
 
-### Technical Insights
-
-| ID | Insight                                                            | Category      | Severity | Applied |
-| -- | ------------------------------------------------------------------ | ------------- | -------- | ------- |
-| L1 | DiagnosticSource抽象化により拡張性が大幅向上                       | Architecture  | high     | ✅      |
-| L2 | Promise.allSettledで部分失敗に対応（グレースフルデグラデーション） | Resilience    | high     | ✅      |
-| L3 | デバウンス・キャンセルパターンの確立（pendingResolveパターン）     | Async         | high     | ✅      |
-| L4 | textlintの非ゼロ終了コード処理（exit 1でもstdoutに有効なJSON）     | Integration   | medium   | ✅      |
-| L5 | cancel/disposeをオプショナルメソッドとして定義し柔軟性確保         | API Design    | medium   | ✅      |
-| L6 | タイムアウト付きプロセス実行でリソースリーク防止                   | Resource Mgmt | high     | ✅      |
-| L7 | sourceフィールドで診断ソースを識別（Aggregatorパターン）           | Integration   | medium   | ✅      |
-
-### Process Insights
-
-| ID | Insight                                                        | Category    | Severity | Applied |
-| -- | -------------------------------------------------------------- | ----------- | -------- | ------- |
-| P1 | TDDによる設計品質向上（インターフェースファースト）            | Process     | high     | ✅      |
-| P2 | 既存コードラップパターンで後方互換性維持                       | Migration   | high     | ✅      |
-| P3 | 外部ツールのネイティブ機能活用（textlint --mcp）で重複実装回避 | Strategy    | medium   | ✅      |
-| P4 | publishDiagnosticsForUri()の変更最小化で既存機能保護           | Refactoring | medium   | ✅      |
-
-### Implementation Patterns
-
-| ID  | Pattern                          | Use Case                 | Example                     |
-| --- | -------------------------------- | ------------------------ | --------------------------- |
-| PT1 | DiagnosticSourceインターフェース | 複数診断ソース統合       | storyteller + textlint      |
-| PT2 | Promise.allSettled               | 部分失敗許容の並列実行   | Aggregator.generate()       |
-| PT3 | pendingResolveパターン           | デバウンス付きキャンセル | TextlintWorker.lint()       |
-| PT4 | Adapterパターン                  | 既存機能のラップ         | StorytellerDiagnosticSource |
-| PT5 | タイムアウト付きプロセス実行     | 外部コマンド実行         | TextlintWorker.execute()    |
-
-### Anti-Patterns (避けるべきパターン)
-
-| ID | Anti-Pattern                        | Problem                        | Solution                             |
-| -- | ----------------------------------- | ------------------------------ | ------------------------------------ |
-| A1 | Promise.allでの部分失敗時の全体失敗 | 一つのソースエラーで全体が失敗 | Promise.allSettledを使用             |
-| A2 | デバウンスなしの即時実行            | UIブロッキング                 | デバウンス + バックグラウンド実行    |
-| A3 | プロセス終了待ちなし                | リソースリーク                 | dispose()での明示的クリーンアップ    |
-| A4 | 外部ツールの重複実装                | メンテナンスコスト増大         | ネイティブ機能（textlint --mcp）活用 |
+| ID | Insight                                           | Severity | Applied |
+| -- | ------------------------------------------------- | -------- | ------- |
+| L1 | vis.jsはCDN経由で読み込むことでビルド複雑化を回避 | medium   | -       |
+| L2 | グラフビルダーは抽象インターフェースで統一        | high     | -       |
 
 ## Feedback Log
 
-| Date       | Type           | Content                                          | Status         |
-| ---------- | -------------- | ------------------------------------------------ | -------------- |
-| 2026-01-02 | Implementation | DiagnosticSource抽象化の導入完了                 | ✅ Completed   |
-| 2026-01-02 | Implementation | TextlintWorker（デバウンス・キャンセル）実装完了 | ✅ Completed   |
-| 2026-01-02 | Implementation | DiagnosticAggregator統合完了                     | ✅ Completed   |
-| 2026-01-02 | Implementation | CLI lint/install-hooks完了                       | ✅ Completed   |
-| 2026-01-02 | Decision       | Process 20-21スキップ（textlint --mcp活用）      | ✅ Decided     |
-| 2026-01-02 | Quality        | テストファイル実装完了（TDD完遂）                | ✅ Completed   |
-| 2026-01-02 | Pending        | docs/lint.md作成待ち                             | ⏳ In Progress |
+| Date | Type | Content | Status |
+| ---- | ---- | ------- | ------ |
+| -    | -    | -       | -      |
 
 ## Completion Checklist
 
-- [x] すべてのProcess完了（Process 200を除く）
-- [x] すべてのテスト合格（実装済み、未コミット）
-- [x] コードレビュー完了（セルフレビュー）
-- [ ] ドキュメント更新完了（docs/lint.md作成待ち）
-- [ ] マージ可能な状態（実装ファイルのコミット + docs/lint.md作成後）
-
-## 次のアクション
-
-1. **実装ファイルのコミット**
-   ```bash
-   git add src/lsp/diagnostics/ src/lsp/integration/ src/shared/textlint/ src/cli/modules/lint/
-   git add tests/lsp/diagnostics/ tests/lsp/integration/textlint/ tests/shared/textlint/ tests/cli/modules/lint/
-   git add src/cli/modules/index.ts src/lsp/server/server.ts
-   git commit -m "feat(lint): textlint-storyteller統合の完全実装
-   ```
-
-- DiagnosticSource抽象化による拡張可能な診断基盤
-- TextlintWorkerによるデバウンス・キャンセル付きバックグラウンド実行
-- DiagnosticAggregatorによる複数診断ソース統合
-- CLI: storyteller lint/install-hooks/uninstall-hooks
-- TDD完遂（全テスト実装済み）
-
-Processes 1-13, 30-31, 100, 300完了"
-
-```
-2. **docs/lint.md作成（Process 200完了）**
-- 概要、LSP統合、CLIコマンド、Git Hooks、セットアップ、設定を記載
-- サンプル設定ファイル（.textlintrc.example）を追加
-
-3. **CLAUDE.md更新**
-- textlint統合機能の概要を追加
+- [ ] すべてのProcess完了
+- [ ] すべてのテスト合格
+- [ ] コードレビュー完了
+- [ ] ドキュメント更新完了
+- [ ] マージ可能な状態
 
 ---
 
 <!--
 Process番号規則
-- 1-9: 機能実装（Phase 1-2: DiagnosticSource、TextlintWorker）
-- 10-19: CLI実装（Phase 3）
-- 20-29: MCP実装（Phase 4）
-- 30-39: Git Hooks実装（Phase 5）
+- 1-9: 機能実装
+- 10-49: テスト拡充
 - 50-99: フォローアップ
 - 100-199: 品質向上（リファクタリング）
-- 200-299: ドキュメンテーション（Phase 6）
+- 200-299: ドキュメンテーション
 - 300+: OODAフィードバックループ（教訓・知見保存）
 -->
-```
