@@ -1126,7 +1126,7 @@ const GRAPH_STYLES = `
 
     .graph-canvas {
       width: 100%;
-      height: 400px;
+      height: 700px;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background: #fafafa;
