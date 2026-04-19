@@ -17,6 +17,7 @@ import { ElementTimelineCommand } from "@storyteller/cli/modules/element/timelin
 import { ElementEventCommand } from "@storyteller/cli/modules/element/event.ts";
 import { ElementForeshadowingCommand } from "@storyteller/cli/modules/element/foreshadowing.ts";
 import { ElementSubplotCommand } from "@storyteller/cli/modules/element/subplot.ts";
+import { ElementBeatCommand } from "@storyteller/cli/modules/element/beat.ts";
 import { elementPhaseCommandDescriptor } from "@storyteller/cli/modules/element/phase.ts";
 
 /**
@@ -413,6 +414,88 @@ export const elementSubplotCommandDescriptor: CommandDescriptor =
   });
 
 /**
+ * element beat サブコマンドの Descriptor
+ */
+const elementBeatHandler = new ElementBeatCommand();
+export const elementBeatCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementBeatHandler, {
+    summary: "Add a beat to an existing subplot.",
+    usage:
+      "storyteller element beat --subplot <id> --title <title> --summary <summary> --chapter <chapter> --structure-position <position> [options]",
+    path: ["element", "beat"],
+    options: [
+      {
+        name: "--subplot",
+        summary: "Subplot ID to add beat to (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--title",
+        summary: "Beat title (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--summary",
+        summary: "Short summary description (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--chapter",
+        summary: "Chapter ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--structure-position",
+        summary:
+          "Narrative position: setup, rising, climax, falling, resolution (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--id",
+        summary: "Beat ID (defaults to generated from title)",
+        type: "string",
+      },
+      {
+        name: "--characters",
+        summary: "Comma-separated character IDs",
+        type: "string",
+      },
+      {
+        name: "--settings",
+        summary: "Comma-separated setting IDs",
+        type: "string",
+      },
+      {
+        name: "--precondition-beats",
+        summary: "Comma-separated beat IDs that must precede this beat",
+        type: "string",
+      },
+      {
+        name: "--timeline-event",
+        summary: "Related timeline event ID",
+        type: "string",
+      },
+    ],
+    examples: [
+      {
+        summary: "Add a setup beat to a subplot",
+        command:
+          'storyteller element beat --subplot "love_story" --title "First Meeting" --summary "Hero meets heroine" --chapter "chapter_01" --structure-position "setup"',
+      },
+      {
+        summary: "Add a climax beat with characters",
+        command:
+          'storyteller element beat --subplot "love_story" --title "Confession" --summary "Hero confesses feelings" --chapter "chapter_08" --structure-position "climax" --characters "hero,heroine"',
+      },
+    ],
+  });
+
+/**
  * element event サブコマンドの Descriptor
  */
 const elementEventHandler = new ElementEventCommand();
@@ -516,6 +599,7 @@ export function createElementDescriptor(
       elementEventCommandDescriptor,
       elementForeshadowingCommandDescriptor,
       elementSubplotCommandDescriptor,
+      elementBeatCommandDescriptor,
       elementPhaseCommandDescriptor,
     ],
     examples: [
