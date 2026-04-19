@@ -1,6 +1,6 @@
 ---
 title: "Subplot 機能実装"
-status: planning
+status: completed
 created: "2026-04-19"
 ---
 
@@ -29,45 +29,45 @@ created: "2026-04-19"
 
 | Process | Title | Status | File |
 |---------|-------|--------|------|
-| 1 | Subplot 型定義 | ☐ planning | [→ plan/process-01.md](plan/process-01.md) |
-| 2 | Subplot Plugin (plugin + validator) | ☐ planning | [→ plan/process-02.md](plan/process-02.md) |
-| 3 | CLI element subplot | ☐ planning | [→ plan/process-03.md](plan/process-03.md) |
-| 4 | CLI element beat | ☐ planning | [→ plan/process-04.md](plan/process-04.md) |
-| 5 | CLI element intersection | ☐ planning | [→ plan/process-05.md](plan/process-05.md) |
-| 6 | CLI view subplot | ☐ planning | [→ plan/process-06.md](plan/process-06.md) |
-| 7 | validate 拡張 (subplot 検証統合) | ☐ planning | [→ plan/process-07.md](plan/process-07.md) |
-| 8 | manuscript_binding 拡張 | ☐ planning | [→ plan/process-08.md](plan/process-08.md) |
-| 9 | パーサー & ファイル生成器 | ☐ planning | [→ plan/process-09.md](plan/process-09.md) |
-| 10 | 型定義テスト | ☐ planning | [→ plan/process-10.md](plan/process-10.md) |
-| 11 | Plugin テスト | ☐ planning | [→ plan/process-11.md](plan/process-11.md) |
-| 12 | element subplot CLI テスト | ☐ planning | [→ plan/process-12.md](plan/process-12.md) |
-| 13 | element beat CLI テスト | ☐ planning | [→ plan/process-13.md](plan/process-13.md) |
-| 14 | element intersection CLI テスト | ☐ planning | [→ plan/process-14.md](plan/process-14.md) |
-| 15 | view subplot CLI テスト | ☐ planning | [→ plan/process-15.md](plan/process-15.md) |
-| 16 | validate 参照整合性テスト | ☐ planning | [→ plan/process-16.md](plan/process-16.md) |
-| 17 | validate 構造完全性テスト | ☐ planning | [→ plan/process-17.md](plan/process-17.md) |
-| 18 | validate オプショナル動作テスト | ☐ planning | [→ plan/process-18.md](plan/process-18.md) |
-| 19 | manuscript_binding テスト | ☐ planning | [→ plan/process-19.md](plan/process-19.md) |
-| 50 | MCP tool subplot_create | ☐ planning | [→ plan/process-50.md](plan/process-50.md) |
-| 51 | MCP tool subplot_view | ☐ planning | [→ plan/process-51.md](plan/process-51.md) |
-| 52 | MCP tool beat_create | ☐ planning | [→ plan/process-52.md](plan/process-52.md) |
-| 53 | MCP tool intersection_create | ☐ planning | [→ plan/process-53.md](plan/process-53.md) |
-| 54 | MCP resource storyteller://subplots | ☐ planning | [→ plan/process-54.md](plan/process-54.md) |
-| 55 | MCP prompts (3種) | ☐ planning | [→ plan/process-55.md](plan/process-55.md) |
-| 56 | HTML graph builder | ☐ planning | [→ plan/process-56.md](plan/process-56.md) |
-| 57 | HTML view browser 統合 | ☐ planning | [→ plan/process-57.md](plan/process-57.md) |
-| 58 | RAG テンプレート | ☐ planning | [→ plan/process-58.md](plan/process-58.md) |
-| 59 | MCP 統合テスト | ☐ planning | [→ plan/process-59.md](plan/process-59.md) |
-| 100 | 後方互換性検証 (cinderella) | ☐ planning | [→ plan/process-100.md](plan/process-100.md) |
-| 101 | パフォーマンステスト | ☐ planning | [→ plan/process-101.md](plan/process-101.md) |
-| 200 | CLAUDE.md 更新 | ☐ planning | [→ plan/process-200.md](plan/process-200.md) |
-| 201 | docs/subplot.md 新規 | ☐ planning | [→ plan/process-201.md](plan/process-201.md) |
-| 202 | cinderella サンプル subplot 追加 | ☐ planning | [→ plan/process-202.md](plan/process-202.md) |
-| 300 | OODA 振り返りと Phase 2+ 計画 | ☐ planning | [→ plan/process-300.md](plan/process-300.md) |
+| 1 | Subplot 型定義 | ✅ done | [→ plan/process-01.md](plan/process-01.md) |
+| 2 | Subplot Plugin (plugin + validator) | ✅ done | [→ plan/process-02.md](plan/process-02.md) |
+| 3 | CLI element subplot | ✅ done | [→ plan/process-03.md](plan/process-03.md) |
+| 4 | CLI element beat | ✅ done | [→ plan/process-04.md](plan/process-04.md) |
+| 5 | CLI element intersection | ✅ done | [→ plan/process-05.md](plan/process-05.md) |
+| 6 | CLI view subplot | ✅ done | [→ plan/process-06.md](plan/process-06.md) |
+| 7 | validate 拡張 (subplot 検証統合) | ✅ done | [→ plan/process-07.md](plan/process-07.md) |
+| 8 | manuscript_binding 拡張 | ✅ done | [→ plan/process-08.md](plan/process-08.md) |
+| 9 | パーサー & ファイル生成器 | ✅ done | [→ plan/process-09.md](plan/process-09.md) |
+| 10 | 型定義テスト | ✅ done | [→ plan/process-10.md](plan/process-10.md) |
+| 11 | Plugin テスト | ✅ done | [→ plan/process-11.md](plan/process-11.md) |
+| 12 | element subplot CLI テスト | ✅ done | [→ plan/process-12.md](plan/process-12.md) |
+| 13 | element beat CLI テスト | ✅ done | [→ plan/process-13.md](plan/process-13.md) |
+| 14 | element intersection CLI テスト | ✅ done | [→ plan/process-14.md](plan/process-14.md) |
+| 15 | view subplot CLI テスト | ✅ done | [→ plan/process-15.md](plan/process-15.md) |
+| 16 | validate 参照整合性テスト | ✅ done | [→ plan/process-16.md](plan/process-16.md) |
+| 17 | validate 構造完全性テスト | ✅ done | [→ plan/process-17.md](plan/process-17.md) |
+| 18 | validate オプショナル動作テスト | ✅ done | [→ plan/process-18.md](plan/process-18.md) |
+| 19 | manuscript_binding テスト | ✅ done | [→ plan/process-19.md](plan/process-19.md) |
+| 50 | MCP tool subplot_create | ✅ done | [→ plan/process-50.md](plan/process-50.md) |
+| 51 | MCP tool subplot_view | ✅ done | [→ plan/process-51.md](plan/process-51.md) |
+| 52 | MCP tool beat_create | ✅ done | [→ plan/process-52.md](plan/process-52.md) |
+| 53 | MCP tool intersection_create | ✅ done | [→ plan/process-53.md](plan/process-53.md) |
+| 54 | MCP resource storyteller://subplots | ✅ done | [→ plan/process-54.md](plan/process-54.md) |
+| 55 | MCP prompts (3種) | ✅ done | [→ plan/process-55.md](plan/process-55.md) |
+| 56 | HTML graph builder | ✅ done | [→ plan/process-56.md](plan/process-56.md) |
+| 57 | HTML view browser 統合 | ✅ done | [→ plan/process-57.md](plan/process-57.md) |
+| 58 | RAG テンプレート | ✅ done | [→ plan/process-58.md](plan/process-58.md) |
+| 59 | MCP 統合テスト | ✅ done | [→ plan/process-59.md](plan/process-59.md) |
+| 100 | 後方互換性検証 (cinderella) | ✅ done | [→ plan/process-100.md](plan/process-100.md) |
+| 101 | パフォーマンステスト | ✅ done | [→ plan/process-101.md](plan/process-101.md) |
+| 200 | CLAUDE.md 更新 | ✅ done | [→ plan/process-200.md](plan/process-200.md) |
+| 201 | docs/subplot.md 新規 | ✅ done | [→ plan/process-201.md](plan/process-201.md) |
+| 202 | cinderella サンプル subplot 追加 | ✅ done | [→ plan/process-202.md](plan/process-202.md) |
+| 300 | OODA 振り返りと Phase 2+ 計画 | ✅ done | [→ plan/process-300.md](plan/process-300.md) |
 
 **DAG**: `01→02→{03,06,07,08,09}` | `03→{04,05}` | `{01→10,02→11,03→12,04→13,05→14,06→15,07→{16,17,18},08→19}` | `{03,04,05}→{50,52,53}` | `06→51` | `{50,51,52,53}→{54,55}` | `{09,54,55}→{56,57,58}` | `{56,57,58,10-19}→59` | `59→{100,101}` | `100→{200,201,202}` | `{200,201,202,101}→300`
 **DAG凡例**: `{A,B}` = 並列実行可能、`A→B` = A完了後にB実行、`|` = 独立した依存チェーン
-**Overall**: ☐ 0/35 completed
+**Overall**: ✅ 35/35 completed
 
 ---
 
