@@ -16,6 +16,7 @@ import { ElementSettingCommand } from "@storyteller/cli/modules/element/setting.
 import { ElementTimelineCommand } from "@storyteller/cli/modules/element/timeline.ts";
 import { ElementEventCommand } from "@storyteller/cli/modules/element/event.ts";
 import { ElementForeshadowingCommand } from "@storyteller/cli/modules/element/foreshadowing.ts";
+import { ElementSubplotCommand } from "@storyteller/cli/modules/element/subplot.ts";
 import { elementPhaseCommandDescriptor } from "@storyteller/cli/modules/element/phase.ts";
 
 /**
@@ -341,6 +342,77 @@ export const elementForeshadowingCommandDescriptor: CommandDescriptor =
   });
 
 /**
+ * element subplot サブコマンドの Descriptor
+ */
+const elementSubplotHandler = new ElementSubplotCommand();
+export const elementSubplotCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementSubplotHandler, {
+    summary: "Create a new subplot element.",
+    usage:
+      "storyteller element subplot --name <name> --type <type> --summary <summary> [options]",
+    path: ["element", "subplot"],
+    options: [
+      {
+        name: "--name",
+        summary: "Subplot name (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--type",
+        summary:
+          "Subplot type: main, subplot, parallel, background (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--summary",
+        summary: "Short summary description (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--id",
+        summary: "Subplot ID (defaults to generated from name)",
+        type: "string",
+      },
+      {
+        name: "--importance",
+        summary: "Importance level: major, minor",
+        type: "string",
+      },
+      {
+        name: "--parent-subplot",
+        summary: "Parent subplot ID (for hierarchical structure)",
+        type: "string",
+      },
+      {
+        name: "--focus-characters",
+        summary:
+          'Focus characters with weights (CSV: "hero:primary,heroine:secondary")',
+        type: "string",
+      },
+      {
+        name: "--force",
+        summary: "Overwrite existing subplot",
+        type: "boolean",
+      },
+    ],
+    examples: [
+      {
+        summary: "Create a main plot",
+        command:
+          'storyteller element subplot --name "Main Story" --type "main" --summary "The central narrative"',
+      },
+      {
+        summary: "Create a subplot with focus characters",
+        command:
+          'storyteller element subplot --name "Love Story" --type "subplot" --summary "Romantic subplot" --focus-characters "hero:primary,heroine:primary"',
+      },
+    ],
+  });
+
+/**
  * element event サブコマンドの Descriptor
  */
 const elementEventHandler = new ElementEventCommand();
@@ -443,6 +515,7 @@ export function createElementDescriptor(
       elementTimelineCommandDescriptor,
       elementEventCommandDescriptor,
       elementForeshadowingCommandDescriptor,
+      elementSubplotCommandDescriptor,
       elementPhaseCommandDescriptor,
     ],
     examples: [
