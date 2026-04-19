@@ -14,8 +14,8 @@ import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.t
 import type {
   PlotBeat,
   PlotIntersection,
-  PlotType,
   Subplot,
+  SubplotType,
 } from "@storyteller/types/v2/subplot.ts";
 
 /**
@@ -40,7 +40,7 @@ export class ViewSubplotCommand extends BaseCliCommand {
       config.runtime.projectRoot || Deno.cwd();
 
     const subplotsDir = `${projectRoot}/src/subplots`;
-    const typeFilter = args.type as PlotType | undefined;
+    const typeFilter = args.type as SubplotType | undefined;
     const statusFilter = args.status as string | undefined;
     const jsonOutput = args.json === true;
     const format = args.format as string | undefined;
@@ -54,11 +54,10 @@ export class ViewSubplotCommand extends BaseCliCommand {
     }
 
     // ステータスフィルタ
-    // Why: ビートのcustomStatusではなく、テーマベースやimportanceベースのフィルタ
+    // Why: importanceベースのフィルタ（customStatusはPlotBeatに存在しないため除去）
     if (statusFilter) {
       subplots = subplots.filter((s) =>
-        s.importance === statusFilter ||
-        s.beats.some((b) => b.customStatus === statusFilter)
+        s.importance === statusFilter
       );
     }
 
@@ -208,14 +207,11 @@ export class ViewSubplotCommand extends BaseCliCommand {
       if (subplot.importance) {
         lines.push(`- Importance: ${subplot.importance}`);
       }
-      if (subplot.focusCharacters.length > 0) {
-        const charList = subplot.focusCharacters
-          .map((fc) => `${fc.characterId}(${fc.weight})`)
+      if (subplot.focusCharacters && Object.keys(subplot.focusCharacters).length > 0) {
+        const charList = Object.entries(subplot.focusCharacters)
+          .map(([charId, weight]) => `${charId}(${weight})`)
           .join(", ");
         lines.push(`- Focus Characters: ${charList}`);
-      }
-      if (subplot.themes && subplot.themes.length > 0) {
-        lines.push(`- Themes: ${subplot.themes.join(", ")}`);
       }
       lines.push("");
     }
@@ -240,38 +236,41 @@ export class ViewSubplotCommand extends BaseCliCommand {
     }
 
     // フォーカスキャラクター
-    if (subplot.focusCharacters.length > 0) {
+    if (subplot.focusCharacters && Object.keys(subplot.focusCharacters).length > 0) {
       lines.push("");
       lines.push("## Focus Characters");
-      for (const fc of subplot.focusCharacters) {
-        lines.push(`- **${fc.characterId}** (${fc.weight})`);
+      for (const [charId, weight] of Object.entries(subplot.focusCharacters)) {
+        lines.push(`- **${charId}** (${weight})`);
       }
     }
 
     // 関連キャラクター
-    if (subplot.relatedCharacters && subplot.relatedCharacters.length > 0) {
+    if (subplot.relations?.characters && subplot.relations.characters.length > 0) {
       lines.push("");
       lines.push(
-        `**Related Characters:** ${subplot.relatedCharacters.join(", ")}`,
+        `**Related Characters:** ${subplot.relations.characters.join(", ")}`,
       );
     }
 
     // テーマ
-    if (subplot.themes && subplot.themes.length > 0) {
+    if (subplot.details?.theme) {
+      const theme = typeof subplot.details.theme === "string"
+        ? subplot.details.theme
+        : `(file: ${subplot.details.theme.file})`;
       lines.push("");
-      lines.push(`**Themes:** ${subplot.themes.join(", ")}`);
+      lines.push(`**Themes:** ${theme}`);
     }
 
     // 親プロット
-    if (subplot.parentPlotId) {
+    if (subplot.parentSubplotId) {
       lines.push("");
-      lines.push(`**Parent Plot:** ${subplot.parentPlotId}`);
+      lines.push(`**Parent Plot:** ${subplot.parentSubplotId}`);
     }
 
     // 子プロット
-    if (subplot.childPlotIds && subplot.childPlotIds.length > 0) {
+    if (subplot.relations?.relatedSubplots && subplot.relations.relatedSubplots.length > 0) {
       lines.push("");
-      lines.push(`**Child Plots:** ${subplot.childPlotIds.join(", ")}`);
+      lines.push(`**Child Plots:** ${subplot.relations.relatedSubplots.join(", ")}`);
     }
 
     // ビート一覧
@@ -280,15 +279,17 @@ export class ViewSubplotCommand extends BaseCliCommand {
       lines.push("## Beats");
       for (const beat of subplot.beats) {
         lines.push(`### ${beat.title} (${beat.id})`);
-        lines.push(`- **Chapter:** ${beat.chapter}`);
+        if (beat.chapter) {
+          lines.push(`- **Chapter:** ${beat.chapter}`);
+        }
         lines.push(`- **Summary:** ${beat.summary}`);
         if (beat.structurePosition) {
           lines.push(`- **Structure Position:** ${beat.structurePosition}`);
         }
-        if (beat.characters.length > 0) {
+        if (beat.characters && beat.characters.length > 0) {
           lines.push(`- **Characters:** ${beat.characters.join(", ")}`);
         }
-        if (beat.settings.length > 0) {
+        if (beat.settings && beat.settings.length > 0) {
           lines.push(`- **Settings:** ${beat.settings.join(", ")}`);
         }
         if (beat.preconditionBeatIds && beat.preconditionBeatIds.length > 0) {
@@ -298,9 +299,6 @@ export class ViewSubplotCommand extends BaseCliCommand {
         }
         if (beat.timelineEventId) {
           lines.push(`- **Timeline Event:** ${beat.timelineEventId}`);
-        }
-        if (beat.customStatus) {
-          lines.push(`- **Status:** ${beat.customStatus}`);
         }
         lines.push("");
       }
@@ -315,17 +313,17 @@ export class ViewSubplotCommand extends BaseCliCommand {
           : `(file: ${subplot.details.description.file})`;
         lines.push(`- **Description:** ${desc}`);
       }
-      if (subplot.details.motivation) {
-        const mot = typeof subplot.details.motivation === "string"
-          ? subplot.details.motivation
-          : `(file: ${subplot.details.motivation.file})`;
-        lines.push(`- **Motivation:** ${mot}`);
+      if (subplot.details.theme) {
+        const themeVal = typeof subplot.details.theme === "string"
+          ? subplot.details.theme
+          : `(file: ${subplot.details.theme.file})`;
+        lines.push(`- **Theme:** ${themeVal}`);
       }
-      if (subplot.details.resolution) {
-        const res = typeof subplot.details.resolution === "string"
-          ? subplot.details.resolution
-          : `(file: ${subplot.details.resolution.file})`;
-        lines.push(`- **Resolution:** ${res}`);
+      if (subplot.details.notes) {
+        const notes = typeof subplot.details.notes === "string"
+          ? subplot.details.notes
+          : `(file: ${subplot.details.notes.file})`;
+        lines.push(`- **Notes:** ${notes}`);
       }
     }
 
@@ -389,8 +387,8 @@ export class ViewSubplotCommand extends BaseCliCommand {
         for (const otherSubplot of subplots) {
           if (otherSubplot.id === subplot.id) continue;
           for (const otherBeat of otherSubplot.beats) {
-            const sharedChars = beat.characters.filter((c) =>
-              otherBeat.characters.includes(c)
+            const sharedChars = (beat.characters ?? []).filter((c) =>
+              (otherBeat.characters ?? []).includes(c)
             );
             if (sharedChars.length > 0) {
               const key = [beat.id, otherBeat.id].sort().join("-");
