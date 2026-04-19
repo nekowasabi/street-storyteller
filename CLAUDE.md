@@ -53,12 +53,14 @@ MCPサーバーは以下を公開します：
 - Tools: `meta_check`, `meta_generate`, `element_create`, `view_browser`,
   `lsp_validate`, `lsp_find_references`, `timeline_create`, `event_create`,
   `event_update`, `timeline_view`, `timeline_analyze`, `foreshadowing_create`,
-  `foreshadowing_view`, `manuscript_binding`
+  `foreshadowing_view`, `manuscript_binding`, `subplot_create`, `subplot_view`,
+  `beat_create`, `intersection_create`
 - Resources: `storyteller://project`, `storyteller://characters`,
   `storyteller://character/<id>`, `storyteller://settings`,
   `storyteller://setting/<id>`, `storyteller://timelines`,
   `storyteller://timeline/<id>`, `storyteller://foreshadowings`,
-  `storyteller://foreshadowing/<id>`
+  `storyteller://foreshadowing/<id>`, `storyteller://subplots`,
+  `storyteller://subplot/<id>`
   - `?expand=details`クエリパラメータ:
     キャラクター/設定リソースでファイル参照を解決して返す
 - Prompts: `character_brainstorm`, `plot_suggestion`, `scene_improvement`,
@@ -670,7 +672,83 @@ storyteller rag install-hooks
 
 詳細は `docs/rag.md` を参照してください。
 
-### 9. textlint統合機能 - 実装済み
+### 9. Subplot（サブプロット）機能 - 実装済み
+
+物語の複数プロットラインを並列管理し、交差（intersection）で物語の絡み合いを表現する機能が実装されました。
+
+#### Subplot型
+
+```typescript
+export type Subplot = {
+  id: string;
+  name: string;
+  type: "main" | "subplot" | "parallel" | "background";
+  status: "active" | "completed";
+  summary: string;
+  beats: PlotBeat[];
+  focusCharacters?: Record<string, "primary" | "secondary">;
+  intersections?: PlotIntersection[];
+  importance?: "major" | "minor";
+  parentSubplotId?: string;
+  displayNames?: string[];
+  relations?: SubplotRelations;
+};
+```
+
+#### CLIコマンド
+
+```bash
+# サブプロット作成
+storyteller element subplot --name "恋愛軸" --type subplot --summary "主人公の恋愛の成長"
+
+# ビート追加
+storyteller element beat --subplot love_story --title "出会い" --summary "運命の出会い" --structure-position setup
+
+# インターセクション作成
+storyteller element intersection --source-subplot main_plot --source-beat beat_001 --target-subplot love_story --target-beat beat_001 --summary "出会いが物語を動かす" --influence-direction forward
+
+# サブプロット一覧表示
+storyteller view subplot --list
+storyteller view subplot --id love_story
+storyteller view subplot --list --format mermaid
+storyteller view subplot --list --json
+```
+
+#### MCPツール
+
+- `subplot_create`: サブプロット作成
+- `subplot_view`: サブプロット表示（一覧/個別/フィルタ）
+- `beat_create`: ビート作成
+- `intersection_create`: インターセクション作成
+
+#### MCPリソース
+
+- `storyteller://subplots`: サブプロット一覧
+- `storyteller://subplot/{id}`: 特定のサブプロット
+
+#### MCPプロンプト
+
+- `subplot_brainstorm`: サブプロットのブレインストーミング
+- `subplot_intersection_suggest`: インターセクションの提案
+- `subplot_completion_review`: サブプロット完了の振り返り
+
+#### HTML可視化
+
+`storyteller view browser`コマンドで、サブプロットの以下の情報がビジュアル表示されます：
+
+- **統計情報**: 総数、type別内訳
+- **サブプロットカード**: 名前、タイプ、ビート数、フォーカスキャラクター
+- **グラフビジュアライゼーション**: SubplotGraphBuilderによる構造グラフ
+
+#### Timelineとの違い
+
+| 観点 | Timeline | Subplot |
+|------|----------|---------|
+| 管理対象 | 「いつ」（時系列） | 「何」「どのように」（展開構造） |
+| 単位 | Event（出来事） | Beat（物語ビート） |
+| 関係性 | 因果関係（causes/causedBy） | 交差（intersection） |
+
+### 10. textlint統合機能 - 実装済み
 
 原稿（Markdown）の文法・表記ゆれを検出・修正する機能が実装されました。
 
