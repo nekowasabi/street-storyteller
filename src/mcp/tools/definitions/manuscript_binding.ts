@@ -33,6 +33,7 @@ const VALID_ENTITY_TYPES: BindableEntityType[] = [
   "timeline_events",
   "phases",
   "timelines",
+  "subplots",
 ];
 
 /**
@@ -64,6 +65,7 @@ export const manuscriptBindingTool: McpToolDefinition = {
           "timeline_events",
           "phases",
           "timelines",
+          "subplots",
         ],
         description: "エンティティタイプ",
       },

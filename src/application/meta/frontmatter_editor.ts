@@ -14,7 +14,8 @@ export type BindableEntityType =
   | "foreshadowings"
   | "timeline_events"
   | "phases"
-  | "timelines";
+  | "timelines"
+  | "subplots";
 
 /**
  * 編集結果
@@ -52,6 +53,7 @@ interface StorytellerYaml {
     timeline_events?: string[];
     phases?: string[];
     timelines?: string[];
+    subplots?: string[];
     summary?: string;
   };
   [key: string]: unknown;
