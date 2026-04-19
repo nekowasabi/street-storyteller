@@ -1,4 +1,5 @@
 import { expandGlob } from "@std/fs";
+import { join } from "@std/path";
 import { err, ok } from "@storyteller/shared/result.ts";
 import type {
   CommandContext,
@@ -9,6 +10,8 @@ import type {
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 import { MetaGeneratorService } from "@storyteller/application/meta/meta_generator_service.ts";
+import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+import { validateSubplot } from "@storyteller/plugins/core/subplot/validator.ts";
 
 type MetaCheckOptions = {
   readonly markdownInputs: readonly string[];
@@ -82,6 +85,18 @@ export class MetaCheckCommand extends BaseCliCommand {
       return err({
         code: "meta_check_failed",
         message: `${failures.length} file(s) failed meta check${suffix}`,
+      });
+    }
+
+    // Why: subplot検証はmeta checkの一部として統合。src/subplots/が存在しない場合はgraceful skip。
+    const subplotErrors = await validateSubplots(context);
+    if (subplotErrors.length > 0) {
+      for (const error of subplotErrors) {
+        context.presenter.showError(`[meta check] subplot: ${error}`);
+      }
+      return err({
+        code: "meta_check_failed",
+        message: `${subplotErrors.length} subplot validation error(s)`,
       });
     }
 
@@ -255,6 +270,309 @@ function renderMetaCheckHelp(): string {
   lines.push("  storyteller meta check --dir manuscripts --recursive");
   lines.push("  storyteller meta check manuscripts/*.md --batch");
   return lines.join("\n");
+}
+
+// ========================================
+// Subplot validation helpers
+// ========================================
+
+/**
+ * プロジェクト内のサブプロットを読み込み、構造と参照の整合性を検証する。
+ * src/subplots/ が存在しない場合は info ログのみ出力しエラーは返さない。
+ */
+async function validateSubplots(
+  context: CommandContext,
+): Promise<string[]> {
+  const errors: string[] = [];
+  const projectRoot = await resolveProjectRoot(context);
+  if (!projectRoot) return errors;
+
+  const subplotsDir = join(projectRoot, "src/subplots");
+  const subplots = await loadSubplotsFromDirectory(subplotsDir);
+
+  if (subplots.length === 0) {
+    context.presenter.showInfo(
+      "[meta check] No subplots found (src/subplots/ is empty or missing) — skipping subplot validation",
+    );
+    return errors;
+  }
+
+  // Collect known IDs for cross-reference checks
+  const characterIds = await collectIdsFromDir(
+    join(projectRoot, "src/characters"),
+  );
+  const settingIds = await collectIdsFromDir(join(projectRoot, "src/settings"));
+  const timelineEventIds = await collectTimelineEventIds(
+    join(projectRoot, "src/timelines"),
+  );
+
+  const subplotIds = new Set(subplots.map((s) => s.id));
+
+  for (const subplot of subplots) {
+    // Basic structure validation via plugin validator
+    const result = validateSubplot(subplot);
+    if (!result.valid) {
+      for (const ve of result.errors ?? []) {
+        errors.push(`${subplot.id}: ${ve.field} — ${ve.message}`);
+      }
+    }
+
+    // Reference validation
+    const refErrors = validateSubplotReferences(
+      subplot,
+      subplotIds,
+      characterIds,
+      settingIds,
+      timelineEventIds,
+    );
+    errors.push(...refErrors);
+
+    // Structural completeness validation
+    const structErrors = validateSubplotStructure(subplot, subplotIds);
+    errors.push(...structErrors);
+  }
+
+  return errors;
+}
+
+/**
+ * Load Subplot objects from all .ts files in the given directory.
+ * Returns an empty array if the directory does not exist.
+ */
+async function loadSubplotsFromDirectory(
+  dir: string,
+): Promise<Subplot[]> {
+  const subplots: Subplot[] = [];
+  try {
+    for await (const entry of Deno.readDir(dir)) {
+      if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+      const filePath = join(dir, entry.name);
+      try {
+        const content = await Deno.readTextFile(filePath);
+        const subplot = parseSubplotFromFile(content);
+        if (subplot) subplots.push(subplot);
+      } catch {
+        // skip unreadable files
+      }
+    }
+  } catch {
+    // directory does not exist — return empty
+  }
+  return subplots;
+}
+
+/**
+ * Parse a Subplot object from TypeScript file content.
+ * Extracts the first exported const typed as Subplot.
+ */
+function parseSubplotFromFile(content: string): Subplot | null {
+  try {
+    const match = content.match(
+      /export\s+const\s+\w+\s*:\s*Subplot\s*=\s*(\{[\s\S]*?\});?\s*$/,
+    );
+    if (!match) return null;
+    return JSON.parse(match[1]) as Subplot;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Validate that all cross-references in a subplot point to existing entities.
+ */
+function validateSubplotReferences(
+  subplot: Subplot,
+  subplotIds: Set<string>,
+  characterIds: Set<string>,
+  settingIds: Set<string>,
+  timelineEventIds: Set<string>,
+): string[] {
+  const errors: string[] = [];
+  const prefix = subplot.id;
+
+  for (const beat of subplot.beats) {
+    // timelineEventId reference check
+    if (
+      beat.timelineEventId &&
+      timelineEventIds.size > 0 &&
+      !timelineEventIds.has(beat.timelineEventId)
+    ) {
+      errors.push(
+        `${prefix}: beat "${beat.id}" references unknown timelineEventId "${beat.timelineEventId}"`,
+      );
+    }
+
+    // character references
+    for (const charId of beat.characters) {
+      if (characterIds.size > 0 && !characterIds.has(charId)) {
+        errors.push(
+          `${prefix}: beat "${beat.id}" references unknown character "${charId}"`,
+        );
+      }
+    }
+
+    // setting references
+    for (const setId of beat.settings) {
+      if (settingIds.size > 0 && !settingIds.has(setId)) {
+        errors.push(
+          `${prefix}: beat "${beat.id}" references unknown setting "${setId}"`,
+        );
+      }
+    }
+  }
+
+  // Intersection references
+  for (const intersection of subplot.intersections ?? []) {
+    if (!subplotIds.has(intersection.targetPlotId)) {
+      errors.push(
+        `${prefix}: intersection references unknown targetSubplotId "${intersection.targetPlotId}"`,
+      );
+    }
+
+    // sourceBeatId must exist in the source subplot
+    const sourceSubplot = intersection.sourcePlotId === subplot.id
+      ? subplot
+      : null;
+    if (sourceSubplot) {
+      const beatIds = new Set(sourceSubplot.beats.map((b) => b.id));
+      if (!beatIds.has(intersection.sourceBeatId)) {
+        errors.push(
+          `${prefix}: intersection references unknown sourceBeatId "${intersection.sourceBeatId}" in "${intersection.sourcePlotId}"`,
+        );
+      }
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Validate structural completeness of a subplot.
+ * - Requires at least one beat with structurePosition="climax"
+ * - Requires at least one beat with structurePosition="setup"
+ * - Warn (as error) if non-main subplot has zero intersections
+ */
+function validateSubplotStructure(
+  subplot: Subplot,
+  subplotIds: Set<string>,
+): string[] {
+  const errors: string[] = [];
+  const prefix = subplot.id;
+
+  const positions = new Set(
+    subplot.beats
+      .map((b) => b.structurePosition)
+      .filter((p): p is string => typeof p === "string"),
+  );
+
+  if (!positions.has("climax")) {
+    errors.push(
+      `${prefix}: no beat with structurePosition="climax" found (required)`,
+    );
+  }
+
+  if (!positions.has("setup")) {
+    errors.push(
+      `${prefix}: no beat with structurePosition="setup" found (required)`,
+    );
+  }
+
+  // Warn about orphan subplots (non-main with zero intersections)
+  if (
+    subplot.type !== "main" &&
+    (!subplot.intersections || subplot.intersections.length === 0)
+  ) {
+    // Why: info-level warning rather than error; orphan subplots are valid but unusual.
+    // Returned as a warning-prefixed message so the caller can distinguish if needed.
+    errors.push(
+      `${prefix} [warn]: non-main subplot has no intersections (orphan)`,
+    );
+  }
+
+  // parentPlotId reference check
+  if (
+    subplot.parentPlotId &&
+    subplotIds.size > 0 &&
+    !subplotIds.has(subplot.parentPlotId)
+  ) {
+    errors.push(
+      `${prefix}: references unknown parentPlotId "${subplot.parentPlotId}"`,
+    );
+  }
+
+  return errors;
+}
+
+/**
+ * Collect all entity IDs exported from .ts files in a directory.
+ * Used for cross-reference validation.
+ */
+async function collectIdsFromDir(
+  dir: string,
+): Promise<Set<string>> {
+  const ids = new Set<string>();
+  try {
+    for await (const entry of Deno.readDir(dir)) {
+      if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+      const filePath = join(dir, entry.name);
+      try {
+        const content = await Deno.readTextFile(filePath);
+        // Match exported id field: id: "some_id" or id: 'some_id'
+        const idPattern =
+          /(?:export\s+const\s+\w+[^=]*=\s*\{[^}]*?\bid\s*:\s*["']([^"']+)["'])/gs;
+        let match: RegExpExecArray | null;
+        while ((match = idPattern.exec(content)) !== null) {
+          ids.add(match[1]);
+        }
+      } catch {
+        // skip
+      }
+    }
+  } catch {
+    // directory does not exist
+  }
+  return ids;
+}
+
+/**
+ * Collect all timeline event IDs from timeline .ts files.
+ */
+async function collectTimelineEventIds(
+  dir: string,
+): Promise<Set<string>> {
+  const ids = new Set<string>();
+  try {
+    for await (const entry of Deno.readDir(dir)) {
+      if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+      const filePath = join(dir, entry.name);
+      try {
+        const content = await Deno.readTextFile(filePath);
+        // Match event id fields inside events array
+        const eventIdPattern = /\bid\s*:\s*["']([^"']+)["']/g;
+        let match: RegExpExecArray | null;
+        while ((match = eventIdPattern.exec(content)) !== null) {
+          ids.add(match[1]);
+        }
+      } catch {
+        // skip
+      }
+    }
+  } catch {
+    // directory does not exist
+  }
+  return ids;
+}
+
+/**
+ * Resolve project root from context, falling back to cwd.
+ */
+async function resolveProjectRoot(
+  context: CommandContext,
+): Promise<string | null> {
+  const config = await context.config.resolve();
+  return (context.args?.projectRoot as string) ??
+    config.runtime.projectRoot ??
+    Deno.cwd();
 }
 
 export const metaCheckCommandDescriptor: CommandDescriptor =
