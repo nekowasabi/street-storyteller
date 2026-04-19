@@ -3,6 +3,8 @@
  * 原稿ファイルのFrontmatterに記載されるエンティティIDが
  * 実際にプロジェクト内に存在するかを検証する
  */
+import { join } from "@std/path";
+import { exists } from "@std/fs/exists";
 import { ProjectAnalyzer } from "@storyteller/application/view/project_analyzer.ts";
 import type {
   CharacterSummary,
@@ -20,7 +22,8 @@ export type ValidatableEntityType =
   | "foreshadowings"
   | "timelines"
   | "timeline_events"
-  | "phases";
+  | "phases"
+  | "subplots";
 
 /**
  * バリデーション結果
@@ -46,6 +49,7 @@ export class EntityValidator {
   private settingsCache: SettingSummary[] | null = null;
   private foreshadowingsCache: ForeshadowingSummary[] | null = null;
   private timelinesCache: TimelineSummary[] | null = null;
+  private subplotsCache: Set<string> | null = null;
 
   /**
    * @param projectPath プロジェクトのルートパス
@@ -88,6 +92,8 @@ export class EntityValidator {
         return await this.validateTimelineEventIds(ids);
       case "phases":
         return await this.validatePhaseIds(ids);
+      case "subplots":
+        return await this.validateSubplotIds(ids);
     }
   }
 
@@ -140,6 +146,15 @@ export class EntityValidator {
    */
   private async validatePhaseIds(ids: string[]): Promise<ValidationResult> {
     const existingIds = await this.getExistingPhaseIds();
+    return this.validateAgainstExisting(ids, existingIds);
+  }
+
+  /**
+   * サブプロットIDを検証
+   * src/subplots/{id}.ts のファイル存在で確認
+   */
+  private async validateSubplotIds(ids: string[]): Promise<ValidationResult> {
+    const existingIds = await this.getExistingSubplotIds();
     return this.validateAgainstExisting(ids, existingIds);
   }
 
@@ -243,6 +258,17 @@ export class EntityValidator {
   }
 
   /**
+   * 既存のサブプロットIDを取得
+   * src/subplots/{id}.ts のファイル存在で確認
+   */
+  private async getExistingSubplotIds(): Promise<Set<string>> {
+    if (!this.subplotsCache) {
+      this.subplotsCache = await this.loadSubplots();
+    }
+    return this.subplotsCache;
+  }
+
+  /**
    * キャラクターをロード
    * ProjectAnalyzerを使用してキャラクター情報を取得
    */
@@ -288,6 +314,33 @@ export class EntityValidator {
   }
 
   /**
+   * サブプロットをロード
+   * src/subplots/ ディレクトリ内の .ts ファイルからIDを抽出
+   */
+  private async loadSubplots(): Promise<Set<string>> {
+    const subplotsDir = join(this.projectPath, "src", "subplots");
+    const subplotIds = new Set<string>();
+
+    try {
+      const dirExists = await exists(subplotsDir);
+      if (!dirExists) {
+        return subplotIds;
+      }
+
+      for await (const entry of Deno.readDir(subplotsDir)) {
+        if (entry.isFile && entry.name.endsWith(".ts")) {
+          const id = entry.name.replace(/\.ts$/, "");
+          subplotIds.add(id);
+        }
+      }
+    } catch {
+      // ディレクトリ読み込み失敗時は空セットを返す
+    }
+
+    return subplotIds;
+  }
+
+  /**
    * キャッシュをクリア
    */
   clearCache(): void {
@@ -295,5 +348,6 @@ export class EntityValidator {
     this.settingsCache = null;
     this.foreshadowingsCache = null;
     this.timelinesCache = null;
+    this.subplotsCache = null;
   }
 }
