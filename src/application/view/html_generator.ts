@@ -10,12 +10,14 @@ import type {
   ProjectAnalysis,
   ResolutionSummary,
   SettingSummary,
+  SubplotSummary,
   TimelineSummary,
 } from "@storyteller/application/view/project_analyzer.ts";
 import { VIS_CDN_LINKS } from "@storyteller/application/view/graph/vis_types.ts";
 import {
   buildCharacterGraphFromSummary,
   buildForeshadowingGraphFromSummary,
+  buildSubplotGraphFromSummary,
   buildTimelineGraphFromSummary,
 } from "@storyteller/application/view/graph/summary_adapters.ts";
 import { ConsistencyChecker } from "@storyteller/application/view/consistency/consistency_checker.ts";
@@ -37,6 +39,7 @@ export class HtmlGenerator {
     const foreshadowingsSection = this.renderForeshadowings(
       analysis.foreshadowings,
     );
+    const subplotsSection = this.renderSubplots(analysis.subplots);
     const manuscriptsSection = this.renderManuscripts(analysis.manuscripts);
 
     // グラフセクションを生成
@@ -47,6 +50,7 @@ export class HtmlGenerator {
     const foreshadowingGraphSection = this.renderForeshadowingGraph(
       analysis.foreshadowings,
     );
+    const subplotGraphSection = this.renderSubplotGraph(analysis.subplots);
     const graphInitScript = this.renderGraphInitScript(analysis);
 
     // 整合性チェック実行
@@ -83,6 +87,7 @@ ${CONSISTENCY_STYLES}
           ${characterGraphSection}
           ${timelineGraphSection}
           ${foreshadowingGraphSection}
+          ${subplotGraphSection}
         </div>
       </section>
 
@@ -104,6 +109,11 @@ ${CONSISTENCY_STYLES}
       <section class="foreshadowings">
         <h2>Foreshadowings</h2>
         ${foreshadowingsSection}
+      </section>
+
+      <section class="subplots">
+        <h2>Subplots</h2>
+        ${subplotsSection}
       </section>
 
       <section class="manuscripts">
@@ -535,6 +545,57 @@ ${CONSISTENCY_STYLES}
       </div>`;
   }
 
+  private renderSubplotGraph(
+    _subplots: readonly SubplotSummary[],
+  ): string {
+    return `
+      <div class="graph-panel">
+        <h3>Subplot Structure</h3>
+        <div id="subplot-graph" class="graph-canvas"></div>
+      </div>`;
+  }
+
+  private renderSubplots(subplots: readonly SubplotSummary[]): string {
+    if (subplots.length === 0) {
+      return '<p class="empty">No subplots found.</p>';
+    }
+
+    const byType = new Map<string, number>();
+    for (const sp of subplots) {
+      byType.set(sp.type, (byType.get(sp.type) ?? 0) + 1);
+    }
+
+    const statsHtml = [
+      `<span class="stat">Total: <strong>${subplots.length}</strong></span>`,
+      ...[...byType.entries()].map(
+        ([t, c]) => `<span class="stat">${escapeHtml(t)}: <strong>${c}</strong></span>`,
+      ),
+    ].join("\n            ");
+
+    const cards = subplots.map((sp) => {
+      const focusNames = sp.focusCharacters
+        .map((fc) => escapeHtml(fc.characterId))
+        .join(", ");
+      return `
+        <div class="card subplot-card type-${escapeHtml(sp.type)}">
+          <h3>${escapeHtml(sp.name)}</h3>
+          <div class="meta">
+            <span class="type">${escapeHtml(sp.type)}</span>
+            ${sp.importance ? `<span class="importance">${escapeHtml(sp.importance)}</span>` : ""}
+            <span class="id">${escapeHtml(sp.id)}</span>
+          </div>
+          <p class="summary">${escapeHtml(sp.summary ?? "")}</p>
+          <div class="subplot-details">
+            <span class="label">Beats:</span> ${sp.beats.length}
+            ${focusNames ? ` | <span class="label">Focus:</span> ${focusNames}` : ""}
+          </div>
+          <div class="file-path"><code>${escapeHtml(sp.filePath)}</code></div>
+        </div>`;
+    }).join("\n");
+
+    return `<div class="subplot-stats">${statsHtml}</div><div class="card-grid">${cards}</div>`;
+  }
+
   /**
    * グラフ初期化スクリプトをレンダリング
    */
@@ -573,6 +634,7 @@ ${CONSISTENCY_STYLES}
     const foreshadowingGraphData = buildForeshadowingGraphFromSummary(
       analysis.foreshadowings,
     );
+    const subplotGraphData = buildSubplotGraphFromSummary(analysis.subplots);
 
     return `
   <script>
@@ -608,6 +670,17 @@ ${CONSISTENCY_STYLES}
           foreshadowingContainer,
           { nodes: new vis.DataSet(foreshadowingData.nodes), edges: new vis.DataSet(foreshadowingData.edges) },
           foreshadowingData.options || {}
+        );
+      }
+
+      // サブプロット構造グラフ
+      const subplotContainer = document.getElementById('subplot-graph');
+      if (subplotContainer) {
+        const subplotData = ${JSON.stringify(subplotGraphData)};
+        const subplotNetwork = new vis.Network(
+          subplotContainer,
+          { nodes: new vis.DataSet(subplotData.nodes), edges: new vis.DataSet(subplotData.edges) },
+          subplotData.options || {}
         );
       }
     });
@@ -1084,6 +1157,40 @@ const CSS_STYLES = `
     .related-characters,
     .related-settings {
       margin-bottom: 0.25rem;
+    }
+
+    /* Subplot styles */
+    .subplot-stats {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      padding: 1rem;
+      background: var(--card-background);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .subplot-stats .stat {
+      font-size: 0.9rem;
+    }
+
+    .subplot-card .type {
+      background: #3498db;
+      color: white;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+    }
+
+    .subplot-card.type-main { border-left: 4px solid #e74c3c; }
+    .subplot-card.type-subplot { border-left: 4px solid #3498db; }
+    .subplot-card.type-parallel { border-left: 4px solid #27ae60; }
+    .subplot-card.type-background { border-left: 4px solid #95a5a6; }
+
+    .subplot-details {
+      margin: 0.5rem 0;
+      font-size: 0.85rem;
+      color: #666;
     }
 
     footer {

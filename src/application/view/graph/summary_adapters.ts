@@ -11,6 +11,8 @@ import type {
   CharacterSummary,
   EventSummary,
   ForeshadowingSummary,
+  SubplotBeatSummary,
+  SubplotSummary,
   TimelineSummary,
 } from "../project_analyzer.ts";
 
@@ -52,6 +54,23 @@ const TYPE_SHAPES: Record<string, VisNode["shape"]> = {
   symbol: "ellipse",
   chekhov: "diamond",
   red_herring: "box",
+};
+
+/** SubplotType別の色 */
+const SUBTYPE_COLORS: Record<string, string> = {
+  main: "#e74c3c",
+  subplot: "#3498db",
+  parallel: "#27ae60",
+  background: "#95a5a6",
+};
+
+/** BeatStructurePosition別の形状 */
+const BEAT_SHAPES: Record<string, VisNode["shape"]> = {
+  setup: "ellipse",
+  rising: "box",
+  climax: "star",
+  falling: "box",
+  resolution: "diamond",
 };
 
 /**
@@ -253,6 +272,84 @@ export function buildForeshadowingGraphFromSummary(
           arrows: "to",
           width: 2,
         });
+      }
+    }
+  }
+
+  return {
+    nodes,
+    edges,
+    options: {
+      nodes: { font: { size: 12 } },
+      edges: { smooth: true },
+      physics: { enabled: true },
+      interaction: { hover: true },
+    },
+  };
+}
+
+/**
+ * SubplotSummary配列からグラフデータを構築する
+ */
+export function buildSubplotGraphFromSummary(
+  subplots: readonly SubplotSummary[],
+): VisGraphData {
+  if (subplots.length === 0) {
+    return { nodes: [], edges: [] };
+  }
+
+  const nodes: VisNode[] = [];
+  const edges: VisEdge[] = [];
+  const beatMap = new Map<string, SubplotBeatSummary>();
+
+  for (const sp of subplots) {
+    nodes.push({
+      id: sp.id,
+      label: sp.name,
+      title: `${sp.name}\n${sp.summary || ""}\nType: ${sp.type}`,
+      shape: "box",
+      color: {
+        background: SUBTYPE_COLORS[sp.type] || "#95a5a6",
+        border: "#2c3e50",
+      },
+    });
+
+    for (const beat of sp.beats) {
+      beatMap.set(beat.id, beat);
+
+      nodes.push({
+        id: beat.id,
+        label: beat.title,
+        title: `${beat.title}\n${beat.summary || ""}\nPosition: ${beat.structurePosition || "unknown"}`,
+        shape: BEAT_SHAPES[beat.structurePosition ?? ""] || "dot",
+        color: {
+          background: SUBTYPE_COLORS[sp.type] || "#95a5a6",
+          border: "#2c3e50",
+        },
+      });
+
+      edges.push({
+        from: sp.id,
+        to: beat.id,
+        arrows: "to",
+        color: { color: "#ccc" },
+        width: 1,
+      });
+    }
+  }
+
+  for (const sp of subplots) {
+    for (const beat of sp.beats) {
+      for (const preId of beat.preconditionBeatIds ?? []) {
+        if (beatMap.has(preId)) {
+          edges.push({
+            from: preId,
+            to: beat.id,
+            arrows: "to",
+            color: { color: "#34495e" },
+            width: 2,
+          });
+        }
       }
     }
   }
