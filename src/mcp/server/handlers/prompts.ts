@@ -21,6 +21,9 @@ import { timelineConsistencyCheckPrompt } from "@storyteller/mcp/prompts/definit
 import { storyDirectorPrompt } from "@storyteller/mcp/prompts/definitions/story_director.ts";
 import { characterArcSuggestPrompt } from "@storyteller/mcp/prompts/definitions/character_arc_suggest.ts";
 import { phaseTransitionCheckPrompt } from "@storyteller/mcp/prompts/definitions/phase_transition_check.ts";
+import { subplotBrainstormPrompt } from "@storyteller/mcp/prompts/definitions/subplot_brainstorm.ts";
+import { subplotIntersectionSuggestPrompt } from "@storyteller/mcp/prompts/definitions/subplot_intersection_suggest.ts";
+import { subplotCompletionReviewPrompt } from "@storyteller/mcp/prompts/definitions/subplot_completion_review.ts";
 
 export type McpListPromptsResult = {
   readonly prompts: readonly McpPrompt[];
@@ -79,6 +82,11 @@ export function createDefaultPromptRegistry(): PromptRegistry {
   // Character phase prompts
   registry.register(characterArcSuggestPrompt);
   registry.register(phaseTransitionCheckPrompt);
+
+  // Subplot prompts
+  registry.register(subplotBrainstormPrompt);
+  registry.register(subplotIntersectionSuggestPrompt);
+  registry.register(subplotCompletionReviewPrompt);
 
   return registry;
 }
