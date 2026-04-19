@@ -26,6 +26,8 @@ export type ParsedUri = {
     | "timeline"
     | "foreshadowings"
     | "foreshadowing"
+    | "subplots"
+    | "subplot"
     | "chapters"
     | "manuscript"
     | "project";
@@ -47,6 +49,8 @@ const VALID_TYPES: ReadonlySet<string> = new Set([
   "timeline",
   "foreshadowings",
   "foreshadowing",
+  "subplots",
+  "subplot",
   "chapters",
   "manuscript",
   "project",
