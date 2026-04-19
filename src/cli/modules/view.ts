@@ -16,6 +16,7 @@ import { LocalViewServer } from "@storyteller/application/view/local_server.ts";
 import { FileWatcher } from "@storyteller/application/view/file_watcher.ts";
 import { ViewForeshadowingCommand } from "@storyteller/cli/modules/view/foreshadowing.ts";
 import { viewSettingCommandDescriptor } from "@storyteller/cli/modules/view/setting.ts";
+import { viewSubplotCommandDescriptor } from "@storyteller/cli/modules/view/subplot.ts";
 
 /**
  * ViewCommandクラス
@@ -322,6 +323,7 @@ export const viewCommandDescriptor: CommandDescriptor =
       children: [
         viewForeshadowingCommandDescriptor,
         viewSettingCommandDescriptor,
+        viewSubplotCommandDescriptor,
       ],
       examples: [
         {
