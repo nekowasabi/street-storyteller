@@ -474,6 +474,10 @@ Deno.test("cinderella伏線シナリオ: 結果確認", async (t) => {
 
 Deno.test("cinderella伏線シナリオ: 伏線参照検出", async (t) => {
   await t.step("11. ProjectAnalyzer が伏線参照を検出できること", async () => {
+    // テスト用伏線ファイルが残っている場合はクリーンアップ
+    // Why: Deno test does not guarantee execution order, so setup cleanup may not have run yet
+    await cleanupTestForeshadowings();
+
     // ProjectAnalyzer をインポート
     const { ProjectAnalyzer } = await import(
       "../../src/application/view/project_analyzer.ts"
@@ -497,9 +501,9 @@ Deno.test("cinderella伏線シナリオ: 伏線参照検出", async (t) => {
         f: { name: string },
       ) => f.name);
       assertEquals(
-        foreshadowingNames.includes("ガラスの靴の伏線"),
+        foreshadowingNames.includes("ガラスの靴"),
         true,
-        "Should include ガラスの靴の伏線",
+        "Should include ガラスの靴",
       );
       assertEquals(
         foreshadowingNames.includes("真夜中の期限"),
@@ -507,9 +511,9 @@ Deno.test("cinderella伏線シナリオ: 伏線参照検出", async (t) => {
         "Should include 真夜中の期限",
       );
       assertEquals(
-        foreshadowingNames.includes("継母の嫉妬の理由"),
+        foreshadowingNames.includes("シンデレラの優しさ"),
         true,
-        "Should include 継母の嫉妬の理由",
+        "Should include シンデレラの優しさ",
       );
     }
   });
@@ -576,9 +580,9 @@ Deno.test("cinderella伏線シナリオ: HTML出力", async (t) => {
 
         // 各伏線カードが含まれること
         assertEquals(
-          html.includes("ガラスの靴の伏線"),
+          html.includes("ガラスの靴"),
           true,
-          "Should include ガラスの靴の伏線",
+          "Should include ガラスの靴",
         );
         assertEquals(
           html.includes("真夜中の期限"),
@@ -586,9 +590,9 @@ Deno.test("cinderella伏線シナリオ: HTML出力", async (t) => {
           "Should include 真夜中の期限",
         );
         assertEquals(
-          html.includes("継母の嫉妬の理由"),
+          html.includes("シンデレラの優しさ"),
           true,
-          "Should include 継母の嫉妬の理由",
+          "Should include シンデレラの優しさ",
         );
 
         // ステータスクラスが含まれること

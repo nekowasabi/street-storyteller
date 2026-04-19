@@ -26,6 +26,7 @@ Deno.test("UnresolvedForeshadowingRule - 未回収伏線検出", async (t) => {
           filePath: "",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
@@ -59,6 +60,7 @@ Deno.test("UnresolvedForeshadowingRule - 未回収伏線検出", async (t) => {
           filePath: "",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
@@ -89,6 +91,7 @@ Deno.test("UnresolvedForeshadowingRule - 未回収伏線検出", async (t) => {
           filePath: "",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
@@ -116,6 +119,7 @@ Deno.test("UnresolvedForeshadowingRule - 未回収伏線検出", async (t) => {
           filePath: "",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);

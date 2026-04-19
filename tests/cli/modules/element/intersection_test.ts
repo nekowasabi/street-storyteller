@@ -63,12 +63,12 @@ Deno.test("ElementIntersectionCommand", async (t) => {
 
         const context = createMockContext({
           args: {
-            "source-plot": "nonexistent_source",
+            "source-subplot": "nonexistent_source",
             "source-beat": "source_beat",
-            "target-plot": "target_plot",
+            "target-subplot": "target_plot",
             "target-beat": "target_beat",
-            description: "テスト交差",
-            level: "high",
+            summary: "テスト交差",
+            "influence-level": "high",
             projectRoot: tempDir,
           },
         });
@@ -76,7 +76,7 @@ Deno.test("ElementIntersectionCommand", async (t) => {
         const result = await command.execute(context);
         assertEquals(result.ok, false);
         if (!result.ok) {
-          assertEquals(result.error.code, "source_plot_not_found");
+          assertEquals(result.error.code, "source_subplot_not_found");
         }
       } finally {
         await Deno.remove(tempDir, { recursive: true });
@@ -117,12 +117,12 @@ Deno.test("ElementIntersectionCommand", async (t) => {
 
         const context = createMockContext({
           args: {
-            "source-plot": "source_plot",
+            "source-subplot": "source_plot",
             "source-beat": "source_beat",
-            "target-plot": "target_plot",
+            "target-subplot": "target_plot",
             "target-beat": "nonexistent_target_beat",
-            description: "テスト交差",
-            level: "high",
+            summary: "テスト交差",
+            "influence-level": "high",
             projectRoot: tempDir,
           },
         });
@@ -169,13 +169,13 @@ Deno.test("ElementIntersectionCommand", async (t) => {
 
         const context = createMockContext({
           args: {
-            "source-plot": "source_plot",
+            "source-subplot": "source_plot",
             "source-beat": "source_beat",
-            "target-plot": "target_plot",
+            "target-subplot": "target_plot",
             "target-beat": "target_beat",
-            description: "テスト交差の説明",
-            level: "high",
-            direction: "mutual",
+            summary: "テスト交差の説明",
+            "influence-level": "high",
+            "influence-direction": "mutual",
             projectRoot: tempDir,
           },
         });
@@ -236,12 +236,12 @@ Deno.test("ElementIntersectionCommand", async (t) => {
         // --direction を指定しない
         const context = createMockContext({
           args: {
-            "source-plot": "source_plot",
+            "source-subplot": "source_plot",
             "source-beat": "source_beat",
-            "target-plot": "target_plot",
+            "target-subplot": "target_plot",
             "target-beat": "target_beat",
-            description: "方向省略のテスト",
-            level: "medium",
+            summary: "方向省略のテスト",
+            "influence-level": "medium",
             projectRoot: tempDir,
           },
         });
@@ -295,12 +295,12 @@ Deno.test("ElementIntersectionCommand", async (t) => {
 
           const context = createMockContext({
             args: {
-              "source-plot": "source_plot",
+              "source-subplot": "source_plot",
               "source-beat": "source_beat",
-              "target-plot": "target_plot",
+              "target-subplot": "target_plot",
               "target-beat": "target_beat",
-              description: `${direction}方向のテスト`,
-              level: "high",
+              summary: `${direction}方向のテスト`,
+              "influence-level": "high",
               direction,
               projectRoot: tempDir,
             },

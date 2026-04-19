@@ -13,11 +13,12 @@ Deno.test("generateSubplotFile", async (t) => {
       id: "prince_story",
       name: "王子の花嫁探し",
       type: "subplot",
+      status: "active",
       summary: "王子が運命の人を探す物語",
       beats: [],
-      focusCharacters: [
-        { characterId: "prince", weight: "primary" },
-      ],
+      focusCharacters: {
+        prince: "primary",
+      },
     };
 
     const content = generateSubplotFile(subplot);
@@ -41,12 +42,14 @@ Deno.test("generateSubplotFile", async (t) => {
       id: "main_story",
       name: "メインストーリー",
       type: "main",
+      status: "active",
       summary: "シンデレラの物語",
       beats: [
         {
           id: "ball_invitation",
           title: "舞踏会の招待状",
           summary: "招待状を受け取る",
+          structurePosition: "setup",
           chapter: "chapter_01",
           characters: ["cinderella"],
           settings: ["mansion"],
@@ -55,16 +58,16 @@ Deno.test("generateSubplotFile", async (t) => {
           id: "ball_dance",
           title: "舞踏会でのダンス",
           summary: "王子と踊る",
+          structurePosition: "climax",
           chapter: "chapter_02",
           characters: ["cinderella", "prince"],
           settings: ["castle_ballroom"],
-          structurePosition: "climax",
           preconditionBeatIds: ["ball_invitation"],
         },
       ],
-      focusCharacters: [
-        { characterId: "cinderella", weight: "primary" },
-      ],
+      focusCharacters: {
+        cinderella: "primary",
+      },
     };
 
     const content = generateSubplotFile(subplot);
@@ -86,25 +89,22 @@ Deno.test("generateSubplotFile", async (t) => {
       id: "stepmother_plot",
       name: "継母の野望",
       type: "subplot",
+      status: "active",
       summary: "娘を王妃にしようとする計画",
       beats: [],
-      focusCharacters: [
-        { characterId: "stepmother", weight: "primary" },
-      ],
-      relatedCharacters: ["cinderella"],
-      parentPlotId: "main_story",
-      childPlotIds: ["daughter_plot"],
-      themes: ["ambition", "jealousy"],
+      focusCharacters: {
+        stepmother: "primary",
+      },
       importance: "minor",
+      parentSubplotId: "main_story",
       displayNames: ["継母の計画"],
       details: {
-        motivation: "社会的地位の向上",
-        resolution: { file: "subplots/stepmother_resolution.md" },
+        theme: "社会的地位の向上",
+        notes: { file: "subplots/stepmother_resolution.md" },
       },
-      detectionHints: {
-        commonPatterns: ["継母", "義母"],
-        excludePatterns: ["母亲"],
-        confidence: 0.8,
+      relations: {
+        characters: ["stepmother", "cinderella"],
+        settings: ["mansion"],
       },
     };
 
@@ -112,14 +112,12 @@ Deno.test("generateSubplotFile", async (t) => {
     const parsed = parseSubplotFromFile(content);
 
     assertExists(parsed);
-    assertEquals(parsed.relatedCharacters, ["cinderella"]);
-    assertEquals(parsed.parentPlotId, "main_story");
-    assertEquals(parsed.childPlotIds, ["daughter_plot"]);
-    assertEquals(parsed.themes, ["ambition", "jealousy"]);
     assertEquals(parsed.importance, "minor");
     assertEquals(parsed.displayNames, ["継母の計画"]);
-    assertEquals(parsed.details?.motivation, "社会的地位の向上");
-    assertEquals(parsed.detectionHints?.confidence, 0.8);
+    assertEquals(parsed.parentSubplotId, "main_story");
+    assertExists(parsed.details);
+    assertEquals(parsed.relations?.characters, ["stepmother", "cinderella"]);
+    assertEquals(parsed.relations?.settings, ["mansion"]);
   });
 });
 
@@ -129,11 +127,12 @@ Deno.test("Round-trip: parse -> generate -> parse", async (t) => {
       id: "fairy_plot",
       name: "妖精の見守り",
       type: "background",
+      status: "active",
       summary: "妖精がシンデレラを見守る",
       beats: [],
-      focusCharacters: [
-        { characterId: "fairy_godmother", weight: "primary" },
-      ],
+      focusCharacters: {
+        fairy_godmother: "primary",
+      },
     };
 
     // generate -> parse -> generate -> parse
@@ -162,38 +161,40 @@ Deno.test("Round-trip: parse -> generate -> parse", async (t) => {
       id: "main_story",
       name: "メインストーリー",
       type: "main",
+      status: "active",
       summary: "シンデレラの物語",
       beats: [
         {
           id: "humble_beginnings",
           title: "惨めな生活",
           summary: "シンデレラの日常",
+          structurePosition: "setup",
           chapter: "chapter_01",
           characters: ["cinderella", "stepmother"],
           settings: ["mansion"],
-          structurePosition: "setup",
         },
         {
           id: "ball_dance",
           title: "舞踏会",
           summary: "王子との出会い",
+          structurePosition: "climax",
           chapter: "chapter_02",
           characters: ["cinderella", "prince"],
           settings: ["castle_ballroom"],
-          structurePosition: "climax",
           preconditionBeatIds: ["humble_beginnings"],
           timelineEventId: "event_ball",
-          displayNames: ["舞踏会の夜"],
         },
       ],
-      focusCharacters: [
-        { characterId: "cinderella", weight: "primary" },
-        { characterId: "prince", weight: "secondary" },
-      ],
-      relatedCharacters: ["fairy_godmother"],
-      themes: ["love", "transformation"],
+      focusCharacters: {
+        cinderella: "primary",
+        prince: "secondary",
+      },
       importance: "major",
       displayNames: ["シンデレラストーリー"],
+      relations: {
+        characters: ["cinderella", "fairy_godmother"],
+        settings: ["mansion", "castle_ballroom"],
+      },
     };
 
     const generated1 = generateSubplotFile(original);
@@ -213,10 +214,10 @@ Deno.test("Round-trip: parse -> generate -> parse", async (t) => {
     assertEquals(parsed2.beats[0], parsed1.beats[0]);
     assertEquals(parsed2.beats[1], parsed1.beats[1]);
     assertEquals(parsed2.focusCharacters, parsed1.focusCharacters);
-    assertEquals(parsed2.relatedCharacters, parsed1.relatedCharacters);
-    assertEquals(parsed2.themes, parsed1.themes);
     assertEquals(parsed2.importance, parsed1.importance);
     assertEquals(parsed2.displayNames, parsed1.displayNames);
+    assertEquals(parsed2.relations?.characters, parsed1.relations?.characters);
+    assertEquals(parsed2.relations?.settings, parsed1.relations?.settings);
 
     // ファイル内容の同一性
     assertEquals(generated2, generated1);
@@ -227,23 +228,21 @@ Deno.test("Round-trip: parse -> generate -> parse", async (t) => {
       id: "empty_plot",
       name: "空のプロット",
       type: "parallel",
+      status: "active",
       summary: "テスト",
       beats: [],
-      focusCharacters: [],
     };
 
     const generated = generateSubplotFile(original);
     const parsed = parseSubplotFromFile(generated);
     assertExists(parsed);
     assertEquals(parsed.beats, []);
-    assertEquals(parsed.focusCharacters, []);
 
     // 二回目
     const generated2 = generateSubplotFile(parsed);
     const parsed2 = parseSubplotFromFile(generated2);
     assertExists(parsed2);
     assertEquals(parsed2.beats, []);
-    assertEquals(parsed2.focusCharacters, []);
     assertEquals(generated2, generated);
   });
 });

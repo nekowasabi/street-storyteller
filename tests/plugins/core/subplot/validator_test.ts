@@ -17,9 +17,10 @@ Deno.test("validateSubplot", async (t) => {
       id: "valid_subplot",
       name: "有効なサブプロット",
       type: "subplot",
+      status: "active",
       summary: "有効な概要",
       beats: [],
-      focusCharacters: [{ characterId: "hero", weight: "primary" }],
+      focusCharacters: { hero: "primary" },
     };
 
     const result = validateSubplot(validSubplot);
@@ -32,9 +33,10 @@ Deno.test("validateSubplot", async (t) => {
       id: "test",
       name: "",
       type: "subplot",
+      status: "active",
       summary: "概要",
       beats: [],
-      focusCharacters: [{ characterId: "hero", weight: "primary" }],
+      focusCharacters: { hero: "primary" },
     };
 
     const result = validateSubplot(invalidSubplot);
@@ -49,9 +51,10 @@ Deno.test("validateSubplot", async (t) => {
       id: "test",
       name: "テスト",
       type: "",
+      status: "active",
       summary: "概要",
       beats: [],
-      focusCharacters: [{ characterId: "hero", weight: "primary" }],
+      focusCharacters: { hero: "primary" },
     };
 
     const result = validateSubplot(invalidSubplot);
@@ -66,9 +69,10 @@ Deno.test("validateSubplot", async (t) => {
       id: "test",
       name: "テスト",
       type: "subplot",
+      status: "active",
       summary: "",
       beats: [],
-      focusCharacters: [{ characterId: "hero", weight: "primary" }],
+      focusCharacters: { hero: "primary" },
     };
 
     const result = validateSubplot(invalidSubplot);
@@ -83,9 +87,10 @@ Deno.test("validateSubplot", async (t) => {
       id: "test",
       name: "テスト",
       type: "invalid_type",
+      status: "active",
       summary: "概要",
       beats: [],
-      focusCharacters: [{ characterId: "hero", weight: "primary" }],
+      focusCharacters: { hero: "primary" },
     };
 
     const result = validateSubplot(invalidSubplot);
@@ -111,6 +116,7 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_a",
         title: "Beat A",
         summary: "Summary A",
+        structurePosition: "setup" as const,
         chapter: "chapter_01",
         characters: [],
         settings: [],
@@ -120,6 +126,7 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_b",
         title: "Beat B",
         summary: "Summary B",
+        structurePosition: "rising" as const,
         chapter: "chapter_01",
         characters: [],
         settings: [],
@@ -127,8 +134,8 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
       },
     ];
 
-    const cycles = detectBeatPreconditionCycles(beats);
-    assertEquals(cycles.length > 0, true);
+    const hasCycles = detectBeatPreconditionCycles(beats);
+    assertEquals(hasCycles, true);
   });
 
   await t.step("自己参照 (A->A) を検出すること", () => {
@@ -137,6 +144,7 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_a",
         title: "Beat A",
         summary: "Summary A",
+        structurePosition: "setup" as const,
         chapter: "chapter_01",
         characters: [],
         settings: [],
@@ -144,8 +152,8 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
       },
     ];
 
-    const cycles = detectBeatPreconditionCycles(beats);
-    assertEquals(cycles.length > 0, true);
+    const hasCycles = detectBeatPreconditionCycles(beats);
+    assertEquals(hasCycles, true);
   });
 
   await t.step("線形DAG (A->B->C) を許容すること", () => {
@@ -154,6 +162,7 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_a",
         title: "Beat A",
         summary: "Summary A",
+        structurePosition: "setup" as const,
         chapter: "chapter_01",
         characters: [],
         settings: [],
@@ -162,6 +171,7 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_b",
         title: "Beat B",
         summary: "Summary B",
+        structurePosition: "rising" as const,
         chapter: "chapter_02",
         characters: [],
         settings: [],
@@ -171,6 +181,7 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_c",
         title: "Beat C",
         summary: "Summary C",
+        structurePosition: "climax" as const,
         chapter: "chapter_03",
         characters: [],
         settings: [],
@@ -178,8 +189,8 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
       },
     ];
 
-    const cycles = detectBeatPreconditionCycles(beats);
-    assertEquals(cycles.length, 0);
+    const hasCycles = detectBeatPreconditionCycles(beats);
+    assertEquals(hasCycles, false);
   });
 
   await t.step("前提条件なしのビートを許容すること", () => {
@@ -188,6 +199,7 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_a",
         title: "Beat A",
         summary: "Summary A",
+        structurePosition: "setup" as const,
         chapter: "chapter_01",
         characters: [],
         settings: [],
@@ -196,13 +208,14 @@ Deno.test("detectBeatPreconditionCycles", async (t) => {
         id: "beat_b",
         title: "Beat B",
         summary: "Summary B",
+        structurePosition: "rising" as const,
         chapter: "chapter_02",
         characters: [],
         settings: [],
       },
     ];
 
-    const cycles = detectBeatPreconditionCycles(beats);
-    assertEquals(cycles.length, 0);
+    const hasCycles = detectBeatPreconditionCycles(beats);
+    assertEquals(hasCycles, false);
   });
 });

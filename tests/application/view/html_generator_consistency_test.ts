@@ -36,6 +36,7 @@ Deno.test("HtmlGenerator - 整合性チェック結果表示", async (t) => {
           filePath: "",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -92,6 +93,7 @@ Deno.test("HtmlGenerator - 整合性チェック結果表示", async (t) => {
           filePath: "",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -133,6 +135,7 @@ Deno.test("HtmlGenerator - 整合性チェック結果表示", async (t) => {
           filePath: "",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 

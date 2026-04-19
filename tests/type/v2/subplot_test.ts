@@ -105,16 +105,18 @@ Deno.test("Subplot型定義", async (t) => {
   // ========================================
 
   await t.step(
-    "PlotBeat型が必須フィールド(id, title, summary)を持つこと",
+    "PlotBeat型が必須フィールド(id, title, summary, structurePosition)を持つこと",
     () => {
       const beat: PlotBeat = {
         id: "ball_announcement",
         title: "舞踏会の告知",
         summary: "王子の舞踏会が発表される",
+        structurePosition: "setup",
       };
       assertExists(beat.id);
       assertExists(beat.title);
       assertExists(beat.summary);
+      assertExists(beat.structurePosition);
     },
   );
 
@@ -149,6 +151,7 @@ Deno.test("Subplot型定義", async (t) => {
 
   await t.step("PlotIntersection型が必須フィールドを持つこと", () => {
     const intersection: PlotIntersection = {
+      id: "intersection_001",
       sourceSubplotId: "main_story",
       sourceBeatId: "cinderella_at_ball",
       targetSubplotId: "prince_story",
@@ -156,6 +159,7 @@ Deno.test("Subplot型定義", async (t) => {
       summary: "シンデレラと王子が出会う",
       influenceDirection: "mutual",
     };
+    assertExists(intersection.id);
     assertExists(intersection.sourceSubplotId);
     assertExists(intersection.sourceBeatId);
     assertExists(intersection.targetSubplotId);
@@ -168,6 +172,7 @@ Deno.test("Subplot型定義", async (t) => {
     "PlotIntersection型がオプショナルフィールド(influenceLevel)を持てること",
     () => {
       const intersection: PlotIntersection = {
+        id: "intersection_002",
         sourceSubplotId: "fairy_plot",
         sourceBeatId: "grants_wish",
         targetSubplotId: "main_story",
@@ -184,6 +189,7 @@ Deno.test("Subplot型定義", async (t) => {
   await t.step("PlotIntersection型が全ての影響方向をサポートすること", () => {
     const intersections: PlotIntersection[] = [
       {
+        id: "intersection_mutual",
         sourceSubplotId: "main_story",
         sourceBeatId: "cinderella_at_ball",
         targetSubplotId: "prince_story",
@@ -192,6 +198,7 @@ Deno.test("Subplot型定義", async (t) => {
         influenceDirection: "mutual",
       },
       {
+        id: "intersection_forward",
         sourceSubplotId: "fairy_plot",
         sourceBeatId: "grants_wish",
         targetSubplotId: "main_story",
@@ -200,6 +207,7 @@ Deno.test("Subplot型定義", async (t) => {
         influenceDirection: "forward",
       },
       {
+        id: "intersection_backward",
         sourceSubplotId: "stepmother_plot",
         sourceBeatId: "discovers_truth",
         targetSubplotId: "main_story",
@@ -292,15 +300,15 @@ Deno.test("Subplot型定義", async (t) => {
       status: "active",
       summary: "王子が運命の人を探す物語",
       beats: [],
-      focusCharacters: [
-        { characterId: "prince", weight: "primary" },
-        { characterId: "king", weight: "secondary" },
-      ],
+      focusCharacters: {
+        prince: "primary",
+        king: "secondary",
+      },
     };
     assertExists(withFocus.focusCharacters);
-    assertEquals(withFocus.focusCharacters!.length, 2);
-    assertEquals(withFocus.focusCharacters![0].characterId, "prince");
-    assertEquals(withFocus.focusCharacters![0].weight, "primary");
+    assertEquals(Object.keys(withFocus.focusCharacters!).length, 2);
+    assertEquals(withFocus.focusCharacters!.prince, "primary");
+    assertEquals(withFocus.focusCharacters!.king, "secondary");
   });
 
   await t.step("Subplot型のintersectionsがオプショナルであること", () => {
@@ -313,6 +321,7 @@ Deno.test("Subplot型定義", async (t) => {
       beats: [],
       intersections: [
         {
+          id: "intersection_003",
           sourceSubplotId: "main_story",
           sourceBeatId: "ball_dance",
           targetSubplotId: "prince_story",
@@ -378,7 +387,7 @@ Deno.test("Subplot型定義", async (t) => {
       beats: [],
       details: {
         description: "王子が舞踏会で運命の人を見つけるまでの物語",
-        motivation: "王位継承と個人の幸福の両立",
+        theme: "王位継承と個人の幸福の両立",
       },
     };
     assertExists(withDetails.details);
@@ -419,19 +428,20 @@ Deno.test("Subplot型定義", async (t) => {
             id: "stepmother_plan",
             title: "野望の始まり",
             summary: "継母が娘を王妃にする計画を立てる",
+            structurePosition: "setup",
             chapter: "chapter_01",
             characters: ["stepmother"],
             settings: ["mansion"],
-            structurePosition: "setup",
           },
         ],
-        focusCharacters: [
-          { characterId: "stepmother", weight: "primary" },
-          { characterId: "stepsister_elder", weight: "secondary" },
-          { characterId: "stepsister_younger", weight: "secondary" },
-        ],
+        focusCharacters: {
+          stepmother: "primary",
+          stepsister_elder: "secondary",
+          stepsister_younger: "secondary",
+        },
         intersections: [
           {
+            id: "intersection_stepmother_main",
             sourceSubplotId: "stepmother_plot",
             sourceBeatId: "stepmother_plan",
             targetSubplotId: "main_story",
@@ -445,8 +455,8 @@ Deno.test("Subplot型定義", async (t) => {
         parentSubplotId: "main_story",
         displayNames: ["継母の計画", "義母の野望"],
         details: {
-          motivation: "社会的地位の向上と娘たちの幸福",
-          resolution: { file: "subplots/stepmother_resolution.md" },
+          theme: "社会的地位の向上と娘たちの幸福",
+          notes: { file: "subplots/stepmother_resolution.md" },
         },
         relations: {
           characters: ["stepmother", "stepsister_elder", "stepsister_younger"],
@@ -460,7 +470,7 @@ Deno.test("Subplot型定義", async (t) => {
       assertEquals(fullSubplot.type, "subplot");
       assertEquals(fullSubplot.status, "active");
       assertEquals(fullSubplot.beats.length, 1);
-      assertEquals(fullSubplot.focusCharacters!.length, 3);
+      assertEquals(Object.keys(fullSubplot.focusCharacters!).length, 3);
       assertEquals(fullSubplot.intersections!.length, 1);
       assertEquals(fullSubplot.importance, "minor");
       assertEquals(fullSubplot.parentSubplotId, "main_story");
@@ -480,23 +490,23 @@ Deno.test("Subplot型定義", async (t) => {
   await t.step("SubplotDetails型がstring値をサポートすること", () => {
     const details: SubplotDetails = {
       description: "インラインの説明文",
-      motivation: "インラインの動機",
-      resolution: "インラインの結末",
+      theme: "インラインのテーマ",
+      notes: "インラインのメモ",
     };
     assertEquals(details.description, "インラインの説明文");
-    assertEquals(details.motivation, "インラインの動機");
-    assertEquals(details.resolution, "インラインの結末");
+    assertEquals(details.theme, "インラインのテーマ");
+    assertEquals(details.notes, "インラインのメモ");
   });
 
   await t.step("SubplotDetails型がファイル参照をサポートすること", () => {
     const details: SubplotDetails = {
       description: { file: "subplots/main_story_description.md" },
-      motivation: { file: "subplots/main_story_motivation.md" },
-      resolution: { file: "subplots/main_story_resolution.md" },
+      theme: { file: "subplots/main_story_theme.md" },
+      notes: { file: "subplots/main_story_notes.md" },
     };
     assertExists(details.description);
-    assertExists(details.motivation);
-    assertExists(details.resolution);
+    assertExists(details.theme);
+    assertExists(details.notes);
   });
 
   await t.step(
@@ -504,10 +514,10 @@ Deno.test("Subplot型定義", async (t) => {
     () => {
       const details: SubplotDetails = {
         description: "インラインの説明",
-        resolution: { file: "subplots/resolution.md" },
+        notes: { file: "subplots/notes.md" },
       };
       assertExists(details.description);
-      assertExists(details.resolution);
+      assertExists(details.notes);
     },
   );
 
@@ -578,12 +588,14 @@ Deno.test("Subplot型定義", async (t) => {
         id: "ball_announcement",
         title: "舞踏会の告知",
         summary: "王子の舞踏会が発表される",
+        structurePosition: "setup",
       };
 
       const beat2: PlotBeat = {
         id: "meets_mysterious_lady",
         title: "謎の女性との出会い",
         summary: "王子が舞踏会で謎の女性と出会う",
+        structurePosition: "rising",
         preconditionBeatIds: [beat1.id],
       };
 
@@ -596,6 +608,7 @@ Deno.test("Subplot型定義", async (t) => {
       id: "climax_battle",
       title: "クライマックスの戦い",
       summary: "最終決戦",
+      structurePosition: "climax",
       preconditionBeatIds: [
         "training_complete",
         "weapon_acquired",

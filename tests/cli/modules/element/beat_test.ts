@@ -23,9 +23,10 @@ async function createTestSubplotFile(
     id: subplotId,
     name: `テストサブプロット (${subplotId})`,
     type: "subplot",
+    status: "active",
     summary: "テスト用サブプロット",
     beats,
-    focusCharacters: [{ characterId: "hero", weight: "primary" }],
+    focusCharacters: { hero: "primary" },
   };
 
   const content =
@@ -102,6 +103,7 @@ Deno.test("ElementBeatCommand", async (t) => {
             id: "ball_announcement",
             title: "舞踏会の告知",
             summary: "王子の舞踏会が発表される",
+            structurePosition: "setup",
             chapter: "chapter_01",
             characters: ["prince", "king"],
             settings: ["castle"],
@@ -114,6 +116,7 @@ Deno.test("ElementBeatCommand", async (t) => {
             title: "謎の女性との出会い",
             chapter: "chapter_02",
             summary: "王子が舞踏会で謎の女性と出会う",
+            "structure-position": "climax",
             characters: "prince,cinderella",
             settings: "castle_ballroom",
             id: "meets_mysterious_lady",
@@ -260,6 +263,7 @@ Deno.test("ElementBeatCommand", async (t) => {
             id: "ball_announcement",
             title: "舞踏会の告知",
             summary: "王子の舞踏会が発表される",
+            structurePosition: "setup",
             chapter: "chapter_01",
             characters: ["prince"],
             settings: ["castle"],
@@ -272,6 +276,7 @@ Deno.test("ElementBeatCommand", async (t) => {
             title: "謎の女性との出会い",
             chapter: "chapter_02",
             summary: "王子が謎の女性と出会う",
+            "structure-position": "climax",
             "precondition-beats": "ball_announcement",
             id: "meets_lady",
             projectRoot: tempDir,

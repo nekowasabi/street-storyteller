@@ -17,9 +17,10 @@ function createTestSubplot(overrides: Partial<Subplot> = {}): Subplot {
     id: "prince_story",
     name: "王子の花嫁探し",
     type: "subplot",
+    status: "active",
     summary: "王子が運命の人を探す物語",
     beats: [],
-    focusCharacters: [{ characterId: "prince", weight: "primary" }],
+    focusCharacters: { prince: "primary" as const },
     ...overrides,
   };
 }
@@ -57,7 +58,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         name: "王子の花嫁探し",
         type: "subplot",
         summary: "王子が運命の人を探す物語",
-        focusCharacters: [{ characterId: "prince", weight: "primary" }],
+        focusCharacters: { prince: "primary" as const },
       });
 
       const subplot2 = createTestSubplot({
@@ -65,7 +66,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         name: "シンデレラの物語",
         type: "main",
         summary: "シンデレラの主軸ストーリー",
-        focusCharacters: [{ characterId: "cinderella", weight: "primary" }],
+        focusCharacters: { cinderella: "primary" as const },
       });
 
       await writeSubplotFile(subplotsDir, subplot1);
@@ -142,12 +143,13 @@ Deno.test("ViewSubplotCommand", async (t) => {
             id: "ball_announcement",
             title: "舞踏会の告知",
             summary: "王子の舞踏会が発表される",
+            structurePosition: "setup" as const,
             chapter: "chapter_01",
             characters: ["prince", "king"],
             settings: ["castle"],
           },
         ],
-        focusCharacters: [{ characterId: "prince", weight: "primary" }],
+        focusCharacters: { prince: "primary" as const },
         importance: "major",
         status: "active",
       });
@@ -189,7 +191,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         name: "メインストーリー",
         type: "main",
         summary: "メインプロット",
-        focusCharacters: [{ characterId: "cinderella", weight: "primary" }],
+        focusCharacters: { cinderella: "primary" as const },
       });
 
       const subplot = createTestSubplot({
@@ -197,7 +199,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         name: "王子のサブプロット",
         type: "subplot",
         summary: "サブプロット",
-        focusCharacters: [{ characterId: "prince", weight: "primary" }],
+        focusCharacters: { prince: "primary" as const },
       });
 
       const background = createTestSubplot({
@@ -205,9 +207,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         name: "妖精の背景プロット",
         type: "background",
         summary: "背景プロット",
-        focusCharacters: [
-          { characterId: "fairy_godmother", weight: "primary" },
-        ],
+        focusCharacters: { fairy_godmother: "primary" as const },
       });
 
       await writeSubplotFile(subplotsDir, mainPlot);
@@ -250,8 +250,8 @@ Deno.test("ViewSubplotCommand", async (t) => {
         name: "計画中プロット",
         type: "subplot",
         summary: "まだ始まっていない",
-        status: "planned",
-        focusCharacters: [{ characterId: "stepmother", weight: "primary" }],
+        status: "completed",
+        focusCharacters: { stepmother: "primary" as const },
       });
 
       const active = createTestSubplot({
@@ -260,7 +260,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         type: "main",
         summary: "進行中のメインプロット",
         status: "active",
-        focusCharacters: [{ characterId: "cinderella", weight: "primary" }],
+        focusCharacters: { cinderella: "primary" as const },
       });
 
       const completed = createTestSubplot({
@@ -269,9 +269,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         type: "background",
         summary: "完了した背景プロット",
         status: "completed",
-        focusCharacters: [
-          { characterId: "fairy_godmother", weight: "primary" },
-        ],
+        focusCharacters: { fairy_godmother: "primary" as const },
       });
 
       await writeSubplotFile(subplotsDir, planned);
@@ -320,6 +318,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
             id: "ball_announcement",
             title: "舞踏会の告知",
             summary: "王子の舞踏会が発表される",
+            structurePosition: "setup" as const,
             chapter: "chapter_01",
             characters: ["prince"],
             settings: ["castle"],
@@ -328,13 +327,14 @@ Deno.test("ViewSubplotCommand", async (t) => {
             id: "meets_mysterious_lady",
             title: "謎の女性との出会い",
             summary: "王子が舞踏会で謎の女性と出会う",
+            structurePosition: "climax" as const,
             chapter: "chapter_02",
             characters: ["prince", "cinderella"],
             settings: ["castle_ballroom"],
             preconditionBeatIds: ["ball_announcement"],
           },
         ],
-        focusCharacters: [{ characterId: "prince", weight: "primary" }],
+        focusCharacters: { prince: "primary" as const },
       });
 
       await writeSubplotFile(subplotsDir, subplot);
@@ -378,7 +378,7 @@ Deno.test("ViewSubplotCommand", async (t) => {
         name: "王子の花嫁探し",
         type: "subplot",
         summary: "王子が運命の人を探す物語",
-        focusCharacters: [{ characterId: "prince", weight: "primary" }],
+        focusCharacters: { prince: "primary" as const },
         status: "active",
       });
 

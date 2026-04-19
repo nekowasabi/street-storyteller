@@ -75,6 +75,7 @@ const mockAnalysis: ProjectAnalysis = {
       filePath: "foreshadowings/foreshadow_01.ts",
     },
   ],
+  subplots: [],
   manuscripts: [],
 };
 
@@ -133,6 +134,7 @@ Deno.test("HtmlGenerator - 空データでのグラフ", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
     const html = generator.generate(emptyAnalysis);

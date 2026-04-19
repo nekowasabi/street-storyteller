@@ -26,6 +26,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
         },
       ],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -51,6 +52,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
         },
       ],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -97,6 +99,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
         },
       ],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -138,6 +141,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
         },
       ],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -190,6 +194,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
         },
       ],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -210,6 +215,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -244,6 +250,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
         },
       ],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -272,6 +279,7 @@ Deno.test("HtmlGenerator Timeline機能", async (t) => {
         },
       ],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 

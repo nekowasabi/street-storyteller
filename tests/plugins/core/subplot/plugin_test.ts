@@ -35,9 +35,10 @@ Deno.test("SubplotPlugin", async (t) => {
       id: "prince_story",
       name: "王子の花嫁探し",
       type: "subplot",
+      status: "active",
       summary: "王子が運命の人を探す物語",
       beats: [],
-      focusCharacters: [{ characterId: "prince", weight: "primary" }],
+      focusCharacters: { prince: "primary" as const },
     };
 
     const result = await plugin.createElementFile(subplot);
@@ -88,9 +89,10 @@ Deno.test("SubplotPlugin", async (t) => {
         id: "valid_subplot",
         name: "有効なサブプロット",
         type: "subplot",
+        status: "active",
         summary: "有効な概要",
         beats: [],
-        focusCharacters: [{ characterId: "hero", weight: "primary" }],
+        focusCharacters: { hero: "primary" as const },
       };
 
       const result = plugin.validateElement(validSubplot);

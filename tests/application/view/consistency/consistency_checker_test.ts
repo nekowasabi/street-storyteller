@@ -15,6 +15,7 @@ const emptyAnalysis: ProjectAnalysis = {
   settings: [],
   timelines: [],
   foreshadowings: [],
+  subplots: [],
   manuscripts: [],
 };
 

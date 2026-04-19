@@ -18,14 +18,12 @@ export const prince_story: Subplot = {
   "id": "prince_story",
   "name": "王子の花嫁探し",
   "type": "subplot",
+  "status": "active",
   "summary": "王子が運命の人を探す物語",
   "beats": [],
-  "focusCharacters": [
-    {
-      "characterId": "prince",
-      "weight": "primary"
-    }
-  ]
+  "focusCharacters": {
+    "prince": "primary"
+  }
 };
 `;
 
@@ -36,9 +34,11 @@ export const prince_story: Subplot = {
     assertEquals(result.type, "subplot");
     assertEquals(result.summary, "王子が運命の人を探す物語");
     assertEquals(result.beats.length, 0);
-    assertEquals(result.focusCharacters.length, 1);
-    assertEquals(result.focusCharacters[0].characterId, "prince");
-    assertEquals(result.focusCharacters[0].weight, "primary");
+    // focusCharacters is Record<string, SubplotFocusCharacterWeight>
+    const fc = result.focusCharacters as Record<string, string> | undefined;
+    assertExists(fc);
+    assertEquals(Object.keys(fc).length, 1);
+    assertEquals(fc!["prince"], "primary");
   });
 
   await t.step("should parse subplot with beats", () => {
@@ -48,12 +48,14 @@ export const main_story: Subplot = {
   "id": "main_story",
   "name": "メインストーリー",
   "type": "main",
+  "status": "active",
   "summary": "シンデレラの物語",
   "beats": [
     {
       "id": "ball_invitation",
       "title": "舞踏会の招待状",
       "summary": "シンデレラが招待状を受け取る",
+      "structurePosition": "setup",
       "chapter": "chapter_01",
       "characters": ["cinderella"],
       "settings": ["mansion"]
@@ -62,16 +64,16 @@ export const main_story: Subplot = {
       "id": "ball_dance",
       "title": "舞踏会でのダンス",
       "summary": "王子と踊る",
+      "structurePosition": "climax",
       "chapter": "chapter_02",
       "characters": ["cinderella", "prince"],
       "settings": ["castle_ballroom"],
-      "structurePosition": "climax",
       "preconditionBeatIds": ["ball_invitation"]
     }
   ],
-  "focusCharacters": [
-    { "characterId": "cinderella", "weight": "primary" }
-  ]
+  "focusCharacters": {
+    "cinderella": "primary"
+  }
 };
 `;
 
@@ -90,35 +92,32 @@ export const stepmother_plot: Subplot = {
   "id": "stepmother_plot",
   "name": "継母の野望",
   "type": "subplot",
+  "status": "active",
   "summary": "娘を王妃にしようとする継母の計画",
   "beats": [],
-  "focusCharacters": [
-    { "characterId": "stepmother", "weight": "primary" }
-  ],
-  "relatedCharacters": ["cinderella"],
-  "parentPlotId": "main_story",
-  "themes": ["ambition", "jealousy"],
+  "focusCharacters": {
+    "stepmother": "primary"
+  },
   "importance": "minor",
   "displayNames": ["継母の計画", "義母の野望"],
-  "details": {
-    "motivation": "社会的地位の向上と娘たちの幸福"
+  "parentSubplotId": "main_story",
+  "relations": {
+    "characters": ["cinderella"],
+    "settings": []
   },
-  "detectionHints": {
-    "commonPatterns": ["継母", "義母", "野望"],
-    "confidence": 0.8
+  "details": {
+    "description": "社会的地位の向上と娘たちの幸福"
   }
 };
 `;
 
     const result = parseSubplotFromFile(content);
     assertExists(result);
-    assertEquals(result.relatedCharacters, ["cinderella"]);
-    assertEquals(result.parentPlotId, "main_story");
-    assertEquals(result.themes, ["ambition", "jealousy"]);
+    assertEquals(result.relations?.characters, ["cinderella"]);
+    assertEquals(result.parentSubplotId, "main_story");
     assertEquals(result.importance, "minor");
     assertEquals(result.displayNames, ["継母の計画", "義母の野望"]);
-    assertEquals(result.details?.motivation, "社会的地位の向上と娘たちの幸福");
-    assertEquals(result.detectionHints?.confidence, 0.8);
+    assertEquals(result.details?.description, "社会的地位の向上と娘たちの幸福");
   });
 
   await t.step("should return null for content without subplot export", () => {
@@ -154,9 +153,10 @@ export const 王子の物語: Subplot = {
   "id": "prince_tale",
   "name": "王子の物語",
   "type": "subplot",
+  "status": "active",
   "summary": "テスト",
   "beats": [],
-  "focusCharacters": []
+  "focusCharacters": {}
 };
 `;
     const result = parseSubplotFromFile(content);
@@ -173,12 +173,14 @@ export const test_plot: Subplot = {
   "id": "test_plot",
   "name": "テストプロット",
   "type": "main",
+  "status": "active",
   "summary": "テスト用",
   "beats": [
     {
       "id": "beat_1",
       "title": "ビート1",
       "summary": "最初のビート",
+      "structurePosition": "setup",
       "chapter": "chapter_01",
       "characters": [],
       "settings": []
@@ -187,12 +189,13 @@ export const test_plot: Subplot = {
       "id": "beat_2",
       "title": "ビート2",
       "summary": "二番目のビート",
+      "structurePosition": "rising",
       "chapter": "chapter_02",
       "characters": [],
       "settings": []
     }
   ],
-  "focusCharacters": []
+  "focusCharacters": {}
 };
 `;
 
@@ -208,6 +211,7 @@ export const test_plot: Subplot = {
       id: "beat_3",
       title: "追加ビート",
       summary: "追加されたビート",
+      structurePosition: "climax",
       chapter: "chapter_03",
       characters: [],
       settings: [],
@@ -229,9 +233,10 @@ export const empty_plot: Subplot = {
   "id": "empty_plot",
   "name": "空のプロット",
   "type": "background",
+  "status": "active",
   "summary": "ビートなし",
   "beats": [],
-  "focusCharacters": []
+  "focusCharacters": {}
 };
 `;
 

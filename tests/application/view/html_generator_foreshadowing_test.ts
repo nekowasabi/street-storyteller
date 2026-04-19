@@ -16,6 +16,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -67,6 +68,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
           filePath: "src/foreshadowings/prophecy.ts",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -103,6 +105,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
           filePath: "src/foreshadowings/sword.ts",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -158,6 +161,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
           filePath: "src/foreshadowings/resolved.ts",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -200,6 +204,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
           filePath: "src/foreshadowings/mystery.ts",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -235,6 +240,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
           filePath: "src/foreshadowings/related.ts",
         },
       ],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -254,6 +260,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 
@@ -308,6 +315,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
           filePath: "src/foreshadowings/midnight_deadline.ts",
         },
       ],
+      subplots: [],
       manuscripts: [
         {
           path: "manuscripts/chapter_01.md",
@@ -345,6 +353,7 @@ Deno.test("HtmlGenerator Foreshadowing", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
 

@@ -40,6 +40,7 @@ Deno.test("OrphanCharacterRule - 孤立キャラクター検出", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
@@ -73,6 +74,7 @@ Deno.test("OrphanCharacterRule - 孤立キャラクター検出", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
@@ -85,6 +87,7 @@ Deno.test("OrphanCharacterRule - 孤立キャラクター検出", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
@@ -107,6 +110,7 @@ Deno.test("OrphanCharacterRule - 孤立キャラクター検出", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
@@ -139,6 +143,7 @@ Deno.test("OrphanCharacterRule - 孤立キャラクター検出", async (t) => {
       settings: [],
       timelines: [],
       foreshadowings: [],
+      subplots: [],
       manuscripts: [],
     };
     const issues = rule.check(analysis);
