@@ -18,6 +18,7 @@ import { ElementEventCommand } from "@storyteller/cli/modules/element/event.ts";
 import { ElementForeshadowingCommand } from "@storyteller/cli/modules/element/foreshadowing.ts";
 import { ElementSubplotCommand } from "@storyteller/cli/modules/element/subplot.ts";
 import { ElementBeatCommand } from "@storyteller/cli/modules/element/beat.ts";
+import { ElementIntersectionCommand } from "@storyteller/cli/modules/element/intersection.ts";
 import { elementPhaseCommandDescriptor } from "@storyteller/cli/modules/element/phase.ts";
 
 /**
@@ -496,6 +497,73 @@ export const elementBeatCommandDescriptor: CommandDescriptor =
   });
 
 /**
+ * element intersection サブコマンドの Descriptor
+ */
+const elementIntersectionHandler = new ElementIntersectionCommand();
+export const elementIntersectionCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementIntersectionHandler, {
+    summary: "Add an intersection between two subplot beats.",
+    usage:
+      "storyteller element intersection --source-subplot <id> --source-beat <id> --target-subplot <id> --target-beat <id> --summary <summary> [options]",
+    path: ["element", "intersection"],
+    options: [
+      {
+        name: "--source-subplot",
+        summary: "Source subplot ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--source-beat",
+        summary: "Source beat ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--target-subplot",
+        summary: "Target subplot ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--target-beat",
+        summary: "Target beat ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--summary",
+        summary: "Intersection summary (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--influence-direction",
+        summary:
+          'Influence direction: forward, backward, mutual (default: "forward")',
+        type: "string",
+      },
+      {
+        name: "--influence-level",
+        summary: "Influence level: high, medium, low (default: \"medium\")",
+        type: "string",
+      },
+    ],
+    examples: [
+      {
+        summary: "Create a forward intersection between two subplots",
+        command:
+          'storyteller element intersection --source-subplot "love_story" --source-beat "first_meeting" --target-subplot "main_story" --target-beat "quest_start" --summary "Love interest motivates the quest"',
+      },
+      {
+        summary: "Create a mutual intersection with high influence",
+        command:
+          'storyteller element intersection --source-subplot "revenge" --source-beat "confrontation" --target-subplot "main_story" --target-beat "climax" --summary "Revenge arc and main plot converge" --influence-direction "mutual" --influence-level "high"',
+      },
+    ],
+  });
+
+/**
  * element event サブコマンドの Descriptor
  */
 const elementEventHandler = new ElementEventCommand();
@@ -600,6 +668,7 @@ export function createElementDescriptor(
       elementForeshadowingCommandDescriptor,
       elementSubplotCommandDescriptor,
       elementBeatCommandDescriptor,
+      elementIntersectionCommandDescriptor,
       elementPhaseCommandDescriptor,
     ],
     examples: [
