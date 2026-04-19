@@ -16,6 +16,9 @@ import { ElementSettingCommand } from "@storyteller/cli/modules/element/setting.
 import { ElementTimelineCommand } from "@storyteller/cli/modules/element/timeline.ts";
 import { ElementEventCommand } from "@storyteller/cli/modules/element/event.ts";
 import { ElementForeshadowingCommand } from "@storyteller/cli/modules/element/foreshadowing.ts";
+import { ElementSubplotCommand } from "@storyteller/cli/modules/element/subplot.ts";
+import { ElementBeatCommand } from "@storyteller/cli/modules/element/beat.ts";
+import { ElementIntersectionCommand } from "@storyteller/cli/modules/element/intersection.ts";
 import { elementPhaseCommandDescriptor } from "@storyteller/cli/modules/element/phase.ts";
 
 /**
@@ -341,6 +344,226 @@ export const elementForeshadowingCommandDescriptor: CommandDescriptor =
   });
 
 /**
+ * element subplot サブコマンドの Descriptor
+ */
+const elementSubplotHandler = new ElementSubplotCommand();
+export const elementSubplotCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementSubplotHandler, {
+    summary: "Create a new subplot element.",
+    usage:
+      "storyteller element subplot --name <name> --type <type> --summary <summary> [options]",
+    path: ["element", "subplot"],
+    options: [
+      {
+        name: "--name",
+        summary: "Subplot name (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--type",
+        summary:
+          "Subplot type: main, subplot, parallel, background (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--summary",
+        summary: "Short summary description (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--id",
+        summary: "Subplot ID (defaults to generated from name)",
+        type: "string",
+      },
+      {
+        name: "--importance",
+        summary: "Importance level: major, minor",
+        type: "string",
+      },
+      {
+        name: "--parent-subplot",
+        summary: "Parent subplot ID (for hierarchical structure)",
+        type: "string",
+      },
+      {
+        name: "--focus-characters",
+        summary:
+          'Focus characters with weights (CSV: "hero:primary,heroine:secondary")',
+        type: "string",
+      },
+      {
+        name: "--force",
+        summary: "Overwrite existing subplot",
+        type: "boolean",
+      },
+    ],
+    examples: [
+      {
+        summary: "Create a main plot",
+        command:
+          'storyteller element subplot --name "Main Story" --type "main" --summary "The central narrative"',
+      },
+      {
+        summary: "Create a subplot with focus characters",
+        command:
+          'storyteller element subplot --name "Love Story" --type "subplot" --summary "Romantic subplot" --focus-characters "hero:primary,heroine:primary"',
+      },
+    ],
+  });
+
+/**
+ * element beat サブコマンドの Descriptor
+ */
+const elementBeatHandler = new ElementBeatCommand();
+export const elementBeatCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementBeatHandler, {
+    summary: "Add a beat to an existing subplot.",
+    usage:
+      "storyteller element beat --subplot <id> --title <title> --summary <summary> --chapter <chapter> --structure-position <position> [options]",
+    path: ["element", "beat"],
+    options: [
+      {
+        name: "--subplot",
+        summary: "Subplot ID to add beat to (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--title",
+        summary: "Beat title (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--summary",
+        summary: "Short summary description (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--chapter",
+        summary: "Chapter ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--structure-position",
+        summary:
+          "Narrative position: setup, rising, climax, falling, resolution (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--id",
+        summary: "Beat ID (defaults to generated from title)",
+        type: "string",
+      },
+      {
+        name: "--characters",
+        summary: "Comma-separated character IDs",
+        type: "string",
+      },
+      {
+        name: "--settings",
+        summary: "Comma-separated setting IDs",
+        type: "string",
+      },
+      {
+        name: "--precondition-beats",
+        summary: "Comma-separated beat IDs that must precede this beat",
+        type: "string",
+      },
+      {
+        name: "--timeline-event",
+        summary: "Related timeline event ID",
+        type: "string",
+      },
+    ],
+    examples: [
+      {
+        summary: "Add a setup beat to a subplot",
+        command:
+          'storyteller element beat --subplot "love_story" --title "First Meeting" --summary "Hero meets heroine" --chapter "chapter_01" --structure-position "setup"',
+      },
+      {
+        summary: "Add a climax beat with characters",
+        command:
+          'storyteller element beat --subplot "love_story" --title "Confession" --summary "Hero confesses feelings" --chapter "chapter_08" --structure-position "climax" --characters "hero,heroine"',
+      },
+    ],
+  });
+
+/**
+ * element intersection サブコマンドの Descriptor
+ */
+const elementIntersectionHandler = new ElementIntersectionCommand();
+export const elementIntersectionCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(elementIntersectionHandler, {
+    summary: "Add an intersection between two subplot beats.",
+    usage:
+      "storyteller element intersection --source-subplot <id> --source-beat <id> --target-subplot <id> --target-beat <id> --summary <summary> [options]",
+    path: ["element", "intersection"],
+    options: [
+      {
+        name: "--source-subplot",
+        summary: "Source subplot ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--source-beat",
+        summary: "Source beat ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--target-subplot",
+        summary: "Target subplot ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--target-beat",
+        summary: "Target beat ID (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--summary",
+        summary: "Intersection summary (required)",
+        type: "string",
+        required: true,
+      },
+      {
+        name: "--influence-direction",
+        summary:
+          'Influence direction: forward, backward, mutual (default: "forward")',
+        type: "string",
+      },
+      {
+        name: "--influence-level",
+        summary: "Influence level: high, medium, low (default: \"medium\")",
+        type: "string",
+      },
+    ],
+    examples: [
+      {
+        summary: "Create a forward intersection between two subplots",
+        command:
+          'storyteller element intersection --source-subplot "love_story" --source-beat "first_meeting" --target-subplot "main_story" --target-beat "quest_start" --summary "Love interest motivates the quest"',
+      },
+      {
+        summary: "Create a mutual intersection with high influence",
+        command:
+          'storyteller element intersection --source-subplot "revenge" --source-beat "confrontation" --target-subplot "main_story" --target-beat "climax" --summary "Revenge arc and main plot converge" --influence-direction "mutual" --influence-level "high"',
+      },
+    ],
+  });
+
+/**
  * element event サブコマンドの Descriptor
  */
 const elementEventHandler = new ElementEventCommand();
@@ -443,6 +666,9 @@ export function createElementDescriptor(
       elementTimelineCommandDescriptor,
       elementEventCommandDescriptor,
       elementForeshadowingCommandDescriptor,
+      elementSubplotCommandDescriptor,
+      elementBeatCommandDescriptor,
+      elementIntersectionCommandDescriptor,
       elementPhaseCommandDescriptor,
     ],
     examples: [
