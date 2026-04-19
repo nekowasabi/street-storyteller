@@ -100,6 +100,21 @@ export class ElementBeatCommand extends BaseCliCommand {
         });
       }
 
+      // precondition-beatsの存在確認
+      if (parsed["precondition-beats"]) {
+        const preconditionIds = parsed["precondition-beats"].split(",").map(
+          (b) => b.trim(),
+        );
+        const existingBeatIds = new Set(beats.map((b) => b.id));
+        const missing = preconditionIds.filter((id) => !existingBeatIds.has(id));
+        if (missing.length > 0) {
+          return err({
+            code: "precondition_beat_not_found",
+            message: `Precondition beat(s) not found: ${missing.join(", ")}`,
+          });
+        }
+      }
+
       // 新しいビートを作成
       const newBeat: PlotBeat = {
         id: parsed.id,
@@ -203,26 +218,21 @@ export class ElementBeatCommand extends BaseCliCommand {
       };
     }
 
-    if (
-      !args["structure-position"] ||
-      typeof args["structure-position"] !== "string"
-    ) {
-      return {
-        code: "invalid_arguments",
-        message: "Structure position is required (--structure-position)",
-      };
-    }
+    // Why: structure-position defaults to "setup" when omitted, allowing simpler beat creation
+    const structurePosition = (typeof args["structure-position"] === "string"
+      ? args["structure-position"]
+      : "setup") as BeatStructurePosition;
 
     // structure-positionの検証
     if (
       !validPositions.includes(
-        args["structure-position"] as BeatStructurePosition,
+        structurePosition,
       )
     ) {
       return {
         code: "invalid_arguments",
         message:
-          `Invalid structure position: ${args["structure-position"]}. Must be one of: ${
+          `Invalid --structure-position: ${structurePosition}. Must be one of: ${
             validPositions.join(", ")
           }`,
       };
@@ -240,7 +250,7 @@ export class ElementBeatCommand extends BaseCliCommand {
       title: args.title,
       summary: args.summary,
       chapter: args.chapter,
-      "structure-position": args["structure-position"] as BeatStructurePosition,
+      "structure-position": structurePosition,
       characters: typeof args.characters === "string"
         ? args.characters
         : undefined,
