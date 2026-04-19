@@ -166,9 +166,9 @@ export class SubplotPlugin implements ElementPlugin {
         "id",
         "name",
         "type",
-        "status",
         "summary",
         "beats",
+        "focusCharacters",
       ],
     };
   }

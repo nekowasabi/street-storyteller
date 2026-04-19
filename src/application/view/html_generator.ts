@@ -556,7 +556,9 @@ ${CONSISTENCY_STYLES}
   }
 
   private renderSubplots(subplots: readonly SubplotSummary[]): string {
-    if (subplots.length === 0) {
+    // Why: undefinedガードではなく呼び出し元でデフォルト値を渡す設計だが、
+    // テストモック等で未設定のProjectAnalysisが渡されるケースを防御
+    if (!subplots || subplots.length === 0) {
       return '<p class="empty">No subplots found.</p>';
     }
 
@@ -634,7 +636,7 @@ ${CONSISTENCY_STYLES}
     const foreshadowingGraphData = buildForeshadowingGraphFromSummary(
       analysis.foreshadowings,
     );
-    const subplotGraphData = buildSubplotGraphFromSummary(analysis.subplots);
+    const subplotGraphData = buildSubplotGraphFromSummary(analysis.subplots ?? []);
 
     return `
   <script>

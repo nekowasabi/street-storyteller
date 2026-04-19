@@ -10,7 +10,7 @@ import type {
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 import { MetaGeneratorService } from "@storyteller/application/meta/meta_generator_service.ts";
-import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+import type { BeatStructurePosition, Subplot } from "@storyteller/types/v2/subplot.ts";
 import { validateSubplot } from "@storyteller/plugins/core/subplot/validator.ts";
 
 type MetaCheckOptions = {
@@ -403,7 +403,7 @@ function validateSubplotReferences(
     }
 
     // character references
-    for (const charId of beat.characters) {
+    for (const charId of beat.characters ?? []) {
       if (characterIds.size > 0 && !characterIds.has(charId)) {
         errors.push(
           `${prefix}: beat "${beat.id}" references unknown character "${charId}"`,
@@ -412,7 +412,7 @@ function validateSubplotReferences(
     }
 
     // setting references
-    for (const setId of beat.settings) {
+    for (const setId of beat.settings ?? []) {
       if (settingIds.size > 0 && !settingIds.has(setId)) {
         errors.push(
           `${prefix}: beat "${beat.id}" references unknown setting "${setId}"`,
@@ -423,21 +423,21 @@ function validateSubplotReferences(
 
   // Intersection references
   for (const intersection of subplot.intersections ?? []) {
-    if (!subplotIds.has(intersection.targetPlotId)) {
+    if (!subplotIds.has(intersection.targetSubplotId)) {
       errors.push(
-        `${prefix}: intersection references unknown targetSubplotId "${intersection.targetPlotId}"`,
+        `${prefix}: intersection references unknown targetSubplotId "${intersection.targetSubplotId}"`,
       );
     }
 
     // sourceBeatId must exist in the source subplot
-    const sourceSubplot = intersection.sourcePlotId === subplot.id
+    const sourceSubplot = intersection.sourceSubplotId === subplot.id
       ? subplot
       : null;
     if (sourceSubplot) {
       const beatIds = new Set(sourceSubplot.beats.map((b) => b.id));
       if (!beatIds.has(intersection.sourceBeatId)) {
         errors.push(
-          `${prefix}: intersection references unknown sourceBeatId "${intersection.sourceBeatId}" in "${intersection.sourcePlotId}"`,
+          `${prefix}: intersection references unknown sourceBeatId "${intersection.sourceBeatId}" in "${intersection.sourceSubplotId}"`,
         );
       }
     }
@@ -462,7 +462,7 @@ function validateSubplotStructure(
   const positions = new Set(
     subplot.beats
       .map((b) => b.structurePosition)
-      .filter((p): p is string => typeof p === "string"),
+      .filter((p): p is BeatStructurePosition => typeof p === "string"),
   );
 
   if (!positions.has("climax")) {
@@ -489,14 +489,14 @@ function validateSubplotStructure(
     );
   }
 
-  // parentPlotId reference check
+  // parentSubplotId reference check
   if (
-    subplot.parentPlotId &&
+    subplot.parentSubplotId &&
     subplotIds.size > 0 &&
-    !subplotIds.has(subplot.parentPlotId)
+    !subplotIds.has(subplot.parentSubplotId)
   ) {
     errors.push(
-      `${prefix}: references unknown parentPlotId "${subplot.parentPlotId}"`,
+      `${prefix}: references unknown parentSubplotId "${subplot.parentSubplotId}"`,
     );
   }
 

@@ -54,10 +54,10 @@ export class ViewSubplotCommand extends BaseCliCommand {
     }
 
     // ステータスフィルタ
-    // Why: importanceベースのフィルタ（customStatusはPlotBeatに存在しないため除去）
+    // Why: status field is the canonical lifecycle filter on Subplot type
     if (statusFilter) {
       subplots = subplots.filter((s) =>
-        s.importance === statusFilter
+        s.status === statusFilter
       );
     }
 
@@ -109,10 +109,10 @@ export class ViewSubplotCommand extends BaseCliCommand {
           context.presenter.showInfo(
             JSON.stringify({ subplot, mermaid: output }, null, 2),
           );
-          return ok({ subplot, format: "mermaid" });
+          return ok({ subplot, mermaid: output });
         }
         context.presenter.showInfo(output);
-        return ok({ subplot, format: "mermaid" });
+        return ok({ subplot, mermaid: output });
       }
 
       // JSON形式
@@ -341,7 +341,7 @@ export class ViewSubplotCommand extends BaseCliCommand {
    * graph TD with beats as nodes, intersections as dotted edges
    */
   private formatMermaid(subplots: Subplot[]): string {
-    const lines: string[] = ["graph TD"];
+    const lines: string[] = ["flowchart TD"];
 
     if (subplots.length === 0) {
       lines.push('  empty["No subplots found"]');
