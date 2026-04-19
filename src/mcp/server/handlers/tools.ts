@@ -24,6 +24,10 @@ import { phaseCreateTool } from "@storyteller/mcp/tools/definitions/phase_create
 import { phaseViewTool } from "@storyteller/mcp/tools/definitions/phase_view.ts";
 import { manuscriptBindingTool } from "@storyteller/mcp/tools/definitions/manuscript_binding.ts";
 import { manuscriptSyncTool } from "@storyteller/mcp/tools/definitions/manuscript_sync.ts";
+import { subplotCreateTool } from "@storyteller/mcp/tools/definitions/subplot_create.ts";
+import { subplotViewTool } from "@storyteller/mcp/tools/definitions/subplot_view.ts";
+import { beatCreateTool } from "@storyteller/mcp/tools/definitions/beat_create.ts";
+import { intersectionCreateTool } from "@storyteller/mcp/tools/definitions/intersection_create.ts";
 
 /**
  * tools/list リクエストを処理
@@ -83,6 +87,12 @@ export function createDefaultToolRegistry(): ToolRegistry {
   // Manuscript（原稿）ツールを登録
   registry.register(manuscriptBindingTool);
   registry.register(manuscriptSyncTool);
+
+  // Subplot（サブプロット）ツールを登録
+  registry.register(subplotCreateTool);
+  registry.register(subplotViewTool);
+  registry.register(beatCreateTool);
+  registry.register(intersectionCreateTool);
 
   return registry;
 }
