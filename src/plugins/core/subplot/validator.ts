@@ -6,11 +6,13 @@
  */
 
 import type {
-  FocusCharacter,
+  BeatStructurePosition,
   PlotBeat,
-  PlotImportance,
-  PlotType,
   Subplot,
+  SubplotFocusCharacterWeight,
+  SubplotImportance,
+  SubplotStatus,
+  SubplotType,
 } from "@storyteller/types/v2/subplot.ts";
 import type {
   ValidationError,
@@ -20,7 +22,7 @@ import type {
 /**
  * 有効なプロットタイプ
  */
-const validPlotTypes: PlotType[] = [
+const validPlotTypes: SubplotType[] = [
   "main",
   "subplot",
   "parallel",
@@ -30,18 +32,24 @@ const validPlotTypes: PlotType[] = [
 /**
  * 有効な重要度
  */
-const validImportances: PlotImportance[] = [
+const validImportances: SubplotImportance[] = [
   "major",
   "minor",
-  "supporting",
+];
+
+/**
+ * 有効なステータス
+ */
+const validStatuses: SubplotStatus[] = [
+  "active",
+  "completed",
 ];
 
 /**
  * 有効な構造位置
  */
-const validStructurePositions = [
+const validStructurePositions: BeatStructurePosition[] = [
   "setup",
-  "inciting_incident",
   "rising",
   "climax",
   "falling",
@@ -51,7 +59,7 @@ const validStructurePositions = [
 /**
  * 有効なフォーカスキャラクター重み
  */
-const validWeights: FocusCharacter["weight"][] = [
+const validWeights: SubplotFocusCharacterWeight[] = [
   "primary",
   "secondary",
 ];
@@ -99,11 +107,22 @@ export function validateSubplot(element: unknown): ValidationResult {
   // type検証
   if (
     !subplot.type ||
-    !validPlotTypes.includes(subplot.type as PlotType)
+    !validPlotTypes.includes(subplot.type as SubplotType)
   ) {
     errors.push({
       field: "type",
       message: `type must be one of: ${validPlotTypes.join(", ")}`,
+    });
+  }
+
+  // status検証
+  if (
+    !subplot.status ||
+    !validStatuses.includes(subplot.status as SubplotStatus)
+  ) {
+    errors.push({
+      field: "status",
+      message: `status must be one of: ${validStatuses.join(", ")}`,
     });
   }
 
@@ -140,28 +159,29 @@ export function validateSubplot(element: unknown): ValidationResult {
     }
   }
 
-  // focusCharacters検証
-  if (!Array.isArray(subplot.focusCharacters)) {
-    errors.push({
-      field: "focusCharacters",
-      message: "focusCharacters is required and must be an array",
-    });
-  } else if (subplot.focusCharacters.length === 0) {
-    errors.push({
-      field: "focusCharacters",
-      message: "focusCharacters must contain at least one character",
-    });
-  } else {
-    subplot.focusCharacters.forEach((fc, index) => {
-      const fcErrors = validateFocusCharacter(fc, index);
+  // focusCharacters検証（オプション）
+  // Why: focusCharacters is Record<string, SubplotFocusCharacterWeight>, not an array
+  if (subplot.focusCharacters !== undefined) {
+    if (
+      typeof subplot.focusCharacters !== "object" ||
+      subplot.focusCharacters === null ||
+      Array.isArray(subplot.focusCharacters)
+    ) {
+      errors.push({
+        field: "focusCharacters",
+        message:
+          "focusCharacters must be a Record<string, SubplotFocusCharacterWeight>",
+      });
+    } else {
+      const fcErrors = validateFocusCharactersRecord(subplot.focusCharacters);
       errors.push(...fcErrors);
-    });
+    }
   }
 
   // importance検証（オプション）
   if (
     subplot.importance !== undefined &&
-    !validImportances.includes(subplot.importance as PlotImportance)
+    !validImportances.includes(subplot.importance as SubplotImportance)
   ) {
     errors.push({
       field: "importance",
@@ -224,42 +244,50 @@ function validateBeat(
     });
   }
 
-  // chapter検証
-  if (!b.chapter || typeof b.chapter !== "string" || b.chapter.trim() === "") {
-    errors.push({
-      field: `${prefix}.chapter`,
-      message: `${prefix}.chapter is required and must be a non-empty string`,
-    });
-  }
-
-  // characters検証
-  if (!Array.isArray(b.characters)) {
-    errors.push({
-      field: `${prefix}.characters`,
-      message: `${prefix}.characters is required and must be an array`,
-    });
-  }
-
-  // settings検証
-  if (!Array.isArray(b.settings)) {
-    errors.push({
-      field: `${prefix}.settings`,
-      message: `${prefix}.settings is required and must be an array`,
-    });
-  }
-
-  // structurePosition検証（オプション）
+  // structurePosition検証（必須）
   if (
-    b.structurePosition !== undefined &&
-    typeof b.structurePosition === "string" &&
-    b.structurePosition.trim() !== "" &&
-    !validStructurePositions.includes(b.structurePosition)
+    !b.structurePosition ||
+    typeof b.structurePosition !== "string" ||
+    !validStructurePositions.includes(
+      b.structurePosition as BeatStructurePosition,
+    )
   ) {
     errors.push({
       field: `${prefix}.structurePosition`,
-      message: `${prefix}.structurePosition must be one of: ${
+      message: `${prefix}.structurePosition is required and must be one of: ${
         validStructurePositions.join(", ")
       }`,
+    });
+  }
+
+  // chapter検証（オプション）
+  if (
+    b.chapter !== undefined &&
+    (typeof b.chapter !== "string" || b.chapter.trim() === "")
+  ) {
+    errors.push({
+      field: `${prefix}.chapter`,
+      message: `${prefix}.chapter must be a non-empty string if provided`,
+    });
+  }
+
+  // characters検証（オプション）
+  if (
+    b.characters !== undefined && !Array.isArray(b.characters)
+  ) {
+    errors.push({
+      field: `${prefix}.characters`,
+      message: `${prefix}.characters must be an array if provided`,
+    });
+  }
+
+  // settings検証（オプション）
+  if (
+    b.settings !== undefined && !Array.isArray(b.settings)
+  ) {
+    errors.push({
+      field: `${prefix}.settings`,
+      message: `${prefix}.settings must be an array if provided`,
     });
   }
 
@@ -294,45 +322,39 @@ function validateBeat(
 }
 
 /**
- * FocusCharacterを検証する
+ * FocusCharacters Recordを検証する
  *
- * @param fc 検証対象のフォーカスキャラクター
- * @param index インデックス（エラーメッセージ用）
+ * Why: focusCharacters is Record<string, SubplotFocusCharacterWeight>, not FocusCharacter[]
+ *
+ * @param fc Record<string, SubplotFocusCharacterWeight>
  * @returns 検証エラーのリスト
  */
-function validateFocusCharacter(
-  fc: unknown,
-  index: number,
+function validateFocusCharactersRecord(
+  fc: Record<string, unknown>,
 ): ValidationError[] {
   const errors: ValidationError[] = [];
-  const prefix = `focusCharacters[${index}]`;
 
-  if (typeof fc !== "object" || fc === null) {
-    return [{ field: prefix, message: `${prefix} must be an object` }];
-  }
+  for (const [characterId, weight] of Object.entries(fc)) {
+    const prefix = `focusCharacters["${characterId}"]`;
 
-  const f = fc as Partial<FocusCharacter>;
+    // characterId検証
+    if (characterId.trim() === "") {
+      errors.push({
+        field: prefix,
+        message: `focusCharacters key must be a non-empty string`,
+      });
+    }
 
-  // characterId検証
-  if (
-    !f.characterId || typeof f.characterId !== "string" ||
-    f.characterId.trim() === ""
-  ) {
-    errors.push({
-      field: `${prefix}.characterId`,
-      message:
-        `${prefix}.characterId is required and must be a non-empty string`,
-    });
-  }
-
-  // weight検証
-  if (
-    !f.weight || !validWeights.includes(f.weight as FocusCharacter["weight"])
-  ) {
-    errors.push({
-      field: `${prefix}.weight`,
-      message: `${prefix}.weight must be one of: ${validWeights.join(", ")}`,
-    });
+    // weight検証
+    if (
+      typeof weight !== "string" ||
+      !validWeights.includes(weight as SubplotFocusCharacterWeight)
+    ) {
+      errors.push({
+        field: prefix,
+        message: `${prefix} must be one of: ${validWeights.join(", ")}`,
+      });
+    }
   }
 
   return errors;

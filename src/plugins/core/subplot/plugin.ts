@@ -39,38 +39,39 @@ export class SubplotPlugin implements ElementPlugin {
       const subplot = options as Partial<Subplot>;
 
       // 必須フィールドの検証
+      // Why: focusCharacters, status are optional in canonical Subplot type
       if (
         !subplot.id || !subplot.name || !subplot.type ||
-        !subplot.summary || !subplot.beats ||
-        !subplot.focusCharacters
+        !subplot.summary || !subplot.beats
       ) {
         return err(
           new Error(
-            "Missing required fields: id, name, type, summary, beats, focusCharacters",
+            "Missing required fields: id, name, type, summary, beats",
           ),
         );
       }
 
       // デフォルト値の設定
+      // Why: Only properties that exist on the canonical Subplot type are included.
+      //       Removed: relatedCharacters, structureTemplateId, parentPlotId,
+      //       childPlotIds, themes, detectionHints (none exist on Subplot).
       const fullSubplot: Subplot = {
         id: subplot.id,
         name: subplot.name,
         type: subplot.type,
+        status: subplot.status ?? "active",
         summary: subplot.summary,
         beats: subplot.beats,
-        focusCharacters: subplot.focusCharacters,
-        ...(subplot.relatedCharacters &&
-          { relatedCharacters: subplot.relatedCharacters }),
-        ...(subplot.structureTemplateId &&
-          { structureTemplateId: subplot.structureTemplateId }),
-        ...(subplot.parentPlotId && { parentPlotId: subplot.parentPlotId }),
-        ...(subplot.childPlotIds && { childPlotIds: subplot.childPlotIds }),
-        ...(subplot.themes && { themes: subplot.themes }),
+        ...(subplot.focusCharacters &&
+          { focusCharacters: subplot.focusCharacters }),
+        ...(subplot.intersections &&
+          { intersections: subplot.intersections }),
         ...(subplot.importance && { importance: subplot.importance }),
+        ...(subplot.parentSubplotId &&
+          { parentSubplotId: subplot.parentSubplotId }),
         ...(subplot.displayNames && { displayNames: subplot.displayNames }),
         ...(subplot.details && { details: subplot.details }),
-        ...(subplot.detectionHints &&
-          { detectionHints: subplot.detectionHints }),
+        ...(subplot.relations && { relations: subplot.relations }),
       };
 
       // 検証
@@ -106,14 +107,19 @@ export class SubplotPlugin implements ElementPlugin {
    * Subplot型のスキーマをエクスポートする
    */
   exportElementSchema(): TypeSchema {
+    // Why: Properties aligned with canonical Subplot type in src/type/v2/subplot.ts
     return {
       type: "subplot",
       properties: {
         id: { type: "string", description: "Unique identifier" },
         name: { type: "string", description: "Subplot name" },
         type: {
-          type: "PlotType",
-          description: "Plot type (main, subplot, parallel, background)",
+          type: "SubplotType",
+          description: "Subplot type (main, subplot, parallel, background)",
+        },
+        status: {
+          type: "SubplotStatus",
+          description: "Lifecycle status (active, completed)",
         },
         summary: { type: "string", description: "Short summary" },
         beats: {
@@ -121,37 +127,23 @@ export class SubplotPlugin implements ElementPlugin {
           description: "Plot beats (key points in the story)",
         },
         focusCharacters: {
-          type: "FocusCharacter[]",
-          description: "Characters this plot focuses on",
-        },
-        relatedCharacters: {
-          type: "string[]",
-          description: "Related character IDs (non-focus)",
+          type: "Record<string, SubplotFocusCharacterWeight>",
+          description: "Focus characters and their involvement weight",
           optional: true,
         },
-        structureTemplateId: {
-          type: "string",
-          description: "Structure template ID",
-          optional: true,
-        },
-        parentPlotId: {
-          type: "string",
-          description: "Parent plot ID (for subplots)",
-          optional: true,
-        },
-        childPlotIds: {
-          type: "string[]",
-          description: "Child plot IDs",
-          optional: true,
-        },
-        themes: {
-          type: "string[]",
-          description: "Themes this plot explores",
+        intersections: {
+          type: "PlotIntersection[]",
+          description: "Intersection points with other subplots",
           optional: true,
         },
         importance: {
-          type: "PlotImportance",
-          description: "Importance level (major, minor, supporting)",
+          type: "SubplotImportance",
+          description: "Importance level (major, minor)",
+          optional: true,
+        },
+        parentSubplotId: {
+          type: "string",
+          description: "Parent subplot ID (for hierarchical structure)",
           optional: true,
         },
         displayNames: {
@@ -164,9 +156,9 @@ export class SubplotPlugin implements ElementPlugin {
           description: "Detailed information",
           optional: true,
         },
-        detectionHints: {
-          type: "SubplotDetectionHints",
-          description: "LSP detection hints",
+        relations: {
+          type: "SubplotRelations",
+          description: "Related entities (characters, settings, foreshadowings, relatedSubplots)",
           optional: true,
         },
       },
@@ -174,9 +166,9 @@ export class SubplotPlugin implements ElementPlugin {
         "id",
         "name",
         "type",
+        "status",
         "summary",
         "beats",
-        "focusCharacters",
       ],
     };
   }
