@@ -11,3 +11,6 @@ coverage/
 
 # Temporary files
 tmp/
+
+# compiled binary
+/storyteller
