@@ -104,6 +104,48 @@ export interface ForeshadowingSummary {
 }
 
 /**
+ * サブプロットビートサマリー
+ */
+export interface SubplotBeatSummary {
+  readonly id: string;
+  readonly title: string;
+  readonly summary?: string;
+  readonly chapter: string;
+  readonly characters: readonly string[];
+  readonly settings: readonly string[];
+  readonly structurePosition?: string;
+  readonly preconditionBeatIds?: readonly string[];
+  readonly timelineEventId?: string;
+  readonly displayNames?: readonly string[];
+}
+
+/**
+ * フォーカスキャラクターサマリー
+ */
+export interface FocusCharacterSummary {
+  readonly characterId: string;
+  readonly weight: "primary" | "secondary";
+}
+
+/**
+ * サブプロットサマリー
+ */
+export interface SubplotSummary {
+  readonly id: string;
+  readonly name: string;
+  readonly type: string;
+  readonly summary?: string;
+  readonly beats: readonly SubplotBeatSummary[];
+  readonly focusCharacters: readonly FocusCharacterSummary[];
+  readonly parentPlotId?: string;
+  readonly childPlotIds?: readonly string[];
+  readonly themes?: readonly string[];
+  readonly importance?: string;
+  readonly displayNames: readonly string[];
+  readonly filePath: string;
+}
+
+/**
  * エンティティ参照
  */
 export interface EntityReference {
@@ -131,6 +173,7 @@ export interface ProjectAnalysis {
   readonly settings: readonly SettingSummary[];
   readonly timelines: readonly TimelineSummary[];
   readonly foreshadowings: readonly ForeshadowingSummary[];
+  readonly subplots: readonly SubplotSummary[];
   readonly manuscripts: readonly ManuscriptSummary[];
 }
 
@@ -165,6 +208,9 @@ export class ProjectAnalyzer {
       // 伏線をロード
       const foreshadowings = await this.loadForeshadowings(projectPath);
 
+      // サブプロットをロード
+      const subplots = await this.loadSubplots(projectPath);
+
       // 原稿を解析
       const manuscripts = await this.analyzeManuscripts(
         projectPath,
@@ -178,6 +224,7 @@ export class ProjectAnalyzer {
         settings,
         timelines,
         foreshadowings,
+        subplots,
         manuscripts,
       });
     } catch (error) {
@@ -477,6 +524,214 @@ export class ProjectAnalyzer {
       chapter,
       description,
       completeness,
+    };
+  }
+
+  /**
+   * サブプロットをロード
+   */
+  private async loadSubplots(
+    projectPath: string,
+  ): Promise<SubplotSummary[]> {
+    const subplotsDir = join(projectPath, "src/subplots");
+    const subplots: SubplotSummary[] = [];
+
+    try {
+      for await (const entry of Deno.readDir(subplotsDir)) {
+        if (!entry.isFile || !entry.name.endsWith(".ts")) continue;
+
+        const absPath = join(subplotsDir, entry.name);
+        try {
+          const mod = await import(toFileUrl(absPath).href);
+          for (const [, value] of Object.entries(mod)) {
+            const parsed = this.parseSubplot(value);
+            if (parsed) {
+              const relPath = relative(projectPath, absPath).replaceAll(
+                "\\",
+                "/",
+              );
+              subplots.push({
+                ...parsed,
+                filePath: relPath,
+              });
+            }
+          }
+        } catch {
+          // スキップ
+        }
+      }
+    } catch {
+      // ディレクトリが存在しない場合はスキップ
+    }
+
+    return subplots;
+  }
+
+  /**
+   * サブプロットをパース
+   */
+  private parseSubplot(
+    value: unknown,
+  ): Omit<SubplotSummary, "filePath"> | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+
+    const id = record.id;
+    const name = record.name;
+    const type = record.type;
+    const summary = record.summary;
+
+    if (
+      typeof id !== "string" ||
+      typeof name !== "string" ||
+      typeof type !== "string" ||
+      typeof summary !== "string"
+    ) {
+      return null;
+    }
+
+    // ビートをパース
+    const beats: SubplotBeatSummary[] = [];
+    if (Array.isArray(record.beats)) {
+      for (const beat of record.beats) {
+        const parsed = this.parseSubplotBeat(beat);
+        if (parsed) {
+          beats.push(parsed);
+        }
+      }
+    }
+
+    // フォーカスキャラクターをパース
+    const focusCharacters: FocusCharacterSummary[] = [];
+    if (Array.isArray(record.focusCharacters)) {
+      for (const fc of record.focusCharacters) {
+        const parsed = this.parseFocusCharacter(fc);
+        if (parsed) {
+          focusCharacters.push(parsed);
+        }
+      }
+    }
+
+    const parentPlotId = typeof record.parentPlotId === "string"
+      ? record.parentPlotId
+      : undefined;
+
+    const childPlotIds = Array.isArray(record.childPlotIds)
+      ? record.childPlotIds.filter((v): v is string => typeof v === "string")
+      : undefined;
+
+    const themes = Array.isArray(record.themes)
+      ? record.themes.filter((v): v is string => typeof v === "string")
+      : undefined;
+
+    const importance = typeof record.importance === "string"
+      ? record.importance
+      : undefined;
+
+    const displayNames = Array.isArray(record.displayNames)
+      ? record.displayNames.filter((v): v is string => typeof v === "string")
+      : [name];
+
+    return {
+      id,
+      name,
+      type,
+      summary,
+      beats,
+      focusCharacters,
+      parentPlotId,
+      childPlotIds,
+      themes,
+      importance,
+      displayNames,
+    };
+  }
+
+  /**
+   * サブプロットビートをパース
+   */
+  private parseSubplotBeat(
+    value: unknown,
+  ): SubplotBeatSummary | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+
+    const id = record.id;
+    const title = record.title;
+    const summary = record.summary;
+    const chapter = record.chapter;
+
+    if (
+      typeof id !== "string" ||
+      typeof title !== "string" ||
+      typeof chapter !== "string"
+    ) {
+      return null;
+    }
+
+    const characters = Array.isArray(record.characters)
+      ? record.characters.filter((v): v is string => typeof v === "string")
+      : [];
+
+    const settings = Array.isArray(record.settings)
+      ? record.settings.filter((v): v is string => typeof v === "string")
+      : [];
+
+    const structurePosition = typeof record.structurePosition === "string"
+      ? record.structurePosition
+      : undefined;
+
+    const preconditionBeatIds = Array.isArray(record.preconditionBeatIds)
+      ? record.preconditionBeatIds.filter(
+        (v): v is string => typeof v === "string",
+      )
+      : undefined;
+
+    const timelineEventId = typeof record.timelineEventId === "string"
+      ? record.timelineEventId
+      : undefined;
+
+    const displayNames = Array.isArray(record.displayNames)
+      ? record.displayNames.filter((v): v is string => typeof v === "string")
+      : undefined;
+
+    return {
+      id,
+      title,
+      summary: typeof summary === "string" ? summary : undefined,
+      chapter,
+      characters,
+      settings,
+      structurePosition,
+      preconditionBeatIds,
+      timelineEventId,
+      displayNames,
+    };
+  }
+
+  /**
+   * フォーカスキャラクターをパース
+   */
+  private parseFocusCharacter(
+    value: unknown,
+  ): FocusCharacterSummary | null {
+    if (!value || typeof value !== "object") return null;
+    const record = value as Record<string, unknown>;
+
+    const characterId = record.characterId;
+    const weight = record.weight;
+
+    if (
+      typeof characterId !== "string" ||
+      typeof weight !== "string" ||
+      (weight !== "primary" && weight !== "secondary")
+    ) {
+      return null;
+    }
+
+    return {
+      characterId,
+      weight: weight as "primary" | "secondary",
     };
   }
 

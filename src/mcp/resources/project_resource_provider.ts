@@ -86,6 +86,12 @@ export class ProjectResourceProvider implements ResourceProvider {
         mimeType: "application/json",
         description: "伏線一覧",
       },
+      {
+        uri: "storyteller://subplots",
+        name: "Subplots",
+        mimeType: "application/json",
+        description: "サブプロット一覧",
+      },
     ];
 
     for (const character of analysis.characters) {
@@ -160,6 +166,15 @@ export class ProjectResourceProvider implements ResourceProvider {
         name: `Foreshadowing: ${foreshadowing.id}`,
         mimeType: "application/json",
         description: foreshadowing.summary ?? foreshadowing.name,
+      });
+    }
+
+    for (const subplot of analysis.subplots ?? []) {
+      resources.push({
+        uri: `storyteller://subplot/${encodeURIComponent(subplot.id)}`,
+        name: `Subplot: ${subplot.id}`,
+        mimeType: "application/json",
+        description: subplot.summary ?? subplot.name,
       });
     }
 
@@ -244,6 +259,24 @@ export class ProjectResourceProvider implements ResourceProvider {
         if (!found) {
           throw new Error(`Foreshadowing not found: ${parsed.id}`);
         }
+        return JSON.stringify(found);
+      }
+      case "subplots":
+        return JSON.stringify(analysis.subplots);
+      case "subplot": {
+        if (!parsed.id) {
+          throw new Error("Missing subplot id");
+        }
+        const found = analysis.subplots.find((s) => s.id === parsed.id);
+        if (!found) {
+          throw new Error(`Subplot not found: ${parsed.id}`);
+        }
+
+        // expand=detailsの場合、detailsを展開
+        if (parsed.expand === "details") {
+          return await this.expandSubplotDetails(found);
+        }
+
         return JSON.stringify(found);
       }
       default:
@@ -367,6 +400,23 @@ export class ProjectResourceProvider implements ResourceProvider {
   private async expandSettingDetails(
     summary:
       import("../../application/view/project_analyzer.ts").SettingSummary,
+  ): Promise<string> {
+    const expander = new EntityDetailsExpander(this.projectPath);
+    const expanded = await expander.expandEntityDetails(
+      summary,
+      summary.filePath,
+      summary.id,
+    );
+    return JSON.stringify(expanded);
+  }
+
+  /**
+   * サブプロットのdetailsを展開して返す
+   * EntityDetailsExpanderを使用してファイル参照を解決する
+   */
+  private async expandSubplotDetails(
+    summary:
+      import("../../application/view/project_analyzer.ts").SubplotSummary,
   ): Promise<string> {
     const expander = new EntityDetailsExpander(this.projectPath);
     const expanded = await expander.expandEntityDetails(
