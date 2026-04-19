@@ -2,7 +2,14 @@
  * rag export コマンド
  * Process 11: rag export コマンド
  */
-import type { CommandOptionDescriptor } from "../../types.ts";
+import { ok } from "@storyteller/shared/result.ts";
+import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
+import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
+import type {
+  CommandContext,
+  CommandDescriptor,
+  CommandOptionDescriptor,
+} from "../../types.ts";
 import type { GeneratorOptions } from "@storyteller/rag/types.ts";
 import { createDefaultGeneratorOptions } from "@storyteller/rag/types.ts";
 
@@ -91,25 +98,45 @@ export async function executeRagExport(
 }
 
 /**
- * rag export コマンドディスクリプタ（ハンドラなし）
- * 親モジュールでCommandHandlerと統合される
+ * rag export コマンドのハンドラ
+ * BaseCliCommand経由でCommandHandlerインターフェースに適合
  */
-export const ragExportCommandDescriptor = {
-  summary: "プロジェクト要素をRAGドキュメントにエクスポート",
-  usage: "storyteller rag export [options]",
-  options: RAG_EXPORT_OPTIONS,
-  examples: [
-    {
-      summary: "全要素をデフォルト設定でエクスポート",
-      command: "storyteller rag export",
-    },
-    {
-      summary: "シーン単位チャンキングで指定ディレクトリにエクスポート",
-      command: "storyteller rag export -o my-docs --chunking scene",
-    },
-    {
-      summary: "変更ファイルのみエクスポート",
-      command: "storyteller rag export --incremental",
-    },
-  ],
-} as const;
+class RagExportCommand extends BaseCliCommand {
+  override readonly name = "export" as const;
+  override readonly path = ["rag", "export"] as const;
+
+  protected async handle(context: CommandContext) {
+    const args = context.args ?? {};
+    const options = parseRagExportOptions(args);
+    const result = await executeRagExport(options);
+    if (result.success) {
+      context.presenter.showSuccess(result.message);
+    } else {
+      context.presenter.showError(result.message);
+    }
+    return ok(undefined);
+  }
+}
+
+// Why: BaseCliCommand + createLegacyCommandDescriptor パターンで CommandHandler インターフェースに適合。
+// 直接オブジェクトリテラルで handler プロパティを定義すると CommandHandler 型（name + execute）に合わないため。
+export const ragExportCommandDescriptor: CommandDescriptor =
+  createLegacyCommandDescriptor(new RagExportCommand(), {
+    summary: "プロジェクト要素をRAGドキュメントにエクスポート",
+    usage: "storyteller rag export [options]",
+    options: RAG_EXPORT_OPTIONS,
+    examples: [
+      {
+        summary: "全要素をデフォルト設定でエクスポート",
+        command: "storyteller rag export",
+      },
+      {
+        summary: "シーン単位チャンキングで指定ディレクトリにエクスポート",
+        command: "storyteller rag export -o my-docs --chunking scene",
+      },
+      {
+        summary: "変更ファイルのみエクスポート",
+        command: "storyteller rag export --incremental",
+      },
+    ],
+  });
