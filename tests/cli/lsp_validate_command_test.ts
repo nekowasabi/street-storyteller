@@ -200,3 +200,169 @@ Deno.test("LspValidateCommand - JSON出力", async (t) => {
     }
   });
 });
+
+Deno.test("LspValidateCommand - DiagnosticOutput confidence/entityId", async (t) => {
+  await t.step("診断結果にconfidenceフィールドが含まれる", async () => {
+    // alias パターンは confidence = 0.8 で診断が生成される
+    const testEntities: DetectableEntity[] = [
+      {
+        kind: "character",
+        id: "hero",
+        name: "勇者太郎",
+        aliases: ["勇者"],
+        filePath: "src/characters/hero.ts",
+      },
+    ];
+
+    const testDir = await Deno.makeTempDir({ prefix: "storyteller_validate_" });
+    const testFile = `${testDir}/test_manuscript.md`;
+    // "勇者" is an alias (confidence 0.8), should generate a diagnostic
+    await Deno.writeTextFile(testFile, "勇者が剣を抜いた。");
+
+    try {
+      const command = new LspValidateCommand({
+        loadEntities: async () => testEntities,
+      });
+
+      const messages = {
+        info: [] as string[],
+        error: [] as string[],
+        success: [] as string[],
+      };
+      const context = createTestContext({ file: testFile }, messages);
+
+      const result = await command.execute(context);
+      assert(result.ok, "検証は成功すべき");
+
+      if (result.ok) {
+        const value = result.value as {
+          diagnostics: Array<{
+            line: number;
+            character: number;
+            endCharacter: number;
+            severity: string;
+            message: string;
+            source: string;
+            confidence?: number;
+            entityId?: string;
+          }>;
+          filePath: string;
+        };
+
+        assert(value.diagnostics.length > 0, "alias経由で診断が生成されるべき");
+        const diag = value.diagnostics[0];
+        assertExists(diag.confidence, "confidenceフィールドが存在すべき");
+        assertEquals(typeof diag.confidence, "number", "confidenceはnumber型");
+        assert(
+          diag.confidence >= 0 && diag.confidence <= 1,
+          "confidenceは0.0-1.0の範囲",
+        );
+      }
+    } finally {
+      await Deno.remove(testDir, { recursive: true });
+    }
+  });
+
+  await t.step("診断結果にentityIdフィールドが含まれる", async () => {
+    const testEntities: DetectableEntity[] = [
+      {
+        kind: "character",
+        id: "hero",
+        name: "勇者太郎",
+        aliases: ["勇者"],
+        filePath: "src/characters/hero.ts",
+      },
+    ];
+
+    const testDir = await Deno.makeTempDir({ prefix: "storyteller_validate_" });
+    const testFile = `${testDir}/test_manuscript.md`;
+    await Deno.writeTextFile(testFile, "勇者が剣を抜いた。");
+
+    try {
+      const command = new LspValidateCommand({
+        loadEntities: async () => testEntities,
+      });
+
+      const messages = {
+        info: [] as string[],
+        error: [] as string[],
+        success: [] as string[],
+      };
+      const context = createTestContext({ file: testFile }, messages);
+
+      const result = await command.execute(context);
+      assert(result.ok, "検証は成功すべき");
+
+      if (result.ok) {
+        const value = result.value as {
+          diagnostics: Array<{
+            line: number;
+            character: number;
+            endCharacter: number;
+            severity: string;
+            message: string;
+            source: string;
+            confidence?: number;
+            entityId?: string;
+          }>;
+          filePath: string;
+        };
+
+        assert(value.diagnostics.length > 0, "alias経由で診断が生成されるべき");
+        const diag = value.diagnostics[0];
+        assertExists(diag.entityId, "entityIdフィールドが存在すべき");
+        assertEquals(
+          diag.entityId,
+          "hero",
+          "entityIdはエンティティのidと一致すべき",
+        );
+      }
+    } finally {
+      await Deno.remove(testDir, { recursive: true });
+    }
+  });
+
+  await t.step(
+    "高信頼度マッチでは診断が生成されず既存テストに影響しない",
+    async () => {
+      // name パターンは confidence = 1.0 で診断は生成されない
+      const testEntities: DetectableEntity[] = [
+        {
+          kind: "character",
+          id: "hero",
+          name: "勇者",
+          displayNames: ["勇者", "主人公"],
+          filePath: "src/characters/hero.ts",
+        },
+      ];
+
+      const testDir = await Deno.makeTempDir({
+        prefix: "storyteller_validate_",
+      });
+      const testFile = `${testDir}/test_manuscript.md`;
+      await Deno.writeTextFile(testFile, "勇者が剣を抜いた。");
+
+      try {
+        const command = new LspValidateCommand({
+          loadEntities: async () => testEntities,
+        });
+
+        const context = createTestContext({ file: testFile });
+
+        const result = await command.execute(context);
+        assert(result.ok, "検証は成功すべき");
+
+        if (result.ok) {
+          const value = result.value as { diagnostics: unknown[] };
+          assertEquals(
+            value.diagnostics.length,
+            0,
+            "高信頼度マッチでは診断は生成されない",
+          );
+        }
+      } finally {
+        await Deno.remove(testDir, { recursive: true });
+      }
+    },
+  );
+});

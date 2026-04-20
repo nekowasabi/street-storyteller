@@ -32,6 +32,8 @@ export type DiagnosticOutput = {
   readonly message: string;
   readonly source: string;
   readonly code?: string;
+  readonly confidence?: number;
+  readonly entityId?: string;
 };
 
 /**
@@ -129,6 +131,8 @@ export class LspValidateCommand extends BaseCliCommand {
 
   /**
    * 診断を生成
+   * Why: DiagnosticsGenerator経由だとPositionedMatchのconfidence/idが失われるため、
+   * detectWithPositionsを直接呼び出してDiagnosticOutputにマッピングする
    */
   private async generateDiagnostics(
     content: string,
@@ -136,53 +140,42 @@ export class LspValidateCommand extends BaseCliCommand {
     _filePath: string,
     _projectRoot: string,
   ): Promise<DiagnosticOutput[]> {
-    // DiagnosticsGeneratorをインポートして使用
-    const { DiagnosticsGenerator } = await import(
-      "../../../lsp/diagnostics/diagnostics_generator.ts"
-    );
     const { PositionedDetector } = await import(
       "../../../lsp/detection/positioned_detector.ts"
     );
 
     const detector = new PositionedDetector(entities);
-    const generator = new DiagnosticsGenerator(detector);
+    const matches = detector.detectWithPositions(content);
 
-    const diagnostics = await generator.generate(
-      `file://${_filePath}`,
-      content,
-      _projectRoot,
-    );
+    const outputs: DiagnosticOutput[] = [];
 
-    // LSP診断をシンプルな出力形式に変換
-    return diagnostics.map((d) => ({
-      line: d.range.start.line + 1, // 1-based for human readability
-      character: d.range.start.character + 1,
-      endCharacter: d.range.end.character + 1,
-      severity: this.severityToString(d.severity),
-      message: d.message,
-      source: d.source,
-      code: d.code,
-    }));
-  }
+    for (const match of matches) {
+      // 高信頼度（>= 0.9）は診断不要（DiagnosticsGeneratorと同じ閾値ロジック）
+      if (match.confidence >= 0.9) continue;
 
-  /**
-   * 重要度を文字列に変換
-   */
-  private severityToString(
-    severity: number,
-  ): "error" | "warning" | "hint" | "info" {
-    switch (severity) {
-      case 1:
-        return "error";
-      case 2:
-        return "warning";
-      case 3:
-        return "info";
-      case 4:
-        return "hint";
-      default:
-        return "info";
+      const severity = match.confidence < 0.7 ? "warning" : "hint";
+      const kindLabel = match.kind === "character" ? "キャラクター" : "設定";
+      const confidencePercent = Math.round(match.confidence * 100);
+      const message =
+        `${kindLabel}「${match.matchedPattern}」への参照（信頼度: ${confidencePercent}%）。` +
+        `定義: ${match.filePath}`;
+
+      for (const pos of match.positions) {
+        outputs.push({
+          line: pos.line + 1, // 1-based for human readability
+          character: pos.character + 1,
+          endCharacter: pos.character + pos.length + 1,
+          severity,
+          message,
+          source: "storyteller",
+          code: `low-confidence-${match.kind}`,
+          confidence: match.confidence,
+          entityId: match.id,
+        });
+      }
     }
+
+    return outputs;
   }
 
   /**
