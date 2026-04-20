@@ -621,9 +621,9 @@ Deno.test("computeConfidenceSummary - 信頼度別サマリー集計", async (t)
     ];
 
     const summary = computeConfidenceSummary(diagnostics);
-    assertEquals(summary.high, 2, "confidence >= 0.85 は High");
-    assertEquals(summary.medium, 2, "0.50 <= confidence < 0.85 は Medium");
-    assertEquals(summary.low, 1, "confidence < 0.50 は Low");
+    assertEquals(summary.high, 1, "confidence >= 0.9 は High");
+    assertEquals(summary.medium, 2, "0.7 <= confidence < 0.9 は Medium");
+    assertEquals(summary.low, 2, "confidence < 0.7 は Low");
     assertEquals(summary.total, 5, "total は診断の総数");
   });
 
@@ -794,6 +794,82 @@ Deno.test("LspValidateCommand - サマリー付きHuman-readable出力", async (
         );
       } finally {
         await Deno.remove(testDir, { recursive: true });
+      }
+    },
+  );
+});
+
+Deno.test("LspValidateCommand - --strict モード", async (t) => {
+  await t.step(
+    "validate --strict returns err when non-high confidence references exist",
+    async () => {
+      const entity: DetectableEntity = {
+        kind: "character",
+        id: "hero",
+        name: "勇者太郎",
+        aliases: ["勇者"],
+        filePath: "src/characters/hero.ts",
+      };
+
+      const tempDir = await Deno.makeTempDir({
+        prefix: "storyteller_strict_",
+      });
+      const manuscriptPath = `${tempDir}/manuscript.md`;
+      await Deno.writeTextFile(manuscriptPath, "勇者は歩いた。");
+
+      try {
+        const cmd = new LspValidateCommand({
+          loadEntities: async () => [entity],
+        });
+
+        const result = await cmd.execute(
+          createTestContext({ file: manuscriptPath, strict: true }),
+        );
+        assert(
+          !result.ok,
+          "--strict時は非高信頼度参照があるとエラーを返すべき",
+        );
+        if (!result.ok) {
+          assertEquals(
+            result.error.code,
+            "validation_errors",
+            "エラーコードは validation_errors であるべき",
+          );
+        }
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
+      }
+    },
+  );
+
+  await t.step(
+    "validate without --strict returns ok even with non-high confidence",
+    async () => {
+      const entity: DetectableEntity = {
+        kind: "character",
+        id: "hero",
+        name: "勇者太郎",
+        aliases: ["勇者"],
+        filePath: "src/characters/hero.ts",
+      };
+
+      const tempDir = await Deno.makeTempDir({
+        prefix: "storyteller_nostrict_",
+      });
+      const manuscriptPath = `${tempDir}/manuscript.md`;
+      await Deno.writeTextFile(manuscriptPath, "勇者は歩いた。");
+
+      try {
+        const cmd = new LspValidateCommand({
+          loadEntities: async () => [entity],
+        });
+
+        const result = await cmd.execute(
+          createTestContext({ file: manuscriptPath }),
+        );
+        assert(result.ok, "--strictなしでは非高信頼度参照があっても成功すべき");
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
       }
     },
   );

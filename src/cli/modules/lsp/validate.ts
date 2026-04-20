@@ -40,16 +40,17 @@ export type DiagnosticOutput = {
 /**
  * 信頼度閾値の定数
  */
-const HIGH_THRESHOLD = 0.85;
-const MEDIUM_THRESHOLD = 0.50;
+// Why: Thresholds aligned with plan (process-05): High >= 0.9, Medium 0.7-0.9, Low < 0.7
+const HIGH_THRESHOLD = 0.9;
+const MEDIUM_THRESHOLD = 0.7;
 
 /**
  * 信頼度別サマリーの型
  */
 export type ConfidenceSummary = {
-  readonly high: number; // confidence >= 0.85
-  readonly medium: number; // 0.50 <= confidence < 0.85
-  readonly low: number; // confidence < 0.50
+  readonly high: number; // confidence >= 0.9
+  readonly medium: number; // 0.7 <= confidence < 0.9
+  readonly low: number; // confidence < 0.7
   readonly total: number;
 };
 
@@ -183,6 +184,18 @@ export class LspValidateCommand extends BaseCliCommand {
         this.displayHumanReadable(context, result);
       }
 
+      // Why: --strict flags medium+low (anything below high 0.9), since current detector
+      // produces min 0.8 (aliases) which is "medium" — checking only "low" (< 0.7) would
+      // never trigger with standard entity configurations.
+      if (args.strict === true && (summary.medium + summary.low) > 0) {
+        return err({
+          code: "validation_errors",
+          message: `${
+            summary.medium + summary.low
+          } non-high-confidence reference(s) detected.`,
+        });
+      }
+
       return ok(result);
     } catch (error) {
       return err({
@@ -250,6 +263,20 @@ export class LspValidateCommand extends BaseCliCommand {
         context.presenter.showInfo(JSON.stringify({ results }, null, 2));
       } else {
         this.displayDirHumanReadable(context, results);
+      }
+
+      if (args.strict === true) {
+        const totalNonHigh = results.reduce((sum, r) => {
+          const s = computeConfidenceSummary(r.diagnostics);
+          return sum + s.medium + s.low;
+        }, 0);
+        if (totalNonHigh > 0) {
+          return err({
+            code: "validation_errors",
+            message:
+              `${totalNonHigh} non-high-confidence reference(s) detected across ${results.length} file(s).`,
+          });
+        }
       }
 
       return ok({ results });
@@ -464,6 +491,11 @@ const LSP_VALIDATE_OPTIONS: readonly CommandOptionDescriptor[] = [
   {
     name: "--json",
     summary: "Output results as JSON.",
+    type: "boolean",
+  },
+  {
+    name: "--strict",
+    summary: "Return error when low-confidence references are detected.",
     type: "boolean",
   },
   {
