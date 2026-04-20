@@ -41,6 +41,10 @@ export type DiagnosticOutput = {
  */
 export type LspValidateDependencies = {
   readonly loadEntities?: (projectRoot: string) => Promise<DetectableEntity[]>;
+  readonly listMarkdownFiles?: (
+    projectRoot: string,
+    dirOrFile: { path?: string; dir?: string; recursive?: boolean },
+  ) => Promise<string[]>;
 };
 
 /**
@@ -55,9 +59,16 @@ export class LspValidateCommand extends BaseCliCommand {
     projectRoot: string,
   ) => Promise<DetectableEntity[]>;
 
+  private readonly listMarkdownFilesFn: (
+    projectRoot: string,
+    dirOrFile: { path?: string; dir?: string; recursive?: boolean },
+  ) => Promise<string[]>;
+
   constructor(deps: LspValidateDependencies = {}) {
     super([]);
     this.loadEntitiesFn = deps.loadEntities ?? loadEntities;
+    this.listMarkdownFilesFn = deps.listMarkdownFiles ??
+      this.defaultListMarkdownFiles.bind(this);
   }
 
   protected async handle(context: CommandContext) {
@@ -69,8 +80,18 @@ export class LspValidateCommand extends BaseCliCommand {
       return ok(undefined);
     }
 
-    // ファイルパスを取得
+    // プロジェクトルートを推測（現在のディレクトリ）
+    const projectRoot = typeof args.path === "string" ? args.path : Deno.cwd();
+
+    // --dir モードの判定（--dir と --file 両方指定時は --dir を優先）
+    const dirPath = args.dir as string | undefined;
     const filePath = args.file as string | undefined;
+
+    if (dirPath && typeof dirPath === "string" && dirPath.trim() !== "") {
+      return this.handleDirMode(context, dirPath, projectRoot, args);
+    }
+
+    // 従来の --file 単一ファイルモード
     if (!filePath || typeof filePath !== "string" || filePath.trim() === "") {
       return err({
         code: "invalid_arguments",
@@ -91,9 +112,6 @@ export class LspValidateCommand extends BaseCliCommand {
 
     // ファイル内容を読み取り
     const content = await Deno.readTextFile(filePath);
-
-    // プロジェクトルートを推測（現在のディレクトリ）
-    const projectRoot = typeof args.path === "string" ? args.path : Deno.cwd();
 
     try {
       // エンティティをロード
@@ -127,6 +145,91 @@ export class LspValidateCommand extends BaseCliCommand {
         message: error instanceof Error ? error.message : String(error),
       });
     }
+  }
+
+  /**
+   * --dir モードの処理
+   * ディレクトリ内の .md ファイルを一括検証する
+   */
+  private async handleDirMode(
+    context: CommandContext,
+    dirPath: string,
+    projectRoot: string,
+    args: Record<string, unknown>,
+  ) {
+    // ディレクトリの存在確認
+    try {
+      const stat = await Deno.stat(dirPath);
+      if (!stat.isDirectory) {
+        return err({
+          code: "dir_not_found",
+          message: `Not a directory: ${dirPath}`,
+        });
+      }
+    } catch {
+      return err({
+        code: "dir_not_found",
+        message: `Directory not found: ${dirPath}`,
+      });
+    }
+
+    const recursive = args.recursive === true;
+
+    try {
+      const files = await this.listMarkdownFilesFn(projectRoot, {
+        dir: dirPath,
+        recursive,
+      });
+
+      if (files.length === 0) {
+        context.presenter.showInfo(`No .md files found in: ${dirPath}`);
+        return ok({ results: [] });
+      }
+
+      // エンティティをロード（全ファイル共通）
+      const entities = await this.loadEntitiesFn(projectRoot);
+
+      // 各ファイルを検証
+      const results: ValidationResult[] = [];
+      for (const file of files) {
+        const content = await Deno.readTextFile(file);
+        const diagnostics = await this.generateDiagnostics(
+          content,
+          entities,
+          file,
+          projectRoot,
+        );
+        results.push({ filePath: file, diagnostics });
+      }
+
+      // JSON出力モード
+      if (args.json === true) {
+        context.presenter.showInfo(JSON.stringify({ results }, null, 2));
+      } else {
+        this.displayDirHumanReadable(context, results);
+      }
+
+      return ok({ results });
+    } catch (error) {
+      return err({
+        code: "validation_failed",
+        message: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+
+  /**
+   * デフォルトの listMarkdownFiles 実装
+   * lsp_shared から listMarkdownFiles を遅延インポートする
+   */
+  private async defaultListMarkdownFiles(
+    projectRoot: string,
+    dirOrFile: { path?: string; dir?: string; recursive?: boolean },
+  ): Promise<string[]> {
+    const { listMarkdownFiles: sharedListMarkdownFiles } = await import(
+      "@storyteller/mcp/tools/lsp_shared.ts"
+    );
+    return sharedListMarkdownFiles(projectRoot, dirOrFile);
   }
 
   /**
@@ -206,6 +309,41 @@ export class LspValidateCommand extends BaseCliCommand {
       );
     }
   }
+
+  /**
+   * --dir モードの人間向け出力を表示
+   */
+  private displayDirHumanReadable(
+    context: CommandContext,
+    results: readonly ValidationResult[],
+  ): void {
+    let totalIssues = 0;
+    for (const result of results) {
+      totalIssues += result.diagnostics.length;
+    }
+
+    context.presenter.showInfo(
+      `Validated ${results.length} file(s), ${totalIssues} issue(s) found.`,
+    );
+    context.presenter.showInfo("");
+
+    for (const result of results) {
+      if (result.diagnostics.length === 0) {
+        context.presenter.showSuccess(`  ${result.filePath}: OK`);
+      } else {
+        context.presenter.showInfo(
+          `  ${result.filePath}: ${result.diagnostics.length} issue(s)`,
+        );
+        for (const d of result.diagnostics) {
+          const severity = d.severity.toUpperCase().padEnd(7);
+          const location = `${d.line}:${d.character}`;
+          context.presenter.showInfo(
+            `    [${severity}] ${location}: ${d.message}`,
+          );
+        }
+      }
+    }
+  }
 }
 
 /**
@@ -219,10 +357,19 @@ function renderLspValidateHelp(): string {
   lines.push("");
   lines.push("Usage:");
   lines.push("  storyteller lsp validate --file <path> [options]");
+  lines.push(
+    "  storyteller lsp validate --dir <directory> [--recursive] [options]",
+  );
   lines.push("");
   lines.push("Options:");
   lines.push(
-    "  --file <path>  Path to the manuscript file to validate (required)",
+    "  --file <path>  Path to the manuscript file to validate",
+  );
+  lines.push(
+    "  --dir <dir>    Directory to scan for .md files (overrides --file)",
+  );
+  lines.push(
+    "  --recursive    Scan subdirectories recursively (use with --dir)",
   );
   lines.push(
     "  --path <dir>   Project root directory (default: current directory)",
@@ -236,6 +383,12 @@ function renderLspValidateHelp(): string {
   lines.push(
     "  storyteller lsp validate --file chapter.md --path /path/to/project",
   );
+  lines.push(
+    "  storyteller lsp validate --dir manuscripts",
+  );
+  lines.push(
+    "  storyteller lsp validate --dir manuscripts --recursive --json",
+  );
   return lines.join("\n");
 }
 
@@ -244,8 +397,18 @@ export const lspValidateCommandHandler = new LspValidateCommand();
 const LSP_VALIDATE_OPTIONS: readonly CommandOptionDescriptor[] = [
   {
     name: "--file",
-    summary: "Path to the manuscript file to validate (required).",
+    summary: "Path to the manuscript file to validate.",
     type: "string",
+  },
+  {
+    name: "--dir",
+    summary: "Directory to scan for .md files (overrides --file).",
+    type: "string",
+  },
+  {
+    name: "--recursive",
+    summary: "Scan subdirectories recursively (use with --dir).",
+    type: "boolean",
   },
   {
     name: "--path",
@@ -280,6 +443,15 @@ export const lspValidateCommandDescriptor: CommandDescriptor =
         {
           summary: "Validate with JSON output",
           command: "storyteller lsp validate --file chapter.md --json",
+        },
+        {
+          summary: "Validate all .md files in a directory",
+          command: "storyteller lsp validate --dir manuscripts",
+        },
+        {
+          summary: "Validate recursively with JSON output",
+          command:
+            "storyteller lsp validate --dir manuscripts --recursive --json",
         },
       ],
     },
