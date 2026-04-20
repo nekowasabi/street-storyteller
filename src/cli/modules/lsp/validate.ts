@@ -32,7 +32,52 @@ export type DiagnosticOutput = {
   readonly message: string;
   readonly source: string;
   readonly code?: string;
+  readonly confidence?: number;
+  readonly entityId?: string;
 };
+
+/**
+ * 信頼度閾値の定数
+ */
+const HIGH_THRESHOLD = 0.85;
+const MEDIUM_THRESHOLD = 0.50;
+
+/**
+ * 信頼度別サマリーの型
+ */
+export type ConfidenceSummary = {
+  readonly high: number; // confidence >= 0.85
+  readonly medium: number; // 0.50 <= confidence < 0.85
+  readonly low: number; // confidence < 0.50
+  readonly total: number;
+};
+
+/**
+ * DiagnosticOutput[] から ConfidenceSummary を生成する
+ * confidence が未定義の場合は Low 扱いとする
+ */
+export function computeConfidenceSummary(
+  diagnostics: readonly DiagnosticOutput[],
+): ConfidenceSummary {
+  let high = 0;
+  let medium = 0;
+  let low = 0;
+
+  for (const d of diagnostics) {
+    const c = d.confidence;
+    if (c === undefined) {
+      low++;
+    } else if (c >= HIGH_THRESHOLD) {
+      high++;
+    } else if (c >= MEDIUM_THRESHOLD) {
+      medium++;
+    } else {
+      low++;
+    }
+  }
+
+  return { high, medium, low, total: diagnostics.length };
+}
 
 /**
  * 依存性注入用の型
@@ -102,12 +147,14 @@ export class LspValidateCommand extends BaseCliCommand {
         content,
         entities,
         filePath,
-        projectRoot,
       );
 
-      const result: ValidationResult = {
+      const summary = computeConfidenceSummary(diagnostics);
+
+      const result: ValidationResult & { summary: ConfidenceSummary } = {
         filePath,
         diagnostics,
+        summary,
       };
 
       // JSON出力モード
@@ -129,40 +176,50 @@ export class LspValidateCommand extends BaseCliCommand {
 
   /**
    * 診断を生成
+   * Why: DiagnosticsGenerator 経由だと confidence が LSP Diagnostic に伝播されないため、
+   * PositionedDetector.detectWithPositions() を直接使用して confidence を保持する
    */
   private async generateDiagnostics(
     content: string,
     entities: DetectableEntity[],
     _filePath: string,
-    _projectRoot: string,
   ): Promise<DiagnosticOutput[]> {
-    // DiagnosticsGeneratorをインポートして使用
-    const { DiagnosticsGenerator } = await import(
-      "../../../lsp/diagnostics/diagnostics_generator.ts"
-    );
     const { PositionedDetector } = await import(
       "../../../lsp/detection/positioned_detector.ts"
     );
 
     const detector = new PositionedDetector(entities);
-    const generator = new DiagnosticsGenerator(detector);
+    const matches = detector.detectWithPositions(content);
 
-    const diagnostics = await generator.generate(
-      `file://${_filePath}`,
-      content,
-      _projectRoot,
-    );
+    const outputs: DiagnosticOutput[] = [];
 
-    // LSP診断をシンプルな出力形式に変換
-    return diagnostics.map((d) => ({
-      line: d.range.start.line + 1, // 1-based for human readability
-      character: d.range.start.character + 1,
-      endCharacter: d.range.end.character + 1,
-      severity: this.severityToString(d.severity),
-      message: d.message,
-      source: d.source,
-      code: d.code,
-    }));
+    for (const match of matches) {
+      // 高信頼度（>= 0.9）は診断不要（DiagnosticsGeneratorと同じ閾値ロジック）
+      if (match.confidence >= 0.9) continue;
+
+      const severity = match.confidence < 0.7 ? "warning" : "hint";
+      const kindLabel = match.kind === "character" ? "キャラクター" : "設定";
+      const confidencePercent = Math.round(match.confidence * 100);
+      const message =
+        `${kindLabel}「${match.matchedPattern}」への参照（信頼度: ${confidencePercent}%）。` +
+        `定義: ${match.filePath}`;
+
+      for (const pos of match.positions) {
+        outputs.push({
+          line: pos.line + 1, // 1-based for human readability
+          character: pos.character + 1,
+          endCharacter: pos.character + pos.length + 1,
+          severity,
+          message,
+          source: "storyteller",
+          code: `low-confidence-${match.kind}`,
+          confidence: match.confidence,
+          entityId: match.id,
+        });
+      }
+    }
+
+    return outputs;
   }
 
   /**
@@ -190,7 +247,7 @@ export class LspValidateCommand extends BaseCliCommand {
    */
   private displayHumanReadable(
     context: CommandContext,
-    result: ValidationResult,
+    result: ValidationResult & { summary: ConfidenceSummary },
   ): void {
     context.presenter.showInfo(`Validating: ${result.filePath}`);
     context.presenter.showInfo("");
@@ -212,6 +269,11 @@ export class LspValidateCommand extends BaseCliCommand {
         `  [${severity}] ${location}: ${d.message}`,
       );
     }
+
+    const { summary } = result;
+    context.presenter.showInfo(
+      `Summary: High: ${summary.high}, Medium: ${summary.medium}, Low: ${summary.low} (Total: ${summary.total})`,
+    );
   }
 }
 
