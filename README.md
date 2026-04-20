@@ -315,13 +315,13 @@ deno run story.ts
 ## Feature(TODO)
 
 - [x] Generate a project directory for storytelling
-- [ ]Story elements can be expressed in TypeScript types
+- [x] Story elements can be expressed in TypeScript types
 - [ ] Unit test for story with AI.
-- [ ] Validate a setting of a story in a manuscript
-- [ ] Validate a foreshadowing in a manuscript
-- [ ] Validate typo with textlint
+- [x] Validate a setting of a story in a manuscript
+- [x] Validate a foreshadowing in a manuscript
+- [x] Validate typo with textlint
 - [ ] Output writing status for statusline in vim
-- [ ] Visualize story structure
+- [x] Visualize story structure
 - [ ] Integrate AI for writing(Just a idea)
 - [ ] Talk with AI.
 - [ ] Extract idea from own datalake with shellscript.

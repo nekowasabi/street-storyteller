@@ -566,6 +566,176 @@ vim.api.nvim_create_autocmd("BufReadPost", {
 coc-tsserverの代わりに`typescript-language-server`をNeovim組み込みLSPで使用することで、
 競合を完全に回避できます。
 
+## CLI 検証コマンド (`storyteller lsp validate`)
+
+LSPサーバーを起動せずに、原稿ファイルの検証をワンショットで実行するCLIコマンドです。
+CIやpre-commitフックでの自動検証に適しています。
+
+### 単一ファイル検証
+
+```bash
+storyteller lsp validate --file manuscripts/chapter01.md
+```
+
+出力例:
+
+```
+Validating: manuscripts/chapter01.md
+
+Found 2 issue(s):
+
+  [WARNING] 3:5: キャラクター「影の者」への参照（信頼度: 65%）。定義: src/characters/shadow.ts
+  [HINT   ] 7:12: 設定「古の塔」への参照（信頼度: 80%）。定義: src/settings/ancient_tower.ts
+Summary: High: 0, Medium: 1, Low: 1 (Total: 2)
+```
+
+高信頼度（90%以上）の参照は問題なしと判定され、診断出力から省かれます。
+
+### ディレクトリ一括検証
+
+```bash
+# ディレクトリ内の .md ファイルを検証
+storyteller lsp validate --dir manuscripts
+
+# サブディレクトリも含めて再帰的に検証
+storyteller lsp validate --dir manuscripts --recursive
+```
+
+出力例:
+
+```
+Validated 5 file(s), 3 issue(s) found.
+
+  manuscripts/chapter01.md: OK
+  manuscripts/chapter02.md: 2 issue(s)
+    [WARNING] 1:8: キャラクター「影の者」への参照（信頼度: 65%）。定義: src/characters/shadow.ts
+    [HINT   ] 4:3: キャラクター「商人」への参照（信頼度: 80%）。定義: src/characters/merchant.ts
+  manuscripts/chapter03.md: 1 issue(s)
+    [HINT   ] 2:10: 設定「古の塔」への参照（信頼度: 85%）。定義: src/settings/ancient_tower.ts
+  manuscripts/chapter04.md: OK
+  manuscripts/chapter05.md: OK
+```
+
+`--dir` と `--file` を同時に指定した場合、`--dir` が優先されます。
+
+### JSON出力
+
+`--json` フラグで結果を機械可読形式で出力します。
+
+```bash
+storyteller lsp validate --file manuscripts/chapter01.md --json
+```
+
+出力例:
+
+```json
+{
+  "filePath": "manuscripts/chapter01.md",
+  "diagnostics": [
+    {
+      "line": 3,
+      "character": 5,
+      "endCharacter": 8,
+      "severity": "warning",
+      "message": "キャラクター「影の者」への参照（信頼度: 65%）。定義: src/characters/shadow.ts",
+      "source": "storyteller",
+      "code": "low-confidence-character",
+      "confidence": 0.65,
+      "entityId": "shadow"
+    },
+    {
+      "line": 7,
+      "character": 12,
+      "endCharacter": 16,
+      "severity": "hint",
+      "message": "設定「古の塔」への参照（信頼度: 80%）。定義: src/settings/ancient_tower.ts",
+      "source": "storyteller",
+      "code": "low-confidence-setting",
+      "confidence": 0.8,
+      "entityId": "ancient_tower"
+    }
+  ],
+  "summary": {
+    "high": 0,
+    "medium": 1,
+    "low": 1,
+    "total": 2
+  }
+}
+```
+
+各診断の主要フィールド:
+
+| フィールド   | 説明                                                       |
+| ------------ | ---------------------------------------------------------- |
+| `confidence` | 検出の信頼度（0.0 - 1.0）                                 |
+| `entityId`   | 参照先のエンティティID（キャラクターや設定のID）           |
+| `severity`   | `warning`（信頼度 < 0.7）または `hint`（0.7 - 0.9 未満）  |
+
+### --strict モード
+
+CIパイプラインやpre-commitフックでの利用を想定したモードです。
+信頼度がHigh未満の参照（Medium + Low）が1件でも存在する場合、コマンドはエラーを返します。
+
+```bash
+# CI / pre-commit での利用例
+storyteller lsp validate --file manuscripts/chapter01.md --strict
+```
+
+```bash
+# ディレクトリ一括検証（CI用）
+storyteller lsp validate --dir manuscripts --recursive --strict
+```
+
+**判定基準:**
+
+| 信頼度         | 判定       | --strict での扱い |
+| -------------- | ---------- | ----------------- |
+| High (>= 0.9)  | 問題なし   | 合格              |
+| Medium (0.7以上0.9未満) | 要確認 | **不合格**        |
+| Low (< 0.7)    | 警告       | **不合格**        |
+
+> **Why**: 現在の検出器が生成する最低信頼度は0.8（aliases由来）であるため、Low（< 0.7）のみをチェック対象にすると標準構成で strict が発動しません。そのため Medium 以上を不合格としています。
+
+### 信頼度閾値
+
+検証コマンドで使用する信頼度の閾値です。LSPサーバーの診断閾値（「信頼度システム」セクション参照）と同一の基準を適用しています。
+
+| レベル  | 信頼度       | 診断severity | 意味                   |
+| ------- | ------------ | ------------ | ---------------------- |
+| High    | >= 0.9       | （診断なし） | 名前または表示名での一致 |
+| Medium  | 0.7 - 0.9未満 | hint         | 別名等のやや不確実な参照 |
+| Low     | < 0.7        | warning      | 曖昧な参照             |
+
+### exit code に関する注意
+
+現在の実装では、`err(...)` を返すすべてのケース（ファイル不在、検証エラー、--strict不合格など）で **exit code 1** が返されます。正常終了時は exit code 0 です。
+
+```bash
+# 正常: 問題なし → exit 0
+storyteller lsp validate --file manuscripts/chapter01.md
+
+# エラー: ファイルなし → exit 1
+storyteller lsp validate --file nonexistent.md
+
+# エラー: strict不合格 → exit 1
+storyteller lsp validate --file manuscripts/chapter01.md --strict
+```
+
+> **Note**: 複数のexit code（例: ファイル不在=2、検証エラー=3）によるエラー種別の区別は、今後のIssueで計画されています。
+
+### コマンドラインオプション一覧
+
+| オプション      | 説明                                                 |
+| --------------- | ---------------------------------------------------- |
+| `--file <path>` | 検証対象の原稿ファイルパス                           |
+| `--dir <dir>`   | ディレクトリ内の .md ファイルを一括検証（--fileより優先） |
+| `--recursive`   | サブディレクトリも再帰的に検索（--dirと併用）         |
+| `--path <dir>`  | プロジェクトルートディレクトリ（デフォルト: カレント） |
+| `--json`        | 結果をJSON形式で出力                                 |
+| `--strict`      | High未満の参照がある場合にエラー（exit 1）            |
+| `--help`, `-h`  | ヘルプを表示                                         |
+
 ## 関連ドキュメント
 
 - [lsp-implementation.md](./lsp-implementation.md) - 実装詳細
