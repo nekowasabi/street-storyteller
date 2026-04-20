@@ -143,18 +143,19 @@ export class LspValidateCommand extends BaseCliCommand {
       });
     }
 
-    // ファイルの存在確認
-    try {
-      await Deno.stat(filePath);
-    } catch {
-      return err({
-        code: "file_not_found",
-        message: `File not found: ${filePath}`,
-      });
-    }
-
     // ファイル内容を読み取り
-    const content = await Deno.readTextFile(filePath);
+    let content: string;
+    try {
+      content = await Deno.readTextFile(filePath);
+    } catch (e) {
+      if (e instanceof Deno.errors.NotFound) {
+        return err({
+          code: "file_not_found",
+          message: `File not found: ${filePath}`,
+        });
+      }
+      throw e;
+    }
 
     try {
       // エンティティをロード
@@ -234,17 +235,18 @@ export class LspValidateCommand extends BaseCliCommand {
       // エンティティをロード（全ファイル共通）
       const entities = await this.loadEntitiesFn(projectRoot);
 
-      // 各ファイルを検証
-      const results: ValidationResult[] = [];
-      for (const file of files) {
-        const content = await Deno.readTextFile(file);
-        const diagnostics = await this.generateDiagnostics(
-          content,
-          entities,
-          file,
-        );
-        results.push({ filePath: file, diagnostics });
-      }
+      // 各ファイルを検証（並列読み込み）
+      const results = await Promise.all(
+        files.map(async (file) => {
+          const content = await Deno.readTextFile(file);
+          const diagnostics = await this.generateDiagnostics(
+            content,
+            entities,
+            file,
+          );
+          return { filePath: file, diagnostics };
+        }),
+      );
 
       // JSON出力モード
       if (args.json === true) {
@@ -300,7 +302,11 @@ export class LspValidateCommand extends BaseCliCommand {
       if (match.confidence >= 0.9) continue;
 
       const severity = match.confidence < 0.7 ? "warning" : "hint";
-      const kindLabel = match.kind === "character" ? "キャラクター" : "設定";
+      const kindLabel = match.kind === "character"
+        ? "キャラクター"
+        : match.kind === "setting"
+        ? "設定"
+        : "伏線";
       const confidencePercent = Math.round(match.confidence * 100);
       const message =
         `${kindLabel}「${match.matchedPattern}」への参照（信頼度: ${confidencePercent}%）。` +

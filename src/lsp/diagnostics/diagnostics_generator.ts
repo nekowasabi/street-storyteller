@@ -145,7 +145,11 @@ export class DiagnosticsGenerator {
       ? DiagnosticSeverity.Warning
       : DiagnosticSeverity.Hint;
 
-    const kindLabel = match.kind === "character" ? "キャラクター" : "設定";
+    const kindLabel = match.kind === "character"
+      ? "キャラクター"
+      : match.kind === "setting"
+      ? "設定"
+      : "伏線";
     const confidencePercent = Math.round(confidence * 100);
 
     // 全ての位置に対して診断を生成
