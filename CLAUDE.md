@@ -22,11 +22,11 @@ code in this repository.
 # メインスクリプトの実行
 deno run main.ts
 
-# テストの実行
-deno test
+# テストの実行（必ず deno task test を使用）
+deno task test
 
 # 特定のテストファイルを実行
-deno test tests/main_test.ts
+deno task test tests/main_test.ts
 
 # テスト名でフィルタリング
 deno test --filter "test name"
