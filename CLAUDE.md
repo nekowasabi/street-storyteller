@@ -29,13 +29,13 @@ deno task test
 deno task test tests/main_test.ts
 
 # テスト名でフィルタリング
-deno test --filter "test name"
+deno task test --filter "test name"
 
 # ファイル監視モードでテスト
-deno test --watch
+deno task test --watch
 
 # カバレッジ付きテスト
-deno test --coverage
+deno task test --coverage
 ```
 
 ## MCP (Claude Desktop) 統合
