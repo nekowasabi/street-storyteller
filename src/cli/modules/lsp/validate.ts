@@ -227,7 +227,7 @@ export class LspValidateCommand extends BaseCliCommand {
     dirOrFile: { path?: string; dir?: string; recursive?: boolean },
   ): Promise<string[]> {
     const { listMarkdownFiles: sharedListMarkdownFiles } = await import(
-      "@storyteller/mcp/tools/lsp_shared.ts"
+      "@storyteller/lsp/utils/markdown_files.ts"
     );
     return sharedListMarkdownFiles(projectRoot, dirOrFile);
   }
