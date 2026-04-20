@@ -84,6 +84,24 @@ export class DiagnosticsGenerator {
     this.detector = detector;
   }
 
+  // Why: detectAll() を新関数として並置 — generate() は LSP 診断で使用中のため変更不可
+  /**
+   * suppress 前の全マッチを返す（信頼度フィルタなし）
+   * CLI validate コマンドで信頼度別サマリーを出力するために使用。
+   * generate() とは異なり、confidence >= 0.9 のマッチも含めて全件返す。
+   * @param _uri ドキュメントURI（現時点では未使用だが、将来の拡張用）
+   * @param content ドキュメント内容
+   * @param _projectPath プロジェクトパス（現時点では未使用だが、将来の拡張用）
+   * @returns 検出された全マッチ（PositionedMatch[]）
+   */
+  async detectAll(
+    _uri: string,
+    content: string,
+    _projectPath: string,
+  ): Promise<PositionedMatch[]> {
+    return this.detector.detectWithPositions(content);
+  }
+
   /**
    * ドキュメントの診断を生成
    * @param _uri ドキュメントURI（現時点では未使用だが、将来の拡張用）
