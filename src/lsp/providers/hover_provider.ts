@@ -18,6 +18,7 @@ import {
   createEntityResolver,
   type EntityResolver,
 } from "@storyteller/lsp/providers/entity_resolver.ts";
+import { getKindLabel } from "@storyteller/lsp/utils/entity_kind.ts";
 import {
   debugLog,
   detectAndResolveFileRef,
@@ -314,20 +315,8 @@ export class HoverProvider {
     return lines.join("\n");
   }
 
-  /**
-   * kindのラベルを取得
-   */
-  private getKindLabel(
-    kind: "character" | "setting" | "foreshadowing",
-  ): string {
-    switch (kind) {
-      case "character":
-        return "キャラクター";
-      case "setting":
-        return "設定";
-      case "foreshadowing":
-        return "伏線";
-    }
+  private getKindLabel(kind: "character" | "setting" | "foreshadowing"): string {
+    return getKindLabel(kind);
   }
 
   /**

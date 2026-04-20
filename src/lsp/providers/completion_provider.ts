@@ -6,6 +6,7 @@
  */
 
 import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
+import { getKindLabel } from "@storyteller/lsp/utils/entity_kind.ts";
 import { LiteralTypeCompletionProvider } from "@storyteller/lsp/providers/literal_type_completion_provider.ts";
 
 /**
@@ -182,22 +183,8 @@ export class CompletionProvider {
     return `[${kindLabel}] ${entity.filePath}`;
   }
 
-  /**
-   * 種別ラベルを取得
-   */
-  private getKindLabel(
-    kind: "character" | "setting" | "foreshadowing",
-  ): string {
-    switch (kind) {
-      case "character":
-        return "キャラクター";
-      case "setting":
-        return "設定";
-      case "foreshadowing":
-        return "伏線";
-      default:
-        return kind;
-    }
+  private getKindLabel(kind: "character" | "setting" | "foreshadowing"): string {
+    return getKindLabel(kind);
   }
 
   /**

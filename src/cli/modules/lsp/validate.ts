@@ -12,6 +12,7 @@ import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 import type { DetectableEntity } from "@storyteller/lsp/detection/positioned_detector.ts";
 import { loadEntities } from "@storyteller/cli/modules/lsp/start.ts";
+import { getKindLabel } from "@storyteller/lsp/utils/entity_kind.ts";
 
 /**
  * 検証結果の型
@@ -143,7 +144,6 @@ export class LspValidateCommand extends BaseCliCommand {
       });
     }
 
-    // ファイル内容を読み取り
     let content: string;
     try {
       content = await Deno.readTextFile(filePath);
@@ -165,7 +165,6 @@ export class LspValidateCommand extends BaseCliCommand {
       const diagnostics = await this.generateDiagnostics(
         content,
         entities,
-        filePath,
       );
 
       const summary = computeConfidenceSummary(diagnostics);
@@ -235,14 +234,12 @@ export class LspValidateCommand extends BaseCliCommand {
       // エンティティをロード（全ファイル共通）
       const entities = await this.loadEntitiesFn(projectRoot);
 
-      // 各ファイルを検証（並列読み込み）
       const results = await Promise.all(
         files.map(async (file) => {
           const content = await Deno.readTextFile(file);
           const diagnostics = await this.generateDiagnostics(
             content,
             entities,
-            file,
           );
           return { filePath: file, diagnostics };
         }),
@@ -286,7 +283,6 @@ export class LspValidateCommand extends BaseCliCommand {
   private async generateDiagnostics(
     content: string,
     entities: DetectableEntity[],
-    _filePath: string,
   ): Promise<DiagnosticOutput[]> {
     const { PositionedDetector } = await import(
       "../../../lsp/detection/positioned_detector.ts"
@@ -302,11 +298,7 @@ export class LspValidateCommand extends BaseCliCommand {
       if (match.confidence >= 0.9) continue;
 
       const severity = match.confidence < 0.7 ? "warning" : "hint";
-      const kindLabel = match.kind === "character"
-        ? "キャラクター"
-        : match.kind === "setting"
-        ? "設定"
-        : "伏線";
+      const kindLabel = getKindLabel(match.kind);
       const confidencePercent = Math.round(match.confidence * 100);
       const message =
         `${kindLabel}「${match.matchedPattern}」への参照（信頼度: ${confidencePercent}%）。` +

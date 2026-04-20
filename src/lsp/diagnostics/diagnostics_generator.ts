@@ -8,6 +8,7 @@ import {
   PositionedDetector,
   type PositionedMatch,
 } from "@storyteller/lsp/detection/positioned_detector.ts";
+import { getKindLabel } from "@storyteller/lsp/utils/entity_kind.ts";
 
 /**
  * LSP Position型
@@ -145,11 +146,7 @@ export class DiagnosticsGenerator {
       ? DiagnosticSeverity.Warning
       : DiagnosticSeverity.Hint;
 
-    const kindLabel = match.kind === "character"
-      ? "キャラクター"
-      : match.kind === "setting"
-      ? "設定"
-      : "伏線";
+    const kindLabel = getKindLabel(match.kind);
     const confidencePercent = Math.round(confidence * 100);
 
     // 全ての位置に対して診断を生成
