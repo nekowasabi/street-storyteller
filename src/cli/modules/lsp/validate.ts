@@ -37,6 +37,49 @@ export type DiagnosticOutput = {
 };
 
 /**
+ * 信頼度閾値の定数
+ */
+const HIGH_THRESHOLD = 0.85;
+const MEDIUM_THRESHOLD = 0.50;
+
+/**
+ * 信頼度別サマリーの型
+ */
+export type ConfidenceSummary = {
+  readonly high: number; // confidence >= 0.85
+  readonly medium: number; // 0.50 <= confidence < 0.85
+  readonly low: number; // confidence < 0.50
+  readonly total: number;
+};
+
+/**
+ * DiagnosticOutput[] から ConfidenceSummary を生成する
+ * confidence が未定義の場合は Low 扱いとする
+ */
+export function computeConfidenceSummary(
+  diagnostics: readonly DiagnosticOutput[],
+): ConfidenceSummary {
+  let high = 0;
+  let medium = 0;
+  let low = 0;
+
+  for (const d of diagnostics) {
+    const c = d.confidence;
+    if (c === undefined) {
+      low++;
+    } else if (c >= HIGH_THRESHOLD) {
+      high++;
+    } else if (c >= MEDIUM_THRESHOLD) {
+      medium++;
+    } else {
+      low++;
+    }
+  }
+
+  return { high, medium, low, total: diagnostics.length };
+}
+
+/**
  * 依存性注入用の型
  */
 export type LspValidateDependencies = {
@@ -122,12 +165,14 @@ export class LspValidateCommand extends BaseCliCommand {
         content,
         entities,
         filePath,
-        projectRoot,
       );
 
-      const result: ValidationResult = {
+      const summary = computeConfidenceSummary(diagnostics);
+
+      const result: ValidationResult & { summary: ConfidenceSummary } = {
         filePath,
         diagnostics,
+        summary,
       };
 
       // JSON出力モード
@@ -197,7 +242,6 @@ export class LspValidateCommand extends BaseCliCommand {
           content,
           entities,
           file,
-          projectRoot,
         );
         results.push({ filePath: file, diagnostics });
       }
@@ -241,7 +285,6 @@ export class LspValidateCommand extends BaseCliCommand {
     content: string,
     entities: DetectableEntity[],
     _filePath: string,
-    _projectRoot: string,
   ): Promise<DiagnosticOutput[]> {
     const { PositionedDetector } = await import(
       "../../../lsp/detection/positioned_detector.ts"
@@ -286,7 +329,7 @@ export class LspValidateCommand extends BaseCliCommand {
    */
   private displayHumanReadable(
     context: CommandContext,
-    result: ValidationResult,
+    result: ValidationResult & { summary: ConfidenceSummary },
   ): void {
     context.presenter.showInfo(`Validating: ${result.filePath}`);
     context.presenter.showInfo("");
@@ -308,6 +351,11 @@ export class LspValidateCommand extends BaseCliCommand {
         `  [${severity}] ${location}: ${d.message}`,
       );
     }
+
+    const { summary } = result;
+    context.presenter.showInfo(
+      `Summary: High: ${summary.high}, Medium: ${summary.medium}, Low: ${summary.low} (Total: ${summary.total})`,
+    );
   }
 
   /**
