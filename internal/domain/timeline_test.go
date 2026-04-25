@@ -248,19 +248,21 @@ func TestTimelineDetectionHints(t *testing.T) {
 }
 
 // TestTimelineDetailsFileRefUnion verifies the string|{file:string} union
-// is modelled as a struct with both Text and File fields (anonymous-struct
-// inline pattern flattened to a named helper type).
+// is modelled with the shared StringOrFileRef helper (Wave-A2-pre集約)。
 func TestTimelineDetailsFileRefUnion(t *testing.T) {
 	d := &domain.TimelineDetails{
-		Background: &domain.TextOrFileRef{Text: "短い背景説明"},
-		Notes:      &domain.TextOrFileRef{File: "notes.md"},
+		Background: &domain.StringOrFileRef{Value: "短い背景説明"},
+		Notes:      &domain.StringOrFileRef{File: "notes.md"},
 	}
 
-	if d.Background == nil || d.Background.Text != "短い背景説明" {
-		t.Errorf("Background.Text = %v, want 短い背景説明", d.Background)
+	if d.Background == nil || d.Background.Value != "短い背景説明" {
+		t.Errorf("Background.Value = %v, want 短い背景説明", d.Background)
 	}
 	if d.Notes == nil || d.Notes.File != "notes.md" {
 		t.Errorf("Notes.File = %v, want notes.md", d.Notes)
+	}
+	if !d.Notes.IsFile() {
+		t.Errorf("Notes should be reported as file ref")
 	}
 }
 

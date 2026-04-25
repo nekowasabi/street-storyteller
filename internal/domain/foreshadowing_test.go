@@ -150,22 +150,28 @@ func TestPlantingInfo_ZeroValue(t *testing.T) {
 	}
 }
 
-// TestPlantingInfo_ExcerptUnion verifies the inline anonymous struct used to
-// represent the `string | { file: string }` union via Excerpt.{Text, FileRef}.
+// TestPlantingInfo_ExcerptUnion verifies the shared StringOrFileRef union
+// represents `string | { file: string }` for Excerpt (Wave-A2-pre集約)。
 func TestPlantingInfo_ExcerptUnion(t *testing.T) {
 	text := "本文からの抜粋"
 	p := domain.PlantingInfo{
-		Excerpt: &domain.ExcerptValue{Text: &text},
+		Excerpt: &domain.StringOrFileRef{Value: text},
 	}
-	if p.Excerpt == nil || p.Excerpt.Text == nil || *p.Excerpt.Text != text {
-		t.Errorf("Excerpt.Text not preserved: %+v", p.Excerpt)
+	if p.Excerpt == nil || p.Excerpt.Value != text {
+		t.Errorf("Excerpt.Value not preserved: %+v", p.Excerpt)
+	}
+	if p.Excerpt.IsFile() {
+		t.Errorf("Excerpt should not be a file ref when Value is set")
 	}
 
 	p2 := domain.PlantingInfo{
-		Excerpt: &domain.ExcerptValue{FileRef: &domain.FileRef{File: "manuscripts/excerpt.md"}},
+		Excerpt: &domain.StringOrFileRef{File: "manuscripts/excerpt.md"},
 	}
-	if p2.Excerpt == nil || p2.Excerpt.FileRef == nil || p2.Excerpt.FileRef.File != "manuscripts/excerpt.md" {
-		t.Errorf("Excerpt.FileRef not preserved: %+v", p2.Excerpt)
+	if p2.Excerpt == nil || p2.Excerpt.File != "manuscripts/excerpt.md" {
+		t.Errorf("Excerpt.File not preserved: %+v", p2.Excerpt)
+	}
+	if !p2.Excerpt.IsFile() {
+		t.Errorf("Excerpt should be a file ref when File is set")
 	}
 }
 

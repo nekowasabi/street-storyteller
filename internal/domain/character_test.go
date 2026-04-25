@@ -126,7 +126,7 @@ func TestCharacter_OptionalSlicesAndHints(t *testing.T) {
 		DisplayNames: []string{"勇者", "若者"},
 		Aliases:      []string{"剣の使い手"},
 		Pronouns:     []string{"彼"},
-		DetectionHints: &domain.DetectionHints{
+		DetectionHints: &domain.CharacterDetectionHints{
 			CommonPatterns:  []string{"勇者は", "勇者が"},
 			ExcludePatterns: []string{"伝説の勇者"},
 			Confidence:      0.9,

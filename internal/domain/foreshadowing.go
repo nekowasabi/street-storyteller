@@ -64,10 +64,13 @@ const (
 )
 
 // PlantingInfo describes where and how a foreshadowing was planted.
+//
+// Excerpt uses the shared StringOrFileRef helper (Wave-A2-pre集約)。nil = excerpt
+// 未設定; non-nil pointer の Value/File 一方が非空。
 type PlantingInfo struct {
 	Chapter     string
 	Description string
-	Excerpt     *ExcerptValue
+	Excerpt     *StringOrFileRef
 	EventID     *string
 }
 
@@ -78,7 +81,7 @@ type PlantingInfo struct {
 type ResolutionInfo struct {
 	Chapter      string
 	Description  string
-	Excerpt      *ExcerptValue
+	Excerpt      *StringOrFileRef
 	EventID      *string
 	Completeness float64
 }
@@ -92,22 +95,4 @@ type ForeshadowingRelations struct {
 	Characters            []string
 	Settings              []string
 	RelatedForeshadowings []string
-}
-
-// ExcerptValue models the TypeScript `string | { file: string }` union.
-//
-// Why: Adopted an inline tagged struct with two pointer fields (Text, FileRef)
-// over Go's lack of native sum types — exactly one is expected to be non-nil,
-// preserving the union's intent without introducing an interface (which would
-// force a type assertion at every read site).
-type ExcerptValue struct {
-	Text    *string
-	FileRef *FileRef
-}
-
-// FileRef references external content stored in a separate file. It mirrors
-// the `{ file: string }` shape used in several hybrid string|file unions in
-// the TypeScript schema.
-type FileRef struct {
-	File string
 }

@@ -65,28 +65,14 @@ type CharacterStateDelta struct {
 }
 
 // PhaseDetails はフェーズの詳細情報。
-// 各フィールドは inline anonymous struct で string|FileRef union を表現する。
+// 各フィールドは共通 StringOrFileRef で string|FileRef union を表現する
+// (Wave-A2-pre で集約)。
 type PhaseDetails struct {
-	Description struct {
-		Value string
-		File  string
-	}
-	InternalChange struct {
-		Value string
-		File  string
-	}
-	ExternalChange struct {
-		Value string
-		File  string
-	}
-	Catalyst struct {
-		Value string
-		File  string
-	}
-	Notes struct {
-		Value string
-		File  string
-	}
+	Description    StringOrFileRef
+	InternalChange StringOrFileRef
+	ExternalChange StringOrFileRef
+	Catalyst       StringOrFileRef
+	Notes          StringOrFileRef
 }
 
 // CharacterPhase はキャラクターの成長段階を表す。

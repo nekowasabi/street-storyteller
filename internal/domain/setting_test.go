@@ -115,14 +115,8 @@ func TestSetting_OptionalDetails(t *testing.T) {
 	}
 
 	// Inline value (Value set, File empty) and FileRef (File set, Value empty).
-	d.Description = &struct {
-		Value string
-		File  string
-	}{Value: "歴史ある都"}
-	d.Geography = &struct {
-		Value string
-		File  string
-	}{File: "docs/geography.md"}
+	d.Description = &domain.StringOrFileRef{Value: "歴史ある都"}
+	d.Geography = &domain.StringOrFileRef{File: "docs/geography.md"}
 
 	if d.Description == nil || d.Description.Value != "歴史ある都" {
 		t.Errorf("Description inline assignment failed: %+v", d.Description)

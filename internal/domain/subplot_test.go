@@ -262,9 +262,9 @@ func TestSubplotRelations(t *testing.T) {
 	}
 }
 
-// Why: SubplotDetails union `string | { file: string }` is modelled as inline
-// anonymous struct with both Inline string and FileRef pointer — verify both
-// shapes can coexist independently per field.
+// Why: SubplotDetails union `string | { file: string }` is modelled with the
+// shared StringOrFileRef helper (Wave-A2-pre集約)。both shapes (Value / File)
+// can coexist independently per field.
 func TestSubplotDetailsStringOrFileUnion(t *testing.T) {
 	s := domain.Subplot{
 		ID:      "main",
@@ -274,25 +274,18 @@ func TestSubplotDetailsStringOrFileUnion(t *testing.T) {
 		Summary: "x",
 		Beats:   []domain.PlotBeat{},
 		Details: &domain.SubplotDetails{
-			Description: struct {
-				Inline  string
-				FileRef *string
-			}{Inline: "Inline description"},
+			Description: domain.StringOrFileRef{Value: "Inline description"},
 		},
 	}
-	if s.Details.Description.Inline != "Inline description" {
+	if s.Details.Description.Value != "Inline description" {
 		t.Fatalf("inline description not stored")
 	}
-	if s.Details.Description.FileRef != nil {
-		t.Fatalf("FileRef should be nil when inline is set")
+	if s.Details.Description.IsFile() {
+		t.Fatalf("Description should not be file ref when Value is set")
 	}
 
-	file := "docs/theme.md"
-	s.Details.Theme = struct {
-		Inline  string
-		FileRef *string
-	}{FileRef: &file}
-	if s.Details.Theme.FileRef == nil || *s.Details.Theme.FileRef != "docs/theme.md" {
+	s.Details.Theme = domain.StringOrFileRef{File: "docs/theme.md"}
+	if !s.Details.Theme.IsFile() || s.Details.Theme.File != "docs/theme.md" {
 		t.Fatalf("file ref not stored")
 	}
 }

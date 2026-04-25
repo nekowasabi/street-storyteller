@@ -41,16 +41,6 @@ const (
 	EventImportanceBackground EventImportance = "background"
 )
 
-// TextOrFileRef models the TS union `string | { file: string }`.
-//
-// Why: a single struct with two fields beats `interface{}` — callers stay
-// allocation-free and JSON encoders can branch on whether File is empty
-// without reflection. Exactly one of Text / File is expected to be set.
-type TextOrFileRef struct {
-	Text string `json:"text,omitempty"`
-	File string `json:"file,omitempty"`
-}
-
 // TimePoint anchors an event in narrative time. Order is required; the rest
 // stay optional via pointer so a zero TimePoint is valid.
 type TimePoint struct {
@@ -72,11 +62,11 @@ type PhaseChangeInfo struct {
 }
 
 // TimelineEventDetails carries optional long-form fields that may live inline
-// or be split out into Markdown via TextOrFileRef.
+// or be split out into Markdown via the shared StringOrFileRef helper.
 type TimelineEventDetails struct {
-	Description *TextOrFileRef `json:"description,omitempty"`
-	Impact      *TextOrFileRef `json:"impact,omitempty"`
-	Notes       *TextOrFileRef `json:"notes,omitempty"`
+	Description *StringOrFileRef `json:"description,omitempty"`
+	Impact      *StringOrFileRef `json:"impact,omitempty"`
+	Notes       *StringOrFileRef `json:"notes,omitempty"`
 }
 
 // TimelineEventDetectionHints feeds the LSP detector with patterns specific
@@ -114,8 +104,8 @@ type TimelineEvent struct {
 
 // TimelineDetails carries optional long-form Timeline fields.
 type TimelineDetails struct {
-	Background *TextOrFileRef `json:"background,omitempty"`
-	Notes      *TextOrFileRef `json:"notes,omitempty"`
+	Background *StringOrFileRef `json:"background,omitempty"`
+	Notes      *StringOrFileRef `json:"notes,omitempty"`
 }
 
 // TimelineDetectionHints feeds the LSP detector with patterns for the
