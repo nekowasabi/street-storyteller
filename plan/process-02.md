@@ -28,11 +28,11 @@ TypeScript/Deno に依存しない Go の domain model と project loader を作
 
 ## Red Phase: テスト作成と失敗確認
 
-- [ ] ブリーフィング確認
-- [ ] Go側に domain fixture 読み込みテストを作成
+- [x] ブリーフィング確認
+- [x] Go側に domain fixture 読み込みテストを作成
   - Character/Setting/Foreshadowing/Timeline/Subplot が読み込めること
   - 日本語ファイル名と file reference を扱えること
-- [ ] テストを実行して失敗することを確認
+- [x] テストを実行して失敗することを確認
 
 ✅ **Phase Complete**
 
@@ -41,11 +41,11 @@ TypeScript/Deno に依存しない Go の domain model と project loader を作
 ## Green Phase: 最小実装と成功確認
 
 - [x] Go module を初期化
-- [ ] `internal/domain` に struct/enum を追加
-- [ ] `internal/project` に manifest/entity loader を追加
-- [ ] fixture から最小 entity を読み込む
-- [ ] エラー型を code/message 付きに統一
-- [ ] テストを実行して成功することを確認
+- [x] `internal/domain` に struct/enum を追加
+- [x] `internal/project` に manifest/entity loader を追加
+- [x] fixture から最小 entity を読み込む
+- [x] エラー型を code/message 付きに統一
+- [x] テストを実行して成功することを確認
 
 ✅ **Phase Complete**
 
@@ -53,9 +53,9 @@ TypeScript/Deno に依存しない Go の domain model と project loader を作
 
 ## Refactor Phase: 品質改善
 
-- [ ] domain と loader の循環依存を確認
-- [ ] parser/loader の責務を分割
-- [ ] テストが継続して成功することを確認
+- [x] domain と loader の循環依存を確認
+- [x] parser/loader の責務を分割
+- [x] テストが継続して成功することを確認
 
 ✅ **Phase Complete**
 
