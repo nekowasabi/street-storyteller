@@ -40,7 +40,7 @@ TypeScript/Deno に依存しない Go の domain model と project loader を作
 
 ## Green Phase: 最小実装と成功確認
 
-- [ ] Go module を初期化
+- [x] Go module を初期化
 - [ ] `internal/domain` に struct/enum を追加
 - [ ] `internal/project` に manifest/entity loader を追加
 - [ ] fixture から最小 entity を読み込む
