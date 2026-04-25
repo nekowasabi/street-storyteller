@@ -82,10 +82,26 @@ func Parse(content []byte) (*Document, error) {
 	}, nil
 }
 
+// isEmpty は FrontMatter の全フィールドがゼロ値かどうかを返す。
+// Why: Encode の三項分岐 (なし+空 / なし+非空 / あり) で用いる。
+// 「編集 API に HasFrontMatter を意識させる」のではなく、Encode 側で吸収する設計。
+func (f FrontMatter) isEmpty() bool {
+	return f.ChapterID == "" &&
+		f.Title == "" &&
+		f.Order == 0 &&
+		len(f.Characters) == 0 &&
+		len(f.Settings) == 0 &&
+		len(f.Foreshadowings) == 0 &&
+		len(f.TimelineEvents) == 0 &&
+		len(f.Phases) == 0 &&
+		len(f.Timelines) == 0
+}
+
 // Encode は FrontMatter を YAML として再生成し、保持していた Body raw bytes と結合する。
-// HasFrontMatter==false の場合は bodyRaw をそのまま返す。
+// HasFrontMatter==false かつ FrontMatter が空の場合は bodyRaw をそのまま返す (byte-perfect)。
+// HasFrontMatter==false かつ FrontMatter が非空の場合は新規 YAML ブロックを先頭に付与する。
 func (d *Document) Encode() ([]byte, error) {
-	if !d.HasFrontMatter {
+	if !d.HasFrontMatter && d.FrontMatter.isEmpty() {
 		return d.bodyRaw, nil
 	}
 

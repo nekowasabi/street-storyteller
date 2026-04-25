@@ -199,3 +199,52 @@ func TestRoundTrip_Idempotent(t *testing.T) {
 		t.Errorf("idempotency violated:\nenc1=%q\nenc2=%q", enc1, enc2)
 	}
 }
+
+func TestEncode_NoFrontMatter_AddEntities_GeneratesBlock(t *testing.T) {
+	plain := []byte("# 章タイトル\n本文だけ\n")
+	doc, err := Parse(plain)
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+	if doc.HasFrontMatter {
+		t.Fatalf("precondition: expected HasFrontMatter=false, got true")
+	}
+	if err := doc.AddEntities(detect.EntityCharacter, "hero"); err != nil {
+		t.Fatalf("AddEntities character failed: %v", err)
+	}
+	if err := doc.AddEntities(detect.EntitySetting, "castle"); err != nil {
+		t.Fatalf("AddEntities setting failed: %v", err)
+	}
+	encoded, err := doc.Encode()
+	if err != nil {
+		t.Fatalf("Encode failed: %v", err)
+	}
+	out := string(encoded)
+	if !strings.HasPrefix(out, "---\n") {
+		t.Errorf("expected YAML block at top, got: %q", out)
+	}
+	if !strings.Contains(out, "hero") {
+		t.Errorf("expected hero in output, got: %q", out)
+	}
+	if !strings.Contains(out, "castle") {
+		t.Errorf("expected castle in output, got: %q", out)
+	}
+	if !strings.HasSuffix(out, "# 章タイトル\n本文だけ\n") {
+		t.Errorf("expected body preserved at suffix, got: %q", out)
+	}
+}
+
+func TestEncode_NoFrontMatter_NoEdit_PreservesRaw(t *testing.T) {
+	plain := []byte("# 章タイトル\n本文だけ\n")
+	doc, err := Parse(plain)
+	if err != nil {
+		t.Fatalf("Parse failed: %v", err)
+	}
+	encoded, err := doc.Encode()
+	if err != nil {
+		t.Fatalf("Encode failed: %v", err)
+	}
+	if !bytes.Equal(plain, encoded) {
+		t.Errorf("expected byte-perfect preservation\nwant: %q\ngot:  %q", plain, encoded)
+	}
+}
