@@ -39,10 +39,10 @@
 
 ## Green Phase: 最小実装と成功確認
 
-- [ ] Clock/Timer interface を追加
-- [ ] fake clock を実装
-- [ ] ProcessRunner interface と fake runner を実装
-- [ ] in-memory JSON-RPC transport を実装
+- [x] Clock/Timer interface を追加
+- [x] fake clock を実装
+- [x] ProcessRunner interface と fake runner を実装
+- [x] in-memory JSON-RPC transport を実装
 - [ ] test tag を設定
 - [ ] テストを実行して成功することを確認
 
