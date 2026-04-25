@@ -113,6 +113,16 @@ func TestDetect_NameExactMatch(t *testing.T) {
 	if got.Source != detect.SourceName || got.Score != 1.0 || got.MatchedText != "勇者" {
 		t.Fatalf("want Name/1.0/勇者, got %+v", got)
 	}
+	// SourceLocation は UTF-16 char position に正規化されている。
+	// 勇=1 unit, 者=1 unit なので [0,0)-(0,2)。
+	wantStart := detect.Position{Line: 0, Character: 0}
+	wantEnd := detect.Position{Line: 0, Character: 2}
+	if got.Location.Range.Start != wantStart || got.Location.Range.End != wantEnd {
+		t.Fatalf("want range %+v..%+v, got %+v", wantStart, wantEnd, got.Location.Range)
+	}
+	if got.Location.URI != "file:///c1.md" {
+		t.Fatalf("want URI propagated, got %q", got.Location.URI)
+	}
 }
 
 func TestDetect_DisplayName(t *testing.T) {
@@ -205,9 +215,25 @@ func TestDetect_DedupSameEntity(t *testing.T) {
 	if hero.Score != 1.0 {
 		t.Fatalf("want highest score 1.0, got %v", hero.Score)
 	}
-	// Location should reference the FIRST byte offset (0).
-	if hero.Location.Range.Start.Character != 0 {
-		t.Fatalf("want first location at offset 0, got %+v", hero.Location)
+	// Location should reference the FIRST occurrence as UTF-16 char position.
+	wantStart := detect.Position{Line: 0, Character: 0}
+	wantEnd := detect.Position{Line: 0, Character: 2}
+	if hero.Location.Range.Start != wantStart || hero.Location.Range.End != wantEnd {
+		t.Fatalf("want first location %+v..%+v, got %+v", wantStart, wantEnd, hero.Location.Range)
+	}
+}
+
+func TestDetect_MultilineLocation(t *testing.T) {
+	cat := buildCatalog(entityRecord{id: "hero", kind: detect.EntityCharacter, name: "勇者"})
+	// "line1\n勇者is here": 勇者 starts at byte offset 6 (after "line1\n"), line=1, char=0.
+	res := detect.Detect(detect.DetectionRequest{
+		URI: "file:///c1.md", Content: "line1\n勇者is here", Catalog: cat,
+	})
+	got := findFor(t, res, detect.EntityCharacter, "hero")
+	wantStart := detect.Position{Line: 1, Character: 0}
+	wantEnd := detect.Position{Line: 1, Character: 2}
+	if got.Location.Range.Start != wantStart || got.Location.Range.End != wantEnd {
+		t.Fatalf("want %+v..%+v, got %+v", wantStart, wantEnd, got.Location.Range)
 	}
 }
 

@@ -72,13 +72,12 @@ const (
 // candidate is the pre-dedup record produced by the body scan or the
 // FrontMatter merge. It is private to the pipeline.
 type candidate struct {
-	entity      EntityRef
-	source      MatchSource
-	score       float64
-	matched     string
-	byteOffset  int
-	warnings    []string
-	fromBinding bool
+	entity     EntityRef
+	source     MatchSource
+	score      float64
+	matched    string
+	byteOffset int
+	warnings   []string
 }
 
 // Detect runs the 4-stage pipeline:
@@ -112,26 +111,26 @@ func Detect(req DetectionRequest) []DetectedEntity {
 	// Phase 4: dedup.
 	deduped := dedup(cands)
 
-	// Materialize SourceLocation. position.go is intentionally NOT imported
-	// (parallel implementation in WT-Main-2). We emit a placeholder line=0,
-	// character=byteOffset; process-04 will normalize via PositionTable.
+	// Why: PositionTable で UTF-16 char position に正規化。placeholder byteOffset は
+	// LSP consumer (UTF-16 契約) と mismatch するため process-04 を待たず本実装に置換。
+	pt := NewPositionTable(req.Content)
+
 	out := make([]DetectedEntity, 0, len(deduped))
 	for _, c := range deduped {
-		// TODO(process-04): replace with PositionTable.Resolve(byteOffset)
-		// once internal/detect/position.go is merged. Current values are
-		// raw byte offsets exposed as Character so consumers can still order
-		// hits deterministically.
-		end := c.byteOffset + len(c.matched)
+		start, err1 := pt.PositionAt(c.byteOffset)
+		end, err2 := pt.PositionAt(c.byteOffset + len(c.matched))
+		if err1 != nil || err2 != nil {
+			// Why: rune/separator 境界 mismatch の candidate は silently skip。
+			// types.go (warning slice の拡張) を触らない方針なので diagnostic 化は process-04 以降。
+			continue
+		}
 		out = append(out, DetectedEntity{
 			Entity: c.entity,
 			Source: c.source,
 			Score:  c.score,
 			Location: SourceLocation{
-				URI: req.URI,
-				Range: RangeUTF16{
-					Start: Position{Line: 0, Character: c.byteOffset},
-					End:   Position{Line: 0, Character: end},
-				},
+				URI:   req.URI,
+				Range: RangeUTF16{Start: start, End: end},
 			},
 			MatchedText: c.matched,
 			Warnings:    c.warnings,
@@ -274,13 +273,12 @@ func fromBindings(bindings map[EntityKind][]string, cat EntityCatalog) []candida
 				}
 			}
 			out = append(out, candidate{
-				entity:      ref,
-				source:      SourceFrontMatter,
-				score:       scoreFrontMatter,
-				matched:     "",
-				byteOffset:  0,
-				warnings:    warnings,
-				fromBinding: true,
+				entity:     ref,
+				source:     SourceFrontMatter,
+				score:      scoreFrontMatter,
+				matched:    "",
+				byteOffset: 0,
+				warnings:   warnings,
 			})
 		}
 	}
