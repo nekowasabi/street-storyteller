@@ -29,54 +29,37 @@ const (
 )
 
 // CharacterDevelopment はキャラクターの成長・発展を表す。
+//
+// ArcNotes は TS の `string | { file: string }` を共通 StringOrFileRef で表現する
+// (Wave-A2-pre で集約)。
 type CharacterDevelopment struct {
 	Initial    string
 	Goal       string
 	Obstacle   string
 	Resolution *string
-	// ArcNotes は arc_notes (TS では string | { file: string }) に対応。
-	// Why: Wave-A1 では共通 StringOrFileRef 型を導入せず inline anonymous struct で
-	// 自己完結。Wave-A2 で集約予定。
-	ArcNotes struct {
-		Value string
-		File  string
-	}
+	ArcNotes   StringOrFileRef
 }
 
 // CharacterDetails は段階的詳細化のためのオプショナル詳細情報。
 //
-// 各 string|FileRef union は inline anonymous struct で表現する。
-// Value/File のいずれか一方のみが空文字以外になる運用。
+// 各 string|FileRef union は共通 StringOrFileRef で表現する。
+// Value/File のいずれか一方のみが空文字以外になる運用 (zero value = 未設定)。
 type CharacterDetails struct {
-	Description struct {
-		Value string
-		File  string
-	}
-	Appearance struct {
-		Value string
-		File  string
-	}
-	Personality struct {
-		Value string
-		File  string
-	}
-	Backstory struct {
-		Value string
-		File  string
-	}
-	RelationshipsDetail struct {
-		Value string
-		File  string
-	}
-	Goals struct {
-		Value string
-		File  string
-	}
-	Development *CharacterDevelopment
+	Description         StringOrFileRef
+	Appearance          StringOrFileRef
+	Personality         StringOrFileRef
+	Backstory           StringOrFileRef
+	RelationshipsDetail StringOrFileRef
+	Goals               StringOrFileRef
+	Development         *CharacterDevelopment
 }
 
-// DetectionHints は LSP 用の検出ヒント。
-type DetectionHints struct {
+// CharacterDetectionHints は LSP 用の検出ヒント (Character entity 向け)。
+//
+// Why: Wave-A2-pre で entity 横断の per-entity 命名に揃える方針を採択。共通名
+// `DetectionHints` は廃止し、各 entity が独自の `<Entity>DetectionHints` 型を
+// 持つ (Setting / Timeline / TimelineEvent と同形式)。
+type CharacterDetectionHints struct {
 	CommonPatterns  []string
 	ExcludePatterns []string
 	Confidence      float64
@@ -100,7 +83,7 @@ type Character struct {
 	Aliases        []string
 	Pronouns       []string
 	Details        *CharacterDetails
-	DetectionHints *DetectionHints
+	DetectionHints *CharacterDetectionHints
 
 	// 成長・変化表現フィールド
 	InitialState   *CharacterInitialState

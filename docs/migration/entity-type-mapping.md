@@ -1,6 +1,89 @@
 # TypeScript Entity Types → Go Struct Mapping
 
-マイグレーション時の 1:1 型対応ガイド。各 TypeScript 型の Go 実装では、フィールド差異（optional field の扱い、union 型の enum 化、ファイル参照の解決方式）を明示する。
+マイグレーション時の 1:1 型対応ガイド。各 TypeScript 型の Go 実装では、フィールド差異（optional field の扱い、union 型の string-typed const enum 化、ファイル参照の解決方式）を明示する。
+
+## Wave-A1 / Wave-A2-pre 採決事項（共通規約）
+
+各 entity bundle に展開する前に、Wave-A1 全 worktree が共通採用した規約をここに集約する。
+
+### Enum 表現: **string-typed const enum**（採用）
+
+```go
+type CharacterRole string
+
+const (
+    RoleProtagonist CharacterRole = "protagonist"
+    RoleAntagonist  CharacterRole = "antagonist"
+    // ...
+)
+```
+
+- **Why**: TS の literal union (`"protagonist" | "antagonist" | ...`) と JSON/YAML wire format を 1:1 に保つ。
+- **Why**: ログやデバッグ出力で値が人間可読 (`"protagonist"` vs `2`)。
+- **Why**: カスタム `MarshalJSON` / `UnmarshalJSON` 実装が不要。
+
+#### Rejected: `iota int` 案
+
+旧版ドキュメント（〜Wave-A1 着手前）には `type CharacterRole int` + `iota` を推奨する記述があった。Wave-A1 全 worktree（character / setting / foreshadowing / timeline / subplot 担当）はこの方針を **明示的に override** し、上記 string-typed const に統一した。
+
+- **Rejection rationale**: JSON wire format compatibility, debug log readability, no custom marshaller.
+- 旧 iota 案は Wave-A1 で全廃。本ドキュメントは現実装（string-typed）を真とする。
+
+### Union 型 `string | { file: string }`: **`StringOrFileRef` 共通型**（Wave-A2-pre で集約）
+
+```go
+// internal/domain/common.go
+type StringOrFileRef struct {
+    Value string
+    File  string
+}
+
+func (s StringOrFileRef) IsFile() bool { return s.File != "" }
+func (s StringOrFileRef) IsEmpty() bool { return s.Value == "" && s.File == "" }
+```
+
+- **Why**: TS の `string | { file: string }` を pointer ペア (`*string` + `*FileRef`) より排他フィールドの struct で表現するほうが zero value（inline 空）として自然で、JSON unmarshaler 拡張時の分岐も単純化される。
+- **使用場所**: Character / CharacterPhase / Setting / Foreshadowing / Timeline / TimelineEvent / Subplot の details / excerpt / arc_notes 各フィールド。
+- **ポインタ運用**:
+  - 「未設定」を区別する箇所 → `*StringOrFileRef`（nil = 未設定）。例: `SettingDetails.Description`, `PlantingInfo.Excerpt`, `TimelineDetails.Background`。
+  - 常に値として持つ箇所 → `StringOrFileRef`（zero = `IsEmpty()`）。例: `CharacterDetails.Description`, `SubplotDetails.Description`, `PhaseDetails.*`, `CharacterDevelopment.ArcNotes`。
+
+#### Wave-A1 で個別に出現していた旧型（**Wave-A2-pre で集約**）
+
+| Worktree | 旧表現 | 集約後 |
+|----------|--------|--------|
+| Character / CharacterPhase | inline anonymous `struct { Value string; File string }` | `StringOrFileRef`（値 or `*StringOrFileRef`） |
+| Setting | inline anonymous pointer `*struct { Value string; File string }` | `*StringOrFileRef` |
+| Foreshadowing | named tagged union `*ExcerptValue { Text *string; FileRef *FileRef }` + `FileRef { File string }` | `*StringOrFileRef` |
+| Timeline / TimelineEvent | named `TextOrFileRef { Text string; File string }` | `*StringOrFileRef` |
+| Subplot | inline anonymous `struct { Inline string; FileRef *string }` | `StringOrFileRef` |
+
+旧型 (`ExcerptValue`, `FileRef`, `TextOrFileRef`, anonymous variants) はすべて削除済み。
+
+### DetectionHints: **per-entity 命名で固定**
+
+LSP 検出ヒント struct は entity ごとに専用型を定義する。共通名 `DetectionHints` は廃止。
+
+| Entity | 型名 |
+|--------|------|
+| Character | `CharacterDetectionHints` |
+| Setting | `SettingDetectionHints` |
+| Timeline | `TimelineDetectionHints` |
+| TimelineEvent | `TimelineEventDetectionHints` |
+| Foreshadowing | （現状 detection hint は未実装。追加時は `ForeshadowingDetectionHints`） |
+| Subplot | （現状未実装。追加時は `SubplotDetectionHints`） |
+
+- **Why**: 共有型にすると、entity 固有のフィールド追加（例: confidence の閾値の差）が他 entity を巻き込む。per-entity prefixed name で疎結合に保つ。
+
+### Optional Field の扱い: **pointer / nil-slice / nil-map convention**
+
+- 単純スカラー optional → `*T`（nil = 未設定、`*T == zero` と区別）。
+- コレクション optional → `nil` slice / `nil` map（zero value = 未設定）。
+- ネスト struct optional → `*S`（nil = 未設定）。
+
+旧版ドキュメントの "presence field (`HasAliases bool` + `Aliases []string`)" 案は採用しない。
+
+---
 
 ## Character
 
@@ -14,23 +97,33 @@
 |------------|----|----|-------|
 | `id: string` | `ID string` | 直接 | 識別子キー |
 | `name: string` | `Name string` | 直接 | 表示名 |
-| `role: "protagonist" \| "antagonist" \| ...` | `Role CharacterRole` | enum iota | union → enum 化必須 |
+| `role: "protagonist" \| "antagonist" \| ...` | `Role CharacterRole` | string-typed const enum | Wave-A1 採決 |
 | `traits: string[]` | `Traits []string` | 直接 | スライス |
 | `relationships: { [key: string]: RelationType }` | `Relationships map[string]RelationType` | 直接 | map 化 |
 | `appearingChapters: string[]` | `AppearingChapters []string` | 直接 | |
 | `summary: string` | `Summary string` | 直接 | |
-| `displayNames?: string[]` | `DisplayNames []*string` | pointer or nil | optional → nil で表現 |
-| `aliases?: string[]` | `Aliases []*string` | pointer or nil | |
-| `pronouns?: string[]` | `Pronouns []*string` | pointer or nil | |
+| `displayNames?: string[]` | `DisplayNames []string` | nil-slice convention | optional → nil で表現 |
+| `aliases?: string[]` | `Aliases []string` | nil-slice convention | |
+| `pronouns?: string[]` | `Pronouns []string` | nil-slice convention | |
 | `details?: { ... }` | `Details *CharacterDetails` | pointer or nil | nested struct |
-| `detectionHints?: { ... }` | `DetectionHints *DetectionHints` | pointer or nil | |
-| `phases?: CharacterPhase[]` | `Phases []*CharacterPhase` | 別型参照 | |
+| `detectionHints?: { ... }` | `DetectionHints *CharacterDetectionHints` | pointer or nil | per-entity 命名 |
+| `phases?: CharacterPhase[]` | `Phases []CharacterPhase` | nil-slice convention | |
 
-### 差異メモ
+### CharacterDetails
 
-- **optional field の扱い**: TS では `field?: type` だが、Go では `*type` (pointer) または struct tag で nil 区別。プロジェクトの方針を決定すること。
-- **union 型**: TS の union type literal（`"protagonist" | "antagonist"`）を Go enum iota に変換。定義は `type CharacterRole int` で。
-- **ファイル参照**: `details?.description: string | { file: string }` のような TS union を Go では `string` + filepath 検証で対応。
+各フィールドは `StringOrFileRef`（値）。zero value = 未設定。
+
+| TypeScript | Go |
+|------------|----|
+| `description?: string \| { file: string }` | `Description StringOrFileRef` |
+| `appearance?` | `Appearance StringOrFileRef` |
+| `personality?` | `Personality StringOrFileRef` |
+| `backstory?` | `Backstory StringOrFileRef` |
+| `relationshipsDetail?` | `RelationshipsDetail StringOrFileRef` |
+| `goals?` | `Goals StringOrFileRef` |
+| `development?` | `Development *CharacterDevelopment` |
+
+`CharacterDevelopment.ArcNotes` も `StringOrFileRef`（値）。
 
 ---
 
@@ -38,43 +131,35 @@
 
 | TS Type | Location | Go Struct | Remarks |
 |---------|----------|-----------|---------|
-| `CharacterPhase` | `src/type/v2/character_phase.ts` | `internal/domain/character.go:CharacterPhase` | 差分適用方式 |
+| `CharacterPhase` | `src/type/v2/character_phase.ts` | `internal/domain/character_phase.go:CharacterPhase` | 差分適用方式 |
 
 ### 主要フィールド対応
 
 | TypeScript | Go | 型変換 | Notes |
 |------------|----|----|-------|
 | `id: string` | `ID string` | 直接 | |
-| `name: string` | `Name string` | 直接 | フェーズ名 |
-| `order: number` | `Order int` | 直接 | 順序付け |
-| `description?: string \| { file: string }` | `Description string` + `DescriptionFile string` | union → 分割 | ファイル参照は別フィールドで保持 |
-| `initial?: CharacterState` | `Initial *CharacterState` | pointer or nil | 初期状態 |
-| `deltas?: CharacterState[]` | `Deltas []*CharacterState` | スライス | 差分リスト |
+| `name: string` | `Name string` | 直接 | |
+| `order: number` | `Order int` | 直接 | |
+| `summary: string` | `Summary string` | 直接 | |
+| `delta: CharacterStateDelta` | `Delta CharacterStateDelta` | 値 | 差分本体 |
+| `transitionType?` | `TransitionType *TransitionType` | pointer enum | string-typed const |
+| `importance?` | `Importance *PhaseImportance` | pointer enum | |
+| `triggerEventId?` | `TriggerEventID *string` | pointer | |
+| `details?: PhaseDetails` | `Details *PhaseDetails` | pointer or nil | nested |
 
-### 差異メモ
-
-- **ファイル参照の分離**: `description` が文字列またはファイル参照の union のため、Go では `Description` と `DescriptionFile` に分割するか、`StringOrFileRef` 構造体を定義。
+`PhaseDetails` の各 union フィールド (`description`, `internalChange`, `externalChange`, `catalyst`, `notes`) は `StringOrFileRef`（値）。
 
 ---
 
-## CharacterState
+## CharacterState（Snapshot / Diff / TimelineEntry）
 
 | TS Type | Location | Go Struct | Remarks |
 |---------|----------|-----------|---------|
-| `CharacterState` | `src/type/v2/character_state.ts` | `internal/domain/character.go:CharacterState` | フェーズ内の属性差分 |
+| `CharacterStateSnapshot` | `src/type/v2/character_state.ts` | `internal/domain/character_state.go:CharacterStateSnapshot` | フェーズ確定スナップショット |
+| `PhaseDiffResult` | 同 | `PhaseDiffResult` | 2 フェーズ間の差分 |
+| `PhaseTimelineEntry` | 同 | `PhaseTimelineEntry` | UI タイムラインエントリ |
 
-### 主要フィールド対応
-
-| TypeScript | Go | 型変換 | Notes |
-|------------|----|----|-------|
-| `traits?: string[]` | `Traits []*string` | pointer or nil | |
-| `personality?: string[]` | `Personality []*string` | pointer or nil | |
-| `appearance?: string` | `Appearance *string` | pointer or nil | |
-| `relationships?: { [key: string]: RelationType }` | `Relationships map[string]RelationType` | nil-safe map | |
-
-### 差異メモ
-
-- **差分型の特性**: キャラクターの成長フェーズを段階的に表現するため、すべてのフィールドが optional。Go では nil/empty で「変化なし」を表現。
+差分・遷移系 helper（`StringDiff`, `RelationshipsDiff`, `StringFromTo`, `StatusDiff`, `PhaseDiffChanges`）はすべて plain struct で `internal/domain/character_state.go` に定義。union 型は使わない。
 
 ---
 
@@ -90,17 +175,28 @@
 |------------|----|----|-------|
 | `id: string` | `ID string` | 直接 | |
 | `name: string` | `Name string` | 直接 | |
-| `type: "location" \| "faction" \| "object" \| "concept"` | `Type SettingType` | enum iota | union → enum |
-| `chapters: string[]` | `Chapters []string` | 直接 | 登場チャプタ |
+| `type: "location" \| "world" \| "culture" \| "organization"` | `Type SettingType` | string-typed const enum | Wave-A1 採決 |
+| `appearingChapters: string[]` | `AppearingChapters []string` | 直接 | |
 | `summary: string` | `Summary string` | 直接 | |
-| `displayNames?: string[]` | `DisplayNames []*string` | pointer or nil | |
-| `details?: SettingDetails` | `Details *SettingDetails` | pointer or nil | nested |
-| `relatedSettings?: string[]` | `RelatedSettings []*string` | pointer or nil | |
-| `detectionHints?: DetectionHints` | `DetectionHints *DetectionHints` | pointer or nil | |
+| `displayNames?` | `DisplayNames []string` | nil-slice | |
+| `details?: SettingDetails` | `Details *SettingDetails` | pointer or nil | |
+| `relatedSettings?` | `RelatedSettings []string` | nil-slice | |
+| `detectionHints?` | `DetectionHints *SettingDetectionHints` | pointer or nil | per-entity 命名 |
 
-### 差異メモ
+### SettingDetails
 
-- **type の enum 化**: `"location" | "faction" | "object" | "concept"` → Go const with iota。
+各フィールドは `*StringOrFileRef`（nil = 未設定、`&{Value: "..."}` = inline、`&{File: "..."}` = file ref）。
+
+| TS field | Go field |
+|----------|----------|
+| `description?` | `Description *StringOrFileRef` |
+| `geography?` | `Geography *StringOrFileRef` |
+| `history?` | `History *StringOrFileRef` |
+| `culture?` | `Culture *StringOrFileRef` |
+| `politics?` | `Politics *StringOrFileRef` |
+| `economy?` | `Economy *StringOrFileRef` |
+| `inhabitants?` | `Inhabitants *StringOrFileRef` |
+| `landmarks?` | `Landmarks *StringOrFileRef` |
 
 ---
 
@@ -116,21 +212,29 @@
 |------------|----|----|-------|
 | `id: string` | `ID string` | 直接 | |
 | `name: string` | `Name string` | 直接 | |
-| `type: ForeshadowingType` | `Type ForeshadowingType` | enum iota | |
+| `type: ForeshadowingType` | `Type ForeshadowingType` | string-typed const enum | |
 | `summary: string` | `Summary string` | 直接 | |
-| `planting: PlantingInfo` | `Planting PlantingInfo` | nested struct | |
-| `status: ForeshadowingStatus` | `Status ForeshadowingStatus` | enum iota | |
-| `importance?: "major" \| "minor" \| "subtle"` | `Importance *ForeshadowingImportance` | pointer enum or nil | |
-| `resolutions?: ResolutionInfo[]` | `Resolutions []*ResolutionInfo` | スライス or nil | |
-| `plannedResolutionChapter?: string` | `PlannedResolutionChapter *string` | pointer or nil | |
-| `relations?: { ... }` | `Relations *ForeshadowingRelations` | nested or nil | |
-| `displayNames?: string[]` | `DisplayNames []*string` | pointer or nil | |
+| `planting: PlantingInfo` | `Planting PlantingInfo` | 値 | |
+| `status: ForeshadowingStatus` | `Status ForeshadowingStatus` | string-typed const enum | |
+| `importance?` | `Importance *ForeshadowingImportance` | pointer enum | |
+| `resolutions?` | `Resolutions []ResolutionInfo` | nil-slice | |
+| `plannedResolutionChapter?` | `PlannedResolutionChapter *string` | pointer | |
+| `relations?` | `Relations *ForeshadowingRelations` | pointer | |
+| `displayNames?` | `DisplayNames []string` | nil-slice | |
 
-### 差異メモ
+### Excerpt union（PlantingInfo / ResolutionInfo）
 
-- **ForeshadowingType enum**: `"hint" | "prophecy" | "mystery" | "symbol" | "chekhov" | "red_herring"`
-- **ForeshadowingStatus enum**: `"planted" | "partially_resolved" | "resolved" | "abandoned"`
-- **ファイル参照**: `PlantingInfo.excerpt` と `ResolutionInfo.excerpt` が `string | { file: string }` union のため、分割か StringOrFileRef 構造体。
+| TS field | Go field |
+|----------|----------|
+| `excerpt?: string \| { file: string }` | `Excerpt *StringOrFileRef` |
+
+旧 `ExcerptValue { Text *string; FileRef *FileRef }` および `FileRef { File string }` は **Wave-A2-pre で削除**。
+
+### Enum 一覧
+
+- **ForeshadowingStatus**: `"planted" | "partially_resolved" | "resolved" | "abandoned"`
+- **ForeshadowingType**: `"hint" | "prophecy" | "mystery" | "symbol" | "chekhov" | "red_herring"`
+- **ForeshadowingImportance**: `"major" | "minor" | "subtle"`
 
 ---
 
@@ -139,44 +243,48 @@
 | TS Type | Location | Go Struct | Remarks |
 |---------|----------|-----------|---------|
 | `Timeline` | `src/type/v2/timeline.ts:92` | `internal/domain/timeline.go:Timeline` | 時系列管理 |
-| `TimelineEvent` | 同ファイル | `internal/domain/timeline.go:TimelineEvent` | タイムラインイベント |
+| `TimelineEvent` | 同 | `internal/domain/timeline.go:TimelineEvent` | イベント |
 
 ### Timeline フィールド対応
 
-| TypeScript | Go | 型変換 | Notes |
-|------------|----|----|-------|
-| `id: string` | `ID string` | 直接 | |
-| `name: string` | `Name string` | 直接 | |
-| `scope: "story" \| "world" \| "character" \| "arc"` | `Scope TimelineScope` | enum iota | |
-| `summary: string` | `Summary string` | 直接 | |
-| `events: TimelineEvent[]` | `Events []*TimelineEvent` | 別型スライス | |
-| `parentTimeline?: string` | `ParentTimelineID *string` | pointer or nil | 親タイムライン ID |
-| `childTimelines?: string[]` | `ChildTimelineIDs []*string` | pointer or スライス | 子タイムライン ID リスト |
-| `relatedCharacter?: string` | `RelatedCharacterID *string` | pointer or nil | キャラクター関連 |
-| `displayNames?: string[]` | `DisplayNames []*string` | pointer or nil | |
-| `detectionHints?: TimelineDetectionHints` | `DetectionHints *TimelineDetectionHints` | pointer or nil | |
+| TypeScript | Go | Notes |
+|------------|----|-------|
+| `scope: "story" \| ...` | `Scope TimelineScope` | string-typed const enum |
+| `events: TimelineEvent[]` | `Events []TimelineEvent` | 値スライス |
+| `parentTimeline?: string` | `ParentTimeline *string` | pointer |
+| `childTimelines?: string[]` | `ChildTimelines []string` | nil-slice |
+| `relatedCharacter?: string` | `RelatedCharacter *string` | pointer |
+| `displayNames?` | `DisplayNames []string` | nil-slice |
+| `displayOptions?` | `DisplayOptions *TimelineDisplayOptions` | pointer |
+| `details?` | `Details *TimelineDetails` | pointer |
+| `detectionHints?` | `DetectionHints *TimelineDetectionHints` | per-entity 命名 |
 
 ### TimelineEvent フィールド対応
 
-| TypeScript | Go | 型変換 | Notes |
-|------------|----|----|-------|
-| `id: string` | `ID string` | 直接 | イベント固有 ID |
-| `title: string` | `Title string` | 直接 | |
-| `category: EventCategory` | `Category EventCategory` | enum iota | |
-| `time: TimePoint` | `Time TimePoint` | nested struct | 時点情報 |
-| `summary: string` | `Summary string` | 直接 | |
-| `characters: string[]` | `CharacterIDs []string` | 直接 | 登場キャラ ID リスト |
-| `settings: string[]` | `SettingIDs []string` | 直接 | 関連設定 ID リスト |
-| `chapters: string[]` | `ChapterIDs []string` | 直接 | 関連チャプタ ID |
-| `causedBy?: string[]` | `CausedByEventIDs []*string` | pointer or nil | 原因イベント ID リスト |
-| `causes?: string[]` | `CausesEventIDs []*string` | pointer or nil | 結果イベント ID リスト |
-| `importance?: EventImportance` | `Importance *EventImportance` | pointer enum or nil | |
+| TypeScript | Go | Notes |
+|------------|----|-------|
+| `category: EventCategory` | `Category EventCategory` | string-typed const enum |
+| `time: TimePoint` | `Time TimePoint` | 値 |
+| `endTime?: TimePoint` | `EndTime *TimePoint` | pointer |
+| `causedBy?: string[]` | `CausedBy []string` | nil-slice |
+| `causes?: string[]` | `Causes []string` | nil-slice |
+| `importance?` | `Importance *EventImportance` | pointer enum |
+| `details?` | `Details *TimelineEventDetails` | pointer |
+| `detectionHints?` | `DetectionHints *TimelineEventDetectionHints` | per-entity 命名 |
+| `phaseChanges?` | `PhaseChanges []PhaseChangeInfo` | nil-slice |
 
-### 差異メモ
+### Union (`string | { file: string }`)
 
-- **scope enum**: `"story" | "world" | "character" | "arc"`
-- **category enum**: 別途 `EventCategory` 定義（ドキュメントに記載なし、TS ファイル確認要）
-- **因果関係**: `causedBy` / `causes` は ID リストで表現。GraphQL 的な実時間解決は不要。
+- `TimelineDetails.{Background, Notes}` → `*StringOrFileRef`
+- `TimelineEventDetails.{Description, Impact, Notes}` → `*StringOrFileRef`
+
+旧 `TextOrFileRef` 名は **Wave-A2-pre で削除**。
+
+### Enum 一覧
+
+- **TimelineScope**: `"story" | "world" | "character" | "arc"`
+- **EventCategory**: `"plot_point" | "character_event" | "world_event" | "backstory" | "foreshadow" | "climax" | "resolution"`
+- **EventImportance**: `"major" | "minor" | "background"`
 
 ---
 
@@ -184,147 +292,98 @@
 
 | TS Type | Location | Go Struct | Remarks |
 |---------|----------|-----------|---------|
-| `Subplot` | `src/type/v2/subplot.ts:176` | `internal/domain/subplot.go:Subplot` | サブプロット |
-| `PlotBeat` | 同ファイル | `internal/domain/subplot.go:PlotBeat` | ビート |
-| `PlotIntersection` | 同ファイル | `internal/domain/subplot.go:PlotIntersection` | 交差 |
+| `Subplot` | `src/type/v2/subplot.ts` | `internal/domain/subplot.go:Subplot` | サブプロット |
+| `PlotBeat` | 同 | `internal/domain/subplot.go:PlotBeat` | ビート |
+| `PlotIntersection` | 同 | `internal/domain/subplot.go:PlotIntersection` | 交差 |
 
 ### Subplot フィールド対応
 
-| TypeScript | Go | 型変換 | Notes |
-|------------|----|----|-------|
-| `id: string` | `ID string` | 直接 | |
-| `name: string` | `Name string` | 直接 | |
-| `type: "main" \| "subplot" \| "parallel" \| "background"` | `Type SubplotType` | enum iota | |
-| `status: "active" \| "completed"` | `Status SubplotStatus` | enum iota | |
-| `summary: string` | `Summary string` | 直接 | |
-| `beats: PlotBeat[]` | `Beats []*PlotBeat` | 別型スライス | |
-| `focusCharacters?: { [id: string]: "primary" \| "secondary" }` | `FocusCharacters map[string]FocusPriority` | map + enum | |
-| `intersections?: PlotIntersection[]` | `Intersections []*PlotIntersection` | スライス or nil | |
-| `importance?: "major" \| "minor"` | `Importance *SubplotImportance` | pointer enum or nil | |
-| `parentSubplotId?: string` | `ParentSubplotID *string` | pointer or nil | |
-| `displayNames?: string[]` | `DisplayNames []*string` | pointer or nil | |
-| `relations?: SubplotRelations` | `Relations *SubplotRelations` | nested or nil | |
+| TypeScript | Go | Notes |
+|------------|----|-------|
+| `type: "main" \| "subplot" \| "parallel" \| "background"` | `Type SubplotType` | string-typed const enum |
+| `status: "active" \| "completed"` | `Status SubplotStatus` | string-typed const enum |
+| `beats: PlotBeat[]` | `Beats []PlotBeat` | 値スライス |
+| `focusCharacters?: { [id]: "primary" \| "secondary" }` | `FocusCharacters map[string]FocusCharacterPriority` | map + enum |
+| `intersections?` | `Intersections []PlotIntersection` | nil-slice |
+| `importance?: "major" \| "minor"` | `Importance *SubplotImportance` | pointer enum |
+| `parentSubplotId?` | `ParentSubplotID *string` | pointer |
+| `displayNames?` | `DisplayNames []string` | nil-slice |
+| `relations?: SubplotRelations` | `Relations *SubplotRelations` | pointer |
+| `details?: SubplotDetails` | `Details *SubplotDetails` | pointer |
 
 ### PlotBeat フィールド対応
 
-| TypeScript | Go | 型変換 | Notes |
-|------------|----|----|-------|
-| `id: string` | `ID string` | 直接 | |
-| `title: string` | `Title string` | 直接 | |
-| `summary: string` | `Summary string` | 直接 | |
-| `structurePosition: StructurePosition` | `StructurePosition StructurePosition` | enum | |
-| その他フィールド | TBD | - | TS ファイル確認後追記 |
+| TypeScript | Go | Notes |
+|------------|----|-------|
+| `id`, `title`, `summary` | `ID`, `Title`, `Summary string` | 直接 |
+| `structurePosition: BeatStructurePosition` | `StructurePosition StructurePosition` | string-typed const enum |
+| `chapter?: string` | `Chapter *string` | pointer |
+| `characters?: string[]` | `Characters []string` | nil-slice |
+| `settings?: string[]` | `Settings []string` | nil-slice |
+| `timelineEventId?: string` | `TimelineEventID *string` | pointer |
+| `preconditionBeatIds?: string[]` | `PreconditionBeatIDs []string` | nil-slice |
 
 ### PlotIntersection フィールド対応
 
-| TypeScript | Go | 型変換 | Notes |
-|------------|----|----|-------|
-| `sourceSubplotId: string` | `SourceSubplotID string` | 直接 | |
-| `sourceBeadId: string` | `SourceBeatID string` | 直接 | |
-| `targetSubplotId: string` | `TargetSubplotID string` | 直接 | |
-| `targetBeatId: string` | `TargetBeatID string` | 直接 | |
-| `summary: string` | `Summary string` | 直接 | 交差の説明 |
-| `influenceDirection?: "forward" \| "backward" \| "both"` | `InfluenceDirection *InfluenceDirection` | pointer enum or nil | |
+| TypeScript | Go | Notes |
+|------------|----|-------|
+| `id`, `summary` | `ID`, `Summary string` | 直接 |
+| `sourceSubplotId`, `sourceBeatId` | `SourceSubplotID`, `SourceBeatID string` | 直接 |
+| `targetSubplotId`, `targetBeatId` | `TargetSubplotID`, `TargetBeatID string` | 直接 |
+| `influenceDirection: "forward" \| "backward" \| "mutual"` | `InfluenceDirection InfluenceDirection` | string-typed const enum（required） |
+| `influenceLevel?: "high" \| "medium" \| "low"` | `InfluenceLevel *InfluenceLevel` | pointer enum |
 
-### 差異メモ
+### SubplotDetails union
 
-- **enum 化が多い**: type, status, structurePosition, focusPriority, importance などが多数の union literal を持つため、Go iota enum の定義が多くなる。
-- **PlotBeat フィールド**: TS ファイルの完全確認が必要。
+| TS field | Go field |
+|----------|----------|
+| `description?` | `Description StringOrFileRef` |
+| `theme?` | `Theme StringOrFileRef` |
+| `notes?` | `Notes StringOrFileRef` |
 
----
+旧 `struct { Inline string; FileRef *string }` は **Wave-A2-pre で削除**。
 
-## 共通パターン
+### StructurePosition の値リスト（TS source: `BeatStructurePosition`）
 
-### Optional Field の扱い
+5-stage arc 固定:
 
-TS では `field?: type` だが、Go では以下のいずれかで実装:
+| 値 | 用途 |
+|----|------|
+| `"setup"` | 導入 |
+| `"rising"` | 上昇 |
+| `"climax"` | 頂点 |
+| `"falling"` | 下降 |
+| `"resolution"` | 結末 |
 
-**Option 1: Pointer type**
-```go
-type Character struct {
-  ID string
-  Aliases *[]string  // nil = missing
-}
-```
+旧版ドキュメントに "TBD" や 3 値案があった場合、本リスト（TS `src/type/v2/subplot.ts` 真偽値）が真。
 
-**Option 2: Presence field**
-```go
-type Character struct {
-  ID string
-  HasAliases bool
-  Aliases []string
-}
-```
+### その他 enum
 
-**推奨**: Option 1 (Pointer) で統一。JSON unmarshal の互換性が高い。
-
-### Union Type の Enum 化
-
-TS:
-```typescript
-type CharacterRole = "protagonist" | "antagonist" | "supporting" | "guest";
-```
-
-Go:
-```go
-type CharacterRole int
-
-const (
-  CharacterRoleUnknown    CharacterRole = iota
-  CharacterRoleProtagonist
-  CharacterRoleAntagonist
-  // ...
-)
-
-func (cr CharacterRole) String() string { ... }
-```
-
-### ファイル参照の扱い
-
-TS ではファイル参照を `{ file: string }` union で表現:
-```typescript
-description?: string | { file: string };
-```
-
-Go では以下のいずれか:
-
-**Option 1: Separate field**
-```go
-type Character struct {
-  Description string
-  DescriptionFile string  // "" = no file
-}
-```
-
-**Option 2: String-based URL**
-```go
-type Character struct {
-  Description string  // "file://./path.md" のように prefix
-}
-```
-
-**推奨**: Option 1 (Separate field) で明示的に。
+- **SubplotImportance**: `"major" | "minor"`
+- **FocusCharacterPriority**: `"primary" | "secondary"`
+- **InfluenceDirection**: `"forward" | "backward" | "mutual"`
+- **InfluenceLevel**: `"high" | "medium" | "low"`
 
 ---
 
 ## Fixture サンプルでの検証
 
-以下の 3 サンプルプロジェクトで各型の互換性を contract test で検証:
+以下の 3 サンプルプロジェクトで各型の互換性を contract test で検証する（Wave-A2 以降の予定）:
 
 - `samples/cinderella` - Character, Setting, Foreshadowing の基本
 - `samples/momotaro` - Timeline/Event, CharacterPhase の複雑性
 - `samples/mistery/old-letter-mystery` - Subplot/Intersection, 高度な検出ルール
 
 Go parser の成功基準:
+
 - すべての entity file を JSON 化できる
-- JSON を Go struct に unmarshal できる
+- JSON を Go struct に unmarshal できる（StringOrFileRef はカスタム unmarshaler を後続 wave で追加予定）
 - 各 struct の validation が通る
 
 ---
 
 ## 今後の作業
 
-- [ ] TS ソースコードの詳細確認により、未記載フィールドを埋める
-- [ ] optional field の Go 実装方針を最終決定
-- [ ] union type の Go enum iota 定義テンプレートを作成
-- [ ] contract test fixture を生成
+- [ ] StringOrFileRef の `MarshalJSON` / `UnmarshalJSON` 実装（TS の `string | { file: string }` 双方向対応）
+- [ ] Foreshadowing / Subplot 用の DetectionHints（必要が確定したら追加、命名は per-entity prefix）
+- [ ] contract test fixture を生成（Wave-A2 以降）

@@ -17,47 +17,21 @@ const (
 
 // SettingDetails captures optional long-form descriptions for a Setting.
 //
-// Why: Each TS field is `string | { file: string }`. We model that union as
-// an inline anonymous struct pointer so callers can express three states:
-//   - nil          : field absent
-//   - {Value: "x"} : inline literal text
-//   - {File: "p"}  : reference to an external markdown file
-//
-// Wave-A2 will likely lift this into a shared StringOrFileRef helper across
-// Character / Setting / Foreshadowing once the union appears in more places.
+// Why: Each TS field is `string | { file: string }`. Wave-A2-pre lifts this
+// into the shared StringOrFileRef helper. Pointer semantics preserved so each
+// field can express three states:
+//   - nil                       : field absent
+//   - &{Value: "x"}             : inline literal text
+//   - &{File: "p"}              : reference to an external markdown file
 type SettingDetails struct {
-	Description *struct {
-		Value string
-		File  string
-	}
-	Geography *struct {
-		Value string
-		File  string
-	}
-	History *struct {
-		Value string
-		File  string
-	}
-	Culture *struct {
-		Value string
-		File  string
-	}
-	Politics *struct {
-		Value string
-		File  string
-	}
-	Economy *struct {
-		Value string
-		File  string
-	}
-	Inhabitants *struct {
-		Value string
-		File  string
-	}
-	Landmarks *struct {
-		Value string
-		File  string
-	}
+	Description *StringOrFileRef
+	Geography   *StringOrFileRef
+	History     *StringOrFileRef
+	Culture     *StringOrFileRef
+	Politics    *StringOrFileRef
+	Economy     *StringOrFileRef
+	Inhabitants *StringOrFileRef
+	Landmarks   *StringOrFileRef
 }
 
 // SettingDetectionHints provides LSP detection tuning data.

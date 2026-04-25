@@ -15,12 +15,10 @@ package domain
 //   - Other domain bundles (foreshadowing/timeline) may use iota; the
 //     entity-type-mapping doc allows divergence per-bundle.
 //
-// Why: `string | { file: string }` unions in TS map to inline anonymous
-// structs `struct { Inline string; FileRef *string }`. Reasons:
-//   - Captures both shapes without leaking a public StringOrFileRef helper
-//     before we have a real consumer (YAGNI; can be promoted later).
-//   - Keeps the union local to SubplotDetails so unrelated entities are not
-//     forced to depend on a shared abstraction.
+// Why: `string | { file: string }` unions in TS map to the shared
+// StringOrFileRef helper (`internal/domain/common.go`). Wave-A2-pre で集約済み:
+// 旧 inline anonymous struct (Inline/FileRef) は撤去し、Character / Setting /
+// Foreshadowing / Timeline と同じ型で統一する。
 
 // SubplotType classifies a plot line by narrative role.
 //
@@ -130,20 +128,11 @@ type PlotIntersection struct {
 }
 
 // SubplotDetails carries optional long-form descriptive fields. Each field
-// uses the inline-or-file-ref union shape (see file header comment).
+// uses the shared StringOrFileRef union (see file header comment).
 type SubplotDetails struct {
-	Description struct {
-		Inline  string
-		FileRef *string
-	}
-	Theme struct {
-		Inline  string
-		FileRef *string
-	}
-	Notes struct {
-		Inline  string
-		FileRef *string
-	}
+	Description StringOrFileRef
+	Theme       StringOrFileRef
+	Notes       StringOrFileRef
 }
 
 // SubplotRelations records cross-entity ID references owned by a Subplot.
