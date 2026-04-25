@@ -6,6 +6,8 @@ import (
 	"strings"
 	"time"
 	"unicode"
+
+	apperrors "github.com/takets/street-storyteller/internal/errors"
 )
 
 // ChapterMetaInput は .meta.ts 生成に必要な最小限の入力。
@@ -205,16 +207,16 @@ func renderReferencesBlock(meta ChapterMetaInput, indent string) []string {
 func replaceMarkedBlock(source, blockName, startTok, endTok string, newLines []string) (string, error) {
 	startIdx, indent, ok := findMarkerLine(source, startTok)
 	if !ok {
-		return "", fmt.Errorf("cannot update: missing marker block (%s) for %s", startTok, blockName)
+		return "", apperrors.New(apperrors.CodeMalformedFile, fmt.Sprintf("cannot update: missing marker block (%s) for %s", startTok, blockName))
 	}
 	endIdx, _, ok := findMarkerLine(source[startIdx:], endTok)
 	if !ok {
-		return "", fmt.Errorf("malformed: missing end marker (%s) for %s after start", endTok, blockName)
+		return "", apperrors.New(apperrors.CodeMalformedFile, fmt.Sprintf("malformed: missing end marker (%s) for %s after start", endTok, blockName))
 	}
 	endIdx += startIdx
 
 	if endIdx <= startIdx {
-		return "", fmt.Errorf("malformed: invalid marker ordering for %s", blockName)
+		return "", apperrors.New(apperrors.CodeMalformedFile, fmt.Sprintf("malformed: invalid marker ordering for %s", blockName))
 	}
 
 	// end マーカー行末まで切り出す範囲を計算

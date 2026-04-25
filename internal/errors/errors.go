@@ -21,6 +21,7 @@ const (
 	CodeManifestInvalid   Code = "ManifestInvalid"
 	CodeEntityConflict    Code = "EntityConflict"
 	CodeUnsupportedFormat Code = "UnsupportedFormat"
+	CodeMalformedFile     Code = "MalformedFile"
 )
 
 // Error はストーリーテラー全体で共有する典型エラー型。

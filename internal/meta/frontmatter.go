@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/takets/street-storyteller/internal/detect"
+	apperrors "github.com/takets/street-storyteller/internal/errors"
 )
 
 // FrontMatter は manuscript の YAML FrontMatter の "storyteller:" 配下を表現する。
@@ -184,7 +185,7 @@ func (d *Document) getList(kind detect.EntityKind) (*[]string, error) {
 	case detect.EntityTimeline:
 		return &d.FrontMatter.Timelines, nil
 	default:
-		return nil, fmt.Errorf("meta: unsupported entity kind: %s", kind)
+		return nil, apperrors.New(apperrors.CodeUnsupportedFormat, fmt.Sprintf("meta: unsupported entity kind: %s", kind))
 	}
 }
 
@@ -231,7 +232,7 @@ func parseFrontMatterYAML(yamlBytes []byte, fm *FrontMatter) error {
 		i++
 	}
 	if i >= len(lines) || strings.TrimSpace(stripCR(lines[i])) != "storyteller:" {
-		return fmt.Errorf("meta: frontmatter must start with 'storyteller:' top-level key")
+		return apperrors.New(apperrors.CodeParse, "meta: frontmatter must start with 'storyteller:' top-level key")
 	}
 	i++
 
