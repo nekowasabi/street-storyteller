@@ -621,58 +621,7 @@ storyteller view foreshadowing --list --json
 }
 ```
 
-### 8. RAG (Retrieval-Augmented Generation) 機能 - 実装済み
-
-物語プロジェクトの全要素をAIが検索可能なドキュメントに変換し、執筆支援の品質を向上させる機能が実装されました。
-
-#### 概要
-
-- **コンテキスト準備の自動化**: キャラクター、設定、伏線等の情報を自動収集
-- **関連情報取得の高精度化**: セマンティック検索による関連性の高い情報取得
-- **リアルタイム更新**: Git hooks による自動同期
-
-#### storyteller ragコマンド
-
-```bash
-# RAGドキュメントをエクスポート
-storyteller rag export
-
-# 変更ファイルのみエクスポート
-storyteller rag export --incremental
-
-# シーン単位チャンキングで出力
-storyteller rag export --chunking scene
-
-# RAGドキュメント + digragインデックスを一括更新
-storyteller rag update
-
-# フル再構築
-storyteller rag update --force
-
-# Git hooksをインストール（自動更新）
-storyteller rag install-hooks
-```
-
-#### 生成されるドキュメント
-
-| 要素タイプ   | ドキュメント形式        | 出力先       |
-| ------------ | ----------------------- | ------------ |
-| キャラクター | `character_{id}.md`     | `.rag-docs/` |
-| 設定         | `setting_{id}.md`       | `.rag-docs/` |
-| 伏線         | `foreshadowing_{id}.md` | `.rag-docs/` |
-| タイムライン | `timeline_{id}.md`      | `.rag-docs/` |
-
-#### チャンキング戦略
-
-| 戦略       | 説明             | 適用条件                      |
-| ---------- | ---------------- | ----------------------------- |
-| `document` | ドキュメント単位 | 小サイズ（〜3,000文字）       |
-| `scene`    | シーン単位分割   | 中サイズ（3,000〜15,000文字） |
-| `auto`     | 自動選択         | デフォルト                    |
-
-詳細は `docs/rag.md` を参照してください。
-
-### 9. Subplot（サブプロット）機能 - 実装済み
+### 8. Subplot（サブプロット）機能 - 実装済み
 
 物語の複数プロットラインを並列管理し、交差（intersection）で物語の絡み合いを表現する機能が実装されました。
 
@@ -748,7 +697,7 @@ storyteller view subplot --list --json
 | 単位     | Event（出来事）             | Beat（物語ビート）               |
 | 関係性   | 因果関係（causes/causedBy） | 交差（intersection）             |
 
-### 10. textlint統合機能 - 実装済み
+### 9. textlint統合機能 - 実装済み
 
 原稿（Markdown）の文法・表記ゆれを検出・修正する機能が実装されました。
 
