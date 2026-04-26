@@ -49,6 +49,10 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 		cctx.Presenter.ShowError(err.Error())
 		return 1
 	}
+	if err := installClaudeSkills(projectRoot); err != nil {
+		cctx.Presenter.ShowError(err.Error())
+		return 1
+	}
 	if cctx.GlobalOpts.JSON {
 		_ = cctx.Presenter.WriteJSON(struct {
 			Path     string `json:"path"`

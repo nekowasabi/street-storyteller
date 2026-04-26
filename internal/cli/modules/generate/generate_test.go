@@ -133,3 +133,34 @@ func TestGenerate_Usage(t *testing.T) {
 		t.Errorf("usage = %q", cmd.Usage())
 	}
 }
+
+func TestGenerateInstallsClaudeSkill(t *testing.T) {
+	tmp := t.TempDir()
+	args := []string{"--name", "demo", "--path", tmp}
+	cmd := New()
+	cctx, _, _ := newCtx(args, false, "")
+	if rc := cmd.Handle(cctx); rc != 0 {
+		t.Fatalf("expected rc=0, got %d", rc)
+	}
+
+	skillPath := filepath.Join(tmp, "demo", ".claude", "skills", "storyteller", "SKILL.md")
+	info, err := os.Stat(skillPath)
+	if err != nil {
+		t.Fatalf("skill file should exist at %s: %v", skillPath, err)
+	}
+	if info.Size() == 0 {
+		t.Fatalf("skill file should not be empty")
+	}
+
+	body, err := os.ReadFile(skillPath)
+	if err != nil {
+		t.Fatalf("read skill: %v", err)
+	}
+	content := string(body)
+	if !strings.Contains(content, "name: storyteller") {
+		t.Fatalf("SKILL.md must declare frontmatter name: storyteller")
+	}
+	if !strings.Contains(content, "description:") {
+		t.Fatalf("SKILL.md must declare frontmatter description")
+	}
+}
