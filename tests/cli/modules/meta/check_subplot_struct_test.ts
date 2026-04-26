@@ -47,7 +47,8 @@ Deno.test("warns subplot with no intersections (orphan)", () => {
     ],
     intersections: [],
   };
-  const isOrphan = subplot.type !== "main" && (subplot.intersections ?? []).length === 0;
+  const isOrphan = subplot.type !== "main" &&
+    (subplot.intersections ?? []).length === 0;
   assertEquals(isOrphan, true);
 });
 
@@ -59,8 +60,20 @@ Deno.test("warns reversed structure position order", () => {
     status: "active",
     summary: "test",
     beats: [
-      { id: "b1", title: "Climax", summary: "s", structurePosition: "climax", chapter: "ch5" },
-      { id: "b2", title: "Setup", summary: "s", structurePosition: "setup", chapter: "ch10" },
+      {
+        id: "b1",
+        title: "Climax",
+        summary: "s",
+        structurePosition: "climax",
+        chapter: "ch5",
+      },
+      {
+        id: "b2",
+        title: "Setup",
+        summary: "s",
+        structurePosition: "setup",
+        chapter: "ch10",
+      },
     ],
   };
   const positions = subplot.beats.map((b) => b.structurePosition);

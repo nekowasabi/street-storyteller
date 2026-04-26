@@ -320,7 +320,9 @@ export function buildSubplotGraphFromSummary(
       nodes.push({
         id: beat.id,
         label: beat.title,
-        title: `${beat.title}\n${beat.summary || ""}\nPosition: ${beat.structurePosition || "unknown"}`,
+        title: `${beat.title}\n${beat.summary || ""}\nPosition: ${
+          beat.structurePosition || "unknown"
+        }`,
         shape: BEAT_SHAPES[beat.structurePosition ?? ""] || "dot",
         color: {
           background: SUBTYPE_COLORS[sp.type] || "#95a5a6",

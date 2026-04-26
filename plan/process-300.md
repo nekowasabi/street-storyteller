@@ -1,9 +1,11 @@
 # Process 300: OODA実行管理
 
 ## Overview
+
 長期移行を小さな観察・判断・実装・検証サイクルで管理し、計画が実装実態から乖離しないようにする。
 
 ## Affected Files
+
 - `PLAN.md:1` - Progress Map 更新
 - `plan/process-*.md` - Process 完了状態更新
 - `docs/migration/go-rearchitecture-requirements.md:1` - 調査・決定事項更新
@@ -11,6 +13,7 @@
 - `samples/*` - ユーザー視点の動作確認対象
 
 ## Implementation Notes
+
 - 各 Process 完了時に次を更新する。
   - PLAN の Status と Overall
   - 実行したコマンド
@@ -55,5 +58,6 @@
 ---
 
 ## Dependencies
+
 - Requires: 200
 - Blocks: -

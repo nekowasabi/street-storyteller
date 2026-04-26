@@ -13,7 +13,8 @@
 2. 原稿ファイルを読み込み
    - 実際の内容を確認
 3. FrontMatter 確認
-   - `characters` / `settings` / `foreshadowings` / `timeline_events` フィールドを確認
+   - `characters` / `settings` / `foreshadowings` / `timeline_events`
+     フィールドを確認
    - 既に紐付けられているエンティティを把握
 
 ## フェーズ②矛盾抽出
@@ -55,4 +56,5 @@
 ## 多言語対応
 
 - `displayNames` / `aliases` は多言語配列として扱う
-- 事前に `storyteller://characters` で確認し、原稿で使用される名前の対応を把握してから改稿を進める
+- 事前に `storyteller://characters`
+  で確認し、原稿で使用される名前の対応を把握してから改稿を進める

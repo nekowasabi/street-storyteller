@@ -7,8 +7,8 @@
 Process 10 では、Go 移行後に既存機能を壊さないことを保証するため、CLI/LSP/MCP の
 入出力を Golden ファイルとして固定する「契約テスト」を導入した。
 
-これらのテストは TDD の Red → Green サイクルで作成しており、**現状の挙動を pin する**
-ことを最初の目的としている。
+これらのテストは TDD の Red → Green サイクルで作成しており、**現状の挙動を pin
+する** ことを最初の目的としている。
 
 ### 「現状の挙動を pin する」テストとしての役割
 
@@ -21,21 +21,21 @@ Golden テストは「正しい挙動を定義する」テストではなく、
 
 ### 意図的な仕様変更時にゴールデンを更新するワークフロー
 
-実装を変更した結果として Golden の期待値を更新する場合、
-`-update` フラグ（またはテストごとの専用フラグ）を使って Golden を再生成する。
+実装を変更した結果として Golden の期待値を更新する場合、 `-update`
+フラグ（またはテストごとの専用フラグ）を使って Golden を再生成する。
 
 ---
 
 ## 対象テスト一覧
 
-| ファイル | パッケージ | -update フラグ | 役割 |
-|---------|-----------|---------------|------|
-| cmd/storyteller/golden_test.go | main | -update | help/version/no_args 等 CLI 基本契約 |
-| cmd/storyteller/golden_meta_check_test.go | main | -update | meta check の cinderella minimal fixture 出力 |
-| cmd/storyteller/golden_view_character_test.go | main | -update | view character の現状契約（現在 exit 1）|
-| cmd/storyteller/golden_version_canonical_test.go | main | -update-canonical | version JSON の canonicalize 比較 |
-| internal/lsp/server/golden_wire_test.go | server | (既存 testdata 流用) | LSP initialize/hover wire-protocol |
-| internal/mcp/server/golden_wire_test.go | server | -update | MCP initialize/tools_list/tools_call_meta_check wire-protocol |
+| ファイル                                         | パッケージ | -update フラグ       | 役割                                                          |
+| ------------------------------------------------ | ---------- | -------------------- | ------------------------------------------------------------- |
+| cmd/storyteller/golden_test.go                   | main       | -update              | help/version/no_args 等 CLI 基本契約                          |
+| cmd/storyteller/golden_meta_check_test.go        | main       | -update              | meta check の cinderella minimal fixture 出力                 |
+| cmd/storyteller/golden_view_character_test.go    | main       | -update              | view character の現状契約（現在 exit 1）                      |
+| cmd/storyteller/golden_version_canonical_test.go | main       | -update-canonical    | version JSON の canonicalize 比較                             |
+| internal/lsp/server/golden_wire_test.go          | server     | (既存 testdata 流用) | LSP initialize/hover wire-protocol                            |
+| internal/mcp/server/golden_wire_test.go          | server     | -update              | MCP initialize/tools_list/tools_call_meta_check wire-protocol |
 
 ---
 
@@ -78,8 +78,9 @@ Golden テストは「正しい挙動を定義する」テストではなく、
 
 ### 2.5 LSP wire-protocol fixture の更新（手動）
 
-LSP server の `internal/lsp/server/testdata/lsp/` golden テストは現在 `-update` フラグが実装されていません。
-fixture を更新する際は以下の手順で対応してください：
+LSP server の `internal/lsp/server/testdata/lsp/` golden テストは現在 `-update`
+フラグが実装されていません。 fixture
+を更新する際は以下の手順で対応してください：
 
 1. テストを実行して diff を観察
 
@@ -102,21 +103,26 @@ fixture を更新する際は以下の手順で対応してください：
 
 ## canonicalize 戦略
 
-- **JSON**: `json.Unmarshal → MarshalIndent("", "  ")` で key 順序とインデント正規化
-- **TempDir パス**: `strings.ReplaceAll(stdout, root, "[TMPDIR]")` で実行毎差分を吸収
+- **JSON**: `json.Unmarshal → MarshalIndent("", "  ")` で key
+  順序とインデント正規化
+- **TempDir パス**: `strings.ReplaceAll(stdout, root, "[TMPDIR]")`
+  で実行毎差分を吸収
 - **時刻**: `internal/testkit/clock` の FakeClock を使用してタイムスタンプ固定
 
 ---
 
 ## 知られている契約 flip 候補（Refactor フェーズ予定）
 
-- **view character の exit 1 → exit 0**: TS character loader 実装後に Golden を更新予定
-- **meta check の "0 files validated" → 実 fixture チェック結果**: manuscripts loader 拡張後
+- **view character の exit 1 → exit 0**: TS character loader 実装後に Golden
+  を更新予定
+- **meta check の "0 files validated" → 実 fixture チェック結果**: manuscripts
+  loader 拡張後
 
 ---
 
 ## 関連ファイル
 
-- `cmd/storyteller/internal/testfixture/cinderella.go`: 共有 minimal fixture materializer
+- `cmd/storyteller/internal/testfixture/cinderella.go`: 共有 minimal fixture
+  materializer
 - `internal/testkit/clock`: 時刻固定
 - `plan/process-10.md`: ミッション詳細チェックリスト

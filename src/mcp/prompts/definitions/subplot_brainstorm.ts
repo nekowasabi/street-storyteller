@@ -31,9 +31,7 @@ export const subplotBrainstormPrompt: McpPromptDefinition = {
     const themes = args.themes ?? "";
     const focusCharacter = args.focusCharacter ?? "";
 
-    const themesLine = themes.trim().length > 0
-      ? `テーマ: ${themes}`
-      : "";
+    const themesLine = themes.trim().length > 0 ? `テーマ: ${themes}` : "";
     const focusLine = focusCharacter.trim().length > 0
       ? `フォーカスキャラクター: ${focusCharacter}`
       : "";

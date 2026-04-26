@@ -1,9 +1,11 @@
 # Process 200: 移行ドキュメント更新
 
 ## Overview
+
 要件整理、移行方針、契約テスト、未決事項を実装者が別セッションで追える形に整える。
 
 ## Affected Files
+
 - `docs/migration/go-rearchitecture-requirements.md:1` - 要件整理本体
 - `PLAN.md:1` - 軽量サマリー
 - `plan/process-*.md` - 詳細手順
@@ -14,7 +16,9 @@
 - `docs/rag.md:1` - RAG差分更新候補
 
 ## Implementation Notes
-- `go-rearchitecture-requirements.md` は調査資料として残し、実装手順は `PLAN.md` と `plan/` を正にする。
+
+- `go-rearchitecture-requirements.md` は調査資料として残し、実装手順は `PLAN.md`
+  と `plan/` を正にする。
 - Ask User Questions の回答が得られたら、未決事項を決定事項へ移す。
 - README/docs は Go版が実際に使える段階まで大きく書き換えない。
 
@@ -54,5 +58,6 @@
 ---
 
 ## Dependencies
+
 - Requires: 100
 - Blocks: 300

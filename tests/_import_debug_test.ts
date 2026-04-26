@@ -2,7 +2,10 @@ import { join } from "@std/path";
 import { toFileUrl } from "@std/path";
 
 Deno.test("import debug", async () => {
-  const absPath = join(Deno.cwd(), "samples/cinderella/src/foreshadowings/ガラスの靴の伏線.ts");
+  const absPath = join(
+    Deno.cwd(),
+    "samples/cinderella/src/foreshadowings/ガラスの靴の伏線.ts",
+  );
   const url = toFileUrl(absPath).href;
   console.log("URL:", url);
   try {

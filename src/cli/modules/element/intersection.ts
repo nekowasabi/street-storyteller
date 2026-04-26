@@ -80,12 +80,14 @@ export class ElementIntersectionCommand extends BaseCliCommand {
         config.runtime.projectRoot || Deno.cwd();
 
       // ソースサブプロットファイルのパス
-      const sourceFilePath =
-        `${projectRoot}/src/subplots/${parsed["source-subplot"]}.ts`;
+      const sourceFilePath = `${projectRoot}/src/subplots/${
+        parsed["source-subplot"]
+      }.ts`;
 
       // ターゲットサブプロットファイルのパス
-      const targetFilePath =
-        `${projectRoot}/src/subplots/${parsed["target-subplot"]}.ts`;
+      const targetFilePath = `${projectRoot}/src/subplots/${
+        parsed["target-subplot"]
+      }.ts`;
 
       // ソースサブプロットファイルが存在するか確認
       try {
@@ -113,7 +115,8 @@ export class ElementIntersectionCommand extends BaseCliCommand {
       if (!sourceSubplot) {
         return err({
           code: "source_subplot_parse_error",
-          message: `Failed to parse source subplot from file: ${sourceFilePath}`,
+          message:
+            `Failed to parse source subplot from file: ${sourceFilePath}`,
         });
       }
 
@@ -123,7 +126,8 @@ export class ElementIntersectionCommand extends BaseCliCommand {
       if (!targetSubplot) {
         return err({
           code: "target_subplot_parse_error",
-          message: `Failed to parse target subplot from file: ${targetFilePath}`,
+          message:
+            `Failed to parse target subplot from file: ${targetFilePath}`,
         });
       }
 
@@ -134,10 +138,13 @@ export class ElementIntersectionCommand extends BaseCliCommand {
       if (!sourceBeat) {
         return err({
           code: "source_beat_not_found",
-          message:
-            `Source beat "${parsed["source-beat"]}" not found in subplot "${parsed["source-subplot"]}". Available beats: ${
-              sourceSubplot.beats.map((b) => b.id).join(", ")
-            }`,
+          message: `Source beat "${
+            parsed["source-beat"]
+          }" not found in subplot "${
+            parsed["source-subplot"]
+          }". Available beats: ${
+            sourceSubplot.beats.map((b) => b.id).join(", ")
+          }`,
         });
       }
 
@@ -148,17 +155,21 @@ export class ElementIntersectionCommand extends BaseCliCommand {
       if (!targetBeat) {
         return err({
           code: "target_beat_not_found",
-          message:
-            `Target beat "${parsed["target-beat"]}" not found in subplot "${parsed["target-subplot"]}". Available beats: ${
-              targetSubplot.beats.map((b) => b.id).join(", ")
-            }`,
+          message: `Target beat "${
+            parsed["target-beat"]
+          }" not found in subplot "${
+            parsed["target-subplot"]
+          }". Available beats: ${
+            targetSubplot.beats.map((b) => b.id).join(", ")
+          }`,
         });
       }
 
       // Intersection IDを生成: intersection_{source}_{target}_{count+1}
       const existingIntersections = sourceSubplot.intersections ?? [];
-      const intersectionId =
-        `intersection_${parsed["source-subplot"]}_${parsed["target-subplot"]}_${existingIntersections.length + 1}`;
+      const intersectionId = `intersection_${parsed["source-subplot"]}_${
+        parsed["target-subplot"]
+      }_${existingIntersections.length + 1}`;
 
       // 新しい交差を作成
       const newIntersection: PlotIntersection = {
@@ -275,7 +286,11 @@ export class ElementIntersectionCommand extends BaseCliCommand {
     const influenceDirection = typeof args["influence-direction"] === "string"
       ? args["influence-direction"]
       : "forward";
-    if (!validDirections.includes(influenceDirection as IntersectionInfluenceDirection)) {
+    if (
+      !validDirections.includes(
+        influenceDirection as IntersectionInfluenceDirection,
+      )
+    ) {
       return {
         code: "invalid_arguments",
         message:
@@ -289,13 +304,15 @@ export class ElementIntersectionCommand extends BaseCliCommand {
     if (
       args["influence-level"] &&
       typeof args["influence-level"] === "string" &&
-      !validLevels.includes(args["influence-level"] as IntersectionInfluenceLevel)
+      !validLevels.includes(
+        args["influence-level"] as IntersectionInfluenceLevel,
+      )
     ) {
       return {
         code: "invalid_arguments",
-        message: `Invalid influence level: ${args["influence-level"]}. Must be one of: ${
-          validLevels.join(", ")
-        }`,
+        message: `Invalid influence level: ${
+          args["influence-level"]
+        }. Must be one of: ${validLevels.join(", ")}`,
       };
     }
 
@@ -305,7 +322,8 @@ export class ElementIntersectionCommand extends BaseCliCommand {
       "target-subplot": args["target-subplot"],
       "target-beat": args["target-beat"],
       summary: args.summary,
-      "influence-direction": influenceDirection as IntersectionInfluenceDirection,
+      "influence-direction":
+        influenceDirection as IntersectionInfluenceDirection,
       "influence-level": typeof args["influence-level"] === "string"
         ? args["influence-level"] as IntersectionInfluenceLevel
         : undefined,

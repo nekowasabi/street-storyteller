@@ -11,10 +11,13 @@ import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 Deno.test("SubplotPlugin", async (t) => {
   const plugin = new SubplotPlugin();
 
-  await t.step("PluginMetadata id が storyteller.element.subplot であること", () => {
-    assertExists(plugin.meta);
-    assertEquals(plugin.meta.id, "storyteller.element.subplot");
-  });
+  await t.step(
+    "PluginMetadata id が storyteller.element.subplot であること",
+    () => {
+      assertExists(plugin.meta);
+      assertEquals(plugin.meta.id, "storyteller.element.subplot");
+    },
+  );
 
   await t.step("elementType が subplot であること", () => {
     assertEquals(plugin.elementType, "subplot");
@@ -30,37 +33,40 @@ Deno.test("SubplotPlugin", async (t) => {
     assertEquals(dir, "/project/src/subplots/prince_story/details");
   });
 
-  await t.step("createElementFile() でサブプロットファイルを生成できること", async () => {
-    const subplot: Subplot = {
-      id: "prince_story",
-      name: "王子の花嫁探し",
-      type: "subplot",
-      status: "active",
-      summary: "王子が運命の人を探す物語",
-      beats: [],
-      focusCharacters: { prince: "primary" as const },
-    };
+  await t.step(
+    "createElementFile() でサブプロットファイルを生成できること",
+    async () => {
+      const subplot: Subplot = {
+        id: "prince_story",
+        name: "王子の花嫁探し",
+        type: "subplot",
+        status: "active",
+        summary: "王子が運命の人を探す物語",
+        beats: [],
+        focusCharacters: { prince: "primary" as const },
+      };
 
-    const result = await plugin.createElementFile(subplot);
+      const result = await plugin.createElementFile(subplot);
 
-    assertEquals(result.ok, true);
-    if (result.ok) {
-      assertEquals(
-        result.value.filePath,
-        "src/subplots/prince_story.ts",
-      );
-      // 生成されたコンテンツにSubplot型インポートが含まれること
-      assertEquals(
-        result.value.content.includes("import type { Subplot }"),
-        true,
-      );
-      // エクスポートが含まれること
-      assertEquals(
-        result.value.content.includes("export const prince_story"),
-        true,
-      );
-    }
-  });
+      assertEquals(result.ok, true);
+      if (result.ok) {
+        assertEquals(
+          result.value.filePath,
+          "src/subplots/prince_story.ts",
+        );
+        // 生成されたコンテンツにSubplot型インポートが含まれること
+        assertEquals(
+          result.value.content.includes("import type { Subplot }"),
+          true,
+        );
+        // エクスポートが含まれること
+        assertEquals(
+          result.value.content.includes("export const prince_story"),
+          true,
+        );
+      }
+    },
+  );
 
   await t.step(
     "createElementFile() が必須フィールド欠落時にエラーを返すこと",

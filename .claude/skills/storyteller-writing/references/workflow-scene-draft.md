@@ -34,7 +34,8 @@
 1. **FrontMatter に情報を紐付け**
    - `manuscript_binding` ツール実行
    - action: `add`
-   - entityType: `characters` / `settings` / `foreshadowings` / `timeline_events`
+   - entityType: `characters` / `settings` / `foreshadowings` /
+     `timeline_events`
    - 該当エンティティの ID をリスト指定
 
 2. **validate:true で実行**
@@ -49,4 +50,5 @@
 
 **新規キャラ・設定・伏線名は必ず view で先に確認すること。**
 
-存在しない名前を提案する場合は、ユーザー承認を取得してから `element_create` を実行。
+存在しない名前を提案する場合は、ユーザー承認を取得してから `element_create`
+を実行。

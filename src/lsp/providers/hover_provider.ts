@@ -315,7 +315,9 @@ export class HoverProvider {
     return lines.join("\n");
   }
 
-  private getKindLabel(kind: "character" | "setting" | "foreshadowing"): string {
+  private getKindLabel(
+    kind: "character" | "setting" | "foreshadowing",
+  ): string {
     return getKindLabel(kind);
   }
 

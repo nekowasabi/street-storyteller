@@ -5,10 +5,7 @@
 import { ok } from "@storyteller/shared/result.ts";
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
-import type {
-  CommandContext,
-  CommandDescriptor,
-} from "../../types.ts";
+import type { CommandContext, CommandDescriptor } from "../../types.ts";
 import { ragExportCommandDescriptor } from "./export.ts";
 
 // サブコマンドの再エクスポート

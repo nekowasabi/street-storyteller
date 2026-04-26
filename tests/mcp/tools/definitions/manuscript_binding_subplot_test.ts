@@ -26,7 +26,10 @@ Deno.test("manuscript_binding subplots: sets subplot list with action=set", () =
   assertEquals(added.ok, true);
   if (!added.ok) return;
 
-  const set = editor.setEntities(added.value.content, "subplots", ["sp2", "sp3"]);
+  const set = editor.setEntities(added.value.content, "subplots", [
+    "sp2",
+    "sp3",
+  ]);
   assertEquals(set.ok, true);
   if (set.ok) {
     assertStringIncludes(set.value.content, "sp2");
@@ -41,7 +44,9 @@ Deno.test("manuscript_binding subplots: removes subplot from list with action=re
   assertEquals(added.ok, true);
   if (!added.ok) return;
 
-  const removed = editor.removeEntities(added.value.content, "subplots", ["sp1"]);
+  const removed = editor.removeEntities(added.value.content, "subplots", [
+    "sp1",
+  ]);
   assertEquals(removed.ok, true);
   if (removed.ok) {
     assertStringIncludes(removed.value.content, "sp2");
@@ -62,7 +67,9 @@ Deno.test("manuscript_binding subplots: preserves other entityType behavior (cha
   assertEquals(withChar.ok, true);
   if (!withChar.ok) return;
 
-  const withSubplot = editor.addEntities(withChar.value.content, "subplots", ["sp1"]);
+  const withSubplot = editor.addEntities(withChar.value.content, "subplots", [
+    "sp1",
+  ]);
   assertEquals(withSubplot.ok, true);
   if (withSubplot.ok) {
     assertStringIncludes(withSubplot.value.content, "hero");

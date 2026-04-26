@@ -18,14 +18,28 @@ Deno.test("MCP integration: all subplot tools are registered", () => {
 });
 
 Deno.test("MCP integration: subplot tools have valid descriptions", () => {
-  for (const tool of [subplotCreateTool, subplotViewTool, beatCreateTool, intersectionCreateTool]) {
+  for (
+    const tool of [
+      subplotCreateTool,
+      subplotViewTool,
+      beatCreateTool,
+      intersectionCreateTool,
+    ]
+  ) {
     assertExists(tool.description);
     assertEquals((tool.description ?? "").length > 0, true);
   }
 });
 
 Deno.test("MCP integration: subplot tools have inputSchema", () => {
-  for (const tool of [subplotCreateTool, subplotViewTool, beatCreateTool, intersectionCreateTool]) {
+  for (
+    const tool of [
+      subplotCreateTool,
+      subplotViewTool,
+      beatCreateTool,
+      intersectionCreateTool,
+    ]
+  ) {
     assertExists(tool.inputSchema);
     assertEquals(typeof tool.inputSchema, "object");
   }

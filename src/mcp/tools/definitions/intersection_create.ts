@@ -152,9 +152,10 @@ export const intersectionCreateTool: McpToolDefinition = {
           content: [
             {
               type: "text" as const,
-              text: `Error: Invalid influenceDirection '${args.influenceDirection}'. Must be one of: ${
-                validDirections.join(", ")
-              }.`,
+              text:
+                `Error: Invalid influenceDirection '${args.influenceDirection}'. Must be one of: ${
+                  validDirections.join(", ")
+                }.`,
             },
           ],
           isError: true,
@@ -170,9 +171,10 @@ export const intersectionCreateTool: McpToolDefinition = {
           content: [
             {
               type: "text" as const,
-              text: `Error: Invalid influenceLevel '${args.influenceLevel}'. Must be one of: ${
-                validLevels.join(", ")
-              }.`,
+              text:
+                `Error: Invalid influenceLevel '${args.influenceLevel}'. Must be one of: ${
+                  validLevels.join(", ")
+                }.`,
             },
           ],
           isError: true,

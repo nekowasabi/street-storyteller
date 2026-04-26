@@ -742,11 +742,11 @@ storyteller view subplot --list --json
 
 #### Timelineとの違い
 
-| 観点 | Timeline | Subplot |
-|------|----------|---------|
-| 管理対象 | 「いつ」（時系列） | 「何」「どのように」（展開構造） |
-| 単位 | Event（出来事） | Beat（物語ビート） |
-| 関係性 | 因果関係（causes/causedBy） | 交差（intersection） |
+| 観点     | Timeline                    | Subplot                          |
+| -------- | --------------------------- | -------------------------------- |
+| 管理対象 | 「いつ」（時系列）          | 「何」「どのように」（展開構造） |
+| 単位     | Event（出来事）             | Beat（物語ビート）               |
+| 関係性   | 因果関係（causes/causedBy） | 交差（intersection）             |
 
 ### 10. textlint統合機能 - 実装済み
 

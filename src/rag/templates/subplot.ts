@@ -51,7 +51,9 @@ function buildSubplotContent(subplot: Subplot): string {
   sections.push(`## 概要
 ${subplot.summary}`);
 
-  if (subplot.focusCharacters && Object.keys(subplot.focusCharacters).length > 0) {
+  if (
+    subplot.focusCharacters && Object.keys(subplot.focusCharacters).length > 0
+  ) {
     const lines = Object.entries(subplot.focusCharacters).map(
       ([charId, weight]) => `- **${charId}:** ${weight}`,
     );
@@ -68,7 +70,9 @@ ${lines.join("\n")}`);
       if (beat.chapter) parts.push(`- チャプター: ${beat.chapter}`);
       parts.push(`- 構造位置: ${beat.structurePosition}`);
       if (beat.summary) parts.push(beat.summary);
-      if (beat.characters?.length) parts.push(`- キャラクター: ${beat.characters.join(", ")}`);
+      if (beat.characters?.length) {
+        parts.push(`- キャラクター: ${beat.characters.join(", ")}`);
+      }
       return parts.join("\n");
     });
     sections.push(`## ビート一覧
@@ -86,7 +90,9 @@ ${ixLines.join("\n")}`);
   if (subplot.relations) {
     const relItems: string[] = [];
     if (subplot.relations.characters.length > 0) {
-      relItems.push(`- キャラクター: ${subplot.relations.characters.join(", ")}`);
+      relItems.push(
+        `- キャラクター: ${subplot.relations.characters.join(", ")}`,
+      );
     }
     if (subplot.relations.settings.length > 0) {
       relItems.push(`- 設定: ${subplot.relations.settings.join(", ")}`);

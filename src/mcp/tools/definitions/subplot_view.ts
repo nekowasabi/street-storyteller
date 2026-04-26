@@ -20,8 +20,7 @@ export const subplotViewTool: McpToolDefinition = {
       action: {
         type: "string",
         enum: ["list", "detail"],
-        description:
-          "表示アクション: list（一覧表示）, detail（個別表示）",
+        description: "表示アクション: list（一覧表示）, detail（個別表示）",
       },
       subplotId: {
         type: "string",
@@ -30,8 +29,7 @@ export const subplotViewTool: McpToolDefinition = {
       type: {
         type: "string",
         enum: ["main", "subplot", "parallel", "background"],
-        description:
-          "タイプフィルタ: main, subplot, parallel, background",
+        description: "タイプフィルタ: main, subplot, parallel, background",
       },
       status: {
         type: "string",

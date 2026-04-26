@@ -10,7 +10,10 @@ import type {
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
 import { MetaGeneratorService } from "@storyteller/application/meta/meta_generator_service.ts";
-import type { BeatStructurePosition, Subplot } from "@storyteller/types/v2/subplot.ts";
+import type {
+  BeatStructurePosition,
+  Subplot,
+} from "@storyteller/types/v2/subplot.ts";
 import { validateSubplot } from "@storyteller/plugins/core/subplot/validator.ts";
 
 type MetaCheckOptions = {

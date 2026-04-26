@@ -1,9 +1,12 @@
 # Process 4: CLI段階移行
 
 ## Overview
-Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI の出力契約と exit code を比較しながら置き換える。
+
+Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI の出力契約と
+exit code を比較しながら置き換える。
 
 ## Affected Files
+
 - `src/cli.ts:25` - 現行CLIの起動・設定・ログ初期化
 - `src/cli/modules/index.ts:12` - CLI command registry
 - `src/cli/output_presenter.ts:9` - console/json presenter
@@ -14,7 +17,9 @@ Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI 
 - `src/cli/modules/migrate/index.ts` - migrate CLI の登録判断対象
 
 ## Implementation Notes
-- 初期対象は `version`, `meta check`, `lsp validate`, `view character --json` のような副作用が小さいコマンドから始める。
+
+- 初期対象は `version`, `meta check`, `lsp validate`, `view character --json`
+  のような副作用が小さいコマンドから始める。
 - JSON出力は script/CI 契約なので先に固定する。
 - Go CLI は domain/project/meta service を呼び、直接 parser を持たない。
 - `rag` と `migrate` は Process 1 の決定に従って登録対象を確定する。
@@ -29,7 +34,8 @@ Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI 
   - exit code
   - JSON output
   - unknown command/help
-- [x] 現行 Deno CLI と Go CLI の差分比較テストを作る (in-process golden test として実装)
+- [x] 現行 Deno CLI と Go CLI の差分比較テストを作る (in-process golden test
+      として実装)
 - [x] テストを実行して失敗することを確認
 
 ✅ **Phase Complete**
@@ -50,8 +56,10 @@ Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI 
 
 ## Refactor Phase: 品質改善
 
-- [x] CLI handler から I/O を注入可能にする (Deps/DefaultDeps/runMain の契約テストと docstring 整備, WT-1)
-- [x] command descriptor と help 生成を整理 (Optional CommandWithUsage interface 導入, help.Handle が Description/Usage を render, WT-2)
+- [x] CLI handler から I/O を注入可能にする (Deps/DefaultDeps/runMain
+      の契約テストと docstring 整備, WT-1)
+- [x] command descriptor と help 生成を整理 (Optional CommandWithUsage interface
+      導入, help.Handle が Description/Usage を render, WT-2)
 - [x] テストが継続して成功することを確認 (go test ./... 全緑, gofmt/vet clean)
 
 ✅ **Phase Complete**
@@ -59,5 +67,6 @@ Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI 
 ---
 
 ## Dependencies
+
 - Requires: 2, 3, 10
 - Blocks: 100

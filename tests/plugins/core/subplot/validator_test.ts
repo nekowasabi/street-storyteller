@@ -42,7 +42,9 @@ Deno.test("validateSubplot", async (t) => {
     const result = validateSubplot(invalidSubplot);
     assertEquals(result.valid, false);
     assertExists(result.errors);
-    const nameError = result.errors.find((e: { field: string }) => e.field === "name");
+    const nameError = result.errors.find((e: { field: string }) =>
+      e.field === "name"
+    );
     assertExists(nameError);
   });
 
@@ -60,7 +62,9 @@ Deno.test("validateSubplot", async (t) => {
     const result = validateSubplot(invalidSubplot);
     assertEquals(result.valid, false);
     assertExists(result.errors);
-    const typeError = result.errors.find((e: { field: string }) => e.field === "type");
+    const typeError = result.errors.find((e: { field: string }) =>
+      e.field === "type"
+    );
     assertExists(typeError);
   });
 
@@ -78,7 +82,9 @@ Deno.test("validateSubplot", async (t) => {
     const result = validateSubplot(invalidSubplot);
     assertEquals(result.valid, false);
     assertExists(result.errors);
-    const summaryError = result.errors.find((e: { field: string }) => e.field === "summary");
+    const summaryError = result.errors.find((e: { field: string }) =>
+      e.field === "summary"
+    );
     assertExists(summaryError);
   });
 
@@ -96,7 +102,9 @@ Deno.test("validateSubplot", async (t) => {
     const result = validateSubplot(invalidSubplot);
     assertEquals(result.valid, false);
     assertExists(result.errors);
-    const typeError = result.errors.find((e: { field: string }) => e.field === "type");
+    const typeError = result.errors.find((e: { field: string }) =>
+      e.field === "type"
+    );
     assertExists(typeError);
   });
 
@@ -104,7 +112,9 @@ Deno.test("validateSubplot", async (t) => {
     const result = validateSubplot(null);
     assertEquals(result.valid, false);
     assertExists(result.errors);
-    const rootError = result.errors.find((e: { field: string }) => e.field === "root");
+    const rootError = result.errors.find((e: { field: string }) =>
+      e.field === "root"
+    );
     assertExists(rootError);
   });
 });

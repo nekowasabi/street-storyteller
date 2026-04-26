@@ -362,8 +362,7 @@ export const elementSubplotCommandDescriptor: CommandDescriptor =
       },
       {
         name: "--type",
-        summary:
-          "Subplot type: main, subplot, parallel, background (required)",
+        summary: "Subplot type: main, subplot, parallel, background (required)",
         type: "string",
         required: true,
       },
@@ -545,7 +544,7 @@ export const elementIntersectionCommandDescriptor: CommandDescriptor =
       },
       {
         name: "--influence-level",
-        summary: "Influence level: high, medium, low (default: \"medium\")",
+        summary: 'Influence level: high, medium, low (default: "medium")',
         type: "string",
       },
     ],

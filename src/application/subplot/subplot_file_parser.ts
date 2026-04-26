@@ -3,10 +3,7 @@
  * サブプロットファイルの読み込み・パースユーティリティ
  */
 
-import type {
-  PlotBeat,
-  Subplot,
-} from "@storyteller/types/v2/subplot.ts";
+import type { PlotBeat, Subplot } from "@storyteller/types/v2/subplot.ts";
 
 /**
  * JavaScriptオブジェクトリテラルからコメントを除去する

@@ -93,38 +93,41 @@ Deno.test("ViewSubplotCommand", async (t) => {
     }
   });
 
-  await t.step("サブプロットが空の場合「No subplots found」を表示すること", async () => {
-    const tempDir = await Deno.makeTempDir();
+  await t.step(
+    "サブプロットが空の場合「No subplots found」を表示すること",
+    async () => {
+      const tempDir = await Deno.makeTempDir();
 
-    try {
-      // subplotsディレクトリは存在するが中身は空
-      const subplotsDir = `${tempDir}/src/subplots`;
-      await Deno.mkdir(subplotsDir, { recursive: true });
+      try {
+        // subplotsディレクトリは存在するが中身は空
+        const subplotsDir = `${tempDir}/src/subplots`;
+        await Deno.mkdir(subplotsDir, { recursive: true });
 
-      const command = new ViewSubplotCommand();
-      const context = createMockContext({
-        args: {
-          list: true,
-          projectRoot: tempDir,
-        },
-      });
+        const command = new ViewSubplotCommand();
+        const context = createMockContext({
+          args: {
+            list: true,
+            projectRoot: tempDir,
+          },
+        });
 
-      const result = await command.execute(context);
-      assertEquals(result.ok, true);
+        const result = await command.execute(context);
+        assertEquals(result.ok, true);
 
-      if (result.ok) {
-        const value = result.value as { subplots: Subplot[] };
-        assertEquals(value.subplots.length, 0);
+        if (result.ok) {
+          const value = result.value as { subplots: Subplot[] };
+          assertEquals(value.subplots.length, 0);
+        }
+
+        // presenterに"No subplots found"が表示されたことを確認
+        const logs = (context.presenter as unknown as { logs: string[] }).logs;
+        const found = logs.some((l) => l.includes("No subplots found"));
+        assertEquals(found, true);
+      } finally {
+        await Deno.remove(tempDir, { recursive: true });
       }
-
-      // presenterに"No subplots found"が表示されたことを確認
-      const logs = (context.presenter as unknown as { logs: string[] }).logs;
-      const found = logs.some((l) => l.includes("No subplots found"));
-      assertEquals(found, true);
-    } finally {
-      await Deno.remove(tempDir, { recursive: true });
-    }
-  });
+    },
+  );
 
   await t.step("--idで特定のサブプロット詳細を表示すること", async () => {
     const tempDir = await Deno.makeTempDir();
@@ -405,7 +408,9 @@ Deno.test("ViewSubplotCommand", async (t) => {
 
       // presenterにJSON文字列が表示されたことを確認
       const logs = (context.presenter as unknown as { logs: string[] }).logs;
-      const jsonLog = logs.find((l) => l.includes('"id"') && l.includes("prince_story"));
+      const jsonLog = logs.find((l) =>
+        l.includes('"id"') && l.includes("prince_story")
+      );
       assertExists(jsonLog);
     } finally {
       await Deno.remove(tempDir, { recursive: true });

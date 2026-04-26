@@ -183,7 +183,9 @@ export class CompletionProvider {
     return `[${kindLabel}] ${entity.filePath}`;
   }
 
-  private getKindLabel(kind: "character" | "setting" | "foreshadowing"): string {
+  private getKindLabel(
+    kind: "character" | "setting" | "foreshadowing",
+  ): string {
     return getKindLabel(kind);
   }
 

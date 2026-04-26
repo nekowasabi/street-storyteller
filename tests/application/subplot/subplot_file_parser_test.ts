@@ -3,12 +3,16 @@
  */
 
 import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
-import { parseSubplotFromFile, parseSubplotWithMutableBeats } from "@storyteller/application/subplot/subplot_file_parser.ts";
+import {
+  parseSubplotFromFile,
+  parseSubplotWithMutableBeats,
+} from "@storyteller/application/subplot/subplot_file_parser.ts";
 import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 Deno.test("parseSubplotFromFile", async (t) => {
   await t.step("should parse a valid subplot file content", () => {
-    const content = `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+    const content =
+      `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 /**
  * 王子の花嫁探し
@@ -42,7 +46,8 @@ export const prince_story: Subplot = {
   });
 
   await t.step("should parse subplot with beats", () => {
-    const content = `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+    const content =
+      `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 export const main_story: Subplot = {
   "id": "main_story",
@@ -86,7 +91,8 @@ export const main_story: Subplot = {
   });
 
   await t.step("should parse subplot with optional fields", () => {
-    const content = `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+    const content =
+      `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 export const stepmother_plot: Subplot = {
   "id": "stepmother_plot",
@@ -121,7 +127,8 @@ export const stepmother_plot: Subplot = {
   });
 
   await t.step("should return null for content without subplot export", () => {
-    const content = `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+    const content =
+      `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
 
 export const myTimeline: Timeline = {
   "id": "test",
@@ -138,7 +145,8 @@ export const myTimeline: Timeline = {
   });
 
   await t.step("should return null for malformed JSON", () => {
-    const content = `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+    const content =
+      `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 export const broken: Subplot = { this is not valid json };
 `;
@@ -147,7 +155,8 @@ export const broken: Subplot = { this is not valid json };
   });
 
   await t.step("should handle Japanese variable names in export", () => {
-    const content = `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+    const content =
+      `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 export const 王子の物語: Subplot = {
   "id": "prince_tale",
@@ -167,7 +176,8 @@ export const 王子の物語: Subplot = {
 
 Deno.test("parseSubplotWithMutableBeats", async (t) => {
   await t.step("should return subplot and mutable beats array", () => {
-    const content = `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+    const content =
+      `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 export const test_plot: Subplot = {
   "id": "test_plot",
@@ -220,14 +230,20 @@ export const test_plot: Subplot = {
     assertEquals(subplot.beats.length, 2);
   });
 
-  await t.step("should return null subplot and empty beats for invalid content", () => {
-    const { subplot, beats } = parseSubplotWithMutableBeats("invalid");
-    assertEquals(subplot, null);
-    assertEquals(beats, []);
-  });
+  await t.step(
+    "should return null subplot and empty beats for invalid content",
+    () => {
+      const { subplot, beats } = parseSubplotWithMutableBeats("invalid");
+      assertEquals(subplot, null);
+      assertEquals(beats, []);
+    },
+  );
 
-  await t.step("should return empty beats array for subplot without beats", () => {
-    const content = `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+  await t.step(
+    "should return empty beats array for subplot without beats",
+    () => {
+      const content =
+        `import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 export const empty_plot: Subplot = {
   "id": "empty_plot",
@@ -240,9 +256,10 @@ export const empty_plot: Subplot = {
 };
 `;
 
-    const { subplot, beats } = parseSubplotWithMutableBeats(content);
-    assertExists(subplot);
-    assertEquals(beats.length, 0);
-    assertEquals(subplot.beats.length, 0);
-  });
+      const { subplot, beats } = parseSubplotWithMutableBeats(content);
+      assertExists(subplot);
+      assertEquals(beats.length, 0);
+      assertEquals(subplot.beats.length, 0);
+    },
+  );
 });

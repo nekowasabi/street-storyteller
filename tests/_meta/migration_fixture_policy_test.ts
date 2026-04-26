@@ -18,8 +18,7 @@ Deno.test("migration: fixture policy documented with required keywords", async (
   );
 
   // DECISION: Fixture representative samples must be listed
-  const hasSamplesSection =
-    content.includes("samples/cinderella") &&
+  const hasSamplesSection = content.includes("samples/cinderella") &&
     content.includes("samples/momotaro") &&
     content.includes("samples/mistery/old-letter-mystery");
   assertEquals(
@@ -29,8 +28,7 @@ Deno.test("migration: fixture policy documented with required keywords", async (
   );
 
   // DECISION: v1 maintained command list must be documented
-  const hasCommandsList =
-    content.includes("registerCoreModules") ||
+  const hasCommandsList = content.includes("registerCoreModules") ||
     content.includes("v1 維持対象コマンド一覧") ||
     content.includes("maintain") ||
     content.includes("generate") ||
@@ -46,8 +44,7 @@ Deno.test("migration: fixture policy documented with required keywords", async (
   );
 
   // INFO: rag/migrate CLI registration status must be clarified
-  const hasRagMigrateDecision =
-    content.includes("RAG") &&
+  const hasRagMigrateDecision = content.includes("RAG") &&
     (content.includes("正式維持") ||
       content.includes("後追い実装") ||
       content.includes("未登録漏れ") ||

@@ -56,9 +56,7 @@ export class ViewSubplotCommand extends BaseCliCommand {
     // ステータスフィルタ
     // Why: status field is the canonical lifecycle filter on Subplot type
     if (statusFilter) {
-      subplots = subplots.filter((s) =>
-        s.status === statusFilter
-      );
+      subplots = subplots.filter((s) => s.status === statusFilter);
     }
 
     // --list モード
@@ -207,7 +205,10 @@ export class ViewSubplotCommand extends BaseCliCommand {
       if (subplot.importance) {
         lines.push(`- Importance: ${subplot.importance}`);
       }
-      if (subplot.focusCharacters && Object.keys(subplot.focusCharacters).length > 0) {
+      if (
+        subplot.focusCharacters &&
+        Object.keys(subplot.focusCharacters).length > 0
+      ) {
         const charList = Object.entries(subplot.focusCharacters)
           .map(([charId, weight]) => `${charId}(${weight})`)
           .join(", ");
@@ -236,7 +237,9 @@ export class ViewSubplotCommand extends BaseCliCommand {
     }
 
     // フォーカスキャラクター
-    if (subplot.focusCharacters && Object.keys(subplot.focusCharacters).length > 0) {
+    if (
+      subplot.focusCharacters && Object.keys(subplot.focusCharacters).length > 0
+    ) {
       lines.push("");
       lines.push("## Focus Characters");
       for (const [charId, weight] of Object.entries(subplot.focusCharacters)) {
@@ -245,7 +248,9 @@ export class ViewSubplotCommand extends BaseCliCommand {
     }
 
     // 関連キャラクター
-    if (subplot.relations?.characters && subplot.relations.characters.length > 0) {
+    if (
+      subplot.relations?.characters && subplot.relations.characters.length > 0
+    ) {
       lines.push("");
       lines.push(
         `**Related Characters:** ${subplot.relations.characters.join(", ")}`,
@@ -268,9 +273,14 @@ export class ViewSubplotCommand extends BaseCliCommand {
     }
 
     // 子プロット
-    if (subplot.relations?.relatedSubplots && subplot.relations.relatedSubplots.length > 0) {
+    if (
+      subplot.relations?.relatedSubplots &&
+      subplot.relations.relatedSubplots.length > 0
+    ) {
       lines.push("");
-      lines.push(`**Child Plots:** ${subplot.relations.relatedSubplots.join(", ")}`);
+      lines.push(
+        `**Child Plots:** ${subplot.relations.relatedSubplots.join(", ")}`,
+      );
     }
 
     // ビート一覧

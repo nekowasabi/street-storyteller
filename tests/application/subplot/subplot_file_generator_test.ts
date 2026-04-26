@@ -8,34 +8,41 @@ import { parseSubplotFromFile } from "@storyteller/application/subplot/subplot_f
 import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 Deno.test("generateSubplotFile", async (t) => {
-  await t.step("should generate valid TypeScript file with minimal subplot", () => {
-    const subplot: Subplot = {
-      id: "prince_story",
-      name: "王子の花嫁探し",
-      type: "subplot",
-      status: "active",
-      summary: "王子が運命の人を探す物語",
-      beats: [],
-      focusCharacters: {
-        prince: "primary",
-      },
-    };
+  await t.step(
+    "should generate valid TypeScript file with minimal subplot",
+    () => {
+      const subplot: Subplot = {
+        id: "prince_story",
+        name: "王子の花嫁探し",
+        type: "subplot",
+        status: "active",
+        summary: "王子が運命の人を探す物語",
+        beats: [],
+        focusCharacters: {
+          prince: "primary",
+        },
+      };
 
-    const content = generateSubplotFile(subplot);
+      const content = generateSubplotFile(subplot);
 
-    // import文が含まれていること
-    assertExists(content.match(/import type \{ Subplot \} from "@storyteller\/types\/v2\/subplot\.ts";/));
+      // import文が含まれていること
+      assertExists(
+        content.match(
+          /import type \{ Subplot \} from "@storyteller\/types\/v2\/subplot\.ts";/,
+        ),
+      );
 
-    // JSDocコメントが含まれていること
-    assertExists(content.includes("王子の花嫁探し"));
-    assertExists(content.includes("王子が運命の人を探す物語"));
+      // JSDocコメントが含まれていること
+      assertExists(content.includes("王子の花嫁探し"));
+      assertExists(content.includes("王子が運命の人を探す物語"));
 
-    // export文が含まれていること
-    assertExists(content.match(/export const prince_story: Subplot = \{/));
+      // export文が含まれていること
+      assertExists(content.match(/export const prince_story: Subplot = \{/));
 
-    // JSONが含まれていること
-    assertExists(content.includes('"id": "prince_story"'));
-  });
+      // JSONが含まれていること
+      assertExists(content.includes('"id": "prince_story"'));
+    },
+  );
 
   await t.step("should generate file with beats", () => {
     const subplot: Subplot = {

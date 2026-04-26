@@ -70,7 +70,12 @@ Deno.test("detects intersection referencing nonexistent target subplot", () => {
     type: "subplot",
     status: "active",
     summary: "test",
-    beats: [{ id: "beat1", title: "B", summary: "s", structurePosition: "setup" }],
+    beats: [{
+      id: "beat1",
+      title: "B",
+      summary: "s",
+      structurePosition: "setup",
+    }],
     intersections: [{
       id: "ix1",
       sourceSubplotId: "test_subplot",
@@ -81,7 +86,10 @@ Deno.test("detects intersection referencing nonexistent target subplot", () => {
       influenceDirection: "forward",
     }],
   };
-  assertEquals(subplot.intersections![0].targetSubplotId, "nonexistent_subplot");
+  assertEquals(
+    subplot.intersections![0].targetSubplotId,
+    "nonexistent_subplot",
+  );
 });
 
 Deno.test("detects intersection referencing nonexistent source beat within source subplot", () => {
@@ -91,7 +99,12 @@ Deno.test("detects intersection referencing nonexistent source beat within sourc
     type: "subplot",
     status: "active",
     summary: "test",
-    beats: [{ id: "beat1", title: "B", summary: "s", structurePosition: "setup" }],
+    beats: [{
+      id: "beat1",
+      title: "B",
+      summary: "s",
+      structurePosition: "setup",
+    }],
     intersections: [{
       id: "ix1",
       sourceSubplotId: "test_subplot",
@@ -104,7 +117,9 @@ Deno.test("detects intersection referencing nonexistent source beat within sourc
   };
   const sourceBeatIds = new Set(subplot.beats.map((b) => b.id));
   const hasInvalid = subplot.intersections!.some(
-    (ix) => ix.sourceSubplotId === "test_subplot" && !sourceBeatIds.has(ix.sourceBeatId),
+    (ix) =>
+      ix.sourceSubplotId === "test_subplot" &&
+      !sourceBeatIds.has(ix.sourceBeatId),
   );
   assertEquals(hasInvalid, true);
 });

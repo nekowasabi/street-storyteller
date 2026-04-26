@@ -11,7 +11,10 @@ function generateTestSubplots(count: number): Subplot[] {
       id: `sp${i}_beat${j}`,
       title: `Beat ${j} of Subplot ${i}`,
       summary: `Summary for beat ${j}`,
-      structurePosition: (["setup", "rising", "climax", "falling", "resolution"] as const)[j % 5],
+      structurePosition:
+        (["setup", "rising", "climax", "falling", "resolution"] as const)[
+          j % 5
+        ],
       characters: [`char_${j % 20}`],
       preconditionBeatIds: j > 0 ? [`sp${i}_beat${j - 1}`] : undefined,
     }));
@@ -23,15 +26,17 @@ function generateTestSubplots(count: number): Subplot[] {
       status: "active",
       summary: `Performance test subplot ${i}`,
       beats,
-      intersections: i > 0 ? [{
-        id: `ix_${i}`,
-        sourceSubplotId: `subplot_${i - 1}`,
-        sourceBeatId: `sp${i - 1}_beat5`,
-        targetSubplotId: `subplot_${i}`,
-        targetBeatId: `sp${i}_beat0`,
-        summary: `Intersection ${i}`,
-        influenceDirection: "forward",
-      }] : undefined,
+      intersections: i > 0
+        ? [{
+          id: `ix_${i}`,
+          sourceSubplotId: `subplot_${i - 1}`,
+          sourceBeatId: `sp${i - 1}_beat5`,
+          targetSubplotId: `subplot_${i}`,
+          targetBeatId: `sp${i}_beat0`,
+          summary: `Intersection ${i}`,
+          influenceDirection: "forward",
+        }]
+        : undefined,
     });
   }
   return subplots;
@@ -45,7 +50,11 @@ Deno.test("performance: validate 100 subplots completes within 1 second", () => 
   }
   const elapsed = performance.now() - start;
   console.log(`validate 100 subplots: ${elapsed.toFixed(1)}ms`);
-  assertEquals(elapsed < 1000, true, `Validation took ${elapsed}ms, expected < 1000ms`);
+  assertEquals(
+    elapsed < 1000,
+    true,
+    `Validation took ${elapsed}ms, expected < 1000ms`,
+  );
 });
 
 Deno.test("performance: graph builder handles 100 subplots", () => {
@@ -54,7 +63,11 @@ Deno.test("performance: graph builder handles 100 subplots", () => {
   const start = performance.now();
   const data = builder.build(subplots);
   const elapsed = performance.now() - start;
-  console.log(`graph builder 100 subplots: ${elapsed.toFixed(1)}ms, nodes: ${data.nodes.length}, edges: ${data.edges.length}`);
+  console.log(
+    `graph builder 100 subplots: ${
+      elapsed.toFixed(1)
+    }ms, nodes: ${data.nodes.length}, edges: ${data.edges.length}`,
+  );
   assertEquals(elapsed < 500, true, `Graph build took ${elapsed}ms`);
   assertEquals(data.nodes.length > 0, true);
 });

@@ -42,7 +42,9 @@ Deno.test("cinderella: existing character files are unaffected", async () => {
 Deno.test("cinderella: existing foreshadowing files are unaffected", async () => {
   try {
     let count = 0;
-    for await (const entry of Deno.readDir(join(CINDERELLA, "src/foreshadowings"))) {
+    for await (
+      const entry of Deno.readDir(join(CINDERELLA, "src/foreshadowings"))
+    ) {
       if (entry.isFile && entry.name.endsWith(".ts")) count++;
     }
     assertEquals(count > 0, true, "cinderella should have foreshadowing files");

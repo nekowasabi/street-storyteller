@@ -42,7 +42,13 @@
     "go:coverage": "bash scripts/go_coverage.sh"
   },
   "fmt": {
-    "exclude": ["coverage/", "dist/", "output/", "test_output/"]
+    "exclude": [
+      "coverage/",
+      "dist/",
+      "output/",
+      "test_output/",
+      "internal/**/testdata/"
+    ]
   },
   "exclude": ["samples/", "src/characters/", "src/settings/", "src/timelines/"],
   "lint": {

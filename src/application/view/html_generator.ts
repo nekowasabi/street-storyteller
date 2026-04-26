@@ -570,7 +570,8 @@ ${CONSISTENCY_STYLES}
     const statsHtml = [
       `<span class="stat">Total: <strong>${subplots.length}</strong></span>`,
       ...[...byType.entries()].map(
-        ([t, c]) => `<span class="stat">${escapeHtml(t)}: <strong>${c}</strong></span>`,
+        ([t, c]) =>
+          `<span class="stat">${escapeHtml(t)}: <strong>${c}</strong></span>`,
       ),
     ].join("\n            ");
 
@@ -583,13 +584,19 @@ ${CONSISTENCY_STYLES}
           <h3>${escapeHtml(sp.name)}</h3>
           <div class="meta">
             <span class="type">${escapeHtml(sp.type)}</span>
-            ${sp.importance ? `<span class="importance">${escapeHtml(sp.importance)}</span>` : ""}
+            ${
+        sp.importance
+          ? `<span class="importance">${escapeHtml(sp.importance)}</span>`
+          : ""
+      }
             <span class="id">${escapeHtml(sp.id)}</span>
           </div>
           <p class="summary">${escapeHtml(sp.summary ?? "")}</p>
           <div class="subplot-details">
             <span class="label">Beats:</span> ${sp.beats.length}
-            ${focusNames ? ` | <span class="label">Focus:</span> ${focusNames}` : ""}
+            ${
+        focusNames ? ` | <span class="label">Focus:</span> ${focusNames}` : ""
+      }
           </div>
           <div class="file-path"><code>${escapeHtml(sp.filePath)}</code></div>
         </div>`;
@@ -636,7 +643,9 @@ ${CONSISTENCY_STYLES}
     const foreshadowingGraphData = buildForeshadowingGraphFromSummary(
       analysis.foreshadowings,
     );
-    const subplotGraphData = buildSubplotGraphFromSummary(analysis.subplots ?? []);
+    const subplotGraphData = buildSubplotGraphFromSummary(
+      analysis.subplots ?? [],
+    );
 
     return `
   <script>

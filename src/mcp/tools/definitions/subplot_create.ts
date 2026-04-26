@@ -42,7 +42,7 @@ export const subplotCreateTool: McpToolDefinition = {
         type: "array",
         items: { type: "string" },
         description:
-          "フォーカスキャラクター（\"characterId:weight\"形式の配列。weight: primary/secondary）",
+          'フォーカスキャラクター（"characterId:weight"形式の配列。weight: primary/secondary）',
       },
       parentSubplot: {
         type: "string",

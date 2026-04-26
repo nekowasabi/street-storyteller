@@ -106,7 +106,9 @@ export class ElementBeatCommand extends BaseCliCommand {
           (b) => b.trim(),
         );
         const existingBeatIds = new Set(beats.map((b) => b.id));
-        const missing = preconditionIds.filter((id) => !existingBeatIds.has(id));
+        const missing = preconditionIds.filter((id) =>
+          !existingBeatIds.has(id)
+        );
         if (missing.length > 0) {
           return err({
             code: "precondition_beat_not_found",
@@ -219,9 +221,10 @@ export class ElementBeatCommand extends BaseCliCommand {
     }
 
     // Why: structure-position defaults to "setup" when omitted, allowing simpler beat creation
-    const structurePosition = (typeof args["structure-position"] === "string"
-      ? args["structure-position"]
-      : "setup") as BeatStructurePosition;
+    const structurePosition =
+      (typeof args["structure-position"] === "string"
+        ? args["structure-position"]
+        : "setup") as BeatStructurePosition;
 
     // structure-positionの検証
     if (

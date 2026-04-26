@@ -158,7 +158,8 @@ export class SubplotPlugin implements ElementPlugin {
         },
         relations: {
           type: "SubplotRelations",
-          description: "Related entities (characters, settings, foreshadowings, relatedSubplots)",
+          description:
+            "Related entities (characters, settings, foreshadowings, relatedSubplots)",
           optional: true,
         },
       },

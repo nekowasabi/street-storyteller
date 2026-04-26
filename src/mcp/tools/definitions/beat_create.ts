@@ -109,15 +109,22 @@ export const beatCreateTool: McpToolDefinition = {
 
     // structurePositionの検証
     if (typeof args.structurePosition === "string") {
-      const validPositions = ["setup", "rising", "climax", "falling", "resolution"];
+      const validPositions = [
+        "setup",
+        "rising",
+        "climax",
+        "falling",
+        "resolution",
+      ];
       if (!validPositions.includes(args.structurePosition)) {
         return {
           content: [
             {
               type: "text" as const,
-              text: `Error: Invalid structurePosition '${args.structurePosition}'. Must be one of: ${
-                validPositions.join(", ")
-              }.`,
+              text:
+                `Error: Invalid structurePosition '${args.structurePosition}'. Must be one of: ${
+                  validPositions.join(", ")
+                }.`,
             },
           ],
           isError: true,

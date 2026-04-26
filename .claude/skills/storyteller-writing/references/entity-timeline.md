@@ -3,12 +3,14 @@
 ## View系ツール
 
 ### タイムライン表示
+
 ```bash
 timeline_view              # タイムライン表示
 timeline_view --id {id}    # 個別表示
 ```
 
 ### 因果関係・整合性分析
+
 ```bash
 timeline_analyze           # 全タイムライン分析
 ```
@@ -22,16 +24,19 @@ timeline_analyze           # 全タイムライン分析
 ## Create系ツール
 
 ### timeline_create
+
 - **分類**: WRITE（ユーザー承認必須）
 - **用途**: 新規タイムライン作成
 - **前提**: `storyteller://timelines` で既存タイムラインを先読み
 
 ### event_create
+
 - **分類**: WRITE（ユーザー承認必須）
 - **用途**: タイムラインにイベント追加
 - **前提**: `timeline_view --id {id}` で該当タイムラインを確認
 
 ### event_update
+
 - **分類**: WRITE（ユーザー承認必須）
 - **用途**: イベント情報更新
 - **前提**: `timeline_view --id {id}` で該当イベントを確認

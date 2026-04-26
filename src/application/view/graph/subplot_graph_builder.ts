@@ -52,7 +52,9 @@ export class SubplotGraphBuilder
         nodes.push({
           id: beat.id,
           label: beat.title,
-          title: `${beat.title}\n${beat.summary ?? ""}\nPosition: ${beat.structurePosition}`,
+          title: `${beat.title}\n${
+            beat.summary ?? ""
+          }\nPosition: ${beat.structurePosition}`,
           shape: POSITION_SHAPES[beat.structurePosition] ?? "dot",
           color: {
             background: TYPE_COLORS[subplot.type],
