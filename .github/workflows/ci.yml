@@ -14,6 +14,11 @@ jobs:
         with:
           deno-version: v2.x
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
       - name: Format check
         run: deno fmt --check
 
@@ -25,3 +30,9 @@ jobs:
 
       - name: Meta check (sample)
         run: deno task meta:check -- --dir samples/cinderella/manuscripts --recursive
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go tests (default tag, includes lint/guard AST checks)
+        run: go test ./... -count=1
