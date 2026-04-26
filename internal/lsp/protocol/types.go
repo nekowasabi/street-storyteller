@@ -2,7 +2,10 @@
 // Wire-level Content-Length parsing lives in jsonrpc.go (Wave-main WT-2).
 package protocol
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // Message is the discriminated union for request/response/notification.
 type Message struct {
@@ -19,6 +22,11 @@ type ResponseError struct {
 	Code    int             `json:"code"`
 	Message string          `json:"message"`
 	Data    json.RawMessage `json:"data,omitempty"`
+}
+
+// Error implements the error interface.
+func (e *ResponseError) Error() string {
+	return fmt.Sprintf("jsonrpc error %d: %s", e.Code, e.Message)
 }
 
 // JSON-RPC 2.0 standard error codes.
