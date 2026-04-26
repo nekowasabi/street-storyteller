@@ -17,16 +17,14 @@ Support for writing a story.
 git clone https://github.com/nekowasabi/street-storyteller.git
 cd street-storyteller
 
-# Build the executable (local ./storyteller)
-deno task build
+# Build the Go binary (local ./storyteller)
+go build -o storyteller ./cmd/storyteller
 ```
 
-Install to your PATH (builds via `deno compile`):
+Install to your PATH:
 
 ```bash
-./scripts/install.sh
-# or
-./scripts/install.sh --prefix "$HOME/.local" --force
+cp storyteller "$HOME/.local/bin/storyteller"
 ```
 
 ## Usage
@@ -186,26 +184,6 @@ To install a local git pre-commit hook:
 ./storyteller lsp start --stdio
 ```
 
-#### RAG Command
-
-Generate RAG (Retrieval-Augmented Generation) documents for AI-assisted writing.
-
-```bash
-# Export all elements to RAG documents
-./storyteller rag export
-
-# Export only changed files (incremental)
-./storyteller rag export --incremental
-
-# Update RAG documents + digrag index
-./storyteller rag update
-
-# Install Git hooks for auto-update
-./storyteller rag install-hooks
-```
-
-See `docs/rag.md` for the full guide.
-
 ### Development
 
 ```bash
@@ -218,9 +196,6 @@ deno task lint         # Lint check
 deno task test         # Run tests
 deno task coverage     # Coverage check (threshold: 80%)
 deno task bench        # Run benchmarks
-
-# Build distributable artifacts (dist/)
-deno task cli:package
 ```
 
 ### Quality Gates
