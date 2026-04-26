@@ -50,9 +50,9 @@ Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI 
 
 ## Refactor Phase: 品質改善
 
-- [ ] CLI handler から I/O を注入可能にする
-- [ ] command descriptor と help 生成を整理
-- [ ] テストが継続して成功することを確認
+- [x] CLI handler から I/O を注入可能にする (Deps/DefaultDeps/runMain の契約テストと docstring 整備, WT-1)
+- [x] command descriptor と help 生成を整理 (Optional CommandWithUsage interface 導入, help.Handle が Description/Usage を render, WT-2)
+- [x] テストが継続して成功することを確認 (go test ./... 全緑, gofmt/vet clean)
 
 ✅ **Phase Complete**
 
