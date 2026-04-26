@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -eu
 
-bin="${1:-./dist/storyteller_linux_amd64}"
+bin="${1:-./dist/linux_amd64/storyteller}"
 max_bytes=$((50 * 1024 * 1024))
 
 if [ ! -x "$bin" ]; then

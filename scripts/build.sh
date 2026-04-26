@@ -13,7 +13,9 @@ for target in $targets; do
   if [ "$goos" = "windows" ]; then
     ext=".exe"
   fi
-  name="storyteller_${goos}_${goarch}${ext}"
-  echo "building $name"
-  GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$out/$name" ./cmd/storyteller
+  dir="$out/${goos}_${goarch}"
+  mkdir -p "$dir"
+  name="storyteller${ext}"
+  echo "building ${goos}_${goarch}/$name"
+  GOOS="$goos" GOARCH="$goarch" CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o "$dir/$name" ./cmd/storyteller
 done
