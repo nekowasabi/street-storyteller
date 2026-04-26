@@ -35,7 +35,11 @@
     "cli:completions": "deno run --allow-read --allow-write scripts/generate_completions.ts",
     "cli:package": "deno task cli:compile && deno task cli:manifest && deno task cli:completions",
     "install": "mkdir -p ~/.local/bin && ln -sf $(pwd)/storyteller ~/.local/bin/storyteller && echo 'Installed: ~/.local/bin/storyteller'",
-    "uninstall": "rm -f ~/.local/bin/storyteller && echo 'Uninstalled: ~/.local/bin/storyteller'"
+    "uninstall": "rm -f ~/.local/bin/storyteller && echo 'Uninstalled: ~/.local/bin/storyteller'",
+    "go:test": "go test ./... -count=1",
+    "go:test:integration": "go test -tags=integration ./... -count=1",
+    "go:test:external": "go test -tags=external ./... -count=1 -v",
+    "go:coverage": "bash scripts/go_coverage.sh"
   },
   "fmt": {
     "exclude": ["coverage/", "dist/", "output/", "test_output/"]

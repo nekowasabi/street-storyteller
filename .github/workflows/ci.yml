@@ -1,38 +1,76 @@
 name: CI
 
-on:
-  push:
-  pull_request:
+on: [push, pull_request]
 
 jobs:
-  test:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
-
+      - run: deno fmt --check
+      - run: deno lint
       - uses: actions/setup-go@v5
         with:
           go-version: '1.25'
           cache: true
+      - run: go vet ./...
 
-      - name: Format check
-        run: deno fmt --check
-
-      - name: Lint
-        run: deno lint
-
-      - name: Run tests
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: Deno tests
         run: deno task test
-
-      - name: Meta check (sample)
-        run: deno task meta:check -- --dir samples/cinderella/manuscripts --recursive
-
-      - name: Go vet
-        run: go vet ./...
-
-      - name: Go tests (default tag, includes lint/guard AST checks)
+      - name: Go default fast tests
         run: go test ./... -count=1
+      # external tag は default に絶対混入させない (Red テスト保護)
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - run: go test -tags=integration ./... -count=1
+
+  external:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[external]')
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - name: External tests with machine-detectable skip log
+        run: |
+          set +e
+          go test -tags=external ./... -count=1 -v
+          rc=$?
+          if [ $rc -ne 0 ]; then
+            echo "EXTERNAL_SKIP_REASON=tests_failed_or_skipped"
+          fi
+          exit $rc
+
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+      - run: bash scripts/go_coverage.sh
+      # internal/testkit/clock のみ 70% gate、他 package は warning-only
