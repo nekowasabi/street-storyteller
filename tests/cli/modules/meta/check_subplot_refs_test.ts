@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 import { validateSubplot } from "@storyteller/plugins/core/subplot/validator.ts";
 
@@ -21,7 +21,7 @@ Deno.test("detects beat referencing nonexistent timelineEventId", () => {
       timelineEventId: "nonexistent_event",
     }],
   };
-  const result = validateSubplot(subplot);
+  validateSubplot(subplot);
   // The validator checks internal consistency; external ref check is in check.ts
   // We verify the beat has the field that would be caught by validateSubplotReferences
   assertEquals(subplot.beats[0].timelineEventId, "nonexistent_event");

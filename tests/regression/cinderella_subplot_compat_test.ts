@@ -1,5 +1,5 @@
-import { assertEquals } from "jsr:@std/assert";
-import { join } from "jsr:@std/path";
+import { assertEquals } from "@std/assert";
+import { join } from "@std/path";
 import { validateSubplot } from "@storyteller/plugins/core/subplot/validator.ts";
 
 const CINDERELLA = join(Deno.cwd(), "samples/cinderella");

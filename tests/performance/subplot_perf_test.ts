@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import { validateSubplot } from "@storyteller/plugins/core/subplot/validator.ts";
 import { SubplotGraphBuilder } from "@storyteller/application/view/graph/subplot_graph_builder.ts";
 import { generateSubplotDocument } from "@storyteller/rag/templates/subplot.ts";

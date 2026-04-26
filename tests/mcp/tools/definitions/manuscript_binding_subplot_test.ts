@@ -1,4 +1,4 @@
-import { assertEquals, assertStringIncludes } from "jsr:@std/assert";
+import { assertEquals, assertStringIncludes } from "@std/assert";
 import { FrontmatterEditor } from "@storyteller/application/meta/frontmatter_editor.ts";
 
 const BASE_MD = `---

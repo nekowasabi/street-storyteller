@@ -11,12 +11,7 @@ import type {
 } from "@storyteller/cli/types.ts";
 import { BaseCliCommand } from "@storyteller/cli/base_command.ts";
 import { createLegacyCommandDescriptor } from "@storyteller/cli/legacy_adapter.ts";
-import type {
-  PlotBeat,
-  PlotIntersection,
-  Subplot,
-  SubplotType,
-} from "@storyteller/types/v2/subplot.ts";
+import type { Subplot, SubplotType } from "@storyteller/types/v2/subplot.ts";
 
 /**
  * ViewSubplotCommandクラス

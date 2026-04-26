@@ -1,4 +1,4 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 
 Deno.test("skips subplot validation when no subplots directory", () => {
   // When src/subplots/ does not exist, validateSubplots returns empty errors.

@@ -2,12 +2,11 @@
  * Subplot File Parser テスト
  */
 
-import { assertEquals, assertExists, assertNotEquals } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import {
   parseSubplotFromFile,
   parseSubplotWithMutableBeats,
 } from "@storyteller/application/subplot/subplot_file_parser.ts";
-import type { Subplot } from "@storyteller/types/v2/subplot.ts";
 
 Deno.test("parseSubplotFromFile", async (t) => {
   await t.step("should parse a valid subplot file content", () => {

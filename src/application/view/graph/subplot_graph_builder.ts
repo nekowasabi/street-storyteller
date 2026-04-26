@@ -3,7 +3,6 @@ import type { VisEdge, VisGraphData, VisNode } from "./vis_types.ts";
 import type {
   BeatStructurePosition,
   PlotBeat,
-  PlotIntersection,
   Subplot,
   SubplotType,
 } from "@storyteller/types/v2/subplot.ts";

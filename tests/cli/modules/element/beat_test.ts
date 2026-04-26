@@ -4,7 +4,7 @@
  * storyteller element beat コマンドの動作を検証
  */
 
-import { assertEquals, assertExists } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import { ElementBeatCommand } from "@storyteller/cli/modules/element/beat.ts";
 import { createMockContext } from "../../../test_utils/mock_context.ts";
 

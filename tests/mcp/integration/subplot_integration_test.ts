@@ -1,4 +1,4 @@
-import { assertEquals, assertExists } from "jsr:@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { subplotCreateTool } from "@storyteller/mcp/tools/definitions/subplot_create.ts";
 import { subplotViewTool } from "@storyteller/mcp/tools/definitions/subplot_view.ts";
 import { beatCreateTool } from "@storyteller/mcp/tools/definitions/beat_create.ts";

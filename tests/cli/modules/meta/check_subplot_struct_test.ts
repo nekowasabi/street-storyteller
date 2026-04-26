@@ -1,6 +1,5 @@
-import { assertEquals } from "jsr:@std/assert";
+import { assertEquals } from "@std/assert";
 import type { Subplot } from "@storyteller/types/v2/subplot.ts";
-import { validateSubplot } from "@storyteller/plugins/core/subplot/validator.ts";
 
 Deno.test("detects subplot without climax beat", () => {
   const subplot: Subplot = {
