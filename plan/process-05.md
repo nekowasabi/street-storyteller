@@ -56,9 +56,9 @@
 
 ## Refactor Phase: 品質改善
 
-- [ ] LSP server からタイマーと外部プロセスを完全排除
-- [ ] MCP/CLI/LSP の service 呼び出しを共通化
-- [ ] テストが継続して成功することを確認
+- [x] LSP server からタイマーと外部プロセスを完全排除 (Green Phase で達成済み: clock.Clock / process.Runner DI 完了、time/exec の直接利用なし)
+- [x] MCP/CLI/LSP の service 呼び出しを共通化 (internal/service/ 層を新設、CLI/MCP の MetaCheck/Validate を移譲、走査仕様を depth-1 に統一)
+- [x] テストが継続して成功することを確認 (go test ./... 全 Green、28 packages)
 
 ✅ **Phase Complete**
 
