@@ -1,2 +1,0 @@
-# TBD: regenerate with `go test -update ./cmd/storyteller/...` once
-# `view character --id cinderella` Green phase lands (Process 10 wt-1b).
