@@ -1,6 +1,9 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -74,3 +77,21 @@ jobs:
           cache: true
       - run: bash scripts/go_coverage.sh
       # internal/testkit/clock のみ 70% gate、他 package は warning-only
+
+  bench:
+    # Why: 性能ベンチ (Process 100) は workflow_dispatch のみ走らせる。
+    # 共有 runner の数値ばらつきは PR ゲートに耐えないため、定常的な PR ブロックには使わない。
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+          cache: true
+      - name: Build storyteller binary
+        run: go build -trimpath -ldflags="-s -w" -o dist/storyteller ./cmd/storyteller
+      - name: CLI bench
+        run: bash scripts/bench/bench_cli.sh
+      - name: LSP bench
+        run: bash scripts/bench/bench_lsp.sh
