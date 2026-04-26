@@ -116,7 +116,8 @@ func TestGolden_VersionJSON_Canonical(t *testing.T) {
 			writeVersionCanonicalGolden(t, "version_json_canonical.json", canonical+"\n")
 			return
 		}
-		t.Errorf("golden mismatch:\n--- got ---\n%s\n--- want ---\n%s", canonical, strings.TrimSpace(want))
+		t.Fatalf("golden mismatch (%s)\n--- want ---\n%s\n--- got ---\n%s\n--- end ---",
+			"version_json_canonical.json", strings.TrimSpace(want), canonical)
 	}
 	if exitCode != 0 {
 		t.Errorf("expected exit 0, got %d", exitCode)

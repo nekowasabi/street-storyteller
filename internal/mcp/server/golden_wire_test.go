@@ -117,7 +117,7 @@ func assertOrUpdateGolden(t *testing.T, goldenName, got string) {
 		t.Fatalf("golden %s missing — run `go test -update` to generate\n--- got ---\n%s", goldenName, got)
 	}
 	if string(want) != got {
-		t.Fatalf("golden mismatch for %s\n--- want ---\n%s\n--- got ---\n%s", goldenName, string(want), got)
+		t.Fatalf("golden mismatch (%s)\n--- want ---\n%s\n--- got ---\n%s\n--- end ---", goldenName, string(want), got)
 	}
 }
 

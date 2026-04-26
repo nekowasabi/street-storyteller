@@ -16,7 +16,6 @@
 ## 残課題（非ブロッキング）
 
 - **Refactor Phase**: process-10.md の Refactor チェックリスト未消化（fixture 更新手順明文化、差分表示改善、共通 helper 抽出）
-- **RAG document fixture**: 今回 wave 対象外。次回 wave または別 Process で対応
 - **canonicalize helper の重複**: wt-1c, wt-2a, wt-2b で `canonicalizeJSON` 同等関数を各々定義。`internal/testkit/golden` パッケージへの集約余地あり
 - **assertOrUpdateGolden ヘルパーの統一**: wt-1a/1b は `assertGolden` (golden_test.go), wt-2b は `assertOrUpdateGolden` (golden_wire_test.go)。命名規約とフラグ名 (`-update` vs `-update-canonical`) も整合させる余地あり
 
@@ -33,3 +32,18 @@
 - .serena/memories/wave-a3-pattern.md
 - .serena/memories/inprocess-golden-test-strategy.md
 - .serena/memories/subagent-sandbox-go-deny.md
+
+---
+
+## Cycle 2 (Refactor Phase) 完了記録
+
+- 実施日: 2026-04-26
+- 範囲: docs ランブック追記 + 4 golden アサーションの diff フォーマット統一
+- 編集ファイル:
+  - docs/development/golden-fixture-update.md (LSP 手動更新節 2.5 追加)
+  - cmd/storyteller/golden_test.go (assertGolden を Errorf→Fatalf 統一)
+  - cmd/storyteller/golden_version_canonical_test.go (want/got 順序統一)
+  - internal/mcp/server/golden_wire_test.go (--- end --- マーカー追加)
+  - internal/lsp/server/golden_wire_test.go (initialize/hover フォーマット統一)
+- 検証: go test ./... 全 31 パッケージ ok / go vet ./... 警告 0
+- スコープ外確認: RAG document fixture（Go 側未移行のため Process 10 外、TS 側継続運用）

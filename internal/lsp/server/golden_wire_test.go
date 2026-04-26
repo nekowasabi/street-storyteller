@@ -115,7 +115,7 @@ func TestGolden_LSP_InitializeWire(t *testing.T) {
 	want := canonicalizeJSON(t, wantBody)
 
 	if got != want {
-		t.Errorf("initialize wire mismatch:\n--- got ---\n%s\n--- want ---\n%s", got, want)
+		t.Errorf("golden mismatch (initialize_response.json)\n--- want ---\n%s\n--- got ---\n%s\n--- end ---", want, got)
 	}
 }
 
@@ -152,6 +152,6 @@ func TestGolden_LSP_HoverWire(t *testing.T) {
 	want := canonicalizeJSON(t, wantBody)
 
 	if got != want {
-		t.Errorf("hover wire mismatch:\n--- got ---\n%s\n--- want ---\n%s", got, want)
+		t.Errorf("golden mismatch (hover_response.json)\n--- want ---\n%s\n--- got ---\n%s\n--- end ---", want, got)
 	}
 }

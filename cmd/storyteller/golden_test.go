@@ -52,7 +52,8 @@ func assertGolden(t *testing.T, file string, got string) {
 		t.Fatalf("read golden %s: %v (run with -update to create)", path, err)
 	}
 	if string(want) != got {
-		t.Errorf("%s mismatch\n--- want ---\n%s\n--- got ---\n%s", path, string(want), got)
+		t.Fatalf("golden mismatch (%s)\n--- want ---\n%s\n--- got ---\n%s\n--- end ---",
+			path, string(want), got)
 	}
 }
 

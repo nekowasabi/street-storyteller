@@ -76,6 +76,28 @@ Golden テストは「正しい挙動を定義する」テストではなく、
 2. 実装側の不具合を修正
 3. テストが PASS することを確認
 
+### 2.5 LSP wire-protocol fixture の更新（手動）
+
+LSP server の `internal/lsp/server/testdata/lsp/` golden テストは現在 `-update` フラグが実装されていません。
+fixture を更新する際は以下の手順で対応してください：
+
+1. テストを実行して diff を観察
+
+   ```bash
+   go test ./internal/lsp/server/... -run TestGoldenWire -v
+   ```
+
+2. `internal/lsp/server/testdata/lsp/` 配下の対象 `.json` ファイルを手動編集
+   - `initialize_request.json` / `initialize_response.json`
+   - `hover_request.json` / `hover_response.json`
+   - その他 wire-protocol fixture
+
+3. 修正後、同じテストで PASS を確認
+
+   ```bash
+   go test ./internal/lsp/server/... -run TestGoldenWire -v
+   ```
+
 ---
 
 ## canonicalize 戦略
@@ -90,7 +112,6 @@ Golden テストは「正しい挙動を定義する」テストではなく、
 
 - **view character の exit 1 → exit 0**: TS character loader 実装後に Golden を更新予定
 - **meta check の "0 files validated" → 実 fixture チェック結果**: manuscripts loader 拡張後
-- **RAG document fixture**: Process 10 second wave で追加予定
 
 ---
 
