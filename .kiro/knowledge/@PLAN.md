@@ -22,15 +22,8 @@
 - `src/cli/types.ts`にdescriptor向けの型を追加し、コマンド定義とプレゼンテーション層で共有する。
 - ヘルプ出力はdescriptorを巡回する`src/cli/help/renderer.ts`で生成し、近似候補提示やエラーメッセージを一元管理する。
 - `src/cli/completions/`でdescriptorからBash/Zsh補完ファイルを生成し、`deno task cli:completions`で再生成できるようにする。
-- `scripts/build_cli.ts`とインストール導線（`scripts/install.sh`）を追加し、`deno compile`成果物とチェックサムをマニフェスト化する。
-- 既存コマンド(`generate`,`help`)はdescriptor経由で登録し、レガシーハンドラを`legacy_adapter`で段階移行する。
-- テンプレート調査結果:
-  - `src/cli/command_registry.ts:7`は重複検知と単一解決のみで階層・共通フラグを扱えない。
-  - `src/cli/base_command.ts:7`はメタデータを持たずヘルプ生成に利用できない。
-  - `src/cli.ts:5`は固定エイリアスマップと静的ヘルプ呼び出しに依存している。
-  - `src/cli/modules/generate.ts:5` /
-    `help.ts:5`は独自に引数検証し、descriptorとの連携が無い。
-  - `tests/command_registry_test.ts:5`と`tests/cli_test.ts:5`は現行フラット実装の挙動を前提としているため再設計に合わせ改修が必要。
+- `scripts/build.sh`（Go クロスコンパイル）とインストール導線（`scripts/install.sh`）で成果物を生成する。
+- 既存コマンド(`generate`,`help`)はGo側の`internal/cli/`で実装済み。
 
 ## 生成AIの学習用コンテキスト
 
@@ -39,23 +32,17 @@
 - @ARCHITECT.md
   - Phase0のレイヤ構造・リスクを整理した計画書。
 
-### 既存CLI実装
+### 既存CLI実装（Go 移植済み）
 
-- src/cli.ts
-  - 現在の起動フローとエイリアス処理の把握に利用。
-- src/cli/command_registry.ts
-  - 現行のフラットレジストリ実装。
-- src/cli/base_command.ts
-  - コマンド共通処理の現状確認。
-- src/cli/modules/index.ts
-  - コマンド登録のエントリポイント。
+- cmd/storyteller/main.go
+  - Go 版エントリポイント。
+- internal/cli/
+  - Go 版 CLI 実装（modules, presenter, registry 等）。
 
 ### テスト
 
-- tests/cli_test.ts
-  - CLI挙動を保証する既存ユニットテスト。
-- tests/command_registry_test.ts
-  - レジストリ仕様のテストカバレッジ。
+- internal/cli/ 配下の Go テスト群
+  - CLI挙動を保証するテスト。
 
 ## Process
 
@@ -162,10 +149,9 @@
 
 #### sub2 ビルドスクリプトとマニフェスト
 
-@target: scripts/build_cli.ts @ref: @ARCHITECT.md
+@target: scripts/build.sh @ref: @ARCHITECT.md
 
-- [x] `deno compile`ラッパー、チェックサム生成、マニフェスト出力を実装する。
-- [x] `deno.json`に`cli:build`/`cli:completions`/`cli:package`タスクを追加しテストを整備する。
+- [x] `scripts/build.sh`（Go クロスコンパイル）とマニフェスト出力を実装する。
 - [x] `scripts/install.sh`の骨格とE2Eテスト（ダミーFS）を追加する。
 
 #### sub3 事後チェック

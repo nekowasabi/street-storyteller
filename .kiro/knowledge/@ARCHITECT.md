@@ -92,8 +92,8 @@ src/
 
 ### 3.3 インストールとパッケージング
 
-- バイナリをコンパイルしチェックサムとアーティファクトマニフェストを生成する
-  `scripts/build_cli.ts` を作成する。
+- Go バイナリをクロスコンパイルしチェックサムとアーティファクトを生成する
+  `scripts/build.sh` を使用する（Go 移植済み）。
 - バイナリ配置（デフォルトは `$HOME/.local/bin`）、PATH
   検出、補完セットアップを担う `scripts/install.sh` と
   `scripts/uninstall.sh`（フェーズ2で実装）を用意する。
@@ -185,8 +185,7 @@ src/
   フラットコマンド用アダプタをフェーズ0完了までは維持し、全モジュール移行後に非推奨化する。
 - **環境差**:
   インストーラが権限不足の場合の手動手順を提示し、既存インストール検出後の上書きを制御する。
-- **補完ドリフト**: `deno task build:completions`
-  による自動再生成を徹底し、descriptor 変更時は必ずコミットさせる。
+- **補完ドリフト**: 補完スクリプトの自動再生成を徹底し、descriptor 変更時は必ずコミットさせる。
 - **バイナリサイズ**: マニフェストで `deno compile` の出力を監視し、閾値（例: 30
   MB）を超えた場合はフラグやツリーシェイキングを調査する。
 
@@ -198,8 +197,7 @@ src/
 - `docs/cli/architecture.md`
   を新設し、コマンドツリー、descriptor、拡張方法をまとめる。
 - CONTRIBUTING に
-  `deno task cli:build`、`deno task cli:completions`、`deno task cli:package`
-  などのメンテナンスタスクを明記する。
+  `bash scripts/build.sh`（Go バイナリビルド）などのメンテナンス手順を明記する。
 
 ---
 
