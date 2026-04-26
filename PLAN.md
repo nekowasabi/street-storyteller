@@ -1,7 +1,8 @@
 ---
 title: "Go 全面移植（処理エンジン層）+ TypeScript authoring surface 維持"
-status: planning
+status: completed
 created: "2026-04-26"
+completed: "2026-04-27"
 ---
 
 # Commander's Intent
@@ -42,16 +43,16 @@ LSP 起動時間（現行 3-5s → 目標 <2s）と CLI レイテンシ（Deno 1
 | 11 | Phase 5b go.mod 整理・vendoring 検討 | ☑ completed | [→ plan/process-11.md](plan/process-11.md) |
 | 12 | Phase 5c バイナリ検証（クロスコンパイル） | ☑ completed | [→ plan/process-12.md](plan/process-12.md) |
 | 13 | E2E テスト棚卸し・削除（YAGNI 原則） | ☑ completed | [→ plan/process-13.md](plan/process-13.md) |
-| 50 | Phase 6 配布（single binary / install.sh / homebrew） | ☐ planning | [→ plan/process-50.md](plan/process-50.md) |
-| 100 | 品質ゲート: 性能ベンチマーク（LSP <2s / CLI <100ms） | ☐ planning | [→ plan/process-100.md](plan/process-100.md) |
-| 101 | 品質ゲート: テストカバレッジ（Go 70%+） | ☐ planning | [→ plan/process-101.md](plan/process-101.md) |
-| 200 | README 更新（インストール・アーキテクチャ図） | ☐ planning | [→ plan/process-200.md](plan/process-200.md) |
-| 201 | docs 個別更新（cli/lsp/mcp/rag/lint/architecture） | ☐ planning | [→ plan/process-201.md](plan/process-201.md) |
-| 300 | OODA 振り返り（達成度評価・教訓記録） | ☐ planning | [→ plan/process-300.md](plan/process-300.md) |
+| 50 | Phase 6 配布（single binary / install.sh / homebrew） | ☑ completed | [→ plan/process-50.md](plan/process-50.md) |
+| 100 | 品質ゲート: 性能ベンチマーク（LSP <2s / CLI <100ms） | ☑ completed | [→ plan/process-100.md](plan/process-100.md) |
+| 101 | 品質ゲート: テストカバレッジ（Go 70%+） | ☑ completed | [→ plan/process-101.md](plan/process-101.md) |
+| 200 | README 更新（インストール・アーキテクチャ図） | ☑ completed | [→ plan/process-200.md](plan/process-200.md) |
+| 201 | docs 個別更新（cli/lsp/mcp/rag/lint/architecture） | ☑ completed | [→ plan/process-201.md](plan/process-201.md) |
+| 300 | OODA 振り返り（達成度評価・教訓記録） | ☑ completed | [→ plan/process-300.md](plan/process-300.md) |
 
 **DAG**: `01→02→03→{04,05,06,07,08}→09→13→10→11→12→{100,101}→50→{200,201}→300`
 **DAG凡例**: `{A,B}` = 並列実行可能、`A→B` = A完了後にB実行
-**Overall**: ☑ 13/19 completed
+**Overall**: ☑ 19/19 completed（2026-04-27 達成 — 振り返り: docs/go-migration-retrospective.md）
 
 ---
 
