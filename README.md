@@ -12,18 +12,40 @@ Support for writing a story.
 
 ## Installation
 
-```bash
-# Clone the repository
-git clone https://github.com/nekowasabi/street-storyteller.git
-cd street-storyteller
+### Quick install (curl)
 
-# Build the Go binary (local ./storyteller)
-go build -o storyteller ./cmd/storyteller
+```bash
+curl -fsSL https://raw.githubusercontent.com/nekowasabi/street-storyteller/main/scripts/install.sh | sh
 ```
 
-Install to your PATH:
+`$HOME/.local/bin/storyteller` にインストールされます。`--prefix` で配置先を変更可能:
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/nekowasabi/street-storyteller/main/scripts/install.sh \
+  | sh -s -- --prefix /usr/local/bin
+```
+
+### Homebrew (macOS / Linux)
+
+```bash
+brew tap nekowasabi/street-storyteller https://github.com/nekowasabi/street-storyteller
+brew install storyteller
+```
+
+> Note: 公式 tap repo の公開は今後の作業です。現状はリポジトリ内 `Formula/storyteller.rb`
+> を `brew install --build-from-source ./Formula/storyteller.rb` で利用できます。
+
+### Manual download
+
+GitHub Releases からプラットフォーム別バイナリ
+(`storyteller-vX.Y.Z-<os>-<arch>.tar.gz`) をダウンロードして展開し、PATH に配置してください。
+
+### Build from source
+
+```bash
+git clone https://github.com/nekowasabi/street-storyteller.git
+cd street-storyteller
+go build -o storyteller ./cmd/storyteller
 cp storyteller "$HOME/.local/bin/storyteller"
 ```
 
