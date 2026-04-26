@@ -72,5 +72,9 @@ jobs:
         with:
           go-version: "1.25"
           cache: true
-      - run: bash scripts/go_coverage.sh
-      # internal/testkit/clock のみ 70% gate、他 package は warning-only
+      - name: Go coverage gate (>=70%)
+        run: bash scripts/go_coverage.sh
+        env:
+          THRESHOLD: 70
+      # Why: Process-101 で全 package 集計の 70% gate へ昇格
+      #      （旧: internal/testkit/clock のみ 70% gate, 他 warning-only）
