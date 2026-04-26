@@ -7,6 +7,13 @@ import (
 )
 
 // DefaultDeps returns Deps wired to the real OS streams.
+//
+// Why: instead of accessing os.Stdout/Stderr/Stdin directly inside Run or
+// RunWithRegistry, we bind them once here and pass the result as a value.
+// This makes the I/O boundary explicit: in tests, callers substitute
+// bytes.Buffer instances without any mocking framework, and the production
+// path remains a single call-site change if OS streams are ever wrapped
+// (e.g., for colour filtering or structured logging).
 func DefaultDeps() Deps {
 	return Deps{
 		Stdout: os.Stdout,

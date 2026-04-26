@@ -9,10 +9,24 @@ import (
 
 // Deps groups injectable dependencies for the CLI runtime. Keep small;
 // large fan-out belongs in CommandContext.
+//
+// All fields must be non-nil at the point of CLI dispatch. Use DefaultDeps()
+// for production and supply bytes.Buffer instances in tests. Passing nil will
+// cause a nil-pointer panic in the presenter or error-printing paths.
 type Deps struct {
+	// Stdout receives normal command output (info, success messages, JSON payloads).
+	// Must not be nil.
 	Stdout io.Writer
+
+	// Stderr receives error messages, warnings, and usage hints.
+	// Routed here so callers can capture diagnostics independently of main output.
+	// Must not be nil.
 	Stderr io.Writer
-	Stdin  io.Reader
+
+	// Stdin is the input stream for commands that read user input interactively.
+	// May be nil for commands that never read from stdin; the CLI core itself
+	// does not read from Stdin.
+	Stdin io.Reader
 }
 
 // Presenter abstracts text vs JSON output. Implementations: TextPresenter, JSONPresenter.
