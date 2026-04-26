@@ -4,12 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
-	"github.com/takets/street-storyteller/internal/meta"
+	"github.com/takets/street-storyteller/internal/service"
 )
 
 // MetaCheckTool validates manuscript YAML frontmatter.
@@ -28,9 +26,10 @@ func (MetaCheckTool) Definition() protocol.Tool {
 	}
 }
 
-// Handle walks <path>/*.md (default <projectRoot>/manuscripts) and parses
-// each via meta.Parse. Returns "<N> files validated" on success or an error
-// content block on first parse failure.
+// Handle resolves the target directory and delegates to MetaCheckService.Run.
+// Why: replaced the inline filepath.Walk loop with service.NewMetaCheckService().Run
+// to unify depth-1 walk behavior between CLI and MCP adapters (previously MCP
+// walked recursively while CLI was depth-1 only).
 func (MetaCheckTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a metaCheckArgs
 	if len(args) > 0 {
@@ -41,37 +40,14 @@ func (MetaCheckTool) Handle(_ context.Context, args json.RawMessage, ec Executio
 		target = filepath.Join(ec.ProjectRoot, "manuscripts")
 	}
 
-	count := 0
-	walkErr := filepath.Walk(target, func(p string, info os.FileInfo, err error) error {
-		if err != nil {
-			// Why: missing root dir is a Green-phase no-op (0 files validated)
-			// rather than an error, mirroring the TS implementation that
-			// tolerates partially-bootstrapped projects.
-			if os.IsNotExist(err) {
-				return filepath.SkipDir
-			}
-			return err
-		}
-		if info.IsDir() || !strings.HasSuffix(strings.ToLower(p), ".md") {
-			return nil
-		}
-		content, err := os.ReadFile(p)
-		if err != nil {
-			return err
-		}
-		if _, err := meta.Parse(content); err != nil {
-			return fmt.Errorf("%s: %w", p, err)
-		}
-		count++
-		return nil
-	})
-	if walkErr != nil && !os.IsNotExist(walkErr) {
+	result, err := service.NewMetaCheckService().Run(target)
+	if err != nil {
 		return &protocol.CallToolResult{
-			Content: []protocol.ContentBlock{{Type: "text", Text: walkErr.Error()}},
+			Content: []protocol.ContentBlock{{Type: "text", Text: err.Error()}},
 			IsError: true,
 		}, nil
 	}
 	return &protocol.CallToolResult{
-		Content: []protocol.ContentBlock{{Type: "text", Text: fmt.Sprintf("%d files validated", count)}},
+		Content: []protocol.ContentBlock{{Type: "text", Text: fmt.Sprintf("%d files validated", result.FilesChecked)}},
 	}, nil
 }

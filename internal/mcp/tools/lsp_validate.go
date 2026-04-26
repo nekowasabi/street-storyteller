@@ -3,12 +3,11 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 
-	"github.com/takets/street-storyteller/internal/detect"
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
+	"github.com/takets/street-storyteller/internal/service"
 )
 
 // LSPValidateTool runs entity detection over a single manuscript file.
@@ -27,40 +26,29 @@ func (LSPValidateTool) Definition() protocol.Tool {
 	}
 }
 
-// Handle reads the file, calls detect.Detect with a nil catalog (Green-phase
-// minimal), and returns "<N> entities detected".
+// Handle delegates to ValidateService.Run and returns "<N> entities detected".
+// Why: replaced the inline filepath.Abs + os.ReadFile + detect.Detect sequence
+// with service.NewValidateService().Run to consolidate file-read and detection
+// logic in one place shared with the CLI adapter.
 func (LSPValidateTool) Handle(_ context.Context, args json.RawMessage, _ ExecutionContext) (*protocol.CallToolResult, error) {
 	var a lspValidateArgs
 	if len(args) > 0 {
 		_ = json.Unmarshal(args, &a)
 	}
-	if a.File == "" {
-		return &protocol.CallToolResult{
-			Content: []protocol.ContentBlock{{Type: "text", Text: "file is required"}},
-			IsError: true,
-		}, nil
-	}
-	abs, err := filepath.Abs(a.File)
+
+	results, err := service.NewValidateService().Run(a.File)
 	if err != nil {
+		if errors.Is(err, service.ErrEmptyPath) {
+			return &protocol.CallToolResult{
+				Content: []protocol.ContentBlock{{Type: "text", Text: "file is required"}},
+				IsError: true,
+			}, nil
+		}
 		return &protocol.CallToolResult{
 			Content: []protocol.ContentBlock{{Type: "text", Text: err.Error()}},
 			IsError: true,
 		}, nil
 	}
-	content, err := os.ReadFile(abs)
-	if err != nil {
-		return &protocol.CallToolResult{
-			Content: []protocol.ContentBlock{{Type: "text", Text: err.Error()}},
-			IsError: true,
-		}, nil
-	}
-	// Why: Catalog=nil is intentional for Green-phase minimal — Detect returns
-	// an empty slice rather than panicking, matching the contract documented
-	// in detect/reference.go (req.Catalog nil branch).
-	results := detect.Detect(detect.DetectionRequest{
-		URI:     "file://" + abs,
-		Content: string(content),
-	})
 	return &protocol.CallToolResult{
 		Content: []protocol.ContentBlock{{Type: "text", Text: fmt.Sprintf("%d entities detected", len(results))}},
 	}, nil
