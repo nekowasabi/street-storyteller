@@ -1,6 +1,28 @@
 Available commands:
-  help            List available commands
-  lsp validate    Validate a manuscript via the detect pipeline
-  meta check      Validate manuscript frontmatter
-  version         Show storyteller version
-  view character  Display a character entity
+  element beat           Create a beat element (storyteller element beat --id <id> --name <name> [--path <project>])
+  element character      Create a character element (storyteller element character --id <id> --name <name> [--path <project>])
+  element event          Create a event element (storyteller element event --id <id> --name <name> [--path <project>])
+  element foreshadowing  Create a foreshadowing element (storyteller element foreshadowing --id <id> --name <name> [--path <project>])
+  element intersection   Create a intersection element (storyteller element intersection --id <id> --name <name> [--path <project>])
+  element phase          Create a phase element (storyteller element phase --id <id> --name <name> [--path <project>])
+  element setting        Create a setting element (storyteller element setting --id <id> --name <name> [--path <project>])
+  element subplot        Create a subplot element (storyteller element subplot --id <id> --name <name> [--path <project>])
+  element timeline       Create a timeline element (storyteller element timeline --id <id> --name <name> [--path <project>])
+  generate               Create a new storyteller project (storyteller generate --name <name> [--path <dir>] [--template basic|novel|screenplay])
+  help                   List available commands
+  lint                   Run manuscript lint checks
+  lint install-hooks     Run manuscript lint checks
+  lsp install            Print editor setup for the Go LSP server (storyteller lsp install <nvim|vscode>)
+  lsp start              Start the Go LSP server (storyteller lsp start --stdio)
+  lsp validate           Validate a manuscript via the detect pipeline
+  mcp init               Manage the Go MCP server (storyteller mcp init [--stdio])
+  mcp start              Manage the Go MCP server (storyteller mcp start [--stdio])
+  meta check             Validate manuscript frontmatter
+  update                 Update project metadata for the Go engine (storyteller update [--path <project>] [--check|--apply])
+  version                Show storyteller version
+  view character         Display a character entity
+  view foreshadowing     Display a foreshadowing entity (storyteller view foreshadowing --id <id> [--path <project>])
+  view list              List project entities (storyteller view list --kind <characters|settings|timelines|foreshadowings|subplots> [--path <project>])
+  view setting           Display a setting entity (storyteller view setting --id <id> [--path <project>])
+  view subplot           Display a subplot entity (storyteller view subplot --id <id> [--path <project>])
+  view timeline          Display a timeline entity (storyteller view timeline --id <id> [--path <project>])

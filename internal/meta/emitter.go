@@ -98,10 +98,10 @@ func UpdateOrEmit(existingContent string, meta ChapterMetaInput, generatedAt tim
 	// block 単位の選択的更新は template では「全置換 vs 部分更新」の境界が表現困難で、
 	// 手動領域 (validations 等) の保持と両立させづらい。
 	type blockSpec struct {
-		name      string
-		startTok  string
-		endTok    string
-		newLines  []string // 新しい block 内容 (start/end マーカー含む、indent なし)
+		name     string
+		startTok string
+		endTok   string
+		newLines []string // 新しい block 内容 (start/end マーカー含む、indent なし)
 	}
 
 	specs := []blockSpec{

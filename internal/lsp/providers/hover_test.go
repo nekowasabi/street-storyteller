@@ -104,8 +104,8 @@ func TestHover_OnEntityReference_ReturnsMarkdown(t *testing.T) {
 
 func TestHover_NoMatch_ReturnsNil(t *testing.T) {
 	cat := fakeCatalog{
-		names:  map[detect.EntityKind][]string{},
-		byID:   map[string]detect.EntityRef{},
+		names: map[detect.EntityKind][]string{},
+		byID:  map[string]detect.EntityRef{},
 		byName: map[string]struct {
 			ref detect.EntityRef
 			src detect.MatchSource

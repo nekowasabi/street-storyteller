@@ -16,11 +16,11 @@ import (
 var updateGolden = flag.Bool("update", false, "update golden files")
 
 type goldenCase struct {
-	name        string
-	args        []string
-	wantExit    int
-	stdoutFile  string
-	stderrFile  string
+	name       string
+	args       []string
+	wantExit   int
+	stdoutFile string
+	stderrFile string
 }
 
 func runGolden(t *testing.T, args []string) (int, string, string) {
@@ -104,6 +104,22 @@ func TestGolden_NoArgs(t *testing.T) {
 		t.Errorf("exit = %d", code)
 	}
 	assertGolden(t, "no_args.txt", out)
+}
+
+func TestGolden_GenerateMissingName(t *testing.T) {
+	code, _, errBuf := runGolden(t, []string{"generate"})
+	if code != 1 {
+		t.Errorf("exit = %d, want 1", code)
+	}
+	assertGolden(t, "generate_missing_name.txt", errBuf)
+}
+
+func TestGolden_ElementCharacterMissingID(t *testing.T) {
+	code, _, errBuf := runGolden(t, []string{"element", "character", "--name", "Hero"})
+	if code != 1 {
+		t.Errorf("exit = %d, want 1", code)
+	}
+	assertGolden(t, "element_character_missing_id.txt", errBuf)
 }
 
 // silence unused warning when -update is not passed

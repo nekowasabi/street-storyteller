@@ -36,10 +36,10 @@ type Foreshadowing struct {
 type ForeshadowingStatus string
 
 const (
-	ForeshadowingStatusPlanted            ForeshadowingStatus = "planted"
-	ForeshadowingStatusPartiallyResolved  ForeshadowingStatus = "partially_resolved"
-	ForeshadowingStatusResolved           ForeshadowingStatus = "resolved"
-	ForeshadowingStatusAbandoned          ForeshadowingStatus = "abandoned"
+	ForeshadowingStatusPlanted           ForeshadowingStatus = "planted"
+	ForeshadowingStatusPartiallyResolved ForeshadowingStatus = "partially_resolved"
+	ForeshadowingStatusResolved          ForeshadowingStatus = "resolved"
+	ForeshadowingStatusAbandoned         ForeshadowingStatus = "abandoned"
 )
 
 // ForeshadowingType enumerates the narrative category of a foreshadowing.

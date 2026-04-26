@@ -6,9 +6,9 @@ import "testing"
 // This verifies that CommandWithUsage is truly optional.
 type dummyCmd struct{}
 
-func (d *dummyCmd) Name() string                    { return "dummy" }
-func (d *dummyCmd) Description() string             { return "dummy description" }
-func (d *dummyCmd) Handle(_ CommandContext) int     { return 0 }
+func (d *dummyCmd) Name() string                { return "dummy" }
+func (d *dummyCmd) Description() string         { return "dummy description" }
+func (d *dummyCmd) Handle(_ CommandContext) int { return 0 }
 
 // dummyCmdWithUsage implements both Command and CommandWithUsage.
 type dummyCmdWithUsage struct{}

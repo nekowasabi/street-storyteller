@@ -9,9 +9,9 @@ type fakeCommand struct {
 	name string
 }
 
-func (f *fakeCommand) Name() string                  { return f.name }
-func (f *fakeCommand) Description() string           { return "" }
-func (f *fakeCommand) Handle(_ CommandContext) int   { return 0 }
+func (f *fakeCommand) Name() string                { return f.name }
+func (f *fakeCommand) Description() string         { return "" }
+func (f *fakeCommand) Handle(_ CommandContext) int { return 0 }
 
 func TestRegistry_RegisterAndResolveSimple(t *testing.T) {
 	r := NewRegistry()

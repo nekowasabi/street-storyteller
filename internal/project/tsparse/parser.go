@@ -3,6 +3,7 @@ package tsparse
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 	"unicode"
@@ -33,38 +34,38 @@ type ParseResult struct {
 // `${` 検出を独自に行いたい、(3) 依存ゼロを維持したい、という 3 点で
 // 内製した方が読みやすく安全なため。
 func ParseExportConst(source []byte) (*ParseResult, error) {
-	p := &parser{src: source}
+	p := &parser{src: preprocessSource(source)}
 	p.skipTrivia()
 
 	if !p.consumeKeyword("export") {
-		return nil, errors.New("expected 'export' keyword at start of declaration")
+		return nil, p.errorf("expected 'export' keyword at start of declaration")
 	}
 	p.skipTrivia()
 
 	if !p.consumeKeyword("const") {
-		return nil, errors.New("expected 'const' keyword after 'export'")
+		return nil, p.errorf("expected 'const' keyword after 'export'")
 	}
 	p.skipTrivia()
 
 	name, err := p.readIdentifier()
 	if err != nil {
-		return nil, fmt.Errorf("expected identifier after 'export const': %w", err)
+		return nil, p.wrapError(fmt.Errorf("expected identifier after 'export const': %w", err))
 	}
 	p.skipTrivia()
 
 	// Optional type annotation `: T` is not supported in limited scope.
 	if p.peekByte() == ':' {
-		return nil, errors.New("type annotations are not supported in limited-scope parser")
+		return nil, p.errorf("type annotations are not supported in limited-scope parser")
 	}
 
 	if !p.consumeByte('=') {
-		return nil, errors.New("expected '=' after const name")
+		return nil, p.errorf("expected '=' after const name")
 	}
 	p.skipTrivia()
 
 	value, err := p.parseValue()
 	if err != nil {
-		return nil, err
+		return nil, p.wrapError(err)
 	}
 	p.skipTrivia()
 
@@ -74,12 +75,12 @@ func ParseExportConst(source []byte) (*ParseResult, error) {
 	if p.consumeKeyword("as") {
 		p.skipTrivia()
 		if p.consumeKeyword("const") {
-			return nil, errors.New("'as const' assertion is not supported in limited-scope parser")
+			return nil, p.errorf("'as const' assertion is not supported in limited-scope parser")
 		}
-		return nil, errors.New("'as <Type>' type assertion is not supported in limited-scope parser")
+		return nil, p.errorf("'as <Type>' type assertion is not supported in limited-scope parser")
 	}
 	if p.consumeKeyword("satisfies") {
-		return nil, errors.New("'satisfies' clause is not supported in limited-scope parser")
+		return nil, p.errorf("'satisfies' clause is not supported in limited-scope parser")
 	}
 
 	// Optional trailing semicolon.
@@ -92,11 +93,52 @@ func ParseExportConst(source []byte) (*ParseResult, error) {
 	return &ParseResult{Name: name, Value: value}, nil
 }
 
+func ParseExportConstFile(path string) (*ParseResult, error) {
+	source, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	result, err := ParseExportConst(source)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", path, err)
+	}
+	return result, nil
+}
+
 // --- internal parser ---------------------------------------------------------
 
 type parser struct {
 	src []byte
 	pos int
+}
+
+func (p *parser) errorf(format string, args ...any) error {
+	return p.wrapError(fmt.Errorf(format, args...))
+}
+
+func (p *parser) wrapError(err error) error {
+	line, column := p.lineColumn()
+	return fmt.Errorf("line %d, column %d: %w", line, column, err)
+}
+
+func (p *parser) lineColumn() (int, int) {
+	line := 1
+	column := 1
+	limit := p.pos
+	if limit > len(p.src) {
+		limit = len(p.src)
+	}
+	for i := 0; i < limit; {
+		r, size := utf8.DecodeRune(p.src[i:])
+		if r == '\n' {
+			line++
+			column = 1
+		} else {
+			column++
+		}
+		i += size
+	}
+	return line, column
 }
 
 func (p *parser) eof() bool { return p.pos >= len(p.src) }

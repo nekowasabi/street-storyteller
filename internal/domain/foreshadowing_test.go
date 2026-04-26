@@ -220,9 +220,9 @@ func TestForeshadowing_OptionalResolutions(t *testing.T) {
 func TestForeshadowing_OptionalRelations(t *testing.T) {
 	f := domain.Foreshadowing{
 		Relations: &domain.ForeshadowingRelations{
-			Characters:             []string{"hero", "mentor"},
-			Settings:               []string{"temple"},
-			RelatedForeshadowings:  []string{"prophecy_of_dawn"},
+			Characters:            []string{"hero", "mentor"},
+			Settings:              []string{"temple"},
+			RelatedForeshadowings: []string{"prophecy_of_dawn"},
 		},
 	}
 	if f.Relations == nil {

@@ -1,72 +1,56 @@
-# Process 4: CLI段階移行
+# Process 04: Phase 3a CLI Go 移植（generate/element/update/view 等）
 
 ## Overview
-
-Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI の出力契約と
-exit code を比較しながら置き換える。
+src/cli/modules/ 配下 43 TS ファイルのうち、LSP/MCP に依存しないコマンド群を Go へ移植する。Why: ユーザーが直接呼ぶエントリポイントの起動時間が最大効果を生む。
 
 ## Affected Files
-
-- `src/cli.ts:25` - 現行CLIの起動・設定・ログ初期化
-- `src/cli/modules/index.ts:12` - CLI command registry
-- `src/cli/output_presenter.ts:9` - console/json presenter
-- `src/cli/modules/generate.ts` - generate の参考
-- `src/cli/modules/meta/index.ts` - meta group の参考
-- `src/cli/modules/lsp/validate.ts` - lsp validate の参考
-- `src/cli/modules/rag/index.ts` - RAG CLI の登録判断対象
-- `src/cli/modules/migrate/index.ts` - migrate CLI の登録判断対象
+- `internal/cli/modules/generate/` (新規): プロジェクト scaffolding
+- `internal/cli/modules/element/` (新規): character/setting/timeline/foreshadowing/subplot/beat/event/intersection/phase create
+- `internal/cli/modules/update/` (新規): manifest/project update
+- `internal/cli/modules/view/` (既存拡張): list, setting, timeline, foreshadowing, subplot サブコマンド
+- `internal/cli/modules/index.go` (既存 L1-36): RegisterCore に新モジュル登録
+- `cmd/storyteller/main.go`: コマンド配線確認
 
 ## Implementation Notes
-
-- 初期対象は `version`, `meta check`, `lsp validate`, `view character --json`
-  のような副作用が小さいコマンドから始める。
-- JSON出力は script/CI 契約なので先に固定する。
-- Go CLI は domain/project/meta service を呼び、直接 parser を持たない。
-- `rag` と `migrate` は Process 1 の決定に従って登録対象を確定する。
+- 参照元 TS: src/cli/modules/{generate,element,update,view}.ts
+- 既存 Go パターン: internal/cli/modules/meta/, internal/cli/modules/view/character.go
+- scaffolding テンプレートは internal/project/manifest/ に配置（embed.FS で同梱）
+- element create は内部で internal/project/entity/loader.go の writer 版を使う（無ければ実装）
+- ユーザー出力は internal/cli/presenter.go（既存）の text/json モード両対応
+- TDD: golden test (cmd/storyteller/golden_test.go パターン) で CLI 全体の出力スナップショット
 
 ---
 
 ## Red Phase: テスト作成と失敗確認
-
 - [x] ブリーフィング確認
-- [x] CLI Golden Test を作成
-  - stdout/stderr
-  - exit code
-  - JSON output
-  - unknown command/help
-- [x] 現行 Deno CLI と Go CLI の差分比較テストを作る (in-process golden test
-      として実装)
-- [x] テストを実行して失敗することを確認
+- [x] 各サブコマンドの golden test 雛形作成 → 未実装で失敗
 
 ✅ **Phase Complete**
 
 ---
 
 ## Green Phase: 最小実装と成功確認
-
-- [x] `cmd/storyteller` に Cobra等を使わない薄い command registry を実装
-- [x] global option と config/logging の最小実装
-- [x] `version`, `meta check`, `lsp validate` の順で実装
-- [x] JSON presenter を実装
-- [x] テストを実行して成功することを確認
+- [x] ブリーフィング確認
+- [x] generate モジュール実装
+- [x] element 各サブコマンド実装
+- [x] update モジュール実装
+- [x] view 拡張実装
+- [x] registry 登録
+- [x] go test ./... 全 green
 
 ✅ **Phase Complete**
 
 ---
 
 ## Refactor Phase: 品質改善
-
-- [x] CLI handler から I/O を注入可能にする (Deps/DefaultDeps/runMain
-      の契約テストと docstring 整備, WT-1)
-- [x] command descriptor と help 生成を整理 (Optional CommandWithUsage interface
-      導入, help.Handle が Description/Usage を render, WT-2)
-- [x] テストが継続して成功することを確認 (go test ./... 全緑, gofmt/vet clean)
+- [x] エラーメッセージ統一（internal/errors）
+- [x] presenter での JSON / text 切替の重複削減
+- [x] cmd/storyteller/golden_test.go に新コマンドの fixture 追加
 
 ✅ **Phase Complete**
 
 ---
 
 ## Dependencies
-
-- Requires: 2, 3, 10
-- Blocks: 100
+- Requires: 02, 03
+- Blocks: 09

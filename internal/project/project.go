@@ -57,9 +57,9 @@ type Project struct {
 //   - CodeManifestInvalid: manifest JSON is malformed or fails schema checks
 //   - CodeIO:              filesystem error while listing/reading entity files
 //   - CodeParse:           an entity .ts file is not parseable by tsparse
-//                          (e.g. type annotation, unsupported syntax)
+//     (e.g. type annotation, unsupported syntax)
 //   - CodeValidation:      a parsed entity has invalid fields (unknown enum,
-//                          missing required field, wrong type)
+//     missing required field, wrong type)
 //   - CodeEntityConflict:  two entities share an ID within the same kind
 //
 // Path semantics: an entity directory configured in Manifest.Paths but absent

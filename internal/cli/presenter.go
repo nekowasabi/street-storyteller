@@ -53,10 +53,18 @@ type jsonMessage struct {
 	Msg   string `json:"msg"`
 }
 
-func (p *jsonPresenter) ShowInfo(msg string)    { _ = writeJSONLine(p.stdout, jsonMessage{Level: "info", Msg: msg}) }
-func (p *jsonPresenter) ShowSuccess(msg string) { _ = writeJSONLine(p.stdout, jsonMessage{Level: "success", Msg: msg}) }
-func (p *jsonPresenter) ShowWarning(msg string) { _ = writeJSONLine(p.stdout, jsonMessage{Level: "warning", Msg: msg}) }
-func (p *jsonPresenter) ShowError(msg string)   { _ = writeJSONLine(p.stdout, jsonMessage{Level: "error", Msg: msg}) }
+func (p *jsonPresenter) ShowInfo(msg string) {
+	_ = writeJSONLine(p.stdout, jsonMessage{Level: "info", Msg: msg})
+}
+func (p *jsonPresenter) ShowSuccess(msg string) {
+	_ = writeJSONLine(p.stdout, jsonMessage{Level: "success", Msg: msg})
+}
+func (p *jsonPresenter) ShowWarning(msg string) {
+	_ = writeJSONLine(p.stdout, jsonMessage{Level: "warning", Msg: msg})
+}
+func (p *jsonPresenter) ShowError(msg string) {
+	_ = writeJSONLine(p.stdout, jsonMessage{Level: "error", Msg: msg})
+}
 
 func (p *jsonPresenter) WriteJSON(payload any) error {
 	return writeJSONLine(p.stdout, payload)

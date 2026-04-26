@@ -72,6 +72,16 @@ MCPサーバーは以下を公開します：
 
 ## アーキテクチャ概要
 
+### アーキテクチャ: 二層構造（Go 移植）
+
+このリポジトリは Go 処理エンジンと TypeScript authoring surface の二層構造へ移行中です。詳しい憲章は `docs/architecture.md` を参照してください。
+
+- **Go = 処理エンジン**: `cmd/storyteller` と `internal/{cli,lsp,mcp,meta,detect,domain,project,service,external,rag}` が CLI/LSP/MCP/RAG/view などの実行パスを担当します。
+- **TypeScript = authoring surface**: `src/type/`, `src/characters/`, `src/settings/`, `src/timelines/`, `src/foreshadowings/`, `samples/*/src/` は物語要素を型安全に記述する編集面として維持します。
+- **E2E = YAGNI**: 品質保証はユニットテスト、golden test、限定的な統合テストを中心にし、E2E は配布・性能など必要性が明確な場合だけ追加します。
+
+新規ランタイム機能は原則 Go 側へ実装し、TypeScript 側の実行モジュールは Go 移植完了後に段階的に退役させます。
+
 ### 中心的なインターフェース
 
 `StoryTeller`インターフェース（`src/storyteller_interface.ts`）が本プロジェクトの中核です：

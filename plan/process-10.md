@@ -1,73 +1,55 @@
-# Process 10: 契約・回帰テスト整備
+# Process 10: Phase 5 CI 整理（Go メイン / Deno は authoring のみ）
 
 ## Overview
-
-Go移行で既存機能を壊さないため、現行 TypeScript/Deno の入出力を Golden/fixture
-として固定する。
+.github/workflows/ci.yml を Go メイン構成に再編する。Why: src/ retire と E2E 削除の結果を CI に反映し、ビルド時間を削減する。
 
 ## Affected Files
-
-- `tests/cli_test.ts` - CLI help/error の参考
-- `tests/command_registry_test.ts` - command registry の参考
-- `tests/application/meta/*` - FrontMatter/meta の参考
-- `tests/lsp/providers/*` - LSP provider の参考
-- `tests/mcp/tools/definitions/*` - MCP tool 契約の参考
-- `tests/scenario/*` - E2E scenario の参考
-- `samples/cinderella/*` - 契約fixture
-- `samples/momotaro/*` - 日本語ファイル名fixture
+- `.github/workflows/ci.yml` (既存 L1-79)
+- `deno.json` (既存 L1-61): test task の対象を authoring に限定
+- `scripts/go_coverage.sh` (既存): カバレッジ閾値 70% に設定
 
 ## Implementation Notes
-
-- Golden
-  は「Goで再生成して一致させる」対象と「現行との差分を許容する」対象を分ける。
-- CLI/MCP/LSP の JSON は比較しやすいよう canonicalize する。
-- HTML は完全一致よりも構造/主要ノード/graph data の契約を優先する。
+- Why: E2E 削除 (Process 13) 完了後に CI を再構成しないと不要 job が残る
+- ジョブ構成案:
+  - **lint**: go vet / go fmt -l (差分0確認) / deno fmt --check (samples のみ)
+  - **test-go**: go test ./... -count=1 -race
+  - **test-go-integration**: go test -tags=integration（既存維持）
+  - **test-deno-authoring**: deno test samples/ tests/authoring/（縮小）
+  - **meta-check-sample**: storyteller meta check samples/cinderella/manuscripts
+  - **coverage**: scripts/go_coverage.sh（閾値ゲート）
+- 削除対象 job:
+  - tests/cli_*, tests/lsp_*, tests/mcp_*, tests/rag_* を対象とする旧 deno test 行
+  - Process 13 で削除済み E2E への参照
+- 並列化: Go と Deno を並走、coverage のみ test-go の後
 
 ---
 
 ## Red Phase: テスト作成と失敗確認
-
 - [x] ブリーフィング確認
-- [x] Golden fixture 生成スクリプトを追加
-- [x] Go実装未作成状態で契約テストが失敗することを確認
+- [x] CI dry-run（act ローカル or PR draft）で旧 job が残っていないこと確認
 
 ✅ **Phase Complete**
 
 ---
 
 ## Green Phase: 最小実装と成功確認
-
-- [x] CLI代表コマンドの Golden を作る
-- [x] Meta生成の Golden を作る
-- [x] LSP request/response fixture を作る
-- [x] MCP request/response fixture を作る
-- [x] テストを実行して成功することを確認
-
-> Note: RAG document fixture はスコープ外（Go 側未移行・TS のみ運用継続）。
+- [x] ブリーフィング確認
+- [x] ci.yml 再編
+- [x] deno.json test task 縮小
+- [x] PR を上げて全 job green 確認
 
 ✅ **Phase Complete**
 
 ---
 
 ## Refactor Phase: 品質改善
-
-- [x] fixture の更新手順を明文化
-- [x] 差分表示を読みやすくする
-- [x] テストが継続して成功することを確認
-
-**完了の根拠**:
-
-- fixture 更新手順: docs/development/golden-fixture-update.md（LSP
-  手動更新節含む）
-- 差分表示: 4 golden アサーションを `--- want / --- got / --- end ---`
-  統一形式に
-- 緑維持: `go test ./...` 全 31 パッケージ ok / `go vet ./...` 警告 0
+- [x] cache 設定（go mod / go build / deno cache）
+- [x] matrix（OS x Go version）の必要性検討
 
 ✅ **Phase Complete**
 
 ---
 
 ## Dependencies
-
-- Requires: 1
-- Blocks: 4, 100
+- Requires: 13
+- Blocks: 11

@@ -60,8 +60,8 @@ func TestDefinition_OnEntityReference_ReturnsLocation(t *testing.T) {
 
 func TestDefinition_NoMatch_ReturnsEmpty(t *testing.T) {
 	cat := fakeCatalog{
-		names:  map[detect.EntityKind][]string{},
-		byID:   map[string]detect.EntityRef{},
+		names: map[detect.EntityKind][]string{},
+		byID:  map[string]detect.EntityRef{},
 		byName: map[string]struct {
 			ref detect.EntityRef
 			src detect.MatchSource

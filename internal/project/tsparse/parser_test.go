@@ -1,6 +1,8 @@
 package tsparse
 
 import (
+	"os"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -109,6 +111,22 @@ func TestParseExportConst_Success(t *testing.T) {
 				"meta":  map[string]Value{},
 			},
 		},
+		{
+			name: "import and const type annotation",
+			source: `
+				import type { Character } from "@storyteller/types/v2/character.ts";
+
+				export const cinderella: Character = {
+					id: "cinderella",
+					name: "シンデレラ",
+				};
+			`,
+			wantName: "cinderella",
+			want: map[string]Value{
+				"id":   "cinderella",
+				"name": "シンデレラ",
+			},
+		},
 	}
 
 	for _, c := range cases {
@@ -122,6 +140,50 @@ func TestParseExportConst_Success(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got.Value, c.want) {
 				t.Errorf("Value mismatch:\n got = %#v\nwant = %#v", got.Value, c.want)
+			}
+		})
+	}
+}
+
+func TestParseExportConst_SampleAuthoringFiles(t *testing.T) {
+	root := filepath.Clean(filepath.Join("..", "..", ".."))
+	samplesRoot := filepath.Join(root, "samples")
+
+	var files []string
+	err := filepath.WalkDir(samplesRoot, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if strings.HasSuffix(path, ".ts") && strings.Contains(path, string(filepath.Separator)+"src"+string(filepath.Separator)) {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("walk samples: %v", err)
+	}
+	if len(files) == 0 {
+		t.Fatal("no sample authoring files found")
+	}
+
+	for _, path := range files {
+		t.Run(strings.TrimPrefix(path, root+string(filepath.Separator)), func(t *testing.T) {
+			source, err := os.ReadFile(path)
+			if err != nil {
+				t.Fatalf("read fixture: %v", err)
+			}
+			got, err := ParseExportConst(source)
+			if err != nil {
+				t.Fatalf("ParseExportConst() unexpected error for %s: %v", path, err)
+			}
+			if got.Name == "" {
+				t.Fatal("Name is empty")
+			}
+			if got.Value == nil {
+				t.Fatal("Value is nil")
 			}
 		})
 	}
@@ -206,5 +268,31 @@ func TestParseExportConst_Rejections(t *testing.T) {
 				t.Errorf("error %q does not contain %q", err.Error(), c.wantErrIn)
 			}
 		})
+	}
+}
+
+func TestParseExportConst_ErrorLocation(t *testing.T) {
+	_, err := ParseExportConst([]byte("export const X = {\n  a: makeThing()\n};"))
+	if err == nil {
+		t.Fatal("ParseExportConst() error = nil, want location error")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "line 2") || !strings.Contains(msg, "column") {
+		t.Fatalf("error %q does not include line/column", msg)
+	}
+}
+
+func TestParseExportConstFile_ErrorIncludesFileName(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "broken_character.ts")
+	if err := os.WriteFile(path, []byte("export const X = {\n  a: makeThing()\n};"), 0o600); err != nil {
+		t.Fatalf("write temp fixture: %v", err)
+	}
+	_, err := ParseExportConstFile(path)
+	if err == nil {
+		t.Fatal("ParseExportConstFile() error = nil, want file name error")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "broken_character.ts") || !strings.Contains(msg, "line 2") {
+		t.Fatalf("error %q does not include file name and line", msg)
 	}
 }

@@ -1,78 +1,67 @@
-# Process 5: LSP/MCP adapter分離
+# Process 05: Phase 3b LSP Go 移植（server/providers/diagnostics）
 
 ## Overview
-
-現行で最も複雑な LSP/MCP を、Go core service に乗る adapter
-として再設計する。サーバー責務、transport、diagnostics、外部プロセスを分離し、テストの長時間化を防ぐ。
+internal/lsp 部分実装の完成 + `storyteller lsp start --stdio` を Go 化する。Why: LSP 起動時間が最大の動機。Deno cold start 3-5s → Go <2s。
 
 ## Affected Files
-
-- `src/lsp/server/server.ts:149` - LspServer の責務集中
-- `src/lsp/server/server.ts:178` - file change debounce
-- `src/lsp/server/server.ts:760` - didChangeWatchedFiles 処理
-- `src/lsp/server/server.ts:797` - LSP から CLI loader への逆依存
-- `src/lsp/integration/textlint/textlint_worker.ts:48` - textlint
-  debounce/process 実行
-- `src/mcp/server/server.ts` - MCP lifecycle と handlers
-- `src/mcp/tools/tool_registry.ts` - ToolRegistry と projectRoot context
+- `internal/lsp/server/server.go` (既存): lifecycle / dispatcher / textsync 完成
+- `internal/lsp/server/handlers.go` (既存/新規): didOpen, didChange, didClose, completion, codeAction, semanticTokens
+- `internal/lsp/providers/{definition,hover}.go` (既存): 拡張
+- `internal/lsp/providers/{diagnostics,code_action,semantic_tokens}.go` (新規)
+- `internal/lsp/diagnostics/` (既存): DiagnosticSource 抽象 + storyteller source
+- `internal/lsp/diagnostics/textlint_source.go` (新規): Process 08 で実装する adapter を取り込む
+- `internal/cli/modules/lsp/start.go` (新規): stdio エントリ
+- `internal/cli/modules/lsp/install.go` (新規): nvim / vscode 設定生成
 
 ## Implementation Notes
-
-- Go 配置案:
-  - `internal/lsp/protocol`
-  - `internal/lsp/server`
-  - `internal/lsp/providers`
-  - `internal/mcp/server`
-  - `internal/mcp/tools`
-  - `internal/external/textlint`
-- `Clock`, `Timer`, `ProcessRunner`, `Transport` を interface 化する。
-- LSP server は provider の orchestration だけ行い、entity load は
-  `project.EntityStore` を使う。
-- MCP tool は CLI adapter ではなく application service を直接呼ぶ。
+- 参照: src/lsp/{server, handlers, providers, integration}/
+- Protocol JSON-RPC: internal/lsp/protocol/jsonrpc.go (既存)
+- 既知教訓: `.serena/memories/lsp-mcp-protocol-error-method.md` 参照
+- DiagnosticSource インタフェース:
+  ```go
+  type DiagnosticSource interface {
+      Name() string
+      Available(ctx context.Context) bool
+      Generate(ctx context.Context, uri string, content []byte, projectRoot string) ([]Diagnostic, error)
+  }
+  ```
+- debounce: time.AfterFunc + sync.Mutex で 500ms
+- cancel: context.Context 伝播
+- timeout: context.WithTimeout(30s)
+- 既存教訓: `.serena/memories/inprocess-golden-test-strategy.md` を golden test に活用
 
 ---
 
 ## Red Phase: テスト作成と失敗確認
-
 - [x] ブリーフィング確認
-- [x] LSP JSON-RPC fixture テストを作る
-  - initialize/shutdown
-  - hover/definition/diagnostics/codeAction/semanticTokens
-- [x] MCP JSON-RPC fixture テストを作る
-  - tools/list, tools/call, resources/read, prompts/get
-- [x] fake clock/process runner を使うテストを作る
-- [x] テストを実行して失敗することを確認
+- [x] hover / definition / diagnostics の golden test 拡充 → 未実装で失敗
+- [x] start サブコマンドの起動時間ベンチ作成（< 2s 期待）
 
 ✅ **Phase Complete**
 
 ---
 
 ## Green Phase: 最小実装と成功確認
-
-- [x] LSP transport と server lifecycle を実装
-- [x] hover/definition/diagnostics の最小 provider を実装
-- [x] textlint adapter を外部コマンド境界として実装
-- [x] MCP lifecycle と ToolRegistry を実装
-- [x] meta_check/lsp_validate/view_browser の代表 tool を実装
-- [x] テストを実行して成功することを確認
+- [x] ブリーフィング確認
+- [x] handlers 実装（didOpen/didChange/didClose）
+- [x] diagnostics provider 実装
+- [x] codeAction / semanticTokens provider 実装
+- [x] start / install サブコマンド実装
+- [x] go test ./internal/lsp/... 全 green
 
 ✅ **Phase Complete**
 
 ---
 
 ## Refactor Phase: 品質改善
-
-- [x] LSP server からタイマーと外部プロセスを完全排除 (Green Phase で達成済み:
-      clock.Clock / process.Runner DI 完了、time/exec の直接利用なし)
-- [x] MCP/CLI/LSP の service 呼び出しを共通化 (internal/service/
-      層を新設、CLI/MCP の MetaCheck/Validate を移譲、走査仕様を depth-1 に統一)
-- [x] テストが継続して成功することを確認 (go test ./... 全 Green、28 packages)
+- [x] textsync の差分計算を rope or piece-table 化（性能向上）
+- [x] providers 共通化リファクタ
+- [x] semanticTokens のキャッシュ
 
 ✅ **Phase Complete**
 
 ---
 
 ## Dependencies
-
-- Requires: 3, 11
-- Blocks: 100
+- Requires: 02, 03
+- Blocks: 06 (MCP が LSP 機能を呼ぶため), 09

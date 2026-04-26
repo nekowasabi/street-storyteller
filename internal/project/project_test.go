@@ -299,9 +299,9 @@ func TestLoad_SkipsNonTSAndIndexFiles(t *testing.T) {
 func TestLoad_ParseErrorBubblesUp(t *testing.T) {
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, ".storyteller.json"), minimalManifest)
-	// type annotation `: Character` triggers tsparse rejection.
+	// Function calls still trigger tsparse rejection.
 	writeFile(t, filepath.Join(root, "src", "characters", "broken.ts"),
-		`export const broken: Character = { "id": "x" };`)
+		`export const broken: Character = { "id": makeID() };`)
 
 	_, err := project.Load(root)
 	expectError(t, err, apperrors.CodeParse)

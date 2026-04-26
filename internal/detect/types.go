@@ -19,7 +19,7 @@ type RangeUTF16 struct {
 
 // SourceLocation は manuscript 内の検出位置。
 type SourceLocation struct {
-	URI   string     // file:// URI
+	URI   string // file:// URI
 	Range RangeUTF16
 }
 
@@ -45,19 +45,19 @@ type EntityRef struct {
 type MatchSource string
 
 const (
-	SourceName          MatchSource = "name"          // 1.0
-	SourceDisplayName   MatchSource = "display_name"  // 0.9
-	SourceAlias         MatchSource = "alias"         // 0.8
-	SourcePronoun       MatchSource = "pronoun"       // 0.6
+	SourceName          MatchSource = "name"           // 1.0
+	SourceDisplayName   MatchSource = "display_name"   // 0.9
+	SourceAlias         MatchSource = "alias"          // 0.8
+	SourcePronoun       MatchSource = "pronoun"        // 0.6
 	SourceDetectionHint MatchSource = "detection_hint" // custom
-	SourceFrontMatter   MatchSource = "frontmatter"   // 1.0 (explicit binding)
+	SourceFrontMatter   MatchSource = "frontmatter"    // 1.0 (explicit binding)
 )
 
 // ConfidenceCandidate は entity 1 件の検出候補。
 type ConfidenceCandidate struct {
 	Entity      EntityRef
 	Source      MatchSource
-	Score       float64        // 0.0-1.0
+	Score       float64 // 0.0-1.0
 	Location    SourceLocation
 	MatchedText string
 	ExcludedBy  []string // exclude rules がマッチしたら何が原因かを残す
