@@ -7,12 +7,12 @@
 package lsp
 
 import (
+	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/takets/street-storyteller/internal/cli"
-	"github.com/takets/street-storyteller/internal/detect"
+	"github.com/takets/street-storyteller/internal/service"
 )
 
 type validateCommand struct{}
@@ -20,8 +20,10 @@ type validateCommand struct{}
 // New returns the `lsp validate` command.
 func New() cli.Command { return &validateCommand{} }
 
-func (c *validateCommand) Name() string        { return "lsp validate" }
-func (c *validateCommand) Description() string { return "Validate a manuscript via the detect pipeline" }
+func (c *validateCommand) Name() string { return "lsp validate" }
+func (c *validateCommand) Description() string {
+	return "Validate a manuscript via the detect pipeline"
+}
 
 func (c *validateCommand) Handle(cctx cli.CommandContext) int {
 	file := ""
@@ -41,25 +43,18 @@ func (c *validateCommand) Handle(cctx cli.CommandContext) int {
 		}
 	}
 
-	if file == "" {
-		cctx.Presenter.ShowError("--file is required")
-		return 1
-	}
-
-	data, err := os.ReadFile(file)
+	// Why: delegate file-read + DetectionRequest construction to ValidateService
+	// instead of duplicating os.ReadFile + detect.Detect here. The adapter
+	// becomes a thin presentation shell — matching the Refactor Phase goal.
+	results, err := service.NewValidateService().Run(file)
 	if err != nil {
-		cctx.Presenter.ShowError(fmt.Sprintf("read %s: %v", file, err))
+		if errors.Is(err, service.ErrEmptyPath) {
+			cctx.Presenter.ShowError("--file is required")
+		} else {
+			cctx.Presenter.ShowError(fmt.Sprintf("validate: %v", err))
+		}
 		return 1
 	}
-
-	// Why: nil Catalog short-circuits the body scan in detect.Detect, so this
-	// stub returns 0 detections on any input. A real catalog will be wired in
-	// once internal/lsp graduates from skeleton.
-	results := detect.Detect(detect.DetectionRequest{
-		URI:     "file://" + file,
-		Content: string(data),
-		Catalog: nil,
-	})
 
 	if cctx.GlobalOpts.JSON {
 		_ = cctx.Presenter.WriteJSON(struct {
