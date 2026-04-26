@@ -42,16 +42,16 @@ var validForeshadowingImportances = map[string]domain.ForeshadowingImportance{
 	"subtle": domain.ForeshadowingImportanceSubtle,
 }
 
-// slugRe matches characters that are not suitable in a slug ID.
-var slugRe = regexp.MustCompile(`[^a-zA-Z0-9_\-]`)
+// foreshadowingSlugRe matches characters that are not suitable in a slug ID.
+var foreshadowingSlugRe = regexp.MustCompile(`[^a-zA-Z0-9_\-]`)
 
-// slugify converts a display name into a URL/file-safe identifier.
+// foreshadowingSlugify converts a display name into a URL/file-safe identifier.
 // Why: adopts the same simple snake_case convention used by the TypeScript
 // side (spaces→underscores, lowercase, strip non-ascii).
-func slugify(name string) string {
+func foreshadowingSlugify(name string) string {
 	s := strings.ToLower(name)
 	s = strings.ReplaceAll(s, " ", "_")
-	s = slugRe.ReplaceAllString(s, "")
+	s = foreshadowingSlugRe.ReplaceAllString(s, "")
 	if s == "" {
 		// Fallback for pure non-ASCII names (e.g. Japanese): use a hex digest
 		// of the original to keep IDs stable and unique.
@@ -138,7 +138,7 @@ func (ForeshadowingCreateTool) Handle(_ context.Context, args json.RawMessage, _
 	// Derive ID.
 	id := a.ID
 	if id == "" {
-		id = slugify(a.Name)
+		id = foreshadowingSlugify(a.Name)
 	}
 
 	// Build the domain struct (in-memory only).

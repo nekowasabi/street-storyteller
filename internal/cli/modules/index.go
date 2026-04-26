@@ -42,6 +42,9 @@ func RegisterCore(r cli.Registry) error {
 	if err := r.Register("meta check", metamod.New()); err != nil {
 		return err
 	}
+	if err := r.Register("lint", lintmod.New()); err != nil {
+		return err
+	}
 	if err := r.Register("lsp validate", lspmod.New()); err != nil {
 		return err
 	}
@@ -55,9 +58,6 @@ func RegisterCore(r cli.Registry) error {
 		return err
 	}
 	if err := r.Register("mcp start", mcpmod.NewStart()); err != nil {
-		return err
-	}
-	if err := r.Register("lint", lintmod.New()); err != nil {
 		return err
 	}
 	if err := r.Register("lint install-hooks", lintmod.NewInstallHooks()); err != nil {

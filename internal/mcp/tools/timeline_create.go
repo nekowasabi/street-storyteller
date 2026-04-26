@@ -30,12 +30,12 @@ var validScopes = map[domain.TimelineScope]struct{}{
 	domain.TimelineScopeArc:       {},
 }
 
-// slugify converts a human-readable name into a lowercase underscore id.
-var nonAlphanumRe = regexp.MustCompile(`[^a-z0-9]+`)
+// timelineSlugify converts a human-readable name into a lowercase underscore id.
+var timelineSlugRe = regexp.MustCompile(`[^a-z0-9]+`)
 
-func slugify(name string) string {
+func timelineSlugify(name string) string {
 	s := strings.ToLower(name)
-	s = nonAlphanumRe.ReplaceAllString(s, "_")
+	s = timelineSlugRe.ReplaceAllString(s, "_")
 	s = strings.Trim(s, "_")
 	return s
 }
@@ -94,7 +94,7 @@ func (TimelineCreateTool) Handle(_ context.Context, args json.RawMessage, _ Exec
 
 	id := a.ID
 	if id == "" {
-		id = slugify(a.Name)
+		id = timelineSlugify(a.Name)
 	}
 
 	tl := domain.Timeline{
