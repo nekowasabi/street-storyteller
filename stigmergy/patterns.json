@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated": "2026-04-26",
+  "updated": "2026-04-27",
   "patterns": [
     {
       "id": "wave-a3-parallel-tdd",
@@ -68,6 +68,54 @@
         "subagent サンドボックスで go ツールチェーンが permission deny"
       ],
       "related_lessons": ["lesson-002"]
+    },
+    {
+      "id": "two-layer-go-ts-split",
+      "name": "二層構造での Go/TS 分担",
+      "description": "Go を処理エンジン (CLI/LSP/MCP/lint adapter)、TypeScript を authoring surface (型 + samples) に固定する移植戦略",
+      "category": "architecture",
+      "maturity": "proven",
+      "first_used": "2026-04",
+      "missions": ["go-migration-process-300"],
+      "context": "性能要件があり既存 TS authoring DSL を保持したい OSS / 内製ツール",
+      "applicability": "Deno/Node 製 CLI を Go へ移植したいが、ユーザー向け型定義 / sample DSL は TS のまま残したいケース",
+      "steps": [
+        "1. 不変条件として保持する TS surface (src/type/, samples/*/src/) を憲章化",
+        "2. 処理エンジン全モジュールを Go 側にミラー実装 (CLI/LSP/MCP/lint adapter)",
+        "3. TS パーサは限定スコープ自作 (tsparse) で依存ゼロを保つ",
+        "4. CI を Go メインに整理し Deno は authoring 型検証のみに縮小",
+        "5. 単一バイナリ配布で TS 同梱なしを実現"
+      ],
+      "preconditions": [
+        "authoring DSL の表現面を pure form に制約できる",
+        "TS 側にランタイム要件がない (型と sample のみ)"
+      ],
+      "trade_offs": "Go と TS の二重実装感はあるが、新規ランタイム機能は Go のみ実装と憲章化することで保守コストを抑制",
+      "example": "street-storyteller (2026-04, KPI 全達成: CLI 1.6-1.9ms / LSP 1.0ms / binary 3.3MB / coverage 70.7%)",
+      "related_lessons": ["go-migration-2026-04-003"]
+    },
+    {
+      "id": "parallel-worktree-helper-prefix",
+      "name": "並列 worktree ヘルパ prefix 命名規約",
+      "description": "3+ worktree の disjoint 並列実装で、各 worktree の private helper に scope prefix を必須化してマージ衝突を構造的に予防",
+      "category": "implementation-strategy",
+      "maturity": "proven",
+      "first_used": "2026-04-26",
+      "missions": ["go-migration-process-300"],
+      "context": "MCP tools 18 個を複数 worktree で並列移植 (Process 06)",
+      "applicability": "Wave-A3 パターン等で 3 worktree 以上が同種の helper (errorResult / slugify / normalize 等) を独立実装する場合",
+      "steps": [
+        "1. wave-pre 段階で scope prefix を確定 (例: binding / timeline / subplot)",
+        "2. private helper は prefix 必須 (bindingErrorResult, timelineSlugify, ...)",
+        "3. マージ前 lint で no-prefix helper を検出 (golangci-lint カスタムルール想定)",
+        "4. 真に共有する helper は wave-pre に昇格させて main に先入れ"
+      ],
+      "preconditions": [
+        "Wave-A3 等の disjoint scope 並列実装",
+        "worktree が 3 つ以上"
+      ],
+      "trade_offs": "命名がやや冗長になるが、マージ作業コストの削減効果が圧倒的に大きい",
+      "related_lessons": ["go-migration-2026-04-001", "go-migration-2026-04-002"]
     }
   ]
 }
