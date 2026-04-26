@@ -32,7 +32,9 @@
       "dist/",
       "output/",
       "test_output/",
-      "internal/**/testdata/"
+      "internal/**/testdata/",
+      "**/*.md",
+      ".kiro/"
     ]
   },
   "exclude": ["samples/", "src/characters/", "src/settings/", "src/timelines/"],
