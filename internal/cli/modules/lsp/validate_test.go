@@ -84,9 +84,9 @@ func TestLspValidate_JSONOutput(t *testing.T) {
 	cmd := New()
 	var out, errBuf bytes.Buffer
 	code := cmd.Handle(cli.CommandContext{
-		Ctx:  context.Background(),
-		Args: []string{"--file", mdPath},
-		Presenter: cli.NewTextPresenter(&out, &errBuf),
+		Ctx:        context.Background(),
+		Args:       []string{"--file", mdPath},
+		Presenter:  cli.NewTextPresenter(&out, &errBuf),
 		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
 		GlobalOpts: cli.GlobalOptions{JSON: true},
 	})

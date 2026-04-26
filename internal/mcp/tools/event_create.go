@@ -84,11 +84,11 @@ func (EventCreateTool) Handle(_ context.Context, args json.RawMessage, _ Executi
 	}
 
 	ev := domain.TimelineEvent{
-		ID:       eventID,
-		Title:    a.Title,
-		Category: domain.EventCategory(a.Category),
-		Time:     domain.TimePoint{Order: a.Order},
-		Summary:  a.Summary,
+		ID:         eventID,
+		Title:      a.Title,
+		Category:   domain.EventCategory(a.Category),
+		Time:       domain.TimePoint{Order: a.Order},
+		Summary:    a.Summary,
 		Characters: chars,
 		Settings:   settings,
 		Chapters:   chapters,

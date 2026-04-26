@@ -14,12 +14,12 @@ type IntersectionCreateTool struct{}
 
 type intersectionCreateArgs struct {
 	SourceSubplot      string `json:"source_subplot"`
-	SourceBeat        string `json:"source_beat"`
+	SourceBeat         string `json:"source_beat"`
 	TargetSubplot      string `json:"target_subplot"`
-	TargetBeat        string `json:"target_beat"`
-	Summary           string `json:"summary"`
+	TargetBeat         string `json:"target_beat"`
+	Summary            string `json:"summary"`
 	InfluenceDirection string `json:"influence_direction"`
-	InfluenceLevel    string `json:"influence_level"`
+	InfluenceLevel     string `json:"influence_level"`
 }
 
 // Definition advertises the intersection_create schema.
@@ -81,12 +81,12 @@ func (IntersectionCreateTool) Handle(_ context.Context, args json.RawMessage, _ 
 	intersection := domain.PlotIntersection{
 		ID:                 id,
 		SourceSubplotID:    a.SourceSubplot,
-		SourceBeatID:      a.SourceBeat,
+		SourceBeatID:       a.SourceBeat,
 		TargetSubplotID:    a.TargetSubplot,
-		TargetBeatID:      a.TargetBeat,
-		Summary:           a.Summary,
+		TargetBeatID:       a.TargetBeat,
+		Summary:            a.Summary,
 		InfluenceDirection: dir,
-		InfluenceLevel:    &level,
+		InfluenceLevel:     &level,
 	}
 
 	b, _ := json.Marshal(intersection)
