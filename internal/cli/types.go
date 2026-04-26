@@ -41,10 +41,23 @@ type GlobalOptions struct {
 }
 
 // Command describes a single (sub)command.
+// Types that want richer help output may additionally implement CommandWithUsage.
 type Command interface {
 	Name() string
 	Description() string
 	Handle(cctx CommandContext) int
+}
+
+// CommandWithUsage は Command の Optional 拡張で、
+// help renderer などが詳細な利用法を表示するために使われる。
+// 全てのコマンドが実装する必要はなく、help renderer は型アサーションで
+// 動的に判定する（fallback として Command.Description() を使用）。
+//
+// Why: Command interface への破壊的変更を避けつつ、help 表示の充実度を
+// 段階的に向上させるため、Optional interface パターンを採用。
+type CommandWithUsage interface {
+	Command
+	Usage() string
 }
 
 // Registry stores commands and resolves "<group> <sub> ..." paths.
