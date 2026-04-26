@@ -1,7 +1,10 @@
 // Package protocol defines MCP JSON-RPC 2.0 message shapes and tool/resource/prompt schemas.
 package protocol
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 // Message: same shape as LSP (intentional duplication; refactor decision deferred).
 type Message struct {
@@ -17,6 +20,11 @@ type ResponseError struct {
 	Code    int             `json:"code"`
 	Message string          `json:"message"`
 	Data    json.RawMessage `json:"data,omitempty"`
+}
+
+// Error implements the error interface.
+func (e *ResponseError) Error() string {
+	return fmt.Sprintf("jsonrpc error %d: %s", e.Code, e.Message)
 }
 
 const (
