@@ -1,259 +1,200 @@
-# MCP API (Street Storyteller)
+# MCP (Model Context Protocol) Reference
 
-MCPサーバーはClaude Desktop等のMCPクライアントと連携し、
-自然言語での物語プロジェクト管理を可能にします。
+`storyteller` は MCP サーバとして Claude Desktop / 他 MCP クライアントから利用できる。実装は Go (`internal/mcp/`)。
 
-## 起動方法
+> 関連: [architecture.md](./architecture.md) / [cli.md](./cli.md) / [lsp.md](./lsp.md)
+
+## 起動
 
 ```bash
 storyteller mcp start --stdio
 storyteller mcp start --stdio --path /path/to/story-project
 ```
 
-## Tools
+`mcp init` は Claude Desktop 用設定スニペットを出力する:
 
-### `meta_check`
+```bash
+storyteller mcp init
+```
 
-原稿のメタデータ生成可能性を検証します。
-
-- Args: `path?: string`, `dir?: string`, `recursive?: boolean`,
-  `characters?: string`, `settings?: string`, `preset?: string`
-
-### `meta_generate`
-
-原稿から`.meta.ts`ファイルを生成します。
-
-- Args: `path?: string`, `dir?: string`, `recursive?: boolean`,
-  `preview?: boolean`, `dryRun?: boolean`, `force?: boolean`,
-  `update?: boolean`, `output?: string`, `characters?: string`,
-  `settings?: string`, `preset?: string`
-
-### `element_create`
-
-物語要素（キャラクター、設定）を作成します。
-
-- Args: `type: "character"|"setting"`, `name: string`, `id?: string`,
-  `role?: string`, `summary?: string`, `traits?: string[]`,
-  `withDetails?: boolean`, `addDetails?: string`, `separateFiles?: string`,
-  `force?: boolean`
-
-### `view_browser`
-
-プロジェクトをHTML形式で可視化します。
-
-- Args: `path?: string`, `output?: string`, `serve?: boolean`, `port?: number`,
-  `watch?: boolean`, `timeout?: number`, `dryRun?: boolean`
-
-### `lsp_validate`
-
-LSPスタイルの診断を実行します。
-
-- Args: `projectRoot?: string`, `path?: string`, `dir?: string`,
-  `recursive?: boolean`
-- Returns: JSON text (`Diagnostic[]` for single file, or `{path, diagnostics}[]`
-  for directory)
-
-### `lsp_find_references`
-
-エンティティ参照を検索します。
-
-- Args: `projectRoot?: string`, `path?: string`, `dir?: string`,
-  `recursive?: boolean`, `characterName?: string`, `settingName?: string`
-- Returns: JSON text (`ReferenceLocation[]`)
-
-### `manuscript_binding`
-
-原稿ファイルのFrontMatterにエンティティを紐付け・編集・削除します。
-
-- Args:
-  - `manuscript: string` - 原稿ファイルパス（必須）
-  - `action: "add"|"remove"|"set"` - 操作タイプ（必須）
-  - `entityType: "characters"|"settings"|"foreshadowings"|"timeline_events"|"phases"|"timelines"` -
-    エンティティタイプ（必須）
-  - `ids: string[]` - エンティティIDリスト（必須）
-  - `validate?: boolean` - ID存在確認（デフォルト: true）
-- Returns: 成功メッセージまたはエラー
-
-#### 操作説明
-
-| action   | 動作                                     |
-| -------- | ---------------------------------------- |
-| `add`    | 既存リストに追加（重複無視）             |
-| `remove` | 既存リストから削除（存在しないIDは無視） |
-| `set`    | リストを完全置換                         |
-
-#### 使用例
+### Claude Desktop 設定例
 
 ```json
-// キャラクター追加
 {
-  "manuscript": "manuscripts/chapter01.md",
-  "action": "add",
-  "entityType": "characters",
-  "ids": ["hero", "heroine"]
-}
-
-// 伏線削除
-{
-  "manuscript": "manuscripts/chapter02.md",
-  "action": "remove",
-  "entityType": "foreshadowings",
-  "ids": ["old_foreshadow"]
-}
-
-// タイムラインイベント置換
-{
-  "manuscript": "manuscripts/chapter03.md",
-  "action": "set",
-  "entityType": "timeline_events",
-  "ids": ["event_001", "event_002"],
-  "validate": false
+  "mcpServers": {
+    "storyteller": {
+      "command": "storyteller",
+      "args": ["mcp", "start", "--stdio"]
+    },
+    "textlint": {
+      "command": "npx",
+      "args": ["textlint", "--mcp"],
+      "cwd": "/path/to/your/story-project"
+    }
+  }
 }
 ```
+
+textlint MCP は textlint v14.8.0+ のネイティブサポートを使う（storyteller 側に textlint MCP は無い）。
+
+## アーキテクチャ
+
+| パッケージ | 役割 |
+|-----------|------|
+| `internal/mcp/server` | JSON-RPC dispatcher / lifecycle |
+| `internal/mcp/protocol` | MCP 型定義 |
+| `internal/mcp/tools` | Tool 実装と registry |
+| `internal/mcp/resources` | Resource プロバイダ |
+| `internal/mcp/prompts` | Prompt 定義 |
+
+サーバは `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list` を実装する（`internal/mcp/server/server.go`）。
+
+## Tools (18)
+
+`internal/mcp/tools/` で実装。各 Tool は `Definition() protocol.Tool` と `Handle(ctx, params)` を持つ。
+
+| Tool | 実装 | 概要 |
+|------|------|------|
+| `meta_check` | `meta_check.go` | manuscripts の YAML frontmatter 検証 |
+| `meta_generate` | `meta_generate.go` | frontmatter テンプレ生成 |
+| `element_create` | `element_create.go` | 物語要素作成 |
+| `view_browser` | `view_browser.go` | HTML ビュー生成 |
+| `lsp_validate` | `lsp_validate.go` | 原稿検証 |
+| `lsp_find_references` | `lsp_find_references.go` | エンティティ参照検索 |
+| `timeline_create` | `timeline_create.go` | タイムライン作成 |
+| `event_create` | `event_create.go` | タイムラインイベント作成 |
+| `event_update` | `event_update.go` | イベント更新 |
+| `timeline_view` | `timeline_view.go` | タイムライン表示 |
+| `timeline_analyze` | `timeline_analyze.go` | 因果関係・整合性分析 |
+| `foreshadowing_create` | `foreshadowing_create.go` | 伏線作成 |
+| `foreshadowing_view` | `foreshadowing_view.go` | 伏線表示 |
+| `manuscript_binding` | `manuscript_binding.go` | 原稿 frontmatter のエンティティ紐付け |
+| `subplot_create` | `subplot_create.go` | サブプロット作成 |
+| `subplot_view` | `subplot_view.go` | サブプロット表示 |
+| `beat_create` | `beat_create.go` | プロットビート作成 |
+| `intersection_create` | `intersection_create.go` | サブプロット間の交差作成 |
+
+### Tool 入力スキーマ例
+
+#### `meta_check`
+```json
+{ "type": "object", "properties": { "path": { "type": "string" } } }
+```
+
+#### `manuscript_binding`
+```json
+{
+  "type": "object",
+  "required": ["manuscript", "action", "entityType", "ids"],
+  "properties": {
+    "manuscript": { "type": "string" },
+    "action": { "enum": ["add", "remove", "set"] },
+    "entityType": {
+      "enum": ["characters", "settings", "foreshadowings",
+               "timeline_events", "phases", "timelines"]
+    },
+    "ids": { "type": "array", "items": { "type": "string" } },
+    "validate": { "type": "boolean", "default": true }
+  }
+}
+```
+
+#### `timeline_create`
+```json
+{
+  "type": "object",
+  "required": ["name", "scope", "summary"],
+  "properties": {
+    "name": { "type": "string" },
+    "scope": { "enum": ["story", "world", "character", "arc"] },
+    "summary": { "type": "string" },
+    "id": { "type": "string" }
+  }
+}
+```
+
+#### `foreshadowing_create`
+```json
+{
+  "type": "object",
+  "required": ["name", "type", "summary", "planting_chapter", "planting_description"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "type": { "enum": ["hint","prophecy","mystery","symbol","chekhov","red_herring"] },
+    "summary": { "type": "string" },
+    "planting_chapter": { "type": "string" },
+    "planting_description": { "type": "string" },
+    "importance": { "enum": ["major","minor","subtle"] },
+    "planned_resolution_chapter": { "type": "string" }
+  }
+}
+```
+
+完全なスキーマは各 `internal/mcp/tools/*.go` の `Definition()` を参照。
 
 ## Resources
 
-`storyteller://`スキームでリソースを提供します。
+`internal/mcp/resources/resources.go` で登録される。
 
-| URI                                | 説明                 |
-| ---------------------------------- | -------------------- |
-| `storyteller://project`            | プロジェクト分析JSON |
-| `storyteller://characters`         | キャラクター一覧JSON |
-| `storyteller://character/<id>`     | 単一キャラクターJSON |
-| `storyteller://settings`           | 設定一覧JSON         |
-| `storyteller://setting/<id>`       | 単一設定JSON         |
-| `storyteller://timelines`          | タイムライン一覧JSON |
-| `storyteller://timeline/<id>`      | 単一タイムラインJSON |
-| `storyteller://foreshadowings`     | 伏線一覧JSON         |
-| `storyteller://foreshadowing/<id>` | 単一伏線JSON         |
+| URI | 概要 |
+|-----|------|
+| `storyteller://project` | プロジェクト全体メタデータ |
+| `storyteller://characters` | キャラクター一覧 |
+| `storyteller://character/<id>` | 個別キャラクター |
+| `storyteller://settings` | 設定一覧 |
+| `storyteller://setting/<id>` | 個別設定 |
+| `storyteller://timelines` | タイムライン一覧 |
+| `storyteller://timeline/<id>` | 個別タイムライン |
+| `storyteller://foreshadowings` | 伏線一覧 |
+| `storyteller://foreshadowing/<id>` | 個別伏線 |
+| `storyteller://subplots` | サブプロット一覧 |
+| `storyteller://subplot/<id>` | 個別サブプロット |
 
 ### クエリパラメータ
 
-#### `?expand=details`
-
-キャラクターまたは設定リソースで使用可能です。
-詳細情報（`details`フィールド）内のファイル参照を解決し、実際の内容を展開して返します。
-
-```
-# キャラクター詳細を展開
-storyteller://character/hero?expand=details
-
-# 設定詳細を展開
-storyteller://setting/royal_capital?expand=details
-```
-
-**動作説明：**
-
-- `details`フィールド内の各項目について、`{ file: "path/to/file.md" }`
-  形式の参照を実際のファイル内容に置き換えます
-- ファイルにFrontMatterがある場合は自動的に除去されます
-- ファイルが見つからない場合は`undefined`として返されます
-- インライン文字列はそのまま返されます
-
-**使用例（Claude Desktop）：**
-
-```
-ユーザー: heroキャラクターの詳細情報を教えて
-
-Claude: storyteller://character/hero?expand=details リソースを読み込みます...
-        [展開された詳細情報を表示]
-```
+| パラメータ | 対応 URI | 効果 |
+|-----------|----------|------|
+| `?expand=details` | character / setting | `{ file: ... }` 参照を解決して長文展開 |
 
 ## Prompts
 
-### Creative（創作支援）
+`internal/mcp/prompts/prompts.go` で登録。
 
-| プロンプト             | 必須引数 | オプション引数 |
-| ---------------------- | -------- | -------------- |
-| `character_brainstorm` | `role`   | `genre`        |
-| `plot_suggestion`      | `genre`  | `logline`      |
-| `scene_improvement`    | `scene`  | `goal`         |
+| Name | 概要 |
+|------|------|
+| `character_brainstorm` | キャラクターのブレインストーム |
+| `plot_suggestion` | プロット展開の提案 |
+| `scene_improvement` | シーン改善 |
+| `project_setup_wizard` | プロジェクト初期化支援 |
+| `chapter_review` | チャプターレビュー |
+| `consistency_fix` | 整合性修正 |
+| `timeline_brainstorm` | タイムラインのブレインストーム |
+| `event_detail_suggest` | イベント詳細の提案 |
+| `causality_analysis` | 因果関係分析 |
+| `timeline_consistency_check` | タイムライン整合性チェック |
 
-### Workflow（ワークフロー支援）
+## エラー応答
 
-| プロンプト             | 必須引数  | オプション引数 |
-| ---------------------- | --------- | -------------- |
-| `project_setup_wizard` | `name`    | `template`     |
-| `chapter_review`       | `chapter` | `text`         |
-| `consistency_fix`      | `issue`   | `context`      |
-
-## 自然言語インテント解析（v1.0拡張）
-
-MCPサーバーは自然言語入力から適切なツールを推論します。
-v1.0で対応パターンが3個から21個に拡張されました。
-
-### 対応パターン一覧
-
-#### ビュー/表示（4パターン）
-
-| 入力例                 | 解析結果       | 信頼度 |
-| ---------------------- | -------------- | ------ |
-| 「一覧を表示して」     | `view_browser` | 90%    |
-| 「プロジェクトを表示」 | `view_browser` | 88%    |
-| 「ビューを開いて」     | `view_browser` | 85%    |
-| 「可視化して」         | `view_browser` | 85%    |
-
-#### キャラクター作成（4パターン）
-
-| 入力例                 | 解析結果         | 信頼度 |
-| ---------------------- | ---------------- | ------ |
-| 「キャラクターを作成」 | `element_create` | 90%    |
-| 「主人公を追加」       | `element_create` | 88%    |
-| 「キャラを作って」     | `element_create` | 85%    |
-| 「新しいキャラクター」 | `element_create` | 85%    |
-
-#### 設定作成（1パターン）
-
-| 入力例           | 解析結果                         | 信頼度 |
-| ---------------- | -------------------------------- | ------ |
-| 「世界観を作成」 | `element_create` (type: setting) | 88%    |
-
-#### メタデータ（3パターン）
-
-| 入力例                   | 解析結果     | 信頼度 |
-| ------------------------ | ------------ | ------ |
-| 「メタデータをチェック」 | `meta_check` | 90%    |
-| 「章情報を確認」         | `meta_check` | 85%    |
-| 「設定を確認」           | `meta_check` | 85%    |
-
-#### LSP/検証（3パターン）
-
-| 入力例                     | 解析結果       | 信頼度 |
-| -------------------------- | -------------- | ------ |
-| 「原稿の整合性をチェック」 | `lsp_validate` | 88%    |
-| 「検証を実行」             | `lsp_validate` | 85%    |
-| 「整合性を確認」           | `lsp_validate` | 85%    |
-
-#### 参照検索（2パターン）
-
-| 入力例                   | 解析結果              | 信頼度 |
-| ------------------------ | --------------------- | ------ |
-| 「参照を検索」           | `lsp_find_references` | 88%    |
-| 「どこで使われている？」 | `lsp_find_references` | 85%    |
-
-#### プロジェクト管理（3パターン）
-
-| 入力例                   | 解析結果        | 信頼度 |
-| ------------------------ | --------------- | ------ |
-| 「プロジェクトを初期化」 | `meta_generate` | 90%    |
-| 「初期化して」           | `meta_generate` | 85%    |
-| 「設定ファイルを生成」   | `meta_generate` | 85%    |
-
-### Claude Desktopでの使用例
-
-```
-ユーザー: 「新しい主人公を作って」
-
-Claude: element_createツールを呼び出しています...
-        キャラクター「hero」を作成しました。
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32602,
+    "message": "invalid params: missing 'name'",
+    "data": { "tool": "timeline_create" }
+  }
+}
 ```
 
-## 関連ドキュメント
+エラーコードは `internal/mcp/protocol/messages.go` を参照。
 
-- [lsp.md](./lsp.md) - LSP機能詳細
-- [cli.md](./cli.md) - CLIリファレンス
-- [rag.md](./rag.md) - RAG機能ガイド
+## 動作確認
 
----
+```bash
+echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+  | storyteller mcp start --stdio
+```
 
-_Last updated: 2025-12-29 (v1.2 - RAG機能追加)_
+統合テストは `internal/mcp/server/golden_wire_test.go`、各 Tool は `*_test.go` を参照。
