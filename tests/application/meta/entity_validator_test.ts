@@ -73,13 +73,13 @@ Deno.test("EntityValidator", async (t) => {
 
   await t.step("存在するforeshadowing IDはvalidを返す", async () => {
     const validator = new EntityValidator(SAMPLE_PROJECT_PATH);
-    // 伏線のIDはファイル内のidフィールド値（glass_slipper）
+    // 伏線のIDはファイル内のidフィールド値（glass_slipper_foreshadowing）
     const result = await validator.validateIds("foreshadowings", [
-      "glass_slipper",
+      "glass_slipper_foreshadowing",
     ]);
 
     assertEquals(result.valid, true);
-    assertEquals(result.validIds, ["glass_slipper"]);
+    assertEquals(result.validIds, ["glass_slipper_foreshadowing"]);
     assertEquals(result.invalidIds, []);
   });
 

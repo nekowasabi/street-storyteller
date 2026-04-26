@@ -5,7 +5,7 @@ import type { Foreshadowing } from "@storyteller/types/v2/foreshadowing.ts";
  * 物語の象徴的アイテム - チェーホフの銃パターン
  */
 export const glassSlipper: Foreshadowing = {
-  id: "glass_slipper",
+  id: "glass_slipper_foreshadowing",
   name: "ガラスの靴",
   type: "chekhov",
   summary: "魔法で与えられた特別な靴。後にシンデレラを見つける決め手となる",
