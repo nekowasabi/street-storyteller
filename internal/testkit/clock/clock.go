@@ -28,6 +28,9 @@ func (RealClock) Now() time.Time { return time.Now() }
 type FakeClock struct {
 	mu  sync.Mutex
 	now time.Time
+	// Why: AfterFunc で登録された fakeTimer を保持し、Advance/Set 時に
+	// deadline ≤ now のものを fire する。fake_timer.go の fireDueTimers が利用する。
+	pendingTimers []*fakeTimer
 }
 
 // NewFakeClock は initial を初期時刻とする FakeClock を生成する。
@@ -52,6 +55,7 @@ func (f *FakeClock) Advance(d time.Duration) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.now = f.now.Add(d)
+	f.fireDueTimers()
 }
 
 // Set は仮想時刻を t に置き換える。
@@ -59,4 +63,5 @@ func (f *FakeClock) Set(t time.Time) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	f.now = t
+	f.fireDueTimers()
 }
