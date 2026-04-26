@@ -1,0 +1,20 @@
+{
+  "id": 2,
+  "jsonrpc": "2.0",
+  "result": {
+    "tools": [
+      {
+        "description": "Validate manuscript metadata (YAML frontmatter)",
+        "inputSchema": {
+          "properties": {
+            "path": {
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "name": "meta_check"
+      }
+    ]
+  }
+}

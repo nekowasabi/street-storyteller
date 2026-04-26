@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"flag"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,6 +12,12 @@ import (
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
 	"github.com/takets/street-storyteller/internal/mcp/tools"
 )
+
+// updateMCPGolden triggers golden file regeneration when set.
+//
+// Why: -update flag pattern keeps golden files as committed source-of-truth
+// while allowing one-shot regeneration via `go test -update` (Process 10 wt-2b).
+var updateMCPGolden = flag.Bool("update", false, "regenerate MCP wire-protocol golden files (Process 10 wt-2b)")
 
 // loadGoldenBytes reads testdata/mcp/<name> as raw bytes.
 //
@@ -84,24 +91,39 @@ func dispatchWire(t *testing.T, requestFixture string, configure func(s *Server)
 	return canonicalizeJSON(t, rawResp)
 }
 
-// assertGolden compares the produced canonical JSON to a committed Golden
-// file under testdata/mcp/. In Red phase the *.golden.json files do not
-// exist yet, so this fails as designed.
-func assertGolden(t *testing.T, goldenName, got string) {
+// assertOrUpdateGolden compares the produced canonical JSON to a committed
+// golden file under testdata/mcp/. When -update is set the file is written
+// (or overwritten) instead of compared.
+//
+// Why: assertOrUpdateGolden replaces the Red-phase assertGolden stub so that
+// `go test -update` is the single command to transition from Red to Green
+// (Process 10 wt-2b). Without -update, missing files cause t.Fatal just as
+// in the original Red design.
+func assertOrUpdateGolden(t *testing.T, goldenName, got string) {
 	t.Helper()
 	wantPath := filepath.Join("testdata", "mcp", goldenName)
+	if *updateMCPGolden {
+		if err := os.MkdirAll(filepath.Dir(wantPath), 0o755); err != nil {
+			t.Fatalf("mkdir %s: %v", filepath.Dir(wantPath), err)
+		}
+		if err := os.WriteFile(wantPath, []byte(got), 0o644); err != nil {
+			t.Fatalf("write golden %s: %v", goldenName, err)
+		}
+		t.Logf("updated golden: %s", wantPath)
+		return
+	}
 	want, err := os.ReadFile(wantPath)
 	if err != nil {
-		t.Fatalf("Red phase: golden %s missing (%v)\n--- got ---\n%s", goldenName, err, got)
+		t.Fatalf("golden %s missing — run `go test -update` to generate\n--- got ---\n%s", goldenName, got)
 	}
 	if string(want) != got {
-		t.Fatalf("Golden mismatch for %s\n--- want ---\n%s\n--- got ---\n%s", goldenName, string(want), got)
+		t.Fatalf("golden mismatch for %s\n--- want ---\n%s\n--- got ---\n%s", goldenName, string(want), got)
 	}
 }
 
 func TestGolden_MCP_InitializeWire(t *testing.T) {
 	got := dispatchWire(t, "initialize.json", nil)
-	assertGolden(t, "initialize.golden.json", got)
+	assertOrUpdateGolden(t, "initialize.golden.json", got)
 }
 
 func TestGolden_MCP_ToolsListWire(t *testing.T) {
@@ -110,12 +132,12 @@ func TestGolden_MCP_ToolsListWire(t *testing.T) {
 		// the public tools/list contract, not a stub.
 		_ = s.Tools().Register(tools.MetaCheckTool{})
 	})
-	assertGolden(t, "tools_list.golden.json", got)
+	assertOrUpdateGolden(t, "tools_list.golden.json", got)
 }
 
 func TestGolden_MCP_ToolsCallMetaCheckWire(t *testing.T) {
 	got := dispatchWire(t, "tools_call_meta_check.json", func(s *Server) {
 		_ = s.Tools().Register(tools.MetaCheckTool{})
 	})
-	assertGolden(t, "tools_call_meta_check.golden.json", got)
+	assertOrUpdateGolden(t, "tools_call_meta_check.golden.json", got)
 }
