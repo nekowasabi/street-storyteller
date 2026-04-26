@@ -1,754 +1,156 @@
-# LSP (Language Server Protocol) ドキュメント
+# LSP (Language Server Protocol)
 
-Street Storytellerは、エディタ統合のためのLSPサーバーを提供します。
-原稿（Markdown）内のキャラクター・設定・伏線参照をリアルタイムで検出し、診断情報・ナビゲーション機能を提供します。
+`storyteller` LSP サーバは Go で実装されている (`internal/lsp/`)。原稿（Markdown）内のキャラクター・設定・伏線参照のリアルタイム検出、定義ジャンプ、ホバー、診断、Code Action を提供する。
+
+> 関連: [architecture.md](./architecture.md) / [cli.md](./cli.md) / [lint.md](./lint.md) / [benchmarks.md](./benchmarks.md)
 
 ## クイックスタート
 
-### LSPサーバー起動
-
 ```bash
-# 標準入出力モードで起動
+# stdio で LSP を起動（エディタからの呼び出し用）
 storyteller lsp start --stdio
-```
 
-### エディタ設定
+# ワンショット検証
+storyteller lsp validate manuscripts/chapter01.md
 
-```bash
-# neovim用設定を生成
+# エディタ設定生成
 storyteller lsp install nvim
-
-# VSCode用設定を生成
 storyteller lsp install vscode
 ```
 
-### ワンショット検証
+性能ベースライン（startup < 2s 等）は [benchmarks.md](./benchmarks.md) を参照。Go バイナリ移植により Deno 版より大幅に高速化されている。
 
-```bash
-# 単一ファイルを検証
-storyteller lsp validate manuscripts/chapter01.md
+## アーキテクチャ
 
-# ディレクトリ内のファイルを検証
-storyteller lsp validate --dir manuscripts/ --recursive
+| パッケージ | 役割 |
+|-----------|------|
+| `internal/lsp/server` | JSON-RPC ループ、ライフサイクル、TextSync、capabilities |
+| `internal/lsp/protocol` | LSP 型・JSON-RPC エンベロープ |
+| `internal/lsp/providers` | `definition`, `hover` などのリクエスト処理 |
+| `internal/lsp/diagnostics` | DiagnosticSource 抽象化と統合 |
+| `internal/detect` | エンティティ参照検出（@付き / @なし日本語） |
+
+```mermaid
+flowchart LR
+    Editor -- JSON-RPC/stdio --> Server[lsp/server]
+    Server --> TextSync[textsync.go]
+    Server --> Providers[lsp/providers]
+    Server --> Diagnostics[lsp/diagnostics]
+    Diagnostics --> Storyteller[StorytellerDiagnosticSource]
+    Diagnostics --> Textlint[TextlintDiagnosticSource]
+    Providers --> Detect[internal/detect]
 ```
 
-## サポート機能
-
-### 1. テキストドキュメント同期
-
-| メソッド                 | 説明                       |
-| ------------------------ | -------------------------- |
-| `textDocument/didOpen`   | ドキュメントを開いた時     |
-| `textDocument/didChange` | ドキュメントが変更された時 |
-| `textDocument/didClose`  | ドキュメントを閉じた時     |
-
-### 2. 定義ジャンプ（Definition）
-
-原稿内のエンティティ参照から、定義ファイルへジャンプできます。
-
-```markdown
-勇者は剣を抜いた。 ← カーソルを置いてGo to Definition
-```
-
-↓ ジャンプ先
-
-```typescript
-// src/characters/hero.ts
-export const hero: Character = {
-  name: "hero",
-  displayNames: ["勇者"],
-  ...
-};
-```
-
-### 3. ホバー情報（Hover）
-
-カーソル位置のエンティティ情報を表示します。
-
-```
-勇者 (character)
-役割: protagonist
-概要: 世界を救う運命を背負った若者
-信頼度: 90%
-```
-
-#### 3.1 リテラル型ホバー（TypeScriptファイル向け）
-
-TypeScript/TSXファイル内のリテラル型値にカーソルを合わせると、その値のドキュメントが表示されます。
-
-**対応する型:**
-
-| 型名                      | フィールド名      | 値の例                                             |
-| ------------------------- | ----------------- | -------------------------------------------------- |
-| `CharacterRole`           | `role`            | `protagonist`, `antagonist`, `supporting`, `guest` |
-| `RelationType`            | `relationships.*` | `ally`, `enemy`, `romantic`, `mentor`              |
-| `ForeshadowingType`       | `type`            | `hint`, `prophecy`, `mystery`, `symbol`            |
-| `ForeshadowingStatus`     | `status`          | `planted`, `resolved`, `abandoned`                 |
-| `ForeshadowingImportance` | `importance`      | `major`, `minor`, `subtle`                         |
-| `SettingType`             | `type`            | `location`, `world`, `culture`                     |
-| `EventCategory`           | `category`        | `plot_point`, `climax`, `resolution`               |
-| `EventImportance`         | `importance`      | `major`, `minor`, `background`                     |
-| `TimelineScope`           | `scope`           | `story`, `world`, `character`, `arc`               |
-| `TransitionType`          | `transitionType`  | `gradual`, `turning_point`, `revelation`           |
-
-**使用例:**
-
-```typescript
-const char: Character = {
-  role: "protagonist", // ← ホバーで「主人公」と表示
-};
-```
-
-ホバー表示:
-
-```markdown
-**`protagonist`** `[CharacterRole]`
-
-主人公
-```
-
-**特徴:**
-
-- 親型（`Character`, `Foreshadowing`等）を自動推定
-- 同名フィールド（`type`, `importance`等）を親型で区別
-- `relationships`内のネストされた値にも対応
-- denolsとの共存が可能
-
-### 4. 診断（Diagnostics）
-
-リアルタイムで参照の整合性をチェックします。
-
-| レベル      | 条件         | 説明             |
-| ----------- | ------------ | ---------------- |
-| Warning     | 信頼度 < 70% | 曖昧な参照       |
-| Hint        | 信頼度 < 90% | 明示的参照の推奨 |
-| Information | -            | 検出された参照   |
-
-### 5. Code Action（v1.0新機能）
-
-低信頼度（85%以下）の参照に対して、Quick Fixを提案します。
-
-#### 機能概要
-
-- 暗黙的な参照（`勇者`）を明示的参照（`@hero`）に変換
-- エディタ上で直接適用可能
-- 信頼度の低い参照を一括で改善
-
-#### 対象となる参照
-
-| 検出方法       | 信頼度 | Code Action           |
-| -------------- | ------ | --------------------- |
-| name（内部ID） | 1.0    | 対象外                |
-| displayNames   | 0.9    | 対象外                |
-| aliases        | 0.8    | 対象（Quick Fix提案） |
-
-#### 使用例
-
-1. エディタで原稿を開く
-2. 低信頼度の参照（黄色の下線など）にカーソルを置く
-3. Code Action（電球アイコン）をクリック
-4. 「明示的参照に変換」を選択
-
-```markdown
-<!-- 変換前 -->
-
-勇者は剣を抜いた。
-
-<!-- 変換後 -->
-
-@heroは剣を抜いた。
-```
-
-### 6. ファイル参照機能（v1.4新機能〜v1.5）
-
-TypeScriptファイル内の `{ file: "./path.md" }`
-パターンに対して、以下の機能を提供します。
-
-#### 6.1 ファイル参照ホバー
-
-ファイル参照にカーソルを合わせると、参照先ファイルの内容をプレビュー表示します。
-
-```typescript
-const hero: Character = {
-  details: {
-    description: { file: "./hero_description.md" }, // ← ホバーでプレビュー表示
-  },
-};
-```
-
-ホバー表示:
-
-```markdown
-**ファイル参照**: `./hero_description.md`
-
----
-
-（ファイル内容のプレビュー - 最大1000文字）
-
----
-
-_パス: `/project/src/characters/hero_description.md`_
-```
-
-**特徴:**
-
-- 参照先ファイルの内容を最大1000文字までプレビュー
-- ファイルが存在しない場合はエラーメッセージを表示
-- 解決済みの絶対パスを表示
-
-#### 6.2 ファイル参照定義ジャンプ
-
-ファイル参照上でGo to Definitionを実行すると、参照先ファイルにジャンプできます。
-
-```typescript
-description: {
-  file: "./description.md";
-} // ← Go to Definitionで参照先ファイルを開く
-```
-
-#### 6.3 Code Lens
-
-ファイル参照に対して「Open」ボタンを表示し、クリックで参照先ファイルを開けます。
-
-```typescript
-description: { file: "./description.md" },   // [Open ./description.md]
-backstory: { file: "./backstory.md" },        // [Open ./backstory.md]
-```
-
-**対応パターン:**
-
-| パターン                     | 例                         |
-| ---------------------------- | -------------------------- |
-| `{ file: "./path.md" }`      | 基本パターン               |
-| `{ "file": "./path.md" }`    | JSON形式（引用符付きキー） |
-| `{ 'file': './path.md' }`    | シングルクォート           |
-| `{ file : "./path.md" }`     | スペース付き               |
-| `{ file: "../shared/a.md" }` | 親ディレクトリ参照         |
-
-**対象ディレクトリ:**
-
-ファイル参照機能は以下のディレクトリ内のファイルでのみ有効です（denolsとの競合回避）:
-
-- `/characters/`
-- `/settings/`
-- `/samples/`
-
-#### デバッグログ
-
-環境変数 `STORYTELLER_LSP_DEBUG=1`
-を設定すると、ファイル参照機能のデバッグログが出力されます。
-
-```bash
-STORYTELLER_LSP_DEBUG=1 storyteller lsp start --stdio
-```
-
-### 7. ファイル変更監視 (File Watching)
-
-storyteller
-LSPは、プロジェクト内のエンティティファイル（キャラクター、設定、伏線など）の変更を監視し、
-原稿ファイルの診断・セマンティックトークンを自動的に更新します。
-
-#### 監視対象ファイルパターン
-
-- `src/characters/**/*.ts` - キャラクター定義
-- `src/settings/**/*.ts` - 設定定義
-- `src/foreshadowings/**/*.ts` - 伏線定義
-- `src/timelines/**/*.ts` - タイムライン定義
-
-#### 動作
-
-1. エディタがファイル変更を検知
-2. `workspace/didChangeWatchedFiles`通知をLSPサーバーに送信
-3. LSPサーバーがデバウンス処理（200ms）で連続変更をバッチ処理
-4. 変更内容に応じた更新処理:
-   - **増分更新**: 5件以下のエンティティファイル変更は差分更新
-   - **フルリロード**: 6件以上の変更または非エンティティファイル変更
-5. 開いている原稿ファイルの診断・セマンティックトークンを再計算
-
-#### パフォーマンス最適化（v1.6新機能）
-
-ファイル変更監視のパフォーマンスを最適化するため、以下の機能を実装しています。
-
-| 機能               | 説明                                                     |
-| ------------------ | -------------------------------------------------------- |
-| デバウンス         | 200ms以内の連続変更を1回の処理にまとめる                 |
-| 増分更新           | 少数のエンティティファイル変更は差分更新                 |
-| キャッシュバスター | Denoモジュールキャッシュを回避して最新ファイルを読み込み |
-
-**増分更新の閾値:**
-
-```typescript
-// 5件以下のエンティティファイル変更は増分更新
-// 6件以上はフルリロード
-const INCREMENTAL_UPDATE_THRESHOLD = 5;
-```
-
-**処理フロー:**
-
-```
-ファイル変更通知
-    ↓
-デバウンス (200ms)
-    ↓
-変更ファイル分類
-    ├─ エンティティファイル (1-5件) → 増分更新
-    ├─ エンティティファイル (6件以上) → フルリロード
-    └─ 非エンティティファイル → フルリロード
-    ↓
-診断・セマンティックトークン更新
-```
-
-#### Neovim設定
-
-nvim-lspconfigでファイル監視を有効にするには、以下の設定が必要です。
-
-通常、Neovimのデフォルト設定ではファイル監視は自動的に有効になりますが、
-LSPサーバーキャパビリティーに`workspace.fileOperations`が含まれていることが前提です。
-
-```lua
-require('lspconfig').storyteller.setup({
-  -- ... 他の設定
-  on_attach = function(client, bufnr)
-    -- ファイル監視が有効になっていることを確認
-    if client.server_capabilities.workspace and
-       client.server_capabilities.workspace.fileOperations then
-      -- ファイル監視が自動的に有効
-    end
-  end,
-})
-```
-
-注意: Neovim組み込みLSPクライアントはファイル変更通知を自動的に処理します。
-エンティティファイルを編集すると、影響を受ける原稿ファイルの表示が自動的に更新されます。
-
-### 8. セマンティックトークン（v1.1新機能）
-
-キャラクター名・設定名をエディタ上でハイライト表示します。
-
-#### 機能概要
-
-- キャラクター名を `character` トークンとしてハイライト
-- 設定名（場所・世界観）を `setting` トークンとしてハイライト
-- 信頼度に応じた3段階のスタイル
-
-#### トークンタイプ
-
-| トークンタイプ  | 対象                                          | 例                 |
-| --------------- | --------------------------------------------- | ------------------ |
-| `character`     | キャラクター名（name, displayNames, aliases） | 勇者、姫、主人公   |
-| `setting`       | 設定名（name, displayNames）                  | 城、王都、魔法の森 |
-| `foreshadowing` | 伏線名（name, displayNames）                  | ガラスの靴、予言   |
-
-#### 信頼度モディファイア
-
-| モディファイア     | 条件                | 推奨スタイル |
-| ------------------ | ------------------- | ------------ |
-| `highConfidence`   | 信頼度 >= 90%       | 通常色       |
-| `mediumConfidence` | 70% <= 信頼度 < 90% | 薄め         |
-| `lowConfidence`    | 信頼度 < 70%        | 点線下線     |
-
-#### 伏線ステータスモディファイア（v1.2新機能）
-
-| モディファイア | 条件           | 推奨スタイル       |
-| -------------- | -------------- | ------------------ |
-| `planted`      | 未回収の伏線   | オレンジ (#e67e22) |
-| `resolved`     | 回収済みの伏線 | グリーン (#27ae60) |
-
-#### 伏線アノテーション機能（v1.5新機能）
-
-HTMLコメント形式のアノテーションを検出し、伏線の状態に応じた色でハイライト表示します。
-
-**対応フォーマット:**
-
-```markdown
-<!-- @foreshadowing:伏線ID -->
-<!-- @fs:伏線ID -->              <!-- 短縮形式 -->
-<!-- @fs:伏線A @fs:伏線B -->     <!-- 複数指定 -->
-```
-
-**動作例:**
-
-```markdown
-<!-- @foreshadowing:ガラスの靴の伏線 -->  ← オレンジ（planted）
-
-「この魔法は真夜中に解けます」
-
-<!-- @foreshadowing:真夜中の期限 -->      ← グリーン（resolved）
-
-時計が12時を打った
-```
-
-**特徴:**
-
-- 伏線IDまたは名前で参照可能
-- 存在しないIDは検出されない（エラーにならない）
-- Markdownのシンタックスハイライトでグレー表示される部分が、状態に応じた色で表示される
-- 物語の品質チェック時に、未回収の伏線を視覚的に識別可能
-
-#### サポートするメソッド
-
-| メソッド                            | 説明                           |
-| ----------------------------------- | ------------------------------ |
-| `textDocument/semanticTokens/full`  | ドキュメント全体のトークン取得 |
-| `textDocument/semanticTokens/range` | 指定範囲のトークン取得         |
-
-#### neovim設定例
-
-```lua
--- セマンティックトークンのハイライトグループを設定
-vim.api.nvim_set_hl(0, "@lsp.type.character", { fg = "#61afef", bold = true })
-vim.api.nvim_set_hl(0, "@lsp.type.setting", { fg = "#98c379", italic = true })
-vim.api.nvim_set_hl(0, "@lsp.type.foreshadowing", { fg = "#e67e22", italic = true })
-
--- 信頼度によるスタイル分け
-vim.api.nvim_set_hl(0, "@lsp.mod.highConfidence", {})
-vim.api.nvim_set_hl(0, "@lsp.mod.mediumConfidence", { fg = "#abb2bf" })
-vim.api.nvim_set_hl(0, "@lsp.mod.lowConfidence", { underdotted = true })
-
--- 伏線ステータスによるスタイル分け
-vim.api.nvim_set_hl(0, "@lsp.mod.planted", { fg = "#e67e22" })  -- オレンジ（未回収）
-vim.api.nvim_set_hl(0, "@lsp.mod.resolved", { fg = "#27ae60" }) -- グリーン（回収済み）
-
--- 伏線アノテーション用の強調設定（typemod形式）
--- Markdownファイルで伏線のステータスに応じた色分け
-vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.planted.markdown", {
-  fg = "#e67e22",  -- オレンジ（未回収の伏線）
-  bold = true
-})
-vim.api.nvim_set_hl(0, "@lsp.typemod.foreshadowing.resolved.markdown", {
-  fg = "#27ae60",  -- グリーン（回収済みの伏線）
-  bold = true
-})
-```
-
-#### VSCode設定例
-
-`settings.json`:
-
-```json
-{
-  "editor.semanticTokenColorCustomizations": {
-    "[*]": {
-      "rules": {
-        "character": { "foreground": "#61afef", "bold": true },
-        "setting": { "foreground": "#98c379", "italic": true },
-        "foreshadowing": { "foreground": "#e67e22", "italic": true },
-        "*.lowConfidence": { "fontStyle": "underline" },
-        "*.planted": { "foreground": "#e67e22" },
-        "*.resolved": { "foreground": "#27ae60" }
-      }
-    }
-  }
+## サポートする LSP メソッド
+
+| Method | 実装 | 概要 |
+|--------|------|------|
+| `initialize` / `initialized` | `server/lifecycle.go`, `server/capabilities.go` | サーバ能力宣言 |
+| `shutdown` / `exit` | `server/lifecycle.go` | 終了 |
+| `textDocument/didOpen` | `server/textsync.go` | ドキュメント取り込み |
+| `textDocument/didChange` | 〃 | 増分同期 |
+| `textDocument/didClose` | 〃 | クローズ |
+| `textDocument/definition` | `providers/definition.go` | 定義ジャンプ |
+| `textDocument/hover` | `providers/hover.go` | ホバー |
+| `textDocument/codeAction` | `providers/` (in-progress) | 低信頼度参照 → 明示参照変換 |
+| `textDocument/publishDiagnostics` | `diagnostics/generator.go` | 診断 push |
+| Semantic Tokens | `server/capabilities.go` | キャラクター / 設定ハイライト |
+
+## DiagnosticSource 抽象化
+
+複数の診断ソースを統合する設計。
+
+```go
+// internal/lsp/diagnostics
+type Source interface {
+    Name() string
+    Available(ctx context.Context) bool
+    Generate(ctx context.Context, uri string, content string, projectRoot string) ([]Diagnostic, error)
+    // optional: Cancel(), Dispose()
 }
 ```
 
-## 信頼度システム
+実装済み:
 
-### 基本信頼度
+| Source | 役割 |
+|--------|------|
+| `StorytellerDiagnosticSource` | 未定義キャラ / 設定参照、ID 不整合の検出 |
+| `TextlintDiagnosticSource` | 文法・表記ゆれ（`internal/external/textlint`） |
 
-```typescript
-const BASE_CONFIDENCE = {
-  name: 1.0, // 内部ID名での完全一致
-  displayNames: 0.9, // 表示名での一致
-  aliases: 0.8, // 別名での一致
-};
+textlint 未インストール環境では `Available()` が false を返し、graceful degradation する（storyteller 診断のみで動作）。詳細は [docs/lint.md](./lint.md)。
+
+## 検出パターン
+
+```markdown
+勇者は剣を抜いた。   → src/characters/hero.ts (confidence: 0.90)
+@勇者は剣を抜いた。  → src/characters/hero.ts (confidence: 1.00)
+王都の城門前で…      → src/settings/royal_capital.ts (confidence: 0.85)
 ```
 
-### 文脈による補正
+`internal/detect/` が `displayNames` / `aliases` / `detectionHints` を参照して信頼度を算出。低信頼度参照は Code Action で明示参照（`@id`）への置換を提案する。
 
-- 助詞パターン（は/が/を/に/の/と/で/へ）がある場合: +0.1
+## エディタ統合
 
-### 診断の閾値
+### Neovim
 
-```typescript
-const CONFIDENCE_THRESHOLD = {
-  WARNING: 0.7, // これ未満でWarning
-  HINT: 0.9, // これ未満でHint
-  CODE_ACTION: 0.85, // これ以下でCode Action提案
-};
-```
-
-## エディタ設定例
-
-### neovim (nvim-lspconfig)
+`storyteller lsp install nvim` が以下相当の Lua 設定を出力:
 
 ```lua
 local lspconfig = require('lspconfig')
+local configs = require('lspconfig.configs')
 
-lspconfig.storyteller = {
-  cmd = { 'storyteller', 'lsp', 'start', '--stdio' },
-  filetypes = { 'markdown' },
-  root_dir = lspconfig.util.root_pattern('storyteller.json', '.storyteller'),
-  settings = {},
-}
-
-lspconfig.storyteller.setup{}
+if not configs.storyteller then
+  configs.storyteller = {
+    default_config = {
+      cmd = { 'storyteller', 'lsp', 'start', '--stdio' },
+      filetypes = { 'markdown' },
+      root_dir = lspconfig.util.root_pattern('deno.json', '.git'),
+    },
+  }
+end
+lspconfig.storyteller.setup({})
 ```
 
 ### VSCode
 
-`.vscode/settings.json`:
+`storyteller lsp install vscode` が `.vscode/settings.json` 用設定を出力。LSP クライアント拡張からの利用を想定。
 
+## ワンショット検証
+
+```bash
+storyteller lsp validate manuscripts/chapter01.md
+storyteller lsp validate --dir manuscripts/ --recursive
+storyteller lsp validate --json
+```
+
+JSON 出力:
 ```json
 {
-  "storyteller.enable": true,
-  "storyteller.path": "storyteller",
-  "storyteller.args": ["lsp", "start", "--stdio"]
+  "type": "diagnostics",
+  "files": [
+    {
+      "uri": "file:///.../chapter01.md",
+      "diagnostics": [
+        { "range": {...}, "severity": 2, "message": "未定義のキャラ参照: 勇者", "source": "storyteller" }
+      ]
+    }
+  ]
 }
 ```
+
+## 性能
+
+| 指標 | 目標 | 出典 |
+|------|------|------|
+| startup | < 2s | [benchmarks.md](./benchmarks.md) |
+| didChange → publishDiagnostics | < 200ms (debounce 込み) | 〃 |
+
+textlint 連携は 500ms デバウンス + 30s タイムアウト + 自動キャンセル（`internal/external/textlint/worker.go`）。
 
 ## トラブルシューティング
 
-### LSPサーバーが起動しない
-
-```bash
-# デバッグログを有効化
-storyteller lsp start --stdio --debug
-
-# 設定ファイルの確認
-storyteller config show
-```
-
-### エンティティが検出されない
-
-1. `storyteller.json`が正しく設定されているか確認
-2. キャラクター/設定ファイルが存在するか確認
-3. `displayNames`や`aliases`が正しく定義されているか確認
-
-### Code Actionが表示されない
-
-- 信頼度が85%を超える参照には表示されません
-- `@`付きの明示的参照には表示されません
-- エディタがCode Actionをサポートしているか確認
-
-### coc.nvimとの競合（定義ジャンプ時エラー）
-
-Neovim組み込みLSPでstoryteller
-LSPを使用し、TypeScriptファイルにcoc.nvimを使用している場合、
-定義ジャンプ（`textDocument/definition`）で`.ts`ファイルを開く際にエラーが発生することがあります。
-
-**エラー例:**
-
-```
-Plugin not ready
-```
-
-**原因:**
-
-storyteller LSPがキャラクター定義ファイル（`.ts`）へのジャンプを返した際、
-coc.nvimがそのファイルにアタッチしようとしますが、初期化が完了していない状態で失敗します。
-
-**解決策1: storytellerプロジェクト内の.tsファイルでcocを無効化**
-
-```lua
--- ~/.config/nvim/lua/storyteller.lua に追加
-vim.api.nvim_create_autocmd("BufReadPost", {
-  pattern = { "*/src/characters/*.ts", "*/src/settings/*.ts" },
-  callback = function()
-    vim.b.coc_enabled = 0
-  end,
-})
-```
-
-**解決策2: プロジェクトルートでcocを無効化**
-
-プロジェクトルートに`.vim/coc-settings.json`を作成:
-
-```json
-{
-  "coc.preferences.enableMessageDialog": false,
-  "typescript.enable": false
-}
-```
-
-**解決策3: TypeScriptもNeovim組み込みLSPに移行**
-
-coc-tsserverの代わりに`typescript-language-server`をNeovim組み込みLSPで使用することで、
-競合を完全に回避できます。
-
-## CLI 検証コマンド (`storyteller lsp validate`)
-
-LSPサーバーを起動せずに、原稿ファイルの検証をワンショットで実行するCLIコマンドです。
-CIやpre-commitフックでの自動検証に適しています。
-
-### 単一ファイル検証
-
-```bash
-storyteller lsp validate --file manuscripts/chapter01.md
-```
-
-出力例:
-
-```
-Validating: manuscripts/chapter01.md
-
-Found 2 issue(s):
-
-  [WARNING] 3:5: キャラクター「影の者」への参照（信頼度: 65%）。定義: src/characters/shadow.ts
-  [HINT   ] 7:12: 設定「古の塔」への参照（信頼度: 80%）。定義: src/settings/ancient_tower.ts
-Summary: High: 0, Medium: 1, Low: 1 (Total: 2)
-```
-
-高信頼度（90%以上）の参照は問題なしと判定され、診断出力から省かれます。
-
-### ディレクトリ一括検証
-
-```bash
-# ディレクトリ内の .md ファイルを検証
-storyteller lsp validate --dir manuscripts
-
-# サブディレクトリも含めて再帰的に検証
-storyteller lsp validate --dir manuscripts --recursive
-```
-
-出力例:
-
-```
-Validated 5 file(s), 3 issue(s) found.
-
-  manuscripts/chapter01.md: OK
-  manuscripts/chapter02.md: 2 issue(s)
-    [WARNING] 1:8: キャラクター「影の者」への参照（信頼度: 65%）。定義: src/characters/shadow.ts
-    [HINT   ] 4:3: キャラクター「商人」への参照（信頼度: 80%）。定義: src/characters/merchant.ts
-  manuscripts/chapter03.md: 1 issue(s)
-    [HINT   ] 2:10: 設定「古の塔」への参照（信頼度: 85%）。定義: src/settings/ancient_tower.ts
-  manuscripts/chapter04.md: OK
-  manuscripts/chapter05.md: OK
-```
-
-`--dir` と `--file` を同時に指定した場合、`--dir` が優先されます。
-
-### JSON出力
-
-`--json` フラグで結果を機械可読形式で出力します。
-
-```bash
-storyteller lsp validate --file manuscripts/chapter01.md --json
-```
-
-出力例:
-
-```json
-{
-  "filePath": "manuscripts/chapter01.md",
-  "diagnostics": [
-    {
-      "line": 3,
-      "character": 5,
-      "endCharacter": 8,
-      "severity": "warning",
-      "message": "キャラクター「影の者」への参照（信頼度: 65%）。定義: src/characters/shadow.ts",
-      "source": "storyteller",
-      "code": "low-confidence-character",
-      "confidence": 0.65,
-      "entityId": "shadow"
-    },
-    {
-      "line": 7,
-      "character": 12,
-      "endCharacter": 16,
-      "severity": "hint",
-      "message": "設定「古の塔」への参照（信頼度: 80%）。定義: src/settings/ancient_tower.ts",
-      "source": "storyteller",
-      "code": "low-confidence-setting",
-      "confidence": 0.8,
-      "entityId": "ancient_tower"
-    }
-  ],
-  "summary": {
-    "high": 0,
-    "medium": 1,
-    "low": 1,
-    "total": 2
-  }
-}
-```
-
-各診断の主要フィールド:
-
-| フィールド   | 説明                                                     |
-| ------------ | -------------------------------------------------------- |
-| `confidence` | 検出の信頼度（0.0 - 1.0）                                |
-| `entityId`   | 参照先のエンティティID（キャラクターや設定のID）         |
-| `severity`   | `warning`（信頼度 < 0.7）または `hint`（0.7 - 0.9 未満） |
-
-### --strict モード
-
-CIパイプラインやpre-commitフックでの利用を想定したモードです。
-信頼度がHigh未満の参照（Medium +
-Low）が1件でも存在する場合、コマンドはエラーを返します。
-
-```bash
-# CI / pre-commit での利用例
-storyteller lsp validate --file manuscripts/chapter01.md --strict
-```
-
-```bash
-# ディレクトリ一括検証（CI用）
-storyteller lsp validate --dir manuscripts --recursive --strict
-```
-
-**判定基準:**
-
-| 信頼度                  | 判定     | --strict での扱い |
-| ----------------------- | -------- | ----------------- |
-| High (>= 0.9)           | 問題なし | 合格              |
-| Medium (0.7以上0.9未満) | 要確認   | **不合格**        |
-| Low (< 0.7)             | 警告     | **不合格**        |
-
-> **Why**:
-> 現在の検出器が生成する最低信頼度は0.8（aliases由来）であるため、Low（<
-> 0.7）のみをチェック対象にすると標準構成で strict が発動しません。そのため
-> Medium 以上を不合格としています。
-
-### 信頼度閾値
-
-検証コマンドで使用する信頼度の閾値です。LSPサーバーの診断閾値（「信頼度システム」セクション参照）と同一の基準を適用しています。
-
-| レベル | 信頼度        | 診断severity | 意味                     |
-| ------ | ------------- | ------------ | ------------------------ |
-| High   | >= 0.9        | （診断なし） | 名前または表示名での一致 |
-| Medium | 0.7 - 0.9未満 | hint         | 別名等のやや不確実な参照 |
-| Low    | < 0.7         | warning      | 曖昧な参照               |
-
-### exit code に関する注意
-
-現在の実装では、`err(...)`
-を返すすべてのケース（ファイル不在、検証エラー、--strict不合格など）で **exit
-code 1** が返されます。正常終了時は exit code 0 です。
-
-```bash
-# 正常: 問題なし → exit 0
-storyteller lsp validate --file manuscripts/chapter01.md
-
-# エラー: ファイルなし → exit 1
-storyteller lsp validate --file nonexistent.md
-
-# エラー: strict不合格 → exit 1
-storyteller lsp validate --file manuscripts/chapter01.md --strict
-```
-
-> **Note**: 複数のexit code（例:
-> ファイル不在=2、検証エラー=3）によるエラー種別の区別は、今後のIssueで計画されています。
-
-### コマンドラインオプション一覧
-
-| オプション      | 説明                                                      |
-| --------------- | --------------------------------------------------------- |
-| `--file <path>` | 検証対象の原稿ファイルパス                                |
-| `--dir <dir>`   | ディレクトリ内の .md ファイルを一括検証（--fileより優先） |
-| `--recursive`   | サブディレクトリも再帰的に検索（--dirと併用）             |
-| `--path <dir>`  | プロジェクトルートディレクトリ（デフォルト: カレント）    |
-| `--json`        | 結果をJSON形式で出力                                      |
-| `--strict`      | High未満の参照がある場合にエラー（exit 1）                |
-| `--help`, `-h`  | ヘルプを表示                                              |
-
-## 関連ドキュメント
-
-- [lsp-implementation.md](./lsp-implementation.md) - 実装詳細
-- [mcp.md](./mcp.md) - MCPサーバー統合
-- [cli.md](./cli.md) - CLIリファレンス
-
----
-
-_Last updated: 2025-12-23 (v1.6 - ファイル変更監視パフォーマンス最適化)_
+| 症状 | 原因 / 対処 |
+|------|------------|
+| 定義ジャンプが動かない | TS authoring ファイル（`src/characters/*.ts` 等）が存在しているか確認 |
+| textlint 診断が出ない | `npx textlint --version` で導入確認。出ない場合は graceful degradation 動作中 |
+| 全部の参照が低信頼度 | `displayNames` / `aliases` を充実させる |
