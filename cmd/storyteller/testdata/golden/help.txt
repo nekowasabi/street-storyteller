@@ -1,5 +1,6 @@
 Available commands:
   help            List available commands
+  lint            Run textlint on manuscript files
   lsp validate    Validate a manuscript via the detect pipeline
   meta check      Validate manuscript frontmatter
   version         Show storyteller version

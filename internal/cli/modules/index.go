@@ -9,6 +9,7 @@ package modules
 import (
 	"github.com/takets/street-storyteller/internal/cli"
 	helpmod "github.com/takets/street-storyteller/internal/cli/modules/help"
+	lintmod "github.com/takets/street-storyteller/internal/cli/modules/lint"
 	lspmod "github.com/takets/street-storyteller/internal/cli/modules/lsp"
 	metamod "github.com/takets/street-storyteller/internal/cli/modules/meta"
 	versionmod "github.com/takets/street-storyteller/internal/cli/modules/version"
@@ -24,6 +25,9 @@ func RegisterCore(r cli.Registry) error {
 		return err
 	}
 	if err := r.Register("meta check", metamod.New()); err != nil {
+		return err
+	}
+	if err := r.Register("lint", lintmod.New()); err != nil {
 		return err
 	}
 	if err := r.Register("lsp validate", lspmod.New()); err != nil {
