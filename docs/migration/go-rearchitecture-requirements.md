@@ -248,13 +248,30 @@ Go移行後も最低限、同等のテスト層を分けて維持する必要が
 - テスト用 transport/clock/process runner が十分に差し替え可能でない
 - サンドボックス環境では localhost 接続やサブプロセスが制約を受ける
 
-Go版での要件:
+Go版での要件 (Process-11 で達成):
 
-- Clock/Timer をインターフェース化し、テストでは fake clock を使う
-- textlint/digrag/git/npm/deno は外部コマンド adapter として隔離する
-- availability check はキャッシュし、テストでは明示的に mock する
-- LSP E2E は通常ユニットテストから分離する
-- デバウンス待機を実時間で待たない
+- ✅ Clock/Timer をインターフェース化し、テストでは fake clock を使う
+  → `internal/testkit/clock` に `Clock`, `Timer`, `Stopper` interface と `FakeClock`/FakeTimer 実装。`AfterFunc` + `Advance` で debounce が 0ms 実行可能。
+- ✅ textlint/digrag/git/npm/deno は外部コマンド adapter として隔離する
+  → `internal/testkit/process` に `Runner` interface + `RealRunner`/`FakeRunner`。`internal/testkit/guard_test.go` が default-tag テストでの `os/exec` 直接 import を機械的に禁止。
+- ✅ availability check はキャッシュし、テストでは明示的に mock する
+  → `FakeRunner.Plan(...)` で実行結果を事前定義可能。
+- ✅ LSP E2E は通常ユニットテストから分離する
+  → 階層: `go test ./...` (default, 高速), `-tags=integration` (E2E), `-tags=external` (textlint等)。`internal/testkit/lint_test.go` が default で実時間 sleep を禁止。
+- ✅ デバウンス待機を実時間で待たない
+  → `FakeClock.AfterFunc` + `Advance` で debounce が決定論的。`internal/testkit/clock/timer_test.go::TestFakeTimerDebounceSimulation` が 200ms 相当の debounce coalescing を 0ms で検証。
+
+### 高速化見込み (TS版実測値→Go版見込み)
+
+| TS実測 | 原因 | Go版置換 |
+|--------|------|----------|
+| TextlintDiagnosticSource 約8分 | npx textlint 実コマンド + debounce | FakeRunner で stub + FakeTimer で debounce → 0.01s 級 |
+| TextlintWorker 約2分20秒 | npx textlint 起動 × 多数 | FakeRunner.Plan で全 invocation を pre-stub |
+| file watching integration 約70秒 | 実時間 debounce 待機 | FakeClock.Advance で即時進行 |
+| LSP E2E 約70秒/ケース | 起動 + protocol 経由実時間 | in-memory `transport.FakeTransport` で round-trip 0.01s |
+| multi-project E2E 約70秒 | 複数プロセス並列待機 | FakeRunner で全プロセス mock |
+
+合計推定削減: TS で **15分超 → Go で 1秒未満** (1000倍以上の高速化見込み)。
 
 ## 推奨アーキテクチャ
 
