@@ -1,0 +1,1 @@
+# TBD: Red phase placeholder. Run `go test ./cmd/storyteller/... -run MetaCheck_Cinderella -update` to populate (Process 10 wt-1a Green phase).
