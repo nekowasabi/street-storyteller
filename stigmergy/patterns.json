@@ -1,0 +1,73 @@
+{
+  "version": "1.0",
+  "updated": "2026-04-26",
+  "patterns": [
+    {
+      "id": "wave-a3-parallel-tdd",
+      "name": "Wave-A3 パターン",
+      "description": "共有契約 pre-commit + 3-way disjoint worktree 並列 TDD 実装",
+      "category": "implementation-strategy",
+      "maturity": "proven",
+      "first_used": "2026-04-26",
+      "missions": ["20260426-084012-2746861-005"],
+      "steps": [
+        "1. shared contract (types.go/protocol.go) を wave-pre commit として main に先入れ",
+        "2. 3 worktree を同 base commit から作成 (全 WT で merge base 一致)",
+        "3. 各 WT で disjoint scope 実装 (cross-WT import 禁止)",
+        "4. sequential merge --no-ff で依存順マージ (CLI → LSP → MCP)"
+      ],
+      "preconditions": [
+        "scope が 3 つ以上に分離可能",
+        "shared contract が事前確定済み",
+        "各 scope が disjoint (循環依存なし)"
+      ],
+      "known_issues": [
+        "wave-pre の types.go に Error() メソッド漏れが起きやすい → checklist 化"
+      ],
+      "related_lessons": ["lesson-001", "lesson-006"]
+    },
+    {
+      "id": "inprocess-golden-test",
+      "name": "In-process Golden Test",
+      "description": "os/exec を使わず CLI の Run 関数を直接呼ぶ golden test 手法",
+      "category": "testing",
+      "maturity": "proven",
+      "first_used": "2026-04-26",
+      "missions": ["20260426-084012-2746861-005"],
+      "steps": [
+        "1. cli.Run(ctx, args, cli.Deps{Stdout: &buf}) を直接呼ぶ runMain ヘルパを定義",
+        "2. testdata/golden/{name}.txt に期待出力を保存",
+        "3. -update flag で期待値を自動更新",
+        "4. 実際の出力と diff 比較"
+      ],
+      "preconditions": [
+        "CLI に Deps injection (Stdout/Stderr) が実装済み",
+        "os/exec が制限される環境 (sandbox/CI)"
+      ],
+      "files": [
+        "cmd/storyteller/main.go:15-23",
+        "cmd/storyteller/golden_test.go:60-105"
+      ],
+      "related_lessons": ["lesson-004"]
+    },
+    {
+      "id": "parent-verify-commit",
+      "name": "親セッション代行検証 commit 戦略",
+      "description": "subagent が go ツールチェーン実行不可の場合、親セッションで Green 確認後 commit する 2 段階戦略",
+      "category": "process",
+      "maturity": "proven",
+      "first_used": "2026-04-26",
+      "missions": ["20260426-084012-2746861-005"],
+      "steps": [
+        "1. subagent はファイル書き込みと git add まで実施",
+        "2. subagent は commit を保留して親に通知",
+        "3. 親セッションで cd <worktree> && go test ./... を実行",
+        "4. Green 確認後 git commit"
+      ],
+      "preconditions": [
+        "subagent サンドボックスで go ツールチェーンが permission deny"
+      ],
+      "related_lessons": ["lesson-002"]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "version": "1.0",
+  "updated": "2026-04-26",
+  "violation_patterns": [
+    {
+      "id": "timeout-equals-failure",
+      "name": "timeout = 実装失敗 の誤認",
+      "description": "agent_wait timeout を即座に実装失敗と判断し再 spawn するアンチパターン",
+      "category": "anti-pattern",
+      "severity": "medium",
+      "observed": "2026-04-26",
+      "missions": ["20260426-084012-2746861-005"],
+      "symptom": "mcp__doctrine__agent_wait が status:timeout を返す",
+      "root_cause": "subagent の SendMessage 配信失敗により親側が timeout に見えるが、worktree には commit 完了済みの場合がある",
+      "incorrect_action": "timeout 検知 → 即再 spawn",
+      "correct_action": "timeout 検知 → git -C <wt> log --oneline main..HEAD で実態確認 → verify first",
+      "related_lessons": ["lesson-003"]
+    },
+    {
+      "id": "fixture-with-type-annotation",
+      "name": "型アノテーション含む TS fixture",
+      "description": "tsparse の testdata fixture に import 文や型アノテーション (: T) を含めるアンチパターン",
+      "category": "anti-pattern",
+      "severity": "medium",
+      "observed": "2026-04-26",
+      "missions": ["20260426-084012-2746861-005"],
+      "symptom": "tsparse.ParseExportConst が予期せぬ parse エラーまたは空結果を返す",
+      "root_cause": "ParseExportConst は import 文・型アノテーションに非対応 (parser.go:35-58)",
+      "incorrect_action": "samples/ の TS ファイルをそのまま fixture として使用",
+      "correct_action": "`export const Name = { ... };` の純粋形のみを fixture に使用",
+      "files": ["internal/project/tsparse/parser.go:35-58"],
+      "related_lessons": ["lesson-005"]
+    },
+    {
+      "id": "wave-pre-missing-error-method",
+      "name": "wave-pre types.go に Error() メソッド漏れ",
+      "description": "ResponseError 型に Error() string を実装せず error interface 非適合にするアンチパターン",
+      "category": "checklist-miss",
+      "severity": "medium",
+      "observed": "2026-04-26",
+      "missions": ["20260426-084012-2746861-005"],
+      "symptom": "ResponseError を error interface 値として返すコードでコンパイルエラー",
+      "root_cause": "wave-pre フェーズで types.go 作成時に Error() メソッド追加を見落とし",
+      "incorrect_action": "ResponseError を struct として定義するだけで error interface を実装しない",
+      "correct_action": "`func (e *ResponseError) Error() string { return fmt.Sprintf(\"jsonrpc error %d: %s\", e.Code, e.Message) }` を必ず追加",
+      "related_lessons": ["lesson-006"]
+    },
+    {
+      "id": "ooda-gate-hard-block",
+      "name": "OODA gate validator 偽陰性でハードブロック",
+      "description": "ooda_transition の decide→act gate が正常条件下で拒否したとき無限リトライするアンチパターン",
+      "category": "anti-pattern",
+      "severity": "low",
+      "observed": "2026-04-26",
+      "missions": ["20260426-084012-2746861-005"],
+      "symptom": "cop.expected_end_state と cop.decisions が揃っているのに gate が拒否",
+      "root_cause": "doctrine MCP の gate validator バグ (疑い)",
+      "incorrect_action": "gate が通るまでリトライし続けてブロック",
+      "correct_action": "gate を skip して直接 agent_spawn で進める。transition は logging-only と割り切る",
+      "related_lessons": ["lesson-008"]
+    }
+  ]
+}
