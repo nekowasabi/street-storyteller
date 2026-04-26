@@ -1,6 +1,6 @@
 Available commands:
-  help
-  lsp validate
-  meta check
-  version
-  view character
+  help            List available commands
+  lsp validate    Validate a manuscript via the detect pipeline
+  meta check      Validate manuscript frontmatter
+  version         Show storyteller version
+  view character  Display a character entity
