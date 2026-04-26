@@ -27,19 +27,19 @@
     "go:coverage": "bash scripts/go_coverage.sh"
   },
   "fmt": {
-    "exclude": [
-      "coverage/",
-      "dist/",
-      "output/",
-      "test_output/",
-      "internal/**/testdata/",
-      "**/*.md",
-      ".kiro/"
+    "include": [
+      "src/type/",
+      "src/foreshadowings/",
+      "tests/authoring/"
     ]
   },
   "exclude": ["samples/", "src/characters/", "src/settings/", "src/timelines/"],
   "lint": {
-    "exclude": ["coverage/", "dist/", "output/", "test_output/", "samples/"],
+    "include": [
+      "src/type/",
+      "src/foreshadowings/",
+      "tests/authoring/"
+    ],
     "rules": {
       "tags": ["recommended"],
       "exclude": ["no-explicit-any", "require-await"]
