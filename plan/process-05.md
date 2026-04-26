@@ -28,14 +28,14 @@
 
 ## Red Phase: テスト作成と失敗確認
 
-- [ ] ブリーフィング確認
-- [ ] LSP JSON-RPC fixture テストを作る
+- [x] ブリーフィング確認
+- [x] LSP JSON-RPC fixture テストを作る
   - initialize/shutdown
   - hover/definition/diagnostics/codeAction/semanticTokens
-- [ ] MCP JSON-RPC fixture テストを作る
+- [x] MCP JSON-RPC fixture テストを作る
   - tools/list, tools/call, resources/read, prompts/get
-- [ ] fake clock/process runner を使うテストを作る
-- [ ] テストを実行して失敗することを確認
+- [x] fake clock/process runner を使うテストを作る
+- [x] テストを実行して失敗することを確認
 
 ✅ **Phase Complete**
 
@@ -43,12 +43,12 @@
 
 ## Green Phase: 最小実装と成功確認
 
-- [ ] LSP transport と server lifecycle を実装
-- [ ] hover/definition/diagnostics の最小 provider を実装
-- [ ] textlint adapter を外部コマンド境界として実装
-- [ ] MCP lifecycle と ToolRegistry を実装
-- [ ] meta_check/lsp_validate/view_browser の代表 tool を実装
-- [ ] テストを実行して成功することを確認
+- [x] LSP transport と server lifecycle を実装
+- [x] hover/definition/diagnostics の最小 provider を実装
+- [x] textlint adapter を外部コマンド境界として実装
+- [x] MCP lifecycle と ToolRegistry を実装
+- [x] meta_check/lsp_validate/view_browser の代表 tool を実装
+- [x] テストを実行して成功することを確認
 
 ✅ **Phase Complete**
 

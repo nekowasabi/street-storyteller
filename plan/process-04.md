@@ -23,14 +23,14 @@ Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI 
 
 ## Red Phase: テスト作成と失敗確認
 
-- [ ] ブリーフィング確認
-- [ ] CLI Golden Test を作成
+- [x] ブリーフィング確認
+- [x] CLI Golden Test を作成
   - stdout/stderr
   - exit code
   - JSON output
   - unknown command/help
-- [ ] 現行 Deno CLI と Go CLI の差分比較テストを作る
-- [ ] テストを実行して失敗することを確認
+- [x] 現行 Deno CLI と Go CLI の差分比較テストを作る (in-process golden test として実装)
+- [x] テストを実行して失敗することを確認
 
 ✅ **Phase Complete**
 
@@ -38,11 +38,11 @@ Go版 CLI を `storyteller-go` として段階的に実装し、現行 Deno CLI 
 
 ## Green Phase: 最小実装と成功確認
 
-- [ ] `cmd/storyteller` に Cobra等を使わない薄い command registry を実装
-- [ ] global option と config/logging の最小実装
-- [ ] `version`, `meta check`, `lsp validate` の順で実装
-- [ ] JSON presenter を実装
-- [ ] テストを実行して成功することを確認
+- [x] `cmd/storyteller` に Cobra等を使わない薄い command registry を実装
+- [x] global option と config/logging の最小実装
+- [x] `version`, `meta check`, `lsp validate` の順で実装
+- [x] JSON presenter を実装
+- [x] テストを実行して成功することを確認
 
 ✅ **Phase Complete**
 
