@@ -102,6 +102,14 @@ SaC（StoryWriting as Code）の中核価値を保持するため、`src/type/`,
 
 ## Lessons Learned
 
+### 0. LSP 実用化リグレッション（2026-04-28）
+
+- Observe: Go 版 `storyteller lsp start --stdio` が Neovim で hover / definition / diagnostics / semantic tokens を実用できない状態だった。
+- Orient: 原因は `start.go` の 2 秒 timeout、空の `ServerOptions`、semantic tokens capability と handler 登録の不一致だった。
+- Decide: TDD で `start` の永続化、`NewServerOptions` による project catalog wiring、semantic tokens provider と wire test を順に固定した。
+- Act: `--root` / CWD から catalog・lookup・locator・aggregator を構築し、`textDocument/semanticTokens/full` を実装した。
+- Learn: capabilities と `RegisterStandardHandlers` の乖離、stdio サーバの早期終了、空 dependency injection は単体テストで固定する。今回追加した `start_test`, `factories_test`, `semantic_tokens_test`, golden wire test を今後の回帰ゲートにする。
+
 ### 1. tsparse 拡張: 自作 vs tree-sitter
 
 - 状況: Process 02 で samples/*.ts を実パースする要件が出た。

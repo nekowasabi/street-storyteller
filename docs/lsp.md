@@ -9,6 +9,7 @@
 ```bash
 # stdio で LSP を起動（エディタからの呼び出し用）
 storyteller lsp start --stdio
+storyteller lsp start --stdio --root samples/cinderella
 
 # ワンショット検証
 storyteller lsp validate manuscripts/chapter01.md
@@ -54,7 +55,35 @@ flowchart LR
 | `textDocument/hover` | `providers/hover.go` | ホバー |
 | `textDocument/codeAction` | `providers/` (in-progress) | 低信頼度参照 → 明示参照変換 |
 | `textDocument/publishDiagnostics` | `diagnostics/generator.go` | 診断 push |
-| Semantic Tokens | `server/capabilities.go` | キャラクター / 設定ハイライト |
+| `textDocument/semanticTokens/full` | `providers/semantic_tokens.go` | キャラクター / 設定 / 伏線ハイライト |
+
+## Go 移植版の起動フロー
+
+`storyteller lsp start --stdio` は CWD をプロジェクトルートとして扱い、`--root <path>` または `--root=file:///...` で明示指定できる。起動時に `server.NewServerOptions` が `.storyteller.json` と `src/{characters,settings,foreshadowings}` を読み込み、以下の依存を組み立てる。
+
+| 依存 | 用途 |
+|------|------|
+| `Catalog` | `internal/detect` の名前検出 |
+| `Lookup` | hover 表示内容の解決 |
+| `Locator` | 定義ジャンプ先 URI の解決 |
+| `Aggregator` | `publishDiagnostics` の統合 |
+
+プロジェクトがまだ初期化されていない場合も、空の fallback catalog で起動する。これによりエディタセッション自体は壊さず、provider は null または空配列を返す。
+
+Neovim での確認例:
+
+```bash
+storyteller lsp start --stdio --root samples/cinderella
+```
+
+`samples/cinderella/manuscripts/chapter01.md` を開き、`シンデレラ` にカーソルを置いて `vim.lsp.buf.definition()` または `,cd` を実行すると `samples/cinderella/src/characters/cinderella.ts` へジャンプする。`vim.lsp.buf.hover()` または `,ck` ではキャラクター名と summary が表示される。
+
+Semantic Tokens の legend:
+
+| 種別 | 値 |
+|------|----|
+| token types | `character`, `setting`, `foreshadowing` |
+| token modifiers | `highConfidence`, `mediumConfidence`, `lowConfidence`, `planted`, `resolved` |
 
 ## DiagnosticSource 抽象化
 
