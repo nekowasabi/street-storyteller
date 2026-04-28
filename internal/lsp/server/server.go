@@ -25,17 +25,19 @@ import (
 // handler bodies remain trivial; pulling state out into per-call args would
 // duplicate plumbing for every method.
 type Server struct {
-	lifecycle  *Lifecycle
-	dispatcher *Dispatcher
-	docs       *DocumentStore
-	aggregator *diagnostics.Aggregator
-	catalog    detect.EntityCatalog
-	lookup     providers.EntityLookup
-	locator    providers.EntityLocator
-	clock      clock.Clock
+	lifecycle   *Lifecycle
+	dispatcher  *Dispatcher
+	docs        *DocumentStore
+	aggregator  *diagnostics.Aggregator
+	catalog     detect.EntityCatalog
+	lookup      providers.EntityLookup
+	locator     providers.EntityLocator
+	clock       clock.Clock
+	useInitRoot bool
 
 	writeMu sync.Mutex
 	writer  io.Writer
+	debug   io.Writer
 }
 
 // ServerOptions bundles the dependencies injected at construction time.
@@ -49,6 +51,10 @@ type ServerOptions struct {
 	Locator    providers.EntityLocator
 	Aggregator *diagnostics.Aggregator
 	Clock      clock.Clock
+	Debug      io.Writer
+	// UseInitializeRoot reloads project-backed dependencies from the LSP
+	// initialize.rootUri. CLI start enables this when --root is omitted.
+	UseInitializeRoot bool
 }
 
 // NewServer constructs a Server with the supplied dependencies. Internal
@@ -60,14 +66,16 @@ type ServerOptions struct {
 // server constructor is the smaller blast radius.
 func NewServer(opts ServerOptions) *Server {
 	return &Server{
-		lifecycle:  NewLifecycle(),
-		dispatcher: New(),
-		docs:       NewDocumentStore(),
-		aggregator: opts.Aggregator,
-		catalog:    opts.Catalog,
-		lookup:     opts.Lookup,
-		locator:    opts.Locator,
-		clock:      opts.Clock,
+		lifecycle:   NewLifecycle(),
+		dispatcher:  New(),
+		docs:        NewDocumentStore(),
+		aggregator:  opts.Aggregator,
+		catalog:     opts.Catalog,
+		lookup:      opts.Lookup,
+		locator:     opts.Locator,
+		clock:       opts.Clock,
+		debug:       opts.Debug,
+		useInitRoot: opts.UseInitializeRoot,
 	}
 }
 
@@ -83,6 +91,7 @@ func (s *Server) RegisterStandardHandlers() {
 	s.dispatcher.Register("textDocument/didClose", s.handleDidClose)
 	s.dispatcher.Register("textDocument/hover", s.handleHover)
 	s.dispatcher.Register("textDocument/definition", s.handleDefinition)
+	s.dispatcher.Register("textDocument/semanticTokens/full", s.handleSemanticTokens)
 }
 
 // Run reads framed JSON-RPC messages from in and writes responses to out
@@ -149,7 +158,7 @@ func (s *Server) write(msg *protocol.Message) {
 
 // --- handlers -------------------------------------------------------------
 
-func (s *Server) handleInitialize(_ context.Context, params json.RawMessage) (any, error) {
+func (s *Server) handleInitialize(ctx context.Context, params json.RawMessage) (any, error) {
 	var p protocol.InitializeParams
 	if len(params) > 0 {
 		if err := json.Unmarshal(params, &p); err != nil {
@@ -159,6 +168,20 @@ func (s *Server) handleInitialize(_ context.Context, params json.RawMessage) (an
 			}
 		}
 	}
+	if s.useInitRoot && p.RootURI != "" {
+		if opts, err := NewServerOptions(ctx, p.RootURI); err == nil {
+			s.catalog = opts.Catalog
+			s.lookup = opts.Lookup
+			s.locator = opts.Locator
+			s.aggregator = opts.Aggregator
+			s.clock = opts.Clock
+			s.debug = opts.Debug
+			debugf(s.debug, "initialize rootUri=%q reconfigured=true", p.RootURI)
+		} else {
+			debugf(s.debug, "initialize rootUri=%q reconfigured=false err=%v", p.RootURI, err)
+		}
+	}
+	debugf(s.debug, "initialize rootUri=%q catalog=%T lookup=%T locator=%T aggregator=%t", p.RootURI, s.catalog, s.lookup, s.locator, s.aggregator != nil)
 	s.lifecycle.MarkInitialized()
 	return protocol.InitializeResult{
 		Capabilities: StandardCapabilities(),
@@ -191,6 +214,7 @@ func (s *Server) handleDidOpen(ctx context.Context, params json.RawMessage) (any
 		}
 	}
 	s.docs.Open(p.TextDocument.URI, p.TextDocument.Text)
+	debugf(s.debug, "didOpen uri=%q bytes=%d", p.TextDocument.URI, len(p.TextDocument.Text))
 	s.publishDiagnostics(ctx, p.TextDocument.URI, p.TextDocument.Text)
 	return nil, nil
 }
@@ -246,7 +270,9 @@ func (s *Server) handleHover(ctx context.Context, params json.RawMessage) (any, 
 		return nil, nil
 	}
 	snap := documentSnapshot{uri: p.TextDocument.URI, content: content}
-	return providers.Hover(ctx, snap, p.Position, s.catalog, s.lookup)
+	result, err := providers.Hover(ctx, snap, p.Position, s.catalog, s.lookup)
+	debugf(s.debug, "hover uri=%q line=%d character=%d hit=%t err=%v", p.TextDocument.URI, p.Position.Line, p.Position.Character, result != nil, err)
+	return result, err
 }
 
 func (s *Server) handleDefinition(ctx context.Context, params json.RawMessage) (any, error) {
@@ -265,7 +291,34 @@ func (s *Server) handleDefinition(ctx context.Context, params json.RawMessage) (
 		return protocol.DefinitionResult{}, nil
 	}
 	snap := documentSnapshot{uri: p.TextDocument.URI, content: content}
-	return providers.Definition(ctx, snap, p.Position, s.catalog, s.locator)
+	result, err := providers.Definition(ctx, snap, p.Position, s.catalog, s.locator)
+	debugf(s.debug, "definition uri=%q line=%d character=%d locations=%d err=%v", p.TextDocument.URI, p.Position.Line, p.Position.Character, len(result), err)
+	return result, err
+}
+
+func (s *Server) handleSemanticTokens(ctx context.Context, params json.RawMessage) (any, error) {
+	if err := s.lifecycle.RequireInitialized(); err != nil {
+		return nil, err
+	}
+	var p protocol.SemanticTokensParams
+	if err := json.Unmarshal(params, &p); err != nil {
+		return nil, &protocol.ResponseError{
+			Code:    protocol.CodeInvalidParams,
+			Message: "semanticTokens/full: " + err.Error(),
+		}
+	}
+	content, ok := s.docs.Get(p.TextDocument.URI)
+	if !ok {
+		return &protocol.SemanticTokens{Data: []uint32{}}, nil
+	}
+	snap := documentSnapshot{uri: p.TextDocument.URI, content: content}
+	result, err := providers.SemanticTokens(ctx, snap, s.catalog)
+	count := 0
+	if result != nil {
+		count = len(result.Data) / 5
+	}
+	debugf(s.debug, "semanticTokens uri=%q tokens=%d err=%v", p.TextDocument.URI, count, err)
+	return result, err
 }
 
 // publishDiagnostics runs the aggregator (if configured) and writes a
@@ -280,12 +333,14 @@ func (s *Server) publishDiagnostics(ctx context.Context, uri, content string) {
 	}
 	diags, err := s.aggregator.Generate(ctx, uri, content)
 	if err != nil {
+		debugf(s.debug, "diagnostics uri=%q err=%v", uri, err)
 		return
 	}
 	if diags == nil {
 		diags = []protocol.Diagnostic{}
 	}
 	params := protocol.PublishDiagnosticsParams{URI: uri, Diagnostics: diags}
+	debugf(s.debug, "diagnostics uri=%q count=%d", uri, len(diags))
 	raw, err := json.Marshal(params)
 	if err != nil {
 		return
