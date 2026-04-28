@@ -155,3 +155,46 @@ func TestGolden_LSP_HoverWire(t *testing.T) {
 		t.Errorf("golden mismatch (hover_response.json)\n--- want ---\n%s\n--- got ---\n%s\n--- end ---", want, got)
 	}
 }
+
+func TestGolden_LSP_SemanticTokensWire(t *testing.T) {
+	semanticReq := []byte(`{"jsonrpc":"2.0","id":3,"method":"textDocument/semanticTokens/full","params":{"textDocument":{"uri":"file:///x.md"}}}`)
+	var in bytes.Buffer
+	in.Write(frameBody(loadFixture(t, "initialize_request.json")))
+	in.Write(frameBody(loadFixture(t, "did_open_notification.json")))
+	in.Write(frameBody(semanticReq))
+
+	var out bytes.Buffer
+
+	srv := NewServer(ServerOptions{
+		Catalog:    fakeCatalog{},
+		Lookup:     fakeLookup{},
+		Locator:    fakeLocator{},
+		Aggregator: &diagnostics.Aggregator{},
+		Clock:      clock.NewFakeClock(time.Unix(0, 0)),
+	})
+	srv.RegisterStandardHandlers()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	if err := srv.Run(ctx, &in, &out); err != nil {
+		t.Fatalf("Run returned error: %v", err)
+	}
+
+	resp := findResponseByID(t, readAllResponses(t, &out), 3)
+	if resp.Error != nil {
+		t.Fatalf("semantic tokens error response: %+v", resp.Error)
+	}
+	var got protocol.SemanticTokens
+	if err := json.Unmarshal(resp.Result, &got); err != nil {
+		t.Fatalf("decode semantic tokens: %v (raw=%s)", err, string(resp.Result))
+	}
+	want := []uint32{0, 0, 2, 0, 1}
+	if len(got.Data) != len(want) {
+		t.Fatalf("data = %v, want %v", got.Data, want)
+	}
+	for i := range want {
+		if got.Data[i] != want[i] {
+			t.Fatalf("data = %v, want %v", got.Data, want)
+		}
+	}
+}

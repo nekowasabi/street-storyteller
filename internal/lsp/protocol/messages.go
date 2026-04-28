@@ -72,6 +72,18 @@ type DefinitionParams struct {
 // regular []Location while still expressing intent at the API boundary.
 type DefinitionResult = []Location
 
+// SemanticTokensParams is the params for `textDocument/semanticTokens/full`.
+type SemanticTokensParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+}
+
+// SemanticTokens is the result for semantic token requests. Data uses the LSP
+// relative integer encoding: deltaLine, deltaStart, length, tokenType,
+// tokenModifiers.
+type SemanticTokens struct {
+	Data []uint32 `json:"data"`
+}
+
 // DidOpenTextDocumentParams is the params for `textDocument/didOpen`.
 type DidOpenTextDocumentParams struct {
 	TextDocument TextDocumentItem `json:"textDocument"`
