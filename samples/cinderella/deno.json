@@ -1,5 +1,6 @@
 {
   "imports": {
+    "@std/assert": "jsr:@std/assert@^1.0.0",
     "@storyteller/types/": "../../src/type/",
     "@storyteller/": "../../src/"
   }

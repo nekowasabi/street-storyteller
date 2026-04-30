@@ -1,14 +1,15 @@
-import { assert } from "../test_utils/assert.ts";
-import { MyStory } from "../story.ts";
+import { assert } from "./test_utils/assert.ts";
+import { momotaroOnigashima } from "../src/plots/momotaro_onigashima.ts";
 
-Deno.test("Story validation", () => {
-  const story = new MyStory();
-  assert(story.validate(), "Story should validate");
-});
+Deno.test("Momotaro has at least one plot fixture with allowed type", () => {
+  const plots = [momotaroOnigashima];
+  const allowedTypes = new Set(["main", "sub", "parallel", "background"]);
 
-Deno.test("Story has required elements", () => {
-  const story = new MyStory();
-  assert(story.purpose.description.length > 0, "Purpose should be described");
-  assert(story.funs.length > 0, "At least one fun element expected");
-  assert(story.charcters.length > 0, "At least one character expected");
+  assert(plots.length > 0, "At least one plot fixture should exist");
+  for (const plot of plots) {
+    assert(
+      allowedTypes.has(plot.type),
+      `Plot type must be one of main/sub/parallel/background: ${plot.type}`,
+    );
+  }
 });

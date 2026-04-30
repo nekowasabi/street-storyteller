@@ -1,6 +1,6 @@
-import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+import type { Plot } from "@storyteller/types/v2/plot.ts";
 
-export const stepsistersRivalry: Subplot = {
+export const stepsistersRivalry: Plot = {
   id: "stepsisters_rivalry",
   name: "継姉妹の対立",
   type: "background",

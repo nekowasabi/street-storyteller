@@ -1,6 +1,6 @@
-import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+import type { Plot } from "@storyteller/types/v2/plot.ts";
 
-export const cinderellaGrowth: Subplot = {
+export const cinderellaGrowth: Plot = {
   id: "cinderella_growth",
   name: "シンデレラの成長",
   type: "main",

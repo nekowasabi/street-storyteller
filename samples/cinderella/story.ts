@@ -1,10 +1,14 @@
-import { StoryTeller } from "../src/storyteller_interface.ts";
-import { Purpose } from "../src/type/purpose.ts";
-import { Character } from "../src/type/character.ts";
-import { Plot } from "../src/type/plot.ts";
-import { Chapter } from "../src/type/chapter.ts";
-import { Fun } from "../src/type/fun.ts";
-import { Setting } from "../src/type/setting.ts";
+import { Purpose } from "@storyteller/types/purpose.ts";
+import { Character } from "@storyteller/types/character.ts";
+import { Plot } from "@storyteller/types/plot.ts";
+import { Chapter } from "@storyteller/types/chapter.ts";
+import { Fun } from "@storyteller/types/fun.ts";
+import { Setting } from "@storyteller/types/setting.ts";
+
+interface StoryTeller {
+  validate(): boolean;
+  output(): void;
+}
 
 export class MyStory implements StoryTeller {
   purpose: Purpose = {

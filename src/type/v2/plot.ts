@@ -1,5 +1,5 @@
 /**
- * Subplot型定義（v2）
+ * Plot型定義（v2）
  *
  * 物語のサブプロット・プロットビート・交差を管理するための型定義
  * ハイブリッド詳細管理（インライン + ファイル参照）に対応
@@ -9,11 +9,11 @@
  * サブプロットの分類
  *
  * - `main`: メインプロット（物語の中心軸）
- * - `subplot`: サブプロット（メインを補完する副次プロット）
+ * - `sub`: サブプロット（メインを補完する副次プロット）
  * - `parallel`: 並行プロット（独立して進行するプロットライン）
  * - `background`: 背景プロット（世界観を構成する背景の動き）
  */
-export type SubplotType = "main" | "subplot" | "parallel" | "background";
+export type PlotType = "main" | "sub" | "parallel" | "background";
 
 /**
  * サブプロットのライフサイクルステータス
@@ -21,7 +21,7 @@ export type SubplotType = "main" | "subplot" | "parallel" | "background";
  * - `active`: 進行中
  * - `completed`: 完了済み
  */
-export type SubplotStatus = "active" | "completed";
+export type PlotStatus = "active" | "completed";
 
 /**
  * サブプロットの重要度
@@ -29,7 +29,7 @@ export type SubplotStatus = "active" | "completed";
  * - `major`: 主要なプロット（物語の根幹に関わる）
  * - `minor`: 補助的なプロット
  */
-export type SubplotImportance = "major" | "minor";
+export type PlotImportance = "major" | "minor";
 
 /**
  * ビートの物語構造上の位置
@@ -55,7 +55,7 @@ export type BeatStructurePosition =
  * - `primary`: 主要な関与（そのサブプロットを牽引する）
  * - `secondary`: 補助的な関与（影響を受ける・支援する）
  */
-export type SubplotFocusCharacterWeight = "primary" | "secondary";
+export type PlotFocusCharacterWeight = "primary" | "secondary";
 
 /**
  * プロットビート
@@ -135,13 +135,13 @@ export type PlotIntersection = {
   id: string;
 
   /** 影響元のサブプロットID */
-  sourceSubplotId: string;
+  sourcePlotId: string;
 
   /** 影響元のビートID */
   sourceBeatId: string;
 
   /** 影響先のサブプロットID */
-  targetSubplotId: string;
+  targetPlotId: string;
 
   /** 影響先のビートID */
   targetBeatId: string;
@@ -164,7 +164,7 @@ export type PlotIntersection = {
  * サブプロットの詳細情報（オプショナル）
  * 各フィールドは短文インラインまたはファイル参照を選択可能
  */
-export type SubplotDetails = {
+export type PlotDetails = {
   /** 詳細な説明（summaryを超える詳細） */
   description?: string | { file: string };
   /** テーマ・主題 */
@@ -176,7 +176,7 @@ export type SubplotDetails = {
 /**
  * サブプロットの関連エンティティ
  */
-export type SubplotRelations = {
+export type PlotRelations = {
   /** 関連するキャラクターのIDリスト */
   characters: string[];
   /** 関連する設定（場所など）のIDリスト */
@@ -184,16 +184,16 @@ export type SubplotRelations = {
   /** 関連する伏線のIDリスト */
   foreshadowings?: string[];
   /** 関連する他のサブプロットのIDリスト */
-  relatedSubplots?: string[];
+  relatedPlots?: string[];
 };
 
 /**
- * Subplot型
+ * Plot型
  *
  * 物語のプロットライン（メインプロット・サブプロット）を管理する型
  * ビート構造による進行管理と、他プロットとの交差関係を追跡する
  */
-export type Subplot = {
+export type Plot = {
   // ========================================
   // 必須メタデータ
   // ========================================
@@ -205,10 +205,10 @@ export type Subplot = {
   name: string;
 
   /** サブプロットの分類 */
-  type: SubplotType;
+  type: PlotType;
 
   /** 現在のステータス */
-  status: SubplotStatus;
+  status: PlotStatus;
 
   /** 短い概要（必須） */
   summary: string;
@@ -221,23 +221,23 @@ export type Subplot = {
   // ========================================
 
   /** フォーカスキャラクターとその関与度（キャラクターID → 関与度） */
-  focusCharacters?: Record<string, SubplotFocusCharacterWeight>;
+  focusCharacters?: Record<string, PlotFocusCharacterWeight>;
 
   /** 他サブプロットとの交差ポイント */
   intersections?: PlotIntersection[];
 
   /** サブプロットの重要度 */
-  importance?: SubplotImportance;
+  importance?: PlotImportance;
 
   /** 親サブプロットのID（階層構造の場合） */
-  parentSubplotId?: string;
+  parentPlotId?: string;
 
   /** 表示名のバリエーション */
   displayNames?: string[];
 
   /** 詳細情報 */
-  details?: SubplotDetails;
+  details?: PlotDetails;
 
   /** 関連エンティティ */
-  relations?: SubplotRelations;
+  relations?: PlotRelations;
 };

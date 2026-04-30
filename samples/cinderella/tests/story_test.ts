@@ -1,4 +1,4 @@
-import { assert } from "../test_utils/assert.ts";
+import { assert } from "./test_utils/assert.ts";
 import { MyStory } from "../story.ts";
 
 Deno.test("Story validation", () => {

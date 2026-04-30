@@ -1,9 +1,9 @@
-import type { Subplot } from "@storyteller/types/v2/subplot.ts";
+import type { Plot } from "@storyteller/types/v2/plot.ts";
 
-export const princeSearch: Subplot = {
+export const princeSearch: Plot = {
   id: "prince_search",
   name: "王子の花嫁探し",
-  type: "subplot",
+  type: "sub",
   status: "active",
   summary: "王子が真の花嫁を探す旅。舞踏会での出会いから靴での確認まで",
   beats: [
