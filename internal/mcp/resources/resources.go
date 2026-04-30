@@ -14,7 +14,7 @@ func List() []Resource {
 		{URI: "storyteller://settings", Name: "settings"},
 		{URI: "storyteller://timelines", Name: "timelines"},
 		{URI: "storyteller://foreshadowings", Name: "foreshadowings"},
-		{URI: "storyteller://subplots", Name: "subplots"},
+		{URI: "storyteller://plots", Name: "plots"},
 	}
 }
 

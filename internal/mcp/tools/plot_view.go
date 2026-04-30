@@ -12,38 +12,38 @@ import (
 	"github.com/takets/street-storyteller/internal/project/store"
 )
 
-// SubplotViewTool retrieves one or all subplots from the project store.
+// PlotViewTool retrieves one or all plots from the project store.
 //
 // Why: store field allows unit tests to inject a pre-populated store without
 // touching the filesystem; when nil, Handle falls back to project.Load.
 // This mirrors the pattern used by TimelineViewTool.
-type SubplotViewTool struct {
+type PlotViewTool struct {
 	store *store.Store
 }
 
-type subplotViewArgs struct {
+type plotViewArgs struct {
 	ID         string `json:"id"`
 	FilterType string `json:"filter_type"`
 }
 
-// Definition advertises the subplot_view schema.
-func (SubplotViewTool) Definition() protocol.Tool {
+// Definition advertises the plot_view schema.
+func (PlotViewTool) Definition() protocol.Tool {
 	return protocol.Tool{
-		Name:        "subplot_view",
-		Description: "View a specific subplot by ID, or list all subplots with optional type filter",
+		Name:        "plot_view",
+		Description: "View a specific plot by ID, or list all plots with optional type filter",
 		InputSchema: json.RawMessage(`{
 			"type":"object",
 			"properties":{
-				"id":{"type":"string","description":"Subplot ID; omit to list all subplots"},
-				"filter_type":{"type":"string","enum":["main","subplot","parallel","background"],"description":"Filter list by subplot type"}
+				"id":{"type":"string","description":"Plot ID; omit to list all plots"},
+				"filter_type":{"type":"string","enum":["main","sub","parallel","background"],"description":"Filter list by plot type"}
 			}
 		}`),
 	}
 }
 
-// Handle looks up a subplot by id (or lists all) from the store.
-func (t SubplotViewTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
-	var a subplotViewArgs
+// Handle looks up a plot by id (or lists all) from the store.
+func (t PlotViewTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
+	var a plotViewArgs
 	if len(args) > 0 {
 		_ = json.Unmarshal(args, &a)
 	}
@@ -63,7 +63,7 @@ func (t SubplotViewTool) Handle(_ context.Context, args json.RawMessage, ec Exec
 }
 
 // resolveStore returns the injected store or loads from disk.
-func (t SubplotViewTool) resolveStore(ec ExecutionContext) (*store.Store, error) {
+func (t PlotViewTool) resolveStore(ec ExecutionContext) (*store.Store, error) {
 	if t.store != nil {
 		return t.store, nil
 	}
@@ -74,8 +74,8 @@ func (t SubplotViewTool) resolveStore(ec ExecutionContext) (*store.Store, error)
 	return proj.Store, nil
 }
 
-func (SubplotViewTool) handleByID(st *store.Store, id string) (*protocol.CallToolResult, error) {
-	sp, err := st.Subplot(id)
+func (PlotViewTool) handleByID(st *store.Store, id string) (*protocol.CallToolResult, error) {
+	sp, err := st.Plot(id)
 	if err != nil {
 		return errorResult(err), nil
 	}
@@ -87,29 +87,29 @@ func (SubplotViewTool) handleByID(st *store.Store, id string) (*protocol.CallToo
 	}, nil
 }
 
-func (SubplotViewTool) handleList(st *store.Store, filterType string) (*protocol.CallToolResult, error) {
-	all := st.AllSubplots()
+func (PlotViewTool) handleList(st *store.Store, filterType string) (*protocol.CallToolResult, error) {
+	all := st.AllPlots()
 
-	var subplots []*domain.Subplot
+	var plots []*domain.Plot
 	if filterType == "" {
-		subplots = all
+		plots = all
 	} else {
-		ft := domain.SubplotType(filterType)
+		ft := domain.PlotType(filterType)
 		for _, sp := range all {
 			if sp.Type == ft {
-				subplots = append(subplots, sp)
+				plots = append(plots, sp)
 			}
 		}
 	}
 
-	if len(subplots) == 0 {
+	if len(plots) == 0 {
 		return &protocol.CallToolResult{
-			Content: []protocol.ContentBlock{{Type: "text", Text: "no subplots found"}},
+			Content: []protocol.ContentBlock{{Type: "text", Text: "no plots found"}},
 		}, nil
 	}
 
 	var sb strings.Builder
-	for _, sp := range subplots {
+	for _, sp := range plots {
 		fmt.Fprintf(&sb, "- %s (%s): %s\n", sp.Name, sp.ID, sp.Type)
 	}
 	return &protocol.CallToolResult{

@@ -44,9 +44,9 @@ func TestElement_AllKinds_Success(t *testing.T) {
 		{"setting", "src/settings"},
 		{"timeline", "src/timelines"},
 		{"foreshadowing", "src/foreshadowings"},
-		{"subplot", "src/subplots"},
-		{"beat", "src/subplots"},
-		{"intersection", "src/subplots"},
+		{"plot", "src/plots"},
+		{"beat", "src/plots"},
+		{"intersection", "src/plots"},
 		{"phase", "src/characters"},
 		{"misc", "src/miscs"}, // default branch
 	}

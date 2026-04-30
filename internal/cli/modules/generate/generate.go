@@ -115,7 +115,7 @@ func createProject(root, name, templateName string) error {
 		"src/structure",
 		"src/purpose",
 		"src/foreshadowings",
-		"src/subplots",
+		"src/plots",
 		"manuscripts",
 		"drafts",
 		"output",

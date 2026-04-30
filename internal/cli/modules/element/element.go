@@ -152,8 +152,8 @@ func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 		return "src/timelines", "Timeline", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  scope: \"story\",\n  summary: %q,\n  events: [],\n}", opts.id, opts.name, summary)
 	case "foreshadowing":
 		return "src/foreshadowings", "Foreshadowing", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"hint\",\n  summary: %q,\n  planting: { chapter: \"\", description: \"\" },\n  status: \"planted\",\n}", opts.id, opts.name, summary)
-	case "subplot", "beat", "intersection":
-		return "src/subplots", "Subplot", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"subplot\",\n  status: \"active\",\n  summary: %q,\n  beats: [],\n}", opts.id, opts.name, summary)
+	case "plot", "beat", "intersection":
+		return "src/plots", "Plot", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"sub\",\n  status: \"active\",\n  summary: %q,\n  beats: [],\n}", opts.id, opts.name, summary)
 	case "phase":
 		return "src/characters", "CharacterPhase", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  summary: %q,\n}", opts.id, opts.name, summary)
 	default:
@@ -166,7 +166,7 @@ func importTypeFile(kind string) string {
 	case "phase":
 		return "character_phase"
 	case "beat", "intersection":
-		return "subplot"
+		return "plot"
 	default:
 		return kind
 	}

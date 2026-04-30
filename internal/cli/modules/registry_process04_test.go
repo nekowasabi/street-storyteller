@@ -19,7 +19,7 @@ func TestRegisterCoreIncludesProcess04Commands(t *testing.T) {
 		"element setting",
 		"element timeline",
 		"element foreshadowing",
-		"element subplot",
+		"element plot",
 		"element beat",
 		"element event",
 		"element intersection",
@@ -29,7 +29,7 @@ func TestRegisterCoreIncludesProcess04Commands(t *testing.T) {
 		"view setting",
 		"view timeline",
 		"view foreshadowing",
-		"view subplot",
+		"view plot",
 	} {
 		if _, _, ok := r.Resolve([]string{path}); !ok {
 			t.Errorf("command %q is not registered", path)

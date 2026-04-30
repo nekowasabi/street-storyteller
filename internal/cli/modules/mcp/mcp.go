@@ -76,9 +76,9 @@ func registerTools(s *mcpserver.Server) {
 	_ = r.Register(tools.TimelineAnalyzeTool{})
 	_ = r.Register(tools.EventCreateTool{})
 	_ = r.Register(tools.EventUpdateTool{})
-	// Process 06 — subplot.
-	_ = r.Register(tools.SubplotCreateTool{})
-	_ = r.Register(tools.SubplotViewTool{})
+	// Process 06 — plot.
+	_ = r.Register(tools.PlotCreateTool{})
+	_ = r.Register(tools.PlotViewTool{})
 	_ = r.Register(tools.BeatCreateTool{})
 	_ = r.Register(tools.IntersectionCreateTool{})
 	// Process 06 — foreshadowing.

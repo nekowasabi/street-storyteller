@@ -60,10 +60,10 @@ export const sword: Foreshadowing = {
   status: "planted",
 };
 `)
-	mustWrite("src/subplots/love.ts",
-		`import type { Subplot } from "@storyteller/types/v2/subplot.ts";
-export const love: Subplot = {
-  id: "love", name: "Love", type: "subplot",
+	mustWrite("src/plots/love.ts",
+		`import type { Plot } from "@storyteller/types/v2/plot.ts";
+export const love: Plot = {
+  id: "love", name: "Love", type: "sub",
   status: "active", summary: "love arc", beats: [],
 };
 `)
@@ -98,9 +98,9 @@ func TestList_AllKinds(t *testing.T) {
 	}
 
 	for _, kind := range []string{
-		"characters", "settings", "timelines", "foreshadowings", "subplots",
+		"characters", "settings", "timelines", "foreshadowings", "plots",
 		// singular forms exercising normalizeKind
-		"character", "setting", "timeline", "foreshadowing", "subplot",
+		"character", "setting", "timeline", "foreshadowing", "plot",
 		"unknown", // default branch returns []
 	} {
 		t.Run(kind, func(t *testing.T) {
@@ -186,7 +186,7 @@ func TestEntity_AllKinds(t *testing.T) {
 		{"setting", "town"},
 		{"timeline", "main"},
 		{"foreshadowing", "sword"},
-		{"subplot", "love"},
+		{"plot", "love"},
 	} {
 		t.Run(tc.kind, func(t *testing.T) {
 			cmd := NewEntity(tc.kind)

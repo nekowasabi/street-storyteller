@@ -16,7 +16,7 @@ var validKinds = map[string]bool{
 	"setting":       true,
 	"foreshadowing": true,
 	"timeline":      true,
-	"subplot":       true,
+	"plot":          true,
 }
 
 // slugRe matches any sequence of characters that are not alphanumeric or underscore.
@@ -36,8 +36,8 @@ type elementCreateArgs struct {
 func (ElementCreateTool) Definition() protocol.Tool {
 	return protocol.Tool{
 		Name:        "element_create",
-		Description: "Scaffold a story element skeleton (character/setting/foreshadowing/timeline/subplot)",
-		InputSchema: json.RawMessage(`{"type":"object","properties":{"kind":{"type":"string","enum":["character","setting","foreshadowing","timeline","subplot"]},"name":{"type":"string"},"summary":{"type":"string"},"id":{"type":"string"}},"required":["kind","name","summary"]}`),
+		Description: "Scaffold a story element skeleton (character/setting/foreshadowing/timeline/plot)",
+		InputSchema: json.RawMessage(`{"type":"object","properties":{"kind":{"type":"string","enum":["character","setting","foreshadowing","timeline","plot"]},"name":{"type":"string"},"summary":{"type":"string"},"id":{"type":"string"}},"required":["kind","name","summary"]}`),
 	}
 }
 
@@ -58,7 +58,7 @@ func (ElementCreateTool) Handle(_ context.Context, args json.RawMessage, _ Execu
 	}
 	if !validKinds[a.Kind] {
 		return &protocol.CallToolResult{
-			Content: []protocol.ContentBlock{{Type: "text", Text: fmt.Sprintf("invalid kind %q: must be one of character, setting, foreshadowing, timeline, subplot", a.Kind)}},
+			Content: []protocol.ContentBlock{{Type: "text", Text: fmt.Sprintf("invalid kind %q: must be one of character, setting, foreshadowing, timeline, plot", a.Kind)}},
 			IsError: true,
 		}, nil
 	}

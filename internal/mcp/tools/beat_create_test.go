@@ -20,19 +20,19 @@ func TestBeatCreateTool_Definition(t *testing.T) {
 	}
 }
 
-func TestBeatCreateTool_Handle_MissingSubplotID(t *testing.T) {
+func TestBeatCreateTool_Handle_MissingPlotID(t *testing.T) {
 	args := json.RawMessage(`{"title":"opening","summary":"the start"}`)
 	res, err := BeatCreateTool{}.Handle(context.Background(), args, ExecutionContext{ProjectRoot: t.TempDir()})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
 	if !res.IsError {
-		t.Error("expected IsError for missing subplot_id")
+		t.Error("expected IsError for missing plot_id")
 	}
 }
 
 func TestBeatCreateTool_Handle_MissingTitle(t *testing.T) {
-	args := json.RawMessage(`{"subplot_id":"sp1","summary":"the start"}`)
+	args := json.RawMessage(`{"plot_id":"sp1","summary":"the start"}`)
 	res, err := BeatCreateTool{}.Handle(context.Background(), args, ExecutionContext{ProjectRoot: t.TempDir()})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -43,7 +43,7 @@ func TestBeatCreateTool_Handle_MissingTitle(t *testing.T) {
 }
 
 func TestBeatCreateTool_Handle_MissingSummary(t *testing.T) {
-	args := json.RawMessage(`{"subplot_id":"sp1","title":"opening"}`)
+	args := json.RawMessage(`{"plot_id":"sp1","title":"opening"}`)
 	res, err := BeatCreateTool{}.Handle(context.Background(), args, ExecutionContext{ProjectRoot: t.TempDir()})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -54,7 +54,7 @@ func TestBeatCreateTool_Handle_MissingSummary(t *testing.T) {
 }
 
 func TestBeatCreateTool_Handle_Success_DefaultPosition(t *testing.T) {
-	args := json.RawMessage(`{"subplot_id":"sp1","title":"opening","summary":"the start"}`)
+	args := json.RawMessage(`{"plot_id":"sp1","title":"opening","summary":"the start"}`)
 	res, err := BeatCreateTool{}.Handle(context.Background(), args, ExecutionContext{ProjectRoot: t.TempDir()})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -67,12 +67,12 @@ func TestBeatCreateTool_Handle_Success_DefaultPosition(t *testing.T) {
 		t.Errorf("text = %q, want 'beat created:'", text)
 	}
 	if !strings.Contains(text, "sp1") {
-		t.Errorf("text = %q, want subplot_id 'sp1'", text)
+		t.Errorf("text = %q, want plot_id 'sp1'", text)
 	}
 }
 
 func TestBeatCreateTool_Handle_CustomID(t *testing.T) {
-	args := json.RawMessage(`{"subplot_id":"sp1","title":"opening","summary":"the start","id":"beat_001"}`)
+	args := json.RawMessage(`{"plot_id":"sp1","title":"opening","summary":"the start","id":"beat_001"}`)
 	res, err := BeatCreateTool{}.Handle(context.Background(), args, ExecutionContext{ProjectRoot: t.TempDir()})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
@@ -87,7 +87,7 @@ func TestBeatCreateTool_Handle_CustomID(t *testing.T) {
 }
 
 func TestBeatCreateTool_Handle_CustomStructurePosition(t *testing.T) {
-	args := json.RawMessage(`{"subplot_id":"sp1","title":"opening","summary":"the start","structure_position":"climax"}`)
+	args := json.RawMessage(`{"plot_id":"sp1","title":"opening","summary":"the start","structure_position":"climax"}`)
 	res, err := BeatCreateTool{}.Handle(context.Background(), args, ExecutionContext{ProjectRoot: t.TempDir()})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)

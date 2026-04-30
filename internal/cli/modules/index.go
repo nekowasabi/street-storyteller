@@ -15,6 +15,7 @@ import (
 	lspmod "github.com/takets/street-storyteller/internal/cli/modules/lsp"
 	mcpmod "github.com/takets/street-storyteller/internal/cli/modules/mcp"
 	metamod "github.com/takets/street-storyteller/internal/cli/modules/meta"
+	migratemod "github.com/takets/street-storyteller/internal/cli/modules/migrate"
 	updatemod "github.com/takets/street-storyteller/internal/cli/modules/update"
 	versionmod "github.com/takets/street-storyteller/internal/cli/modules/version"
 	viewmod "github.com/takets/street-storyteller/internal/cli/modules/view"
@@ -31,12 +32,15 @@ func RegisterCore(r cli.Registry) error {
 	if err := r.Register("generate", generatemod.New()); err != nil {
 		return err
 	}
-	for _, kind := range []string{"character", "setting", "timeline", "foreshadowing", "subplot", "beat", "event", "intersection", "phase"} {
+	for _, kind := range []string{"character", "setting", "timeline", "foreshadowing", "plot", "beat", "event", "intersection", "phase"} {
 		if err := r.Register("element "+kind, elementmod.New(kind)); err != nil {
 			return err
 		}
 	}
 	if err := r.Register("update", updatemod.New()); err != nil {
+		return err
+	}
+	if err := r.Register("migrate", migratemod.New()); err != nil {
 		return err
 	}
 	if err := r.Register("meta check", metamod.New()); err != nil {
@@ -69,7 +73,7 @@ func RegisterCore(r cli.Registry) error {
 	if err := r.Register("view list", viewmod.NewList()); err != nil {
 		return err
 	}
-	for _, kind := range []string{"setting", "timeline", "foreshadowing", "subplot"} {
+	for _, kind := range []string{"setting", "timeline", "foreshadowing", "plot"} {
 		if err := r.Register("view "+kind, viewmod.NewEntity(kind)); err != nil {
 			return err
 		}

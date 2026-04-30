@@ -16,7 +16,7 @@ func NewList() cli.Command { return &listCommand{} }
 func (c *listCommand) Name() string        { return "view list" }
 func (c *listCommand) Description() string { return "List project entities" }
 func (c *listCommand) Usage() string {
-	return "storyteller view list --kind <characters|settings|timelines|foreshadowings|subplots> [--path <project>]"
+	return "storyteller view list --kind <characters|settings|timelines|foreshadowings|plots> [--path <project>]"
 }
 
 func (c *listCommand) Handle(cctx cli.CommandContext) int {
@@ -69,9 +69,9 @@ func listRows(proj *project.Project, kind string) []string {
 			out = append(out, fmt.Sprintf("%s\t%s", v.ID, v.Name))
 		}
 		return out
-	case "subplots":
-		out := make([]string, 0, len(proj.Store.AllSubplots()))
-		for _, v := range proj.Store.AllSubplots() {
+	case "plots":
+		out := make([]string, 0, len(proj.Store.AllPlots()))
+		for _, v := range proj.Store.AllPlots() {
 			out = append(out, fmt.Sprintf("%s\t%s", v.ID, v.Name))
 		}
 		return out
@@ -130,8 +130,8 @@ func normalizeKind(kind string) string {
 		return "timelines"
 	case "foreshadowing":
 		return "foreshadowings"
-	case "subplot":
-		return "subplots"
+	case "plot":
+		return "plots"
 	default:
 		return kind
 	}

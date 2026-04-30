@@ -7,10 +7,10 @@ import (
 	"testing"
 )
 
-func TestSubplotCreateTool_Definition(t *testing.T) {
-	def := SubplotCreateTool{}.Definition()
-	if def.Name != "subplot_create" {
-		t.Errorf("name = %q, want subplot_create", def.Name)
+func TestPlotCreateTool_Definition(t *testing.T) {
+	def := PlotCreateTool{}.Definition()
+	if def.Name != "plot_create" {
+		t.Errorf("name = %q, want plot_create", def.Name)
 	}
 	if def.Description == "" {
 		t.Error("description should not be empty")
@@ -20,9 +20,9 @@ func TestSubplotCreateTool_Definition(t *testing.T) {
 	}
 }
 
-func TestSubplotCreateTool_Handle_Success(t *testing.T) {
+func TestPlotCreateTool_Handle_Success(t *testing.T) {
 	args := json.RawMessage(`{"name":"Main Plot","type":"main","summary":"The hero's journey"}`)
-	res, err := SubplotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
+	res, err := PlotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -30,17 +30,17 @@ func TestSubplotCreateTool_Handle_Success(t *testing.T) {
 		t.Fatalf("unexpected IsError: %s", res.Content[0].Text)
 	}
 	text := res.Content[0].Text
-	if !strings.Contains(text, "subplot created: main_plot") {
-		t.Errorf("expected 'subplot created: main_plot' in %q", text)
+	if !strings.Contains(text, "plot created: main_plot") {
+		t.Errorf("expected 'plot created: main_plot' in %q", text)
 	}
 	if !strings.Contains(text, `"main"`) {
 		t.Errorf("expected type 'main' in JSON output: %q", text)
 	}
 }
 
-func TestSubplotCreateTool_Handle_MissingName(t *testing.T) {
-	args := json.RawMessage(`{"type":"subplot","summary":"A side story"}`)
-	res, err := SubplotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
+func TestPlotCreateTool_Handle_MissingName(t *testing.T) {
+	args := json.RawMessage(`{"type":"sub","summary":"A side story"}`)
+	res, err := PlotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -52,9 +52,9 @@ func TestSubplotCreateTool_Handle_MissingName(t *testing.T) {
 	}
 }
 
-func TestSubplotCreateTool_Handle_MissingType(t *testing.T) {
+func TestPlotCreateTool_Handle_MissingType(t *testing.T) {
 	args := json.RawMessage(`{"name":"Love Story","summary":"A romance arc"}`)
-	res, err := SubplotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
+	res, err := PlotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -66,9 +66,9 @@ func TestSubplotCreateTool_Handle_MissingType(t *testing.T) {
 	}
 }
 
-func TestSubplotCreateTool_Handle_MissingSummary(t *testing.T) {
-	args := json.RawMessage(`{"name":"Revenge Plot","type":"subplot"}`)
-	res, err := SubplotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
+func TestPlotCreateTool_Handle_MissingSummary(t *testing.T) {
+	args := json.RawMessage(`{"name":"Revenge Plot","type":"sub"}`)
+	res, err := PlotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -80,9 +80,9 @@ func TestSubplotCreateTool_Handle_MissingSummary(t *testing.T) {
 	}
 }
 
-func TestSubplotCreateTool_Handle_InvalidType(t *testing.T) {
+func TestPlotCreateTool_Handle_InvalidType(t *testing.T) {
 	args := json.RawMessage(`{"name":"Mystery Arc","type":"unknown","summary":"A mystery"}`)
-	res, err := SubplotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
+	res, err := PlotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -94,16 +94,28 @@ func TestSubplotCreateTool_Handle_InvalidType(t *testing.T) {
 	}
 }
 
-func TestSubplotCreateTool_Handle_ExplicitID(t *testing.T) {
-	args := json.RawMessage(`{"name":"Love Story","type":"subplot","summary":"Romance arc","id":"custom_id"}`)
-	res, err := SubplotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
+func TestPlotCreateTool_Handle_ExplicitID(t *testing.T) {
+	args := json.RawMessage(`{"name":"Love Story","type":"sub","summary":"Romance arc","id":"custom_id"}`)
+	res, err := PlotCreateTool{}.Handle(context.Background(), args, ExecutionContext{})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
 	if res.IsError {
 		t.Fatalf("unexpected IsError: %s", res.Content[0].Text)
 	}
-	if !strings.Contains(res.Content[0].Text, "subplot created: custom_id") {
+	if !strings.Contains(res.Content[0].Text, "plot created: custom_id") {
 		t.Errorf("expected explicit id in output: %q", res.Content[0].Text)
+	}
+}
+
+func TestPlotCreateTool_DefinitionUsesSubType(t *testing.T) {
+	def := PlotCreateTool{}.Definition()
+	schema := string(def.InputSchema)
+	if !strings.Contains(schema, `"sub"`) {
+		t.Fatalf("schema must expose sub plot type: %s", schema)
+	}
+	legacy := `"sub` + `plot"`
+	if strings.Contains(schema, legacy) {
+		t.Fatalf("schema must not expose legacy plot subtype: %s", schema)
 	}
 }

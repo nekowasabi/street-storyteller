@@ -108,7 +108,7 @@ func handleForeshadowingList(proj *project.Project, statusFilter string) (*proto
 	}
 
 	if len(filtered) == 0 {
-		msg := fmt.Sprintf("0 foreshadowings")
+		msg := "0 foreshadowings"
 		if statusFilter != "" {
 			msg = fmt.Sprintf("0 foreshadowings with status %q", statusFilter)
 		}

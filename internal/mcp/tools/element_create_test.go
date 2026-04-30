@@ -133,8 +133,8 @@ func TestElementCreateTool_Handle_Timeline(t *testing.T) {
 	}
 }
 
-func TestElementCreateTool_Handle_Subplot(t *testing.T) {
-	res, err := ElementCreateTool{}.Handle(context.Background(), json.RawMessage(`{"kind":"subplot","name":"Love Story","summary":"the romance subplot"}`), ExecutionContext{})
+func TestElementCreateTool_Handle_Plot(t *testing.T) {
+	res, err := ElementCreateTool{}.Handle(context.Background(), json.RawMessage(`{"kind":"plot","name":"Love Story","summary":"the romance plot"}`), ExecutionContext{})
 	if err != nil {
 		t.Fatalf("Handle: %v", err)
 	}
@@ -142,7 +142,7 @@ func TestElementCreateTool_Handle_Subplot(t *testing.T) {
 		t.Errorf("unexpected IsError: %+v", res)
 	}
 	text := res.Content[0].Text
-	if !strings.Contains(text, "element created: kind=subplot") {
+	if !strings.Contains(text, "element created: kind=plot") {
 		t.Errorf("text = %q", text)
 	}
 }

@@ -106,8 +106,8 @@ func entitySummary(proj *project.Project, kind, id string) (summaryRow, error) {
 			return summaryRow{}, err
 		}
 		return summaryRow{ID: v.ID, Name: v.Name, Summary: v.Summary}, nil
-	case "subplot":
-		v, err := proj.Store.Subplot(id)
+	case "plot":
+		v, err := proj.Store.Plot(id)
 		if err != nil {
 			return summaryRow{}, err
 		}
