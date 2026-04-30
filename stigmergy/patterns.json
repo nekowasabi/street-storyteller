@@ -105,7 +105,7 @@
       "context": "MCP tools 18 個を複数 worktree で並列移植 (Process 06)",
       "applicability": "Wave-A3 パターン等で 3 worktree 以上が同種の helper (errorResult / slugify / normalize 等) を独立実装する場合",
       "steps": [
-        "1. wave-pre 段階で scope prefix を確定 (例: binding / timeline / subplot)",
+        "1. wave-pre 段階で scope prefix を確定 (例: binding / timeline / plot)",
         "2. private helper は prefix 必須 (bindingErrorResult, timelineSlugify, ...)",
         "3. マージ前 lint で no-prefix helper を検出 (golangci-lint カスタムルール想定)",
         "4. 真に共有する helper は wave-pre に昇格させて main に先入れ"
