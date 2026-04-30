@@ -15,14 +15,6 @@ import (
 // Use `go test -update ./cmd/storyteller/...` to regenerate.
 var updateGolden = flag.Bool("update", false, "update golden files")
 
-type goldenCase struct {
-	name       string
-	args       []string
-	wantExit   int
-	stdoutFile string
-	stderrFile string
-}
-
 func runGolden(t *testing.T, args []string) (int, string, string) {
 	t.Helper()
 	var out, errBuf bytes.Buffer
@@ -121,6 +113,3 @@ func TestGolden_ElementCharacterMissingID(t *testing.T) {
 	}
 	assertGolden(t, "element_character_missing_id.txt", errBuf)
 }
-
-// silence unused warning when -update is not passed
-var _ = goldenCase{}

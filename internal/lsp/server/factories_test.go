@@ -11,7 +11,6 @@ import (
 
 	"github.com/takets/street-storyteller/internal/detect"
 	"github.com/takets/street-storyteller/internal/lsp/protocol"
-	"github.com/takets/street-storyteller/internal/lsp/providers"
 )
 
 func TestNewServerOptions_EmptyProjectReturnsUsableFallback(t *testing.T) {
@@ -52,7 +51,7 @@ func TestNewServerOptions_LoadsProjectEntities(t *testing.T) {
 	if src != detect.SourceName {
 		t.Fatalf("source = %q, want name", src)
 	}
-	info, ok := opts.Lookup.(providers.EntityLookup).Lookup(ref)
+	info, ok := opts.Lookup.Lookup(ref)
 	if !ok || info.Summary != "主人公" {
 		t.Fatalf("Lookup = %+v, %v", info, ok)
 	}
