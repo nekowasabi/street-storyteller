@@ -18,7 +18,7 @@
 |--------|-----------|------|
 | エントリ | `cmd/storyteller` | バイナリ entrypoint、golden test 駆動 |
 | CLI | `internal/cli`, `internal/cli/modules/*` | サブコマンドのレジストリと presenter |
-| Domain | `internal/domain` | Character / Setting / Timeline / Foreshadowing / Subplot / Beat 等の型と検証 |
+| Domain | `internal/domain` | Character / Setting / Timeline / Foreshadowing / Plot / Beat 等の型と検証 |
 | Project parsing | `internal/project`, `internal/project/tsparse` | TypeScript 認可サブセットを Go 側で読み取る |
 | Service | `internal/service` | meta_check / generate などのユースケース |
 | Meta | `internal/meta` | YAML frontmatter 検証・emitter |

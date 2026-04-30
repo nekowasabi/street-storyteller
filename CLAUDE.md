@@ -53,14 +53,14 @@ MCPサーバーは以下を公開します：
 - Tools: `meta_check`, `meta_generate`, `element_create`, `view_browser`,
   `lsp_validate`, `lsp_find_references`, `timeline_create`, `event_create`,
   `event_update`, `timeline_view`, `timeline_analyze`, `foreshadowing_create`,
-  `foreshadowing_view`, `manuscript_binding`, `subplot_create`, `subplot_view`,
+  `foreshadowing_view`, `manuscript_binding`, `plot_create`, `plot_view`,
   `beat_create`, `intersection_create`
 - Resources: `storyteller://project`, `storyteller://characters`,
   `storyteller://character/<id>`, `storyteller://settings`,
   `storyteller://setting/<id>`, `storyteller://timelines`,
   `storyteller://timeline/<id>`, `storyteller://foreshadowings`,
-  `storyteller://foreshadowing/<id>`, `storyteller://subplots`,
-  `storyteller://subplot/<id>`
+  `storyteller://foreshadowing/<id>`, `storyteller://plots`,
+  `storyteller://plot/<id>`
   - `?expand=details`クエリパラメータ:
     キャラクター/設定リソースでファイル参照を解決して返す
 - Prompts: `character_brainstorm`, `plot_suggestion`, `scene_improvement`,
@@ -632,77 +632,77 @@ storyteller view foreshadowing --list --json
 }
 ```
 
-### 8. Subplot（サブプロット）機能 - 実装済み
+### 8. Plot（plot/sub）機能 - 実装済み
 
 物語の複数プロットラインを並列管理し、交差（intersection）で物語の絡み合いを表現する機能が実装されました。
 
-#### Subplot型
+#### Plot型
 
 ```typescript
-export type Subplot = {
+export type Plot = {
   id: string;
   name: string;
-  type: "main" | "subplot" | "parallel" | "background";
+  type: "main" | "sub" | "parallel" | "background";
   status: "active" | "completed";
   summary: string;
   beats: PlotBeat[];
   focusCharacters?: Record<string, "primary" | "secondary">;
   intersections?: PlotIntersection[];
   importance?: "major" | "minor";
-  parentSubplotId?: string;
+  parentPlotId?: string;
   displayNames?: string[];
-  relations?: SubplotRelations;
+  relations?: PlotRelations;
 };
 ```
 
 #### CLIコマンド
 
 ```bash
-# サブプロット作成
-storyteller element subplot --name "恋愛軸" --type subplot --summary "主人公の恋愛の成長"
+# plot/sub 作成
+storyteller element plot --name "恋愛軸" --type sub --summary "主人公の恋愛の成長"
 
 # ビート追加
-storyteller element beat --subplot love_story --title "出会い" --summary "運命の出会い" --structure-position setup
+storyteller element beat --plot love_story --title "出会い" --summary "運命の出会い" --structure-position setup
 
 # インターセクション作成
-storyteller element intersection --source-subplot main_plot --source-beat beat_001 --target-subplot love_story --target-beat beat_001 --summary "出会いが物語を動かす" --influence-direction forward
+storyteller element intersection --source-plot main_plot --source-beat beat_001 --target-plot love_story --target-beat beat_001 --summary "出会いが物語を動かす" --influence-direction forward
 
-# サブプロット一覧表示
-storyteller view subplot --list
-storyteller view subplot --id love_story
-storyteller view subplot --list --format mermaid
-storyteller view subplot --list --json
+# plot/sub 一覧表示
+storyteller view plot --list
+storyteller view plot --id love_story
+storyteller view plot --list --format mermaid
+storyteller view plot --list --json
 ```
 
 #### MCPツール
 
-- `subplot_create`: サブプロット作成
-- `subplot_view`: サブプロット表示（一覧/個別/フィルタ）
+- `plot_create`: plot/sub 作成
+- `plot_view`: plot/sub 表示（一覧/個別/フィルタ）
 - `beat_create`: ビート作成
 - `intersection_create`: インターセクション作成
 
 #### MCPリソース
 
-- `storyteller://subplots`: サブプロット一覧
-- `storyteller://subplot/{id}`: 特定のサブプロット
+- `storyteller://plots`: plot/sub 一覧
+- `storyteller://plot/{id}`: 特定の plot/sub
 
 #### MCPプロンプト
 
-- `subplot_brainstorm`: サブプロットのブレインストーミング
-- `subplot_intersection_suggest`: インターセクションの提案
-- `subplot_completion_review`: サブプロット完了の振り返り
+- `plot_brainstorm`: plot/sub のブレインストーミング
+- `plot_intersection_suggest`: インターセクションの提案
+- `plot_completion_review`: plot/sub 完了の振り返り
 
 #### HTML可視化
 
-`storyteller view browser`コマンドで、サブプロットの以下の情報がビジュアル表示されます：
+`storyteller view browser`コマンドで、plot/sub の以下の情報がビジュアル表示されます：
 
 - **統計情報**: 総数、type別内訳
-- **サブプロットカード**: 名前、タイプ、ビート数、フォーカスキャラクター
-- **グラフビジュアライゼーション**: SubplotGraphBuilderによる構造グラフ
+- **plot/sub カード**: 名前、タイプ、ビート数、フォーカスキャラクター
+- **グラフビジュアライゼーション**: PlotGraphBuilderによる構造グラフ
 
 #### Timelineとの違い
 
-| 観点     | Timeline                    | Subplot                          |
+| 観点     | Timeline                    | Plot                          |
 | -------- | --------------------------- | -------------------------------- |
 | 管理対象 | 「いつ」（時系列）          | 「何」「どのように」（展開構造） |
 | 単位     | Event（出来事）             | Beat（物語ビート）               |

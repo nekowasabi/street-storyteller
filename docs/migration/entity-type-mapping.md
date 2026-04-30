@@ -30,7 +30,7 @@ const (
 
 旧版ドキュメント（〜Wave-A1 着手前）には `type CharacterRole int` + `iota`
 を推奨する記述があった。Wave-A1 全 worktree（character / setting / foreshadowing
-/ timeline / subplot 担当）はこの方針を **明示的に override** し、上記
+/ timeline / plot 担当）はこの方針を **明示的に override** し、上記
 string-typed const に統一した。
 
 - **Rejection rationale**: JSON wire format compatibility, debug log
@@ -55,13 +55,13 @@ func (s StringOrFileRef) IsEmpty() bool { return s.Value == "" && s.File == "" }
   `*FileRef`) より排他フィールドの struct で表現するほうが zero value（inline
   空）として自然で、JSON unmarshaler 拡張時の分岐も単純化される。
 - **使用場所**: Character / CharacterPhase / Setting / Foreshadowing / Timeline
-  / TimelineEvent / Subplot の details / excerpt / arc_notes 各フィールド。
+  / TimelineEvent / Plot の details / excerpt / arc_notes 各フィールド。
 - **ポインタ運用**:
   - 「未設定」を区別する箇所 → `*StringOrFileRef`（nil = 未設定）。例:
     `SettingDetails.Description`, `PlantingInfo.Excerpt`,
     `TimelineDetails.Background`。
   - 常に値として持つ箇所 → `StringOrFileRef`（zero = `IsEmpty()`）。例:
-    `CharacterDetails.Description`, `SubplotDetails.Description`,
+    `CharacterDetails.Description`, `PlotDetails.Description`,
     `PhaseDetails.*`, `CharacterDevelopment.ArcNotes`。
 
 #### Wave-A1 で個別に出現していた旧型（**Wave-A2-pre で集約**）
@@ -72,7 +72,7 @@ func (s StringOrFileRef) IsEmpty() bool { return s.Value == "" && s.File == "" }
 | Setting                    | inline anonymous pointer `*struct { Value string; File string }`                                  | `*StringOrFileRef`                            |
 | Foreshadowing              | named tagged union `*ExcerptValue { Text *string; FileRef *FileRef }` + `FileRef { File string }` | `*StringOrFileRef`                            |
 | Timeline / TimelineEvent   | named `TextOrFileRef { Text string; File string }`                                                | `*StringOrFileRef`                            |
-| Subplot                    | inline anonymous `struct { Inline string; FileRef *string }`                                      | `StringOrFileRef`                             |
+| Plot                    | inline anonymous `struct { Inline string; FileRef *string }`                                      | `StringOrFileRef`                             |
 
 旧型 (`ExcerptValue`, `FileRef`, `TextOrFileRef`, anonymous variants)
 はすべて削除済み。
@@ -89,7 +89,7 @@ LSP 検出ヒント struct は entity ごとに専用型を定義する。共通
 | Timeline      | `TimelineDetectionHints`                                                 |
 | TimelineEvent | `TimelineEventDetectionHints`                                            |
 | Foreshadowing | （現状 detection hint は未実装。追加時は `ForeshadowingDetectionHints`） |
-| Subplot       | （現状未実装。追加時は `SubplotDetectionHints`）                         |
+| Plot       | （現状未実装。追加時は `PlotDetectionHints`）                         |
 
 - **Why**: 共有型にすると、entity 固有のフィールド追加（例: confidence
   の閾値の差）が他 entity を巻き込む。per-entity prefixed name で疎結合に保つ。
@@ -316,28 +316,28 @@ inline、`&{File: "..."}` = file ref）。
 
 ---
 
-## Subplot / PlotBeat / PlotIntersection
+## Plot / PlotBeat / PlotIntersection
 
 | TS Type            | Location                 | Go Struct                                     | Remarks      |
 | ------------------ | ------------------------ | --------------------------------------------- | ------------ |
-| `Subplot`          | `src/type/v2/subplot.ts` | `internal/domain/subplot.go:Subplot`          | サブプロット |
-| `PlotBeat`         | 同                       | `internal/domain/subplot.go:PlotBeat`         | ビート       |
-| `PlotIntersection` | 同                       | `internal/domain/subplot.go:PlotIntersection` | 交差         |
+| `Plot`          | `src/type/v2/plot.ts` | `internal/domain/plot.go:Plot`          | サブプロット |
+| `PlotBeat`         | 同                       | `internal/domain/plot.go:PlotBeat`         | ビート       |
+| `PlotIntersection` | 同                       | `internal/domain/plot.go:PlotIntersection` | 交差         |
 
-### Subplot フィールド対応
+### Plot フィールド対応
 
 | TypeScript                                                | Go                                                  | Notes                   |
 | --------------------------------------------------------- | --------------------------------------------------- | ----------------------- |
-| `type: "main" \| "subplot" \| "parallel" \| "background"` | `Type SubplotType`                                  | string-typed const enum |
-| `status: "active" \| "completed"`                         | `Status SubplotStatus`                              | string-typed const enum |
+| `type: "main" \| "sub" \| "parallel" \| "background"` | `Type PlotType`                                  | string-typed const enum |
+| `status: "active" \| "completed"`                         | `Status PlotStatus`                              | string-typed const enum |
 | `beats: PlotBeat[]`                                       | `Beats []PlotBeat`                                  | 値スライス              |
 | `focusCharacters?: { [id]: "primary" \| "secondary" }`    | `FocusCharacters map[string]FocusCharacterPriority` | map + enum              |
 | `intersections?`                                          | `Intersections []PlotIntersection`                  | nil-slice               |
-| `importance?: "major" \| "minor"`                         | `Importance *SubplotImportance`                     | pointer enum            |
-| `parentSubplotId?`                                        | `ParentSubplotID *string`                           | pointer                 |
+| `importance?: "major" \| "minor"`                         | `Importance *PlotImportance`                     | pointer enum            |
+| `parentPlotId?`                                        | `ParentPlotID *string`                           | pointer                 |
 | `displayNames?`                                           | `DisplayNames []string`                             | nil-slice               |
-| `relations?: SubplotRelations`                            | `Relations *SubplotRelations`                       | pointer                 |
-| `details?: SubplotDetails`                                | `Details *SubplotDetails`                           | pointer                 |
+| `relations?: PlotRelations`                            | `Relations *PlotRelations`                       | pointer                 |
+| `details?: PlotDetails`                                | `Details *PlotDetails`                           | pointer                 |
 
 ### PlotBeat フィールド対応
 
@@ -356,12 +356,12 @@ inline、`&{File: "..."}` = file ref）。
 | TypeScript                                                | Go                                       | Notes                               |
 | --------------------------------------------------------- | ---------------------------------------- | ----------------------------------- |
 | `id`, `summary`                                           | `ID`, `Summary string`                   | 直接                                |
-| `sourceSubplotId`, `sourceBeatId`                         | `SourceSubplotID`, `SourceBeatID string` | 直接                                |
-| `targetSubplotId`, `targetBeatId`                         | `TargetSubplotID`, `TargetBeatID string` | 直接                                |
+| `sourcePlotId`, `sourceBeatId`                         | `SourcePlotID`, `SourceBeatID string` | 直接                                |
+| `targetPlotId`, `targetBeatId`                         | `TargetPlotID`, `TargetBeatID string` | 直接                                |
 | `influenceDirection: "forward" \| "backward" \| "mutual"` | `InfluenceDirection InfluenceDirection`  | string-typed const enum（required） |
 | `influenceLevel?: "high" \| "medium" \| "low"`            | `InfluenceLevel *InfluenceLevel`         | pointer enum                        |
 
-### SubplotDetails union
+### PlotDetails union
 
 | TS field       | Go field                      |
 | -------------- | ----------------------------- |
@@ -384,11 +384,11 @@ inline、`&{File: "..."}` = file ref）。
 | `"resolution"` | 結末 |
 
 旧版ドキュメントに "TBD" や 3 値案があった場合、本リスト（TS
-`src/type/v2/subplot.ts` 真偽値）が真。
+`src/type/v2/plot.ts` 真偽値）が真。
 
 ### その他 enum
 
-- **SubplotImportance**: `"major" | "minor"`
+- **PlotImportance**: `"major" | "minor"`
 - **FocusCharacterPriority**: `"primary" | "secondary"`
 - **InfluenceDirection**: `"forward" | "backward" | "mutual"`
 - **InfluenceLevel**: `"high" | "medium" | "low"`
@@ -402,7 +402,7 @@ inline、`&{File: "..."}` = file ref）。
 
 - `samples/cinderella` - Character, Setting, Foreshadowing の基本
 - `samples/momotaro` - Timeline/Event, CharacterPhase の複雑性
-- `samples/mistery/old-letter-mystery` - Subplot/Intersection, 高度な検出ルール
+- `samples/mistery/old-letter-mystery` - Plot/Intersection, 高度な検出ルール
 
 Go parser の成功基準:
 
@@ -417,6 +417,6 @@ Go parser の成功基準:
 
 - [ ] StringOrFileRef の `MarshalJSON` / `UnmarshalJSON` 実装（TS の
       `string | { file: string }` 双方向対応）
-- [ ] Foreshadowing / Subplot 用の DetectionHints（必要が確定したら追加、命名は
+- [ ] Foreshadowing / Plot 用の DetectionHints（必要が確定したら追加、命名は
       per-entity prefix）
 - [ ] contract test fixture を生成（Wave-A2 以降）

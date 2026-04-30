@@ -8,7 +8,7 @@
 
 ## What is street-storyteller
 
-street-storyteller は SaC (StoryWriting as Code) コンセプトに基づき、キャラクター・設定・タイムライン・伏線・サブプロットといった物語要素を **型安全な TypeScript** で記述し、整合性をプログラムで検証可能にする創作支援ツールです。
+street-storyteller は SaC (StoryWriting as Code) コンセプトに基づき、キャラクター・設定・タイムライン・伏線・plot/sub といった物語要素を **型安全な TypeScript** で記述し、整合性をプログラムで検証可能にする創作支援ツールです。
 
 ランタイムは Go で実装された単一バイナリ (`storyteller`) として配布され、CLI / LSP / MCP / textlint 統合をひとつの実行ファイルで提供します。
 
@@ -20,7 +20,7 @@ street-storyteller は SaC (StoryWriting as Code) コンセプトに基づき、
 - **LSP server**: 原稿 (Markdown) からエンティティ参照をリアルタイム検出・診断 (`storyteller lsp start --stdio`)
 - **MCP server**: Claude Desktop / Claude Code から物語データへ tools / resources / prompts でアクセス
 - **textlint integration**: 文法・表記ゆれ検出を LSP に統合
-- **Story elements**: characters, settings, timelines, foreshadowings, subplots, beats, intersections
+- **Story elements**: characters, settings, timelines, foreshadowings, plots, beats, intersections
 
 ## Installation
 
@@ -119,7 +119,7 @@ ASCII 版:
 ┌─────────────────────────────────────────────┐
 │  TypeScript Authoring Surface (preserved)   │
 │  src/{type,characters,settings,timelines,   │
-│       foreshadowings,subplots}/             │
+│       foreshadowings,plots}/             │
 │  samples/*/src/                             │
 └──────────────────────┬──────────────────────┘
                        │ parsed by tsparse
@@ -144,8 +144,8 @@ ASCII 版:
 | Command | Description |
 |---------|-------------|
 | `storyteller generate` | 新規物語プロジェクトを初期化 |
-| `storyteller element <kind>` | 物語要素を作成 (character / setting / timeline / event / foreshadowing / subplot / beat / intersection / phase) |
-| `storyteller view <kind>` | 物語要素を表示 (character / setting / timeline / foreshadowing / subplot / browser) |
+| `storyteller element <kind>` | 物語要素を作成 (character / setting / timeline / event / foreshadowing / plot / beat / intersection / phase) |
+| `storyteller view <kind>` | 物語要素を表示 (character / setting / timeline / foreshadowing / plot / browser) |
 | `storyteller meta generate` | 原稿から `.meta.ts` 伴走ファイルを生成 |
 | `storyteller meta check` | メタデータ整合性を検証 (CI / pre-commit 向け) |
 | `storyteller meta watch` | 原稿の変更を監視して `.meta.ts` を更新 |
@@ -197,8 +197,8 @@ Claude Desktop 設定例 (`claude_desktop_config.json`):
 
 公開している主な API:
 
-- **Tools**: `meta_check`, `meta_generate`, `element_create`, `view_browser`, `lsp_validate`, `lsp_find_references`, `timeline_create`, `event_create`, `event_update`, `timeline_view`, `timeline_analyze`, `foreshadowing_create`, `foreshadowing_view`, `manuscript_binding`, `subplot_create`, `subplot_view`, `beat_create`, `intersection_create`
-- **Resources**: `storyteller://project`, `storyteller://characters`, `storyteller://character/<id>`, `storyteller://settings`, `storyteller://setting/<id>`, `storyteller://timelines`, `storyteller://timeline/<id>`, `storyteller://foreshadowings`, `storyteller://foreshadowing/<id>`, `storyteller://subplots`, `storyteller://subplot/<id>`
+- **Tools**: `meta_check`, `meta_generate`, `element_create`, `view_browser`, `lsp_validate`, `lsp_find_references`, `timeline_create`, `event_create`, `event_update`, `timeline_view`, `timeline_analyze`, `foreshadowing_create`, `foreshadowing_view`, `manuscript_binding`, `plot_create`, `plot_view`, `beat_create`, `intersection_create`
+- **Resources**: `storyteller://project`, `storyteller://characters`, `storyteller://character/<id>`, `storyteller://settings`, `storyteller://setting/<id>`, `storyteller://timelines`, `storyteller://timeline/<id>`, `storyteller://foreshadowings`, `storyteller://foreshadowing/<id>`, `storyteller://plots`, `storyteller://plot/<id>`
 - **Prompts**: `character_brainstorm`, `plot_suggestion`, `scene_improvement`, `project_setup_wizard`, `chapter_review`, `consistency_fix`, `timeline_brainstorm`, `event_detail_suggest`, `causality_analysis`, `timeline_consistency_check`
 
 詳細は [`docs/mcp.md`](docs/mcp.md) を参照してください。
@@ -214,7 +214,7 @@ story-project/
 │   ├── plots/          # Plot development
 │   ├── timelines/      # Timeline management
 │   ├── foreshadowings/ # Foreshadowing tracking
-│   ├── subplots/       # Subplot management
+│   ├── plots/       # Plot management
 │   ├── themes/         # Theme definitions
 │   ├── structure/      # Story structure
 │   └── purpose/        # Story purpose
@@ -244,7 +244,7 @@ story-project/
 | [`docs/lint.md`](docs/lint.md) | textlint 統合と Git hooks |
 | [`docs/meta-generate.md`](docs/meta-generate.md) | `.meta.ts` 生成の仕組み |
 | [`docs/character-phase.md`](docs/character-phase.md) | キャラクターフェーズ管理 |
-| [`docs/subplot.md`](docs/subplot.md) | サブプロット機能の詳細 |
+| [`docs/plot.md`](docs/plot.md) | plot/sub 機能の詳細 |
 | [`docs/ui-guide.md`](docs/ui-guide.md) | ブラウザ可視化のガイド |
 
 ## Development
@@ -292,7 +292,7 @@ deno task meta:check
 - [x] 原稿のキャラクター・設定参照検証
 - [x] 伏線管理 (foreshadowings)
 - [x] タイムライン管理 (timelines)
-- [x] サブプロット管理 (subplots)
+- [x] plot/sub 管理 (plots)
 - [x] textlint による表記ゆれ検出
 - [x] ブラウザ可視化
 - [ ] AI を活用した執筆支援 (LLM UI/UX 統合は計画中)

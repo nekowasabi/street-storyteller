@@ -1,28 +1,27 @@
 ---
-title: "Go 全面移植（処理エンジン層）+ TypeScript authoring surface 維持"
+title: "subplot → plot リネーム（破壊的変更）と migrate コマンド提供"
 status: completed
-created: "2026-04-26"
-completed: "2026-04-27"
+created: "2026-04-30"
 ---
 
 # Commander's Intent
 
 ## Purpose
-LSP 起動時間（現行 3-5s → 目標 <2s）と CLI レイテンシ（Deno 100-300ms → Go 5-20ms）を改善し、単一バイナリで配布可能にする。同時に TypeScript authoring surface（src/type/, samples/*/src/）は不変条件として維持し、SaC（StoryWriting as Code）の中核価値を保つ。
+`subplot` という型名が「総称」と「特定サブカテゴリ」を兼任する命名上の認知不一致を解消し、`plot` を上位概念に据えて Go/TS 二層・MCP・CLI・docs を統一する。初学者の認知負荷を下げ、API 命名規則を他エンティティ（character.role, foreshadowing.type）と整合させる。
 
 ## End State
-`storyteller` 単一バイナリ（<50MB）で全機能（generate/meta/lint/lsp/mcp/rag/view）を提供。Deno は authoring 型検証のみ。E2E テストはミニマルから開始し必要発生時に追加。
+Go/TS 双方で `Plot/plot` 命名に統一され、`storyteller migrate plot-rename` で既存プロジェクトが自動移行可能。docs・samples・golden 全てが新名に追従し、リリースノート以外で `grep -ri subplot` が残らない状態。
 
 ## Key Tasks
-- 二層構造憲章化 + tsparse 実 samples/*.ts 対応化
-- CLI/LSP/MCP/RAG/lint adapter を Go へ並列移植 → src/ retire
-- E2E テスト棚卸し・削除 → CI を Go メインに整理 → 単一バイナリ配布
+- Phase 1: 型リネーム（TS Process 1 → Go domain/store/loader Process 2-4）を atomic に置換
+- Phase 2: CLI/MCP コマンド・リソース URI を `plot_*` / `storyteller://plot[s]` に切替（Process 5-6, 9）
+- Phase 3-4: `migrate plot-rename` コマンドと移行ガイド（Process 8, 14, 204）で既存ユーザー保護
 
 ## Constraints
-- README.md L318 "Story elements can be expressed in TypeScript types" は不変
-- src/type/, src/characters/, src/settings/, src/timelines/, src/foreshadowings/, samples/ は保持
-- テスト戦略: UT 中心。E2E は YAGNI（必要発生時に都度追加）
-- 各 Phase は TDD（Red→Green→Refactor）で進行
+- Phase 1 内の Go 4 Process（2,3,4）は同 PR で atomic 置換（パッケージ単位の破壊的影響を最小化）
+- migrate コマンドは新コードベースに立脚するため先行リリース不可（新バイナリ同梱）
+- ゴールデンファイル更新は Process 5,6,9 完了後に Process 12 で一括
+- CI に `grep -RIn "subplot\|Subplot"` 残骸チェックを Process 51 で導入
 
 ---
 
@@ -30,29 +29,37 @@ LSP 起動時間（現行 3-5s → 目標 <2s）と CLI レイテンシ（Deno 1
 
 | Process | Title | Status | File |
 |---------|-------|--------|------|
-| 01 | Phase 0 憲章化（Go/TS 二層構造 + E2E 最小主義） | ☑ completed | [→ plan/process-01.md](plan/process-01.md) |
-| 02 | Phase 1 tsparse 拡張（import / 型注釈 スキップ） | ☑ completed | [→ plan/process-02.md](plan/process-02.md) |
-| 03 | Phase 2 未移植モジュール棚卸し | ☑ completed | [→ plan/process-03.md](plan/process-03.md) |
-| 04 | Phase 3a CLI Go 移植（generate/element/update/view 等） | ☑ completed | [→ plan/process-04.md](plan/process-04.md) |
-| 05 | Phase 3b LSP Go 移植（server/providers/diagnostics） | ☑ completed | [→ plan/process-05.md](plan/process-05.md) |
-| 06 | Phase 3c MCP Go 移植（tools/resources/prompts） | ☑ completed | [→ plan/process-06.md](plan/process-06.md) |
-| 07 | Phase 3d RAG Go 移植（export/update/hooks） | ☑ retired | [→ plan/process-07.md](plan/process-07.md) |
-| 08 | Phase 3e textlint adapter Go 移植 | ☑ completed | [→ plan/process-08.md](plan/process-08.md) |
-| 09 | Phase 4 TS src/ retire（authoring 以外削除） | ☑ completed | [→ plan/process-09.md](plan/process-09.md) |
-| 10 | Phase 5 CI 整理（Go メイン / Deno は authoring のみ） | ☑ completed | [→ plan/process-10.md](plan/process-10.md) |
-| 11 | Phase 5b go.mod 整理・vendoring 検討 | ☑ completed | [→ plan/process-11.md](plan/process-11.md) |
-| 12 | Phase 5c バイナリ検証（クロスコンパイル） | ☑ completed | [→ plan/process-12.md](plan/process-12.md) |
-| 13 | E2E テスト棚卸し・削除（YAGNI 原則） | ☑ completed | [→ plan/process-13.md](plan/process-13.md) |
-| 50 | Phase 6 配布（single binary / install.sh / homebrew） | ☑ completed | [→ plan/process-50.md](plan/process-50.md) |
-| 100 | 品質ゲート: 性能ベンチマーク（LSP <2s / CLI <100ms） | ☑ completed | [→ plan/process-100.md](plan/process-100.md) |
-| 101 | 品質ゲート: テストカバレッジ（Go 70%+） | ☑ completed | [→ plan/process-101.md](plan/process-101.md) |
-| 200 | README 更新（インストール・アーキテクチャ図） | ☑ completed | [→ plan/process-200.md](plan/process-200.md) |
-| 201 | docs 個別更新（cli/lsp/mcp/rag/lint/architecture） | ☑ completed | [→ plan/process-201.md](plan/process-201.md) |
-| 300 | OODA 振り返り（達成度評価・教訓記録） | ☑ completed | [→ plan/process-300.md](plan/process-300.md) |
+| 1 | TS 型ファイルリネーム | ☑ done | [→ plan/process-01.md](plan/process-01.md) |
+| 2 | Go domain リネーム | ☑ done | [→ plan/process-02.md](plan/process-02.md) |
+| 3 | Go store/manifest/project リネーム | ☑ done | [→ plan/process-03.md](plan/process-03.md) |
+| 4 | Go entity loader リネーム | ☑ done | [→ plan/process-04.md](plan/process-04.md) |
+| 5 | CLI モジュールリネーム | ☑ done | [→ plan/process-05.md](plan/process-05.md) |
+| 6 | MCP tools リネーム | ☑ done | [→ plan/process-06.md](plan/process-06.md) |
+| 7 | サンプルプロジェクトリネーム | ☑ done | [→ plan/process-07.md](plan/process-07.md) |
+| 8 | migrate コマンド実装 | ☑ done | [→ plan/process-08.md](plan/process-08.md) |
+| 9 | help/golden 反映 | ☑ done | [→ plan/process-09.md](plan/process-09.md) |
+| 10 | domain plot テスト整備 | ☑ done | [→ plan/process-10.md](plan/process-10.md) |
+| 11 | loader plot 互換テスト | ☑ done | [→ plan/process-11.md](plan/process-11.md) |
+| 12 | CLI element/view ゴールデン更新 | ☑ done | [→ plan/process-12.md](plan/process-12.md) |
+| 13 | MCP tools E2E 名寄せ | ☑ done | [→ plan/process-13.md](plan/process-13.md) |
+| 14 | migrate dry-run/実行テスト | ☑ done | [→ plan/process-14.md](plan/process-14.md) |
+| 15 | サンプル統合テスト | ☑ done | [→ plan/process-15.md](plan/process-15.md) |
+| 50 | エラーメッセージ精査 | ☑ done | [→ plan/process-50.md](plan/process-50.md) |
+| 51 | 旧名残骸 CI チェック | ☑ done | [→ plan/process-51.md](plan/process-51.md) |
+| 52 | momotaro plots 整合 | ☑ done | [→ plan/process-52.md](plan/process-52.md) |
+| 100 | go vet/staticcheck 緑化 | ☑ done | [→ plan/process-100.md](plan/process-100.md) |
+| 101 | deno check/tsc 確認 | ☑ done | [→ plan/process-101.md](plan/process-101.md) |
+| 102 | 後方互換アサーション禁止 | ☑ done | [→ plan/process-102.md](plan/process-102.md) |
+| 200 | CLAUDE.md §8 改訂 | ☑ done | [→ plan/process-200.md](plan/process-200.md) |
+| 201 | README.md 改訂 | ☑ done | [→ plan/process-201.md](plan/process-201.md) |
+| 202 | docs/plot.md 新設 | ☑ done | [→ plan/process-202.md](plan/process-202.md) |
+| 203 | Skills 改訂 | ☑ done | [→ plan/process-203.md](plan/process-203.md) |
+| 204 | migration ガイド執筆 | ☑ done | [→ plan/process-204.md](plan/process-204.md) |
+| 300 | 全体検証 OODA | ☑ done | [→ plan/process-300.md](plan/process-300.md) |
 
-**DAG**: `01→02→03→{04,05,06,07,08}→09→13→10→11→12→{100,101}→50→{200,201}→300`
-**DAG凡例**: `{A,B}` = 並列実行可能、`A→B` = A完了後にB実行
-**Overall**: ☑ 19/19 completed（2026-04-27 達成 — 振り返り: docs/go-migration-retrospective.md）
+**DAG**: `{1,2}→3→4→{5,6}→7→8→9 | 10←2 | 11←4 | 12←{5,9} | 13←6 | 14←8 | 15←{5,7} | 50←4 | 51←{1..7} | 52←7 | 100←{1..7} | 101←{1,7} | 102←11 | {200,201,202,203}←{1..9} | 204←8 | 300←{1..204}`
+**DAG凡例**: `{A,B}` = 並列、`A→B` = A完了後B、`A←B` = AはBに依存、`|` = 独立チェーン
+**Overall**: ☑ 27/27 completed
 
 ---
 
@@ -60,16 +67,20 @@ LSP 起動時間（現行 3-5s → 目標 <2s）と CLI レイテンシ（Deno 1
 
 | @ref | @target | @test |
 |------|---------|-------|
-| Charter | CLAUDE.md / docs/architecture.md | - |
-| TS Parser | internal/project/tsparse/parser.go | internal/project/tsparse/parser_test.go |
-| CLI | internal/cli/modules/** | internal/cli/registry_test.go |
-| LSP | internal/lsp/{server,providers,diagnostics,protocol} | internal/lsp/providers/*_test.go |
-| MCP | internal/mcp/{server,tools,protocol} | internal/mcp/**/*_test.go |
-| RAG | internal/rag/** (新規) | internal/rag/*_test.go |
-| Textlint | internal/external/textlint/** (新規) | internal/external/textlint/*_test.go |
-| Authoring (preserve) | src/type/, src/characters/, samples/*/src/ | samples/*/tests/ |
-| CI | .github/workflows/ci.yml | - |
-| Distribution | scripts/install.sh, scripts/release.sh | - |
+| TS 型 | src/type/v2/subplot.ts → plot.ts | tests/authoring/ |
+| Go domain | internal/domain/subplot.go → plot.go | internal/domain/plot_test.go |
+| Go store | internal/project/store/store.go (L23,64,75,259-,262,274,277) | store_test.go |
+| Go manifest | internal/project/manifest/manifest.go (L33,65,91,183,206-207) | loader_test.go |
+| Go loader | internal/project/entity/loader.go (L54-60,739-862,915-921,1256-1278) | loader_test.go |
+| CLI element | internal/cli/modules/element/element.go (L155-156,169) | element_test.go |
+| CLI view | internal/cli/modules/view/{list,entity}.go | list_entity_test.go |
+| MCP tools | internal/mcp/tools/{subplot_create,subplot_view,beat_create,intersection_create,element_create}.go | 各 _test.go |
+| MCP resources | internal/mcp/resources/resources.go (L17) | - |
+| Samples | samples/cinderella/src/subplots/*.ts → src/plots/ | golden test |
+| Migrate (新規) | internal/cli/modules/migrate/migrate.go | migrate_test.go |
+| Golden | cmd/storyteller/testdata/golden/{help,no_args}.txt | golden tests |
+| Docs | CLAUDE.md (L56,62-63,635-705), README.md, docs/{subplot→plot}.md, docs/{cli,mcp,architecture}.md | - |
+| Skills | .claude/skills/storyteller-writing/references/entity-{subplot→plot}.md | - |
 
 ---
 
@@ -77,7 +88,6 @@ LSP 起動時間（現行 3-5s → 目標 <2s）と CLI レイテンシ（Deno 1
 
 | リスク | 対策 |
 |--------|------|
-| LSP/MCP 性能改善が目標未達（<2s） | Process 100 でベンチ計測、未達なら起動パス見直し（lazy init / cache） |
-| 二層構造による保守性低下（Go + TS の二重実装感） | 憲章 (01) に「新規コマンド = Go のみ」明記、samples/ で authoring デモ維持 |
-| tsparse 拡張が samples 全形式をカバーできない | tree-sitter-typescript / tsc subprocess を Phase 1 内で代替検討 |
-| E2E 削除しすぎてリグレッション検出力低下 | golden test を厚く、UT で境界条件を網羅、必要時に E2E 都度追加 |
+| 既存ユーザーの物語プロジェクトが migrate 失敗で毀損 | --dry-run デフォルト、--apply 必須、git status クリーン必須、Process 14 で不整合状態テスト |
+| TS authoring と Go loader のキー名不整合で silent ビルド成功＋runtime 失敗 | Process 1 と Process 4 を同 PR、samples リアル fixture テスト、旧キー受理時 validation error |
+| 文字列 "subplot" 残骸の見落とし（テスト・docs・golden） | Process 51 で grep CI チェック化、Process 300 で最終確認 |

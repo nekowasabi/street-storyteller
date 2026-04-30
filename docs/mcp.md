@@ -69,10 +69,10 @@ textlint MCP は textlint v14.8.0+ のネイティブサポートを使う（sto
 | `foreshadowing_create` | `foreshadowing_create.go` | 伏線作成 |
 | `foreshadowing_view` | `foreshadowing_view.go` | 伏線表示 |
 | `manuscript_binding` | `manuscript_binding.go` | 原稿 frontmatter のエンティティ紐付け |
-| `subplot_create` | `subplot_create.go` | サブプロット作成 |
-| `subplot_view` | `subplot_view.go` | サブプロット表示 |
+| `plot_create` | `plot_create.go` | plot/sub 作成 |
+| `plot_view` | `plot_view.go` | plot/sub 表示 |
 | `beat_create` | `beat_create.go` | プロットビート作成 |
-| `intersection_create` | `intersection_create.go` | サブプロット間の交差作成 |
+| `intersection_create` | `intersection_create.go` | plot/sub 間の交差作成 |
 
 ### Tool 入力スキーマ例
 
@@ -148,8 +148,8 @@ textlint MCP は textlint v14.8.0+ のネイティブサポートを使う（sto
 | `storyteller://timeline/<id>` | 個別タイムライン |
 | `storyteller://foreshadowings` | 伏線一覧 |
 | `storyteller://foreshadowing/<id>` | 個別伏線 |
-| `storyteller://subplots` | サブプロット一覧 |
-| `storyteller://subplot/<id>` | 個別サブプロット |
+| `storyteller://plots` | plot/sub 一覧 |
+| `storyteller://plot/<id>` | 個別 plot/sub |
 
 ### クエリパラメータ
 

@@ -11,7 +11,7 @@
 | 用語                         | 定義                                                                                                                                  |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | **Manifest**                 | `.storyteller.json`。プロジェクトメタデータ（バージョン、パス、スキーマ）を保持                                                       |
-| **EntityStore**              | メモリ内に読み込まれた全 entity（character, setting, foreshadowing, timeline, subplot）の管理。ロック、増分更新、キャッシュ機構を持つ |
+| **EntityStore**              | メモリ内に読み込まれた全 entity（character, setting, foreshadowing, timeline, plot）の管理。ロック、増分更新、キャッシュ機構を持つ |
 | **Detection**                | Markdown 原稿本文からキャラクター・設定・伏線等の参照を検出するプロセス。confidence スコア付き                                        |
 | **FrontMatter**              | Markdown ファイルの先頭の YAML/TOML ブロック。storyteller キー配下に章メタデータと参照リストを保持                                    |
 | **fixture**                  | Go 版互換性検証用の代表サンプルプロジェクト。cinderella, momotaro, old-letter-mystery の 3 つを固定                                   |
@@ -42,9 +42,9 @@
 - `generate`: 物語プロジェクト雛形生成
 - `meta check/generate/watch/sync`: 原稿 FrontMatter と `.meta.ts`
   の検証・生成・更新
-- `element`: character, setting, timeline, event, foreshadowing, subplot, beat,
+- `element`: character, setting, timeline, event, foreshadowing, plot, beat,
   intersection, phase の作成
-- `view`: HTML可視化、character/setting/timeline/foreshadowing/subplot
+- `view`: HTML可視化、character/setting/timeline/foreshadowing/plot
   表示、JSON出力
 - `lsp start/install/validate`: LSP起動、エディタ設定生成、ワンショット検証
 - `mcp start/init`: MCPサーバー起動、設定生成
@@ -77,7 +77,7 @@
   displayNames, details, detectionHints
 - Timeline/TimelineEvent: scope, events, causal links, phaseChanges,
   displayNames, details
-- Subplot/PlotBeat/PlotIntersection: subplot type/status, beat sequence,
+- Plot/PlotBeat/PlotIntersection: plot type/status, beat sequence,
   preconditions, intersections, relations
 - CharacterPhase: 差分適用方式の成長フェーズ、初期状態、フェーズ間差分
 
@@ -167,7 +167,7 @@ tokens、code lens、completion、document symbol を提供する。
   - `storyteller://settings`, `storyteller://setting/<id>`
   - `storyteller://timelines`, `storyteller://timeline/<id>`
   - `storyteller://foreshadowings`, `storyteller://foreshadowing/<id>`
-  - subplot/phase 系
+  - plot/phase 系
 - Tools:
   - meta_check, meta_generate
   - element_create
@@ -177,7 +177,7 @@ tokens、code lens、completion、document symbol を提供する。
   - timeline_create/view/analyze
   - event_create/update
   - foreshadowing_create/view
-  - subplot_create/view
+  - plot_create/view
   - beat_create, intersection_create
   - phase_create/view
 - 自然言語 intent analysis と command mapping
@@ -192,7 +192,7 @@ tokens、code lens、completion、document symbol を提供する。
 - character graph
 - timeline graph
 - foreshadowing graph
-- subplot graph
+- plot graph
 - consistency check
 - orphan character rule
 - unresolved foreshadowing rule
@@ -206,7 +206,7 @@ tokens、code lens、completion、document symbol を提供する。
 
 維持対象:
 
-- character/setting/foreshadowing/timeline/subplot/manuscript の Markdown
+- character/setting/foreshadowing/timeline/plot/manuscript の Markdown
   ドキュメント生成
 - frontmatter 付き RAG ドキュメント
 - chunking: document, scene, auto
@@ -252,7 +252,7 @@ tokens、code lens、completion、document symbol を提供する。
 - migration: interface, registry, v1 to v2, setting migration
 - RAG: chunker, incremental, templates, CLI wrapper
 - release/CI/install: deno tasks, workflow, build manifest, install script
-- performance: subplot validation/graph/RAG for 100 items
+- performance: plot validation/graph/RAG for 100 items
 
 Go移行後も最低限、同等のテスト層を分けて維持する必要がある。
 
@@ -454,7 +454,7 @@ Go版との互換性検証に使用するサンプルプロジェクト:
 - `samples/cinderella` - 基本的なキャラクター・設定・伏線構造
 - `samples/momotaro` - Timeline/Event の因果関係と phaseChange
 - `samples/mistery/old-letter-mystery` - 複雑な
-  Subplot/Intersection、高度な検出ルール
+  Plot/Intersection、高度な検出ルール
 
 これらサンプルで以下が成功することを Go版受け入れ条件とする:
 
@@ -472,8 +472,8 @@ Go版との互換性検証に使用するサンプルプロジェクト:
 | generate                                             | `generate`          | -                                                                                      |
 | meta                                                 | `meta`              | check, generate, watch, sync                                                           |
 | lsp                                                  | `lsp`               | start, install, validate                                                               |
-| element                                              | `element`           | character, setting, timeline, event, foreshadowing, subplot, beat, intersection, phase |
-| view                                                 | `view`              | character, setting, timeline, foreshadowing, subplot, browser                          |
+| element                                              | `element`           | character, setting, timeline, event, foreshadowing, plot, beat, intersection, phase |
+| view                                                 | `view`              | character, setting, timeline, foreshadowing, plot, browser                          |
 | mcp                                                  | `mcp`               | start, init                                                                            |
 | lint                                                 | `lint`              | -                                                                                      |
 | help                                                 | `help`              | -                                                                                      |
