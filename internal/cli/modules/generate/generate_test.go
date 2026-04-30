@@ -54,6 +54,37 @@ func TestGenerate_DefaultTemplate(t *testing.T) {
 	}
 }
 
+func TestGenerate_McpJsonCreated(t *testing.T) {
+	root := t.TempDir()
+	cctx, _, errBuf := newCtx([]string{"--name", "demo"}, false, root)
+	if code := New().Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	mcpPath := filepath.Join(root, "demo", ".mcp.json")
+	if _, err := os.Stat(mcpPath); err != nil {
+		t.Fatalf(".mcp.json not created: %v", err)
+	}
+	raw, err := os.ReadFile(mcpPath)
+	if err != nil {
+		t.Fatalf("read .mcp.json: %v", err)
+	}
+	var parsed map[string]any
+	if err := json.Unmarshal(raw, &parsed); err != nil {
+		t.Fatalf(".mcp.json is not valid JSON: %v", err)
+	}
+	servers, ok := parsed["mcpServers"].(map[string]any)
+	if !ok {
+		t.Fatalf("mcpServers missing or wrong type")
+	}
+	st, ok := servers["storyteller"].(map[string]any)
+	if !ok {
+		t.Fatalf("mcpServers.storyteller missing or wrong type")
+	}
+	if st["command"] != "storyteller" {
+		t.Errorf("mcpServers.storyteller.command = %q, want \"storyteller\"", st["command"])
+	}
+}
+
 func TestGenerate_AllTemplates(t *testing.T) {
 	for _, tmpl := range []string{"basic", "novel", "screenplay", "unknown_template"} {
 		t.Run(tmpl, func(t *testing.T) {
