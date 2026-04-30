@@ -22,3 +22,4 @@ coverage.out
 
 # Serena MCP local config (contains absolute home paths, environment-specific)
 serena_config.yml
+.brv/
