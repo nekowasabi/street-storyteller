@@ -82,15 +82,15 @@ func TestStore_AddAndGet_Timeline(t *testing.T) {
 	}
 }
 
-func TestStore_AddAndGet_Subplot(t *testing.T) {
+func TestStore_AddAndGet_Plot(t *testing.T) {
 	s := New()
-	p := &domain.Subplot{ID: "love_story", Name: "恋愛軸"}
-	if err := s.AddSubplot(p); err != nil {
-		t.Fatalf("AddSubplot: %v", err)
+	p := &domain.Plot{ID: "love_story", Name: "恋愛軸"}
+	if err := s.AddPlot(p); err != nil {
+		t.Fatalf("AddPlot: %v", err)
 	}
-	got, err := s.Subplot("love_story")
+	got, err := s.Plot("love_story")
 	if err != nil {
-		t.Fatalf("Subplot: %v", err)
+		t.Fatalf("Plot: %v", err)
 	}
 	if got != p {
 		t.Fatalf("pointer mismatch")
@@ -135,10 +135,10 @@ func TestStore_DuplicateID_ReturnsEntityConflict(t *testing.T) {
 	}
 	mustErrorCode(t, s.AddTimeline(&domain.Timeline{ID: "t", Name: "t2"}), apperrors.CodeEntityConflict)
 
-	if err := s.AddSubplot(&domain.Subplot{ID: "p", Name: "p"}); err != nil {
+	if err := s.AddPlot(&domain.Plot{ID: "p", Name: "p"}); err != nil {
 		t.Fatal(err)
 	}
-	mustErrorCode(t, s.AddSubplot(&domain.Subplot{ID: "p", Name: "p2"}), apperrors.CodeEntityConflict)
+	mustErrorCode(t, s.AddPlot(&domain.Plot{ID: "p", Name: "p2"}), apperrors.CodeEntityConflict)
 
 	if err := s.AddCharacterPhase(&domain.CharacterPhase{ID: "ph", Name: "ph"}); err != nil {
 		t.Fatal(err)
@@ -156,7 +156,7 @@ func TestStore_MissingID_ReturnsNotFound(t *testing.T) {
 	mustErrorCode(t, err, apperrors.CodeNotFound)
 	_, err = s.Timeline("missing")
 	mustErrorCode(t, err, apperrors.CodeNotFound)
-	_, err = s.Subplot("missing")
+	_, err = s.Plot("missing")
 	mustErrorCode(t, err, apperrors.CodeNotFound)
 	_, err = s.CharacterPhase("missing")
 	mustErrorCode(t, err, apperrors.CodeNotFound)
@@ -270,7 +270,7 @@ func TestStore_FindByName_AcrossAllKinds(t *testing.T) {
 	if err := s.AddTimeline(&domain.Timeline{ID: "t", Name: "本編", DisplayNames: []string{"メイン"}}); err != nil {
 		t.Fatal(err)
 	}
-	if err := s.AddSubplot(&domain.Subplot{ID: "p", Name: "恋愛", DisplayNames: []string{"ロマンス"}}); err != nil {
+	if err := s.AddPlot(&domain.Plot{ID: "p", Name: "恋愛", DisplayNames: []string{"ロマンス"}}); err != nil {
 		t.Fatal(err)
 	}
 	if err := s.AddCharacterPhase(&domain.CharacterPhase{ID: "ph", Name: "覚醒", DisplayNames: []string{"目覚め"}}); err != nil {
@@ -282,7 +282,7 @@ func TestStore_FindByName_AcrossAllKinds(t *testing.T) {
 	}{
 		{KindForeshadowing, "古き予言"},
 		{KindTimeline, "メイン"},
-		{KindSubplot, "ロマンス"},
+		{KindPlot, "ロマンス"},
 		{KindCharacterPhase, "目覚め"},
 	}
 	for _, tc := range cases {
@@ -351,12 +351,12 @@ func TestStore_All_PreservesInsertionOrder(t *testing.T) {
 		t.Fatalf("timelines order broken")
 	}
 
-	p1 := &domain.Subplot{ID: "p1"}
-	p2 := &domain.Subplot{ID: "p2"}
-	_ = s.AddSubplot(p1)
-	_ = s.AddSubplot(p2)
-	if all := s.AllSubplots(); len(all) != 2 || all[0] != p1 || all[1] != p2 {
-		t.Fatalf("subplots order broken")
+	p1 := &domain.Plot{ID: "p1"}
+	p2 := &domain.Plot{ID: "p2"}
+	_ = s.AddPlot(p1)
+	_ = s.AddPlot(p2)
+	if all := s.AllPlots(); len(all) != 2 || all[0] != p1 || all[1] != p2 {
+		t.Fatalf("plots order broken")
 	}
 
 	ph1 := &domain.CharacterPhase{ID: "ph1"}
@@ -374,7 +374,7 @@ func TestStore_AddNil_ReturnsValidation(t *testing.T) {
 	mustErrorCode(t, s.AddSetting(nil), apperrors.CodeValidation)
 	mustErrorCode(t, s.AddForeshadowing(nil), apperrors.CodeValidation)
 	mustErrorCode(t, s.AddTimeline(nil), apperrors.CodeValidation)
-	mustErrorCode(t, s.AddSubplot(nil), apperrors.CodeValidation)
+	mustErrorCode(t, s.AddPlot(nil), apperrors.CodeValidation)
 	mustErrorCode(t, s.AddCharacterPhase(nil), apperrors.CodeValidation)
 }
 

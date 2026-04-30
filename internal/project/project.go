@@ -96,7 +96,7 @@ func Load(projectRoot string) (*Project, error) {
 		{kind: "setting", dir: m.Paths.Settings, load: loadSettingIntoStore(st)},
 		{kind: "foreshadowing", dir: m.Paths.Foreshadowings, load: loadForeshadowingIntoStore(st)},
 		{kind: "timeline", dir: m.Paths.Timelines, load: loadTimelineIntoStore(st)},
-		{kind: "subplot", dir: m.Paths.Subplots, load: loadSubplotIntoStore(st)},
+		{kind: "plot", dir: m.Paths.Plots, load: loadPlotIntoStore(st)},
 	}
 	for _, w := range walkers {
 		if err := walkKindDir(abs, w); err != nil {
@@ -255,18 +255,18 @@ func loadTimelineIntoStore(st *store.Store) func(string) error {
 	}
 }
 
-func loadSubplotIntoStore(st *store.Store) func(string) error {
+func loadPlotIntoStore(st *store.Store) func(string) error {
 	return func(path string) error {
 		f, err := os.Open(path)
 		if err != nil {
 			return apperrors.Wrap(err, apperrors.CodeIO, "open "+path)
 		}
 		defer f.Close()
-		sp, err := entity.LoadSubplot(f)
+		sp, err := entity.LoadPlot(f)
 		if err != nil {
 			return err
 		}
-		return st.AddSubplot(sp)
+		return st.AddPlot(sp)
 	}
 }
 
@@ -278,6 +278,6 @@ var (
 	_ = (*store.Store)(nil).AddSetting
 	_ = (*store.Store)(nil).AddForeshadowing
 	_ = (*store.Store)(nil).AddTimeline
-	_ = (*store.Store)(nil).AddSubplot
+	_ = (*store.Store)(nil).AddPlot
 	_ = domain.Character{} // ensure domain import remains required
 )

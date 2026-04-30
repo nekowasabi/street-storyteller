@@ -138,7 +138,7 @@ func TestLoad_AppliesDefaultPaths_WhenPathsOmitted(t *testing.T) {
 		Settings:       "src/settings",
 		Foreshadowings: "src/foreshadowings",
 		Timelines:      "src/timelines",
-		Subplots:       "src/subplots",
+		Plots:          "src/plots",
 		Manuscripts:    "manuscripts",
 	}
 	if got.Paths != want {
@@ -177,8 +177,8 @@ func TestLoad_PartialPathsOverride_KeepsDefaultsForOmitted(t *testing.T) {
 	if got.Paths.Timelines != "src/timelines" {
 		t.Errorf("Paths.Timelines = %q, want default %q", got.Paths.Timelines, "src/timelines")
 	}
-	if got.Paths.Subplots != "src/subplots" {
-		t.Errorf("Paths.Subplots = %q, want default %q", got.Paths.Subplots, "src/subplots")
+	if got.Paths.Plots != "src/plots" {
+		t.Errorf("Paths.Plots = %q, want default %q", got.Paths.Plots, "src/plots")
 	}
 }
 

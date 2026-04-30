@@ -1,6 +1,6 @@
 // Package entity reads single-entity TS source files (`export const NAME = {...};`)
 // and maps the raw object literal into the corresponding domain struct
-// (Character, Setting, Foreshadowing, Timeline, Subplot, CharacterPhase).
+// (Character, Setting, Foreshadowing, Timeline, Plot, CharacterPhase).
 //
 // Why: storyteller projects ship entity definitions as TypeScript const literals.
 // Migrating to Go requires a typed loader so transports (CLI / LSP / MCP) can

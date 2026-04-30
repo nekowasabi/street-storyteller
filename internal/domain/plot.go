@@ -1,14 +1,14 @@
 package domain
 
-// This file bundles Subplot, PlotBeat, PlotIntersection and SubplotRelations.
-// All four types share the same conceptual cluster (a subplot is composed of
-// beats and connected to other subplots through intersections), so co-locating
+// This file bundles Plot, PlotBeat, PlotIntersection and PlotRelations.
+// All four types share the same conceptual cluster (a plot is composed of
+// beats and connected to other plots through intersections), so co-locating
 // them keeps the cross-references local and avoids exposing intermediate
 // helpers.
 //
-// Why: Adopt string-typed const enums (e.g. `type SubplotType string`) instead
+// Why: Adopt string-typed const enums (e.g. `type PlotType string`) instead
 // of int-iota. Reasons:
-//   - JSON round-trip with src/type/v2/subplot.ts uses literal strings as the
+//   - JSON round-trip with src/type/v2/plot.ts uses literal strings as the
 //     source of truth; matching the wire representation by value avoids a
 //     translation table on every marshal/unmarshal.
 //   - Mission spec (WT-A1-5) explicitly mandates this representation.
@@ -20,38 +20,47 @@ package domain
 // 旧 inline anonymous struct (Inline/FileRef) は撤去し、Character / Setting /
 // Foreshadowing / Timeline と同じ型で統一する。
 
-// SubplotType classifies a plot line by narrative role.
+// PlotType classifies a plot line by narrative role.
 //
-// TS source: `"main" | "subplot" | "parallel" | "background"`
-// (src/type/v2/subplot.ts).
-type SubplotType string
+// TS source: `"main" | "sub" | "parallel" | "background"`
+// (src/type/v2/plot.ts).
+type PlotType string
 
 const (
-	SubplotTypeMain       SubplotType = "main"
-	SubplotTypeSubplot    SubplotType = "subplot"
-	SubplotTypeParallel   SubplotType = "parallel"
-	SubplotTypeBackground SubplotType = "background"
+	PlotTypeMain       PlotType = "main"
+	PlotTypeSub        PlotType = "sub"
+	PlotTypeParallel   PlotType = "parallel"
+	PlotTypeBackground PlotType = "background"
 )
 
-// SubplotStatus tracks lifecycle progression of a subplot.
-type SubplotStatus string
+func IsValidPlotType(v PlotType) bool {
+	switch v {
+	case PlotTypeMain, PlotTypeSub, PlotTypeParallel, PlotTypeBackground:
+		return true
+	default:
+		return false
+	}
+}
+
+// PlotStatus tracks lifecycle progression of a plot.
+type PlotStatus string
 
 const (
-	SubplotStatusActive    SubplotStatus = "active"
-	SubplotStatusCompleted SubplotStatus = "completed"
+	PlotStatusActive    PlotStatus = "active"
+	PlotStatusCompleted PlotStatus = "completed"
 )
 
-// SubplotImportance flags how central a subplot is to the overall story.
-type SubplotImportance string
+// PlotImportance flags how central a plot is to the overall story.
+type PlotImportance string
 
 const (
-	SubplotImportanceMajor SubplotImportance = "major"
-	SubplotImportanceMinor SubplotImportance = "minor"
+	PlotImportanceMajor PlotImportance = "major"
+	PlotImportanceMinor PlotImportance = "minor"
 )
 
-// FocusCharacterPriority records how strongly a character drives a subplot.
+// FocusCharacterPriority records how strongly a character drives a plot.
 //
-// TS source: `Record<string, "primary" | "secondary">` on Subplot.focusCharacters.
+// TS source: `Record<string, "primary" | "secondary">` on Plot.focusCharacters.
 type FocusCharacterPriority string
 
 const (
@@ -61,7 +70,7 @@ const (
 
 // StructurePosition labels where a beat sits in the narrative arc.
 //
-// TS source: BeatStructurePosition in src/type/v2/subplot.ts.
+// TS source: BeatStructurePosition in src/type/v2/plot.ts.
 // Five-stage arc (setup, rising, climax, falling, resolution).
 type StructurePosition string
 
@@ -93,7 +102,7 @@ const (
 	InfluenceLevelLow    InfluenceLevel = "low"
 )
 
-// PlotBeat is one narrative beat inside a Subplot. Beats are also the
+// PlotBeat is one narrative beat inside a Plot. Beats are also the
 // connection points referenced by PlotIntersection.
 type PlotBeat struct {
 	// Required identity & content
@@ -111,14 +120,14 @@ type PlotBeat struct {
 	PreconditionBeatIDs []string
 }
 
-// PlotIntersection links a beat in one subplot to a beat in another, modelling
+// PlotIntersection links a beat in one plot to a beat in another, modelling
 // how plotlines influence each other.
 type PlotIntersection struct {
 	// Required identity & link surface.
 	ID                 string
-	SourceSubplotID    string
+	SourcePlotID       string
 	SourceBeatID       string
-	TargetSubplotID    string
+	TargetPlotID       string
 	TargetBeatID       string
 	Summary            string
 	InfluenceDirection InfluenceDirection
@@ -127,41 +136,41 @@ type PlotIntersection struct {
 	InfluenceLevel *InfluenceLevel
 }
 
-// SubplotDetails carries optional long-form descriptive fields. Each field
+// PlotDetails carries optional long-form descriptive fields. Each field
 // uses the shared StringOrFileRef union (see file header comment).
-type SubplotDetails struct {
+type PlotDetails struct {
 	Description StringOrFileRef
 	Theme       StringOrFileRef
 	Notes       StringOrFileRef
 }
 
-// SubplotRelations records cross-entity ID references owned by a Subplot.
+// PlotRelations records cross-entity ID references owned by a Plot.
 // Characters/Settings are required (always present, possibly empty); the rest
 // are optional and default to nil.
-type SubplotRelations struct {
-	Characters      []string
-	Settings        []string
-	Foreshadowings  []string // optional (nil = absent)
-	RelatedSubplots []string // optional
+type PlotRelations struct {
+	Characters     []string
+	Settings       []string
+	Foreshadowings []string // optional (nil = absent)
+	RelatedPlots   []string // optional
 }
 
-// Subplot is a single plot line composed of ordered beats and connected to
-// other subplots through intersections.
-type Subplot struct {
+// Plot is a single plot line composed of ordered beats and connected to
+// other plots through intersections.
+type Plot struct {
 	// Required identity & metadata
 	ID      string
 	Name    string
-	Type    SubplotType
-	Status  SubplotStatus
+	Type    PlotType
+	Status  PlotStatus
 	Summary string
 	Beats   []PlotBeat
 
 	// Optional structural information
 	FocusCharacters map[string]FocusCharacterPriority // nil = absent
 	Intersections   []PlotIntersection                // nil = absent
-	Importance      *SubplotImportance                // nil = absent
-	ParentSubplotID *string                           // nil = top-level
+	Importance      *PlotImportance                   // nil = absent
+	ParentPlotID    *string                           // nil = top-level
 	DisplayNames    []string                          // nil = absent
-	Details         *SubplotDetails                   // nil = absent
-	Relations       *SubplotRelations                 // nil = absent
+	Details         *PlotDetails                      // nil = absent
+	Relations       *PlotRelations                    // nil = absent
 }

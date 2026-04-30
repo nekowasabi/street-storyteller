@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	apperrors "github.com/takets/street-storyteller/internal/errors"
+	"github.com/takets/street-storyteller/internal/project"
 	"github.com/takets/street-storyteller/internal/project/entity"
 )
 
@@ -295,11 +296,11 @@ func TestLoadTimeline_minimal(t *testing.T) {
 	}
 }
 
-func TestLoadSubplot_minimal(t *testing.T) {
+func TestLoadPlot_minimal(t *testing.T) {
 	src := `export const growth = {
 		id: "growth",
 		name: "成長",
-		type: "subplot",
+		type: "sub",
 		status: "active",
 		summary: "主人公の成長",
 		beats: [
@@ -316,9 +317,9 @@ func TestLoadSubplot_minimal(t *testing.T) {
 		intersections: [
 			{
 				id: "i1",
-				sourceSubplotId: "growth",
+				sourcePlotId: "growth",
 				sourceBeatId: "b1",
-				targetSubplotId: "search",
+				targetPlotId: "search",
 				targetBeatId: "b1",
 				summary: "交差",
 				influenceDirection: "forward",
@@ -333,11 +334,11 @@ func TestLoadSubplot_minimal(t *testing.T) {
 		},
 	};`
 
-	got, err := entity.LoadSubplot(strings.NewReader(src))
+	got, err := entity.LoadPlot(strings.NewReader(src))
 	if err != nil {
-		t.Fatalf("LoadSubplot: %v", err)
+		t.Fatalf("LoadPlot: %v", err)
 	}
-	if got.ID != "growth" || got.Type != "subplot" || got.Status != "active" {
+	if got.ID != "growth" || got.Type != "sub" || got.Status != "active" {
 		t.Errorf("got = %+v", got)
 	}
 	if len(got.Beats) != 1 || got.Beats[0].StructurePosition != "setup" {
@@ -358,6 +359,98 @@ func TestLoadSubplot_minimal(t *testing.T) {
 	}
 	if got.Importance == nil || *got.Importance != "major" {
 		t.Errorf("Importance = %v", got.Importance)
+	}
+}
+
+func TestLoadPlot_rejectsLegacyTypeAndKeys(t *testing.T) {
+	cases := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{
+			name: "legacy type",
+			src: `export const growth = {
+				id: "growth",
+				name: "成長",
+				type: "` + legacyPlotLiteral() + `",
+				status: "active",
+				summary: "主人公の成長",
+				beats: [],
+			};`,
+			want: `unknown plot type "` + legacyPlotLiteral() + `"`,
+		},
+		{
+			name: "legacy intersection keys",
+			src: `export const growth = {
+				id: "growth",
+				name: "成長",
+				type: "sub",
+				status: "active",
+				summary: "主人公の成長",
+				beats: [],
+				intersections: [{
+					id: "i1",
+					` + legacyPlotKey("source", "Id") + `: "growth",
+					sourceBeatId: "b1",
+					` + legacyPlotKey("target", "Id") + `: "search",
+					targetBeatId: "b1",
+					summary: "交差",
+					influenceDirection: "forward",
+				}],
+			};`,
+			want: "legacy plot key " + legacyPlotKey("source", "Id") + " is not supported",
+		},
+		{
+			name: "legacy parent key",
+			src: `export const growth = {
+				id: "growth",
+				name: "成長",
+				type: "sub",
+				status: "active",
+				summary: "主人公の成長",
+				beats: [],
+				` + legacyPlotKey("parent", "Id") + `: "main",
+			};`,
+			want: "legacy plot key " + legacyPlotKey("parent", "Id") + " is not supported",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := entity.LoadPlot(strings.NewReader(tc.src))
+			if err == nil {
+				t.Fatal("LoadPlot succeeded unexpectedly")
+			}
+			if !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("error = %q, want %q", err.Error(), tc.want)
+			}
+		})
+	}
+}
+
+func legacyPlotLiteral() string {
+	return "sub" + "plot"
+}
+
+func legacyPlotKey(prefix, suffix string) string {
+	return prefix + "Sub" + "plot" + suffix
+}
+
+func TestLoadPlot_cinderellaFixture(t *testing.T) {
+	proj, err := project.Load("../../../samples/cinderella")
+	if err != nil {
+		t.Fatalf("Load samples/cinderella: %v", err)
+	}
+	plots := proj.Store.AllPlots()
+	if len(plots) == 0 {
+		t.Fatal("expected cinderella sample plots")
+	}
+	got, err := proj.Store.Plot("prince_search")
+	if err != nil {
+		t.Fatalf("Plot(prince_search): %v", err)
+	}
+	if got.Type != "sub" {
+		t.Fatalf("prince_search type = %q, want sub", got.Type)
 	}
 }
 

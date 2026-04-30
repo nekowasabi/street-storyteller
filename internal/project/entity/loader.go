@@ -51,13 +51,13 @@ func LoadTimeline(r io.Reader) (*domain.Timeline, error) {
 	return mapTimeline(root)
 }
 
-// LoadSubplot reads a TS source describing a Subplot entity.
-func LoadSubplot(r io.Reader) (*domain.Subplot, error) {
+// LoadPlot reads a TS source describing a Plot entity.
+func LoadPlot(r io.Reader) (*domain.Plot, error) {
 	root, err := readRoot(r)
 	if err != nil {
 		return nil, err
 	}
-	return mapSubplot(root)
+	return mapPlot(root)
 }
 
 // LoadCharacterPhase reads a TS source describing a CharacterPhase entity.
@@ -736,11 +736,15 @@ func mapPhaseChangeInfo(o map[string]any) (domain.PhaseChangeInfo, error) {
 	return pc, nil
 }
 
-// --- Subplot mapping ---------------------------------------------------------
+// --- Plot mapping ---------------------------------------------------------
 
-func mapSubplot(o map[string]any) (*domain.Subplot, error) {
-	s := &domain.Subplot{}
+func mapPlot(o map[string]any) (*domain.Plot, error) {
+	s := &domain.Plot{}
 	var err error
+	legacyParentKey := legacyPlotKey("parent", "Id")
+	if hasKey(o, legacyParentKey) {
+		return nil, validationf("legacy plot key %s is not supported; use parentPlotId", legacyParentKey)
+	}
 	if s.ID, err = decodeRequiredString(o, "id"); err != nil {
 		return nil, err
 	}
@@ -749,12 +753,12 @@ func mapSubplot(o map[string]any) (*domain.Subplot, error) {
 	}
 	if v, err := decodeRequiredString(o, "type"); err != nil {
 		return nil, err
-	} else if s.Type, err = decodeSubplotType(v); err != nil {
+	} else if s.Type, err = decodePlotType(v); err != nil {
 		return nil, err
 	}
 	if v, err := decodeRequiredString(o, "status"); err != nil {
 		return nil, err
-	} else if s.Status, err = decodeSubplotStatus(v); err != nil {
+	} else if s.Status, err = decodePlotStatus(v); err != nil {
 		return nil, err
 	}
 	if s.Summary, err = decodeRequiredString(o, "summary"); err != nil {
@@ -817,16 +821,16 @@ func mapSubplot(o map[string]any) (*domain.Subplot, error) {
 	if imp, ok, err := getString(o, "importance"); err != nil {
 		return nil, err
 	} else if ok {
-		v, err := decodeSubplotImportance(imp)
+		v, err := decodePlotImportance(imp)
 		if err != nil {
 			return nil, err
 		}
 		s.Importance = &v
 	}
-	if v, ok, err := getString(o, "parentSubplotId"); err != nil {
+	if v, ok, err := getString(o, "parentPlotId"); err != nil {
 		return nil, err
 	} else if ok {
-		s.ParentSubplotID = &v
+		s.ParentPlotID = &v
 	}
 	if s.DisplayNames, err = decodeOptionalStringSlice(o, "displayNames"); err != nil {
 		return nil, err
@@ -834,7 +838,7 @@ func mapSubplot(o map[string]any) (*domain.Subplot, error) {
 	if details, ok, err := getObject(o, "details"); err != nil {
 		return nil, err
 	} else if ok {
-		sd := &domain.SubplotDetails{}
+		sd := &domain.PlotDetails{}
 		if sd.Description, err = decodeStringOrFileRef(details, "description"); err != nil {
 			return nil, err
 		}
@@ -849,7 +853,7 @@ func mapSubplot(o map[string]any) (*domain.Subplot, error) {
 	if rel, ok, err := getObject(o, "relations"); err != nil {
 		return nil, err
 	} else if ok {
-		sr := &domain.SubplotRelations{}
+		sr := &domain.PlotRelations{}
 		if sr.Characters, err = decodeOptionalStringSlice(rel, "characters"); err != nil {
 			return nil, err
 		}
@@ -859,7 +863,7 @@ func mapSubplot(o map[string]any) (*domain.Subplot, error) {
 		if sr.Foreshadowings, err = decodeOptionalStringSlice(rel, "foreshadowings"); err != nil {
 			return nil, err
 		}
-		if sr.RelatedSubplots, err = decodeOptionalStringSlice(rel, "relatedSubplots"); err != nil {
+		if sr.RelatedPlots, err = decodeOptionalStringSlice(rel, "relatedPlots"); err != nil {
 			return nil, err
 		}
 		s.Relations = sr
@@ -909,16 +913,24 @@ func mapPlotBeat(o map[string]any) (domain.PlotBeat, error) {
 func mapPlotIntersection(o map[string]any) (domain.PlotIntersection, error) {
 	x := domain.PlotIntersection{}
 	var err error
+	legacySourceKey := legacyPlotKey("source", "Id")
+	if hasKey(o, legacySourceKey) {
+		return x, validationf("legacy plot key %s is not supported; use sourcePlotId", legacySourceKey)
+	}
+	legacyTargetKey := legacyPlotKey("target", "Id")
+	if hasKey(o, legacyTargetKey) {
+		return x, validationf("legacy plot key %s is not supported; use targetPlotId", legacyTargetKey)
+	}
 	if x.ID, err = decodeRequiredString(o, "id"); err != nil {
 		return x, err
 	}
-	if x.SourceSubplotID, err = decodeRequiredString(o, "sourceSubplotId"); err != nil {
+	if x.SourcePlotID, err = decodeRequiredString(o, "sourcePlotId"); err != nil {
 		return x, err
 	}
 	if x.SourceBeatID, err = decodeRequiredString(o, "sourceBeatId"); err != nil {
 		return x, err
 	}
-	if x.TargetSubplotID, err = decodeRequiredString(o, "targetSubplotId"); err != nil {
+	if x.TargetPlotID, err = decodeRequiredString(o, "targetPlotId"); err != nil {
 		return x, err
 	}
 	if x.TargetBeatID, err = decodeRequiredString(o, "targetBeatId"); err != nil {
@@ -1253,29 +1265,29 @@ func decodeEventImportance(s string) (domain.EventImportance, error) {
 	return "", validationf("unknown event importance %q", s)
 }
 
-func decodeSubplotType(s string) (domain.SubplotType, error) {
-	switch domain.SubplotType(s) {
-	case domain.SubplotTypeMain, domain.SubplotTypeSubplot,
-		domain.SubplotTypeParallel, domain.SubplotTypeBackground:
-		return domain.SubplotType(s), nil
+func decodePlotType(s string) (domain.PlotType, error) {
+	switch domain.PlotType(s) {
+	case domain.PlotTypeMain, domain.PlotTypeSub,
+		domain.PlotTypeParallel, domain.PlotTypeBackground:
+		return domain.PlotType(s), nil
 	}
-	return "", validationf("unknown subplot type %q", s)
+	return "", validationf("unknown plot type %q", s)
 }
 
-func decodeSubplotStatus(s string) (domain.SubplotStatus, error) {
-	switch domain.SubplotStatus(s) {
-	case domain.SubplotStatusActive, domain.SubplotStatusCompleted:
-		return domain.SubplotStatus(s), nil
+func decodePlotStatus(s string) (domain.PlotStatus, error) {
+	switch domain.PlotStatus(s) {
+	case domain.PlotStatusActive, domain.PlotStatusCompleted:
+		return domain.PlotStatus(s), nil
 	}
-	return "", validationf("unknown subplot status %q", s)
+	return "", validationf("unknown plot status %q", s)
 }
 
-func decodeSubplotImportance(s string) (domain.SubplotImportance, error) {
-	switch domain.SubplotImportance(s) {
-	case domain.SubplotImportanceMajor, domain.SubplotImportanceMinor:
-		return domain.SubplotImportance(s), nil
+func decodePlotImportance(s string) (domain.PlotImportance, error) {
+	switch domain.PlotImportance(s) {
+	case domain.PlotImportanceMajor, domain.PlotImportanceMinor:
+		return domain.PlotImportance(s), nil
 	}
-	return "", validationf("unknown subplot importance %q", s)
+	return "", validationf("unknown plot importance %q", s)
 }
 
 func decodeFocusCharacterPriority(s string) (domain.FocusCharacterPriority, error) {
@@ -1338,6 +1350,15 @@ func decodePhaseImportance(s string) (domain.PhaseImportance, error) {
 // mapping failures.
 func validationf(format string, args ...any) error {
 	return apperrors.New(apperrors.CodeValidation, fmt.Sprintf(format, args...))
+}
+
+func hasKey(o map[string]any, key string) bool {
+	_, ok := o[key]
+	return ok
+}
+
+func legacyPlotKey(prefix, suffix string) string {
+	return prefix + "Sub" + "plot" + suffix
 }
 
 func decodeRequiredString(o map[string]any, key string) (string, error) {

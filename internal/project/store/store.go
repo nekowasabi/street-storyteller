@@ -20,7 +20,7 @@ const (
 	KindSetting        Kind = "setting"
 	KindForeshadowing  Kind = "foreshadowing"
 	KindTimeline       Kind = "timeline"
-	KindSubplot        Kind = "subplot"
+	KindPlot           Kind = "plot"
 	KindCharacterPhase Kind = "character_phase"
 )
 
@@ -61,7 +61,7 @@ type Store struct {
 	settings   kindIndex[domain.Setting]
 	fores      kindIndex[domain.Foreshadowing]
 	timelines  kindIndex[domain.Timeline]
-	subplots   kindIndex[domain.Subplot]
+	plots      kindIndex[domain.Plot]
 	phases     kindIndex[domain.CharacterPhase]
 }
 
@@ -72,7 +72,7 @@ func New() *Store {
 		settings:   newKindIndex[domain.Setting](),
 		fores:      newKindIndex[domain.Foreshadowing](),
 		timelines:  newKindIndex[domain.Timeline](),
-		subplots:   newKindIndex[domain.Subplot](),
+		plots:      newKindIndex[domain.Plot](),
 		phases:     newKindIndex[domain.CharacterPhase](),
 	}
 }
@@ -256,10 +256,10 @@ func (s *Store) AllTimelines() []*domain.Timeline {
 }
 
 // ---------------------------------------------------------------------------
-// Subplot
+// Plot
 // ---------------------------------------------------------------------------
 
-func (s *Store) AddSubplot(p *domain.Subplot) error {
+func (s *Store) AddPlot(p *domain.Plot) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	var names []string
@@ -271,20 +271,20 @@ func (s *Store) AddSubplot(p *domain.Subplot) error {
 	if p != nil {
 		id = p.ID
 	}
-	return addEntity(&s.subplots, p, id, names)
+	return addEntity(&s.plots, p, id, names)
 }
 
-func (s *Store) Subplot(id string) (*domain.Subplot, error) {
+func (s *Store) Plot(id string) (*domain.Plot, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	return getByID(&s.subplots, KindSubplot, id)
+	return getByID(&s.plots, KindPlot, id)
 }
 
-func (s *Store) AllSubplots() []*domain.Subplot {
+func (s *Store) AllPlots() []*domain.Plot {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
-	out := make([]*domain.Subplot, len(s.subplots.order))
-	copy(out, s.subplots.order)
+	out := make([]*domain.Plot, len(s.plots.order))
+	copy(out, s.plots.order)
 	return out
 }
 
@@ -368,8 +368,8 @@ func (s *Store) FindByName(kind Kind, name string) ([]any, error) {
 			out = append(out, h)
 		}
 		return out, nil
-	case KindSubplot:
-		hits := s.subplots.byName[name]
+	case KindPlot:
+		hits := s.plots.byName[name]
 		out := make([]any, 0, len(hits))
 		for _, h := range hits {
 			out = append(out, h)
