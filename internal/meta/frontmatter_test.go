@@ -234,6 +234,100 @@ func TestEncode_NoFrontMatter_AddEntities_GeneratesBlock(t *testing.T) {
 	}
 }
 
+func TestFrontMatter_DetailRoundTrip(t *testing.T) {
+	src := []byte("---\nstoryteller:\n  type: character_detail\n  entity_id: cinderella\n  field: backstory\n---\n# Backstory\n本文\n")
+	doc, err := Parse(src)
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if got, want := doc.FrontMatter.Type, "character_detail"; got != want {
+		t.Errorf("Type = %q, want %q", got, want)
+	}
+	if got, want := doc.FrontMatter.EntityID, "cinderella"; got != want {
+		t.Errorf("EntityID = %q, want %q", got, want)
+	}
+	if got, want := doc.FrontMatter.Field, "backstory"; got != want {
+		t.Errorf("Field = %q, want %q", got, want)
+	}
+
+	encoded, err := doc.Encode()
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	doc2, err := Parse(encoded)
+	if err != nil {
+		t.Fatalf("re-Parse: %v", err)
+	}
+	if !reflect.DeepEqual(doc.FrontMatter, doc2.FrontMatter) {
+		t.Errorf("round-trip mismatch:\nbefore=%+v\nafter =%+v", doc.FrontMatter, doc2.FrontMatter)
+	}
+}
+
+func TestFrontMatter_DetailEncodeOrder(t *testing.T) {
+	doc := &Document{
+		FrontMatter: FrontMatter{
+			Type:     "setting_detail",
+			EntityID: "royal_capital",
+			Field:    "geography",
+		},
+		HasFrontMatter: true,
+		bodyRaw:        []byte("# Geography\n"),
+	}
+	encoded, err := doc.Encode()
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	want := "---\nstoryteller:\n  type: setting_detail\n  entity_id: royal_capital\n  field: geography\n---\n# Geography\n"
+	if string(encoded) != want {
+		t.Errorf("encode order mismatch:\nwant=%q\ngot =%q", want, string(encoded))
+	}
+}
+
+func TestFrontMatter_ManuscriptUnaffected(t *testing.T) {
+	content := mustReadFixture(t)
+	doc1, err := Parse(content)
+	if err != nil {
+		t.Fatalf("Parse: %v", err)
+	}
+	if doc1.FrontMatter.Type != "" || doc1.FrontMatter.EntityID != "" || doc1.FrontMatter.Field != "" {
+		t.Errorf("manuscript should have empty detail fields, got Type=%q EntityID=%q Field=%q",
+			doc1.FrontMatter.Type, doc1.FrontMatter.EntityID, doc1.FrontMatter.Field)
+	}
+	enc1, err := doc1.Encode()
+	if err != nil {
+		t.Fatalf("Encode: %v", err)
+	}
+	// detail フィールドを含まない (manuscript 出力に紛れ込まない)
+	if bytes.Contains(enc1, []byte("\n  type:")) ||
+		bytes.Contains(enc1, []byte("\n  entity_id:")) ||
+		bytes.Contains(enc1, []byte("\n  field:")) {
+		t.Errorf("manuscript encode leaked detail keys:\n%s", enc1)
+	}
+	// idempotency 維持
+	doc2, err := Parse(enc1)
+	if err != nil {
+		t.Fatalf("re-Parse: %v", err)
+	}
+	enc2, err := doc2.Encode()
+	if err != nil {
+		t.Fatalf("Encode #2: %v", err)
+	}
+	if !bytes.Equal(enc1, enc2) {
+		t.Errorf("manuscript round-trip not idempotent")
+	}
+}
+
+func TestFrontMatter_Kind(t *testing.T) {
+	manuscript := &Document{FrontMatter: FrontMatter{ChapterID: "chapter01"}}
+	if got, want := manuscript.Kind(), DocumentKindManuscript; got != want {
+		t.Errorf("Kind() for empty Type = %q, want %q", got, want)
+	}
+	detail := &Document{FrontMatter: FrontMatter{Type: "character_detail", EntityID: "hero", Field: "backstory"}}
+	if got, want := detail.Kind(), DocumentKindDetail; got != want {
+		t.Errorf("Kind() for non-empty Type = %q, want %q", got, want)
+	}
+}
+
 func TestEncode_NoFrontMatter_NoEdit_PreservesRaw(t *testing.T) {
 	plain := []byte("# 章タイトル\n本文だけ\n")
 	doc, err := Parse(plain)

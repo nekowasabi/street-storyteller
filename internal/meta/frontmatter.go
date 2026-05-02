@@ -13,15 +13,40 @@ import (
 // FrontMatter は manuscript の YAML FrontMatter の "storyteller:" 配下を表現する。
 // YAML 上は `storyteller:` で 1 段ネストするが、Go API としては flat に展開する。
 type FrontMatter struct {
-	ChapterID      string
-	Title          string
-	Order          int
-	Characters     []string
-	Settings       []string
-	Foreshadowings []string
-	TimelineEvents []string
-	Phases         []string
-	Timelines      []string
+	// Detail markdown 用フィールド (type / entity_id / field)。
+	// Why: detail md (例: cinderella_backstory.md) を LSP がジャンプ・ハイライトするため、
+	// manuscript フィールドと共存可能な形で導入する (排他にしない=将来拡張余地)。
+	Type     string `yaml:"type"`
+	EntityID string `yaml:"entity_id"`
+	Field    string `yaml:"field"`
+
+	ChapterID      string   `yaml:"chapter_id"`
+	Title          string   `yaml:"title"`
+	Order          int      `yaml:"order"`
+	Characters     []string `yaml:"characters"`
+	Settings       []string `yaml:"settings"`
+	Foreshadowings []string `yaml:"foreshadowings"`
+	TimelineEvents []string `yaml:"timeline_events"`
+	Phases         []string `yaml:"phases"`
+	Timelines      []string `yaml:"timelines"`
+}
+
+// DocumentKind は Document が manuscript か detail md かを表す。
+type DocumentKind string
+
+const (
+	DocumentKindManuscript DocumentKind = "manuscript"
+	DocumentKindDetail     DocumentKind = "detail"
+)
+
+// Kind は Type フィールドの有無で manuscript / detail を判別する。
+// Why: Type が空 → 既存の manuscript として扱い、非空 → detail md として扱う。
+// 既存の manuscript 挙動を破壊しないため、Type を識別子として採用 (chapter_id ではなく)。
+func (d *Document) Kind() DocumentKind {
+	if d.FrontMatter.Type == "" {
+		return DocumentKindManuscript
+	}
+	return DocumentKindDetail
 }
 
 // Document は manuscript ファイル全体を表現する。
@@ -86,7 +111,10 @@ func Parse(content []byte) (*Document, error) {
 // Why: Encode の三項分岐 (なし+空 / なし+非空 / あり) で用いる。
 // 「編集 API に HasFrontMatter を意識させる」のではなく、Encode 側で吸収する設計。
 func (f FrontMatter) isEmpty() bool {
-	return f.ChapterID == "" &&
+	return f.Type == "" &&
+		f.EntityID == "" &&
+		f.Field == "" &&
+		f.ChapterID == "" &&
 		f.Title == "" &&
 		f.Order == 0 &&
 		len(f.Characters) == 0 &&
@@ -108,6 +136,23 @@ func (d *Document) Encode() ([]byte, error) {
 	var buf bytes.Buffer
 	buf.WriteString("---\n")
 	buf.WriteString("storyteller:\n")
+	// Why: detail 用フィールドを先頭に配置 (type → entity_id → field)。
+	// manuscript 用フィールド (chapter_id 等) の出力順は既存 golden を壊さないよう温存する。
+	if d.FrontMatter.Type != "" {
+		buf.WriteString("  type: ")
+		buf.WriteString(quoteIfNeeded(d.FrontMatter.Type))
+		buf.WriteString("\n")
+	}
+	if d.FrontMatter.EntityID != "" {
+		buf.WriteString("  entity_id: ")
+		buf.WriteString(quoteIfNeeded(d.FrontMatter.EntityID))
+		buf.WriteString("\n")
+	}
+	if d.FrontMatter.Field != "" {
+		buf.WriteString("  field: ")
+		buf.WriteString(quoteIfNeeded(d.FrontMatter.Field))
+		buf.WriteString("\n")
+	}
 	if d.FrontMatter.ChapterID != "" {
 		buf.WriteString("  chapter_id: ")
 		buf.WriteString(quoteIfNeeded(d.FrontMatter.ChapterID))
@@ -325,6 +370,12 @@ func unquote(s string) string {
 
 func assignScalar(fm *FrontMatter, key, value string) {
 	switch key {
+	case "type":
+		fm.Type = value
+	case "entity_id":
+		fm.EntityID = value
+	case "field":
+		fm.Field = value
 	case "chapter_id":
 		fm.ChapterID = value
 	case "title":
