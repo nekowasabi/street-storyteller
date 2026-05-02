@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/takets/street-storyteller/internal/cli"
+	"github.com/takets/street-storyteller/internal/meta"
 )
 
 type Command struct {
@@ -46,29 +48,56 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 		opts.root = cwd
 	}
 
-	path, err := writeElement(opts.root, c.kind, opts)
+	// Why: detail flags は character/setting のみで意味を持つ。他 kind 指定時はエラーとし
+	// 暗黙の no-op で利用者を混乱させない。
+	if (opts.withDetails || len(opts.detailFields) > 0) && c.kind != "character" && c.kind != "setting" {
+		cctx.Presenter.ShowError(fmt.Sprintf("detail flags are only supported for character/setting, not %q", c.kind))
+		return 1
+	}
+
+	path, detailPaths, err := writeElement(opts.root, c.kind, opts)
 	if err != nil {
 		cctx.Presenter.ShowError(err.Error())
 		return 1
 	}
 	if cctx.GlobalOpts.JSON {
 		_ = cctx.Presenter.WriteJSON(struct {
-			Kind string `json:"kind"`
-			ID   string `json:"id"`
-			Path string `json:"path"`
-		}{Kind: c.kind, ID: opts.id, Path: path})
+			Kind        string   `json:"kind"`
+			ID          string   `json:"id"`
+			Path        string   `json:"path"`
+			DetailPaths []string `json:"detail_paths,omitempty"`
+		}{Kind: c.kind, ID: opts.id, Path: path, DetailPaths: detailPaths})
 		return 0
 	}
 	cctx.Presenter.ShowSuccess(fmt.Sprintf("created %s: %s", c.kind, path))
+	for _, dp := range detailPaths {
+		cctx.Presenter.ShowSuccess(fmt.Sprintf("created detail: %s", dp))
+	}
 	return 0
 }
 
 type options struct {
-	root    string
-	id      string
-	name    string
-	role    string
-	summary string
+	root         string
+	id           string
+	name         string
+	role         string
+	summary      string
+	withDetails  bool
+	detailFields []string // フィールド名のユニーク集合 (順序保持)
+}
+
+// addDetailField は重複を排除しつつ順序を保持して field を追加する。
+func (o *options) addDetailField(field string) {
+	field = strings.TrimSpace(field)
+	if field == "" {
+		return
+	}
+	for _, existing := range o.detailFields {
+		if existing == field {
+			return
+		}
+	}
+	o.detailFields = append(o.detailFields, field)
 }
 
 func parseOptions(args []string) (options, error) {
@@ -116,22 +145,129 @@ func parseOptions(args []string) (options, error) {
 			i++
 		case strings.HasPrefix(a, "--summary="):
 			opts.summary = strings.TrimPrefix(a, "--summary=")
+		case a == "--with-details":
+			opts.withDetails = true
+		case a == "--separate-files":
+			if i+1 >= len(args) {
+				return opts, fmt.Errorf("--separate-files requires a value")
+			}
+			opts.addDetailField(args[i+1])
+			i++
+		case strings.HasPrefix(a, "--separate-files="):
+			opts.addDetailField(strings.TrimPrefix(a, "--separate-files="))
+		case a == "--add-details":
+			if i+1 >= len(args) {
+				return opts, fmt.Errorf("--add-details requires a value")
+			}
+			for _, f := range strings.Split(args[i+1], ",") {
+				opts.addDetailField(f)
+			}
+			i++
+		case strings.HasPrefix(a, "--add-details="):
+			for _, f := range strings.Split(strings.TrimPrefix(a, "--add-details="), ",") {
+				opts.addDetailField(f)
+			}
 		}
 	}
 	return opts, nil
 }
 
-func writeElement(root, kind string, opts options) (string, error) {
+func writeElement(root, kind string, opts options) (string, []string, error) {
 	dir, typeName, body := elementTemplate(kind, opts)
 	path := filepath.Join(root, dir, opts.id+".ts")
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return "", err
+		return "", nil, err
 	}
 	content := fmt.Sprintf("import type { %s } from \"@storyteller/types/v2/%s.ts\";\n\nexport const %s: %s = %s;\n", typeName, importTypeFile(kind), opts.id, typeName, body)
 	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
-		return "", err
+		return "", nil, err
 	}
-	return path, nil
+
+	// Why: detail md は --separate-files / --add-details に列挙された field 分のみ生成。
+	// --with-details (フィールド指定なし) は TS 側 details:{} のみで md は生成しない。
+	detailPaths, err := writeDetailFiles(filepath.Dir(path), kind, opts)
+	if err != nil {
+		return "", nil, err
+	}
+	return path, detailPaths, nil
+}
+
+// writeDetailFiles は detailFields ごとに <id>_<field>.md を生成する。
+// 既存ファイルがある場合は上書きせずエラーを返す (data loss 防止)。
+func writeDetailFiles(dir, kind string, opts options) ([]string, error) {
+	if len(opts.detailFields) == 0 {
+		return nil, nil
+	}
+	docType := detailDocType(kind)
+	if docType == "" {
+		return nil, fmt.Errorf("detail md not supported for kind %q", kind)
+	}
+	out := make([]string, 0, len(opts.detailFields))
+	for _, field := range opts.detailFields {
+		mdPath := filepath.Join(dir, opts.id+"_"+field+".md")
+		if _, err := os.Stat(mdPath); err == nil {
+			return out, fmt.Errorf("detail file already exists: %s", mdPath)
+		} else if !os.IsNotExist(err) {
+			return out, err
+		}
+		doc := &meta.Document{
+			HasFrontMatter: true,
+			FrontMatter: meta.FrontMatter{
+				Type:     docType,
+				EntityID: opts.id,
+				Field:    field,
+			},
+		}
+		// bodyRaw 用プレースホルダ。Encode は bodyRaw を frontmatter 末尾に連結する。
+		body := fmt.Sprintf("\nTODO: %s を記述\n", field)
+		// Document.bodyRaw は非 export だが Encode は d.bodyRaw を読む。
+		// よって直接生成ではなく Parse 経由は不要 — 一旦 Encode して body を末尾に追記する。
+		encoded, err := doc.Encode()
+		if err != nil {
+			return out, err
+		}
+		final := append(encoded, []byte(body)...)
+		if err := os.WriteFile(mdPath, final, 0644); err != nil {
+			return out, err
+		}
+		out = append(out, mdPath)
+	}
+	return out, nil
+}
+
+func detailDocType(kind string) string {
+	switch kind {
+	case "character":
+		return "character_detail"
+	case "setting":
+		return "setting_detail"
+	default:
+		return ""
+	}
+}
+
+// detailsLiteral は TS の details オブジェクトリテラルを生成する。
+// withDetails=true かつ detailFields=[] → "{}"。
+// detailFields 非空 → 各 field を { file: "./<id>_<field>.md" } で展開。
+// 何もなければ空文字を返し、呼び出し側で details キー自体を省略する。
+func detailsLiteral(id string, opts options) string {
+	if !opts.withDetails && len(opts.detailFields) == 0 {
+		return ""
+	}
+	if len(opts.detailFields) == 0 {
+		return "{}"
+	}
+	// Why: 出力安定性のため field 名でソート。テスト golden 比較を容易にする。
+	fields := make([]string, len(opts.detailFields))
+	copy(fields, opts.detailFields)
+	sort.Strings(fields)
+	var b strings.Builder
+	b.WriteString("{\n")
+	for _, f := range fields {
+		fmt.Fprintf(&b, "    %s: { file: \"./%s_%s.md\" },\n", f, id, f)
+	}
+	b.WriteString("  }")
+	return b.String()
 }
 
 func elementTemplate(kind string, opts options) (dir, typeName, body string) {
@@ -145,9 +281,19 @@ func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 		if role == "" {
 			role = "supporting"
 		}
-		return "src/characters", "Character", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  role: %q,\n  traits: [],\n  relationships: {},\n  appearingChapters: [],\n  summary: %q,\n}", opts.id, opts.name, role, summary)
+		base := fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  role: %q,\n  traits: [],\n  relationships: {},\n  appearingChapters: [],\n  summary: %q,", opts.id, opts.name, role, summary)
+		if dl := detailsLiteral(opts.id, opts); dl != "" {
+			base += fmt.Sprintf("\n  details: %s,", dl)
+		}
+		base += "\n}"
+		return "src/characters", "Character", base
 	case "setting":
-		return "src/settings", "Setting", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"location\",\n  appearingChapters: [],\n  summary: %q,\n}", opts.id, opts.name, summary)
+		base := fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"location\",\n  appearingChapters: [],\n  summary: %q,", opts.id, opts.name, summary)
+		if dl := detailsLiteral(opts.id, opts); dl != "" {
+			base += fmt.Sprintf("\n  details: %s,", dl)
+		}
+		base += "\n}"
+		return "src/settings", "Setting", base
 	case "timeline":
 		return "src/timelines", "Timeline", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  scope: \"story\",\n  summary: %q,\n  events: [],\n}", opts.id, opts.name, summary)
 	case "foreshadowing":

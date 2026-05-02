@@ -1,0 +1,8 @@
+---
+storyteller:
+  type: character_detail
+  entity_id: hero
+  field: appearance
+---
+
+TODO: appearance を記述

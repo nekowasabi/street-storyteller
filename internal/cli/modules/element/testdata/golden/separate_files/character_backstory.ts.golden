@@ -1,0 +1,14 @@
+import type { Character } from "@storyteller/types/v2/character.ts";
+
+export const hero: Character = {
+  id: "hero",
+  name: "hero",
+  role: "protagonist",
+  traits: [],
+  relationships: {},
+  appearingChapters: [],
+  summary: "勇者",
+  details: {
+    backstory: { file: "./hero_backstory.md" },
+  },
+};

@@ -1,0 +1,8 @@
+---
+storyteller:
+  type: setting_detail
+  entity_id: castle
+  field: geography
+---
+
+TODO: geography を記述

@@ -1,0 +1,8 @@
+---
+storyteller:
+  type: character_detail
+  entity_id: hero
+  field: backstory
+---
+
+TODO: backstory を記述

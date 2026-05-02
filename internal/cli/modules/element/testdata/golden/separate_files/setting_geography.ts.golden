@@ -1,0 +1,12 @@
+import type { Setting } from "@storyteller/types/v2/setting.ts";
+
+export const castle: Setting = {
+  id: "castle",
+  name: "castle",
+  type: "location",
+  appearingChapters: [],
+  summary: "城",
+  details: {
+    geography: { file: "./castle_geography.md" },
+  },
+};

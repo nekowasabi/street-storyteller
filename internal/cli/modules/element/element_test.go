@@ -174,6 +174,105 @@ func TestElement_PathOverride(t *testing.T) {
 	}
 }
 
+func TestElement_SeparateFiles_CreatesTSAndMD(t *testing.T) {
+	root := t.TempDir()
+	cmd := New("character")
+	cctx, _, errBuf := newCtx(t, []string{"--id", "hero", "--separate-files", "backstory"}, false, root)
+	if code := cmd.Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	tsPath := filepath.Join(root, "src/characters/hero.ts")
+	mdPath := filepath.Join(root, "src/characters/hero_backstory.md")
+	tsBody, err := os.ReadFile(tsPath)
+	if err != nil {
+		t.Fatalf("ts not created: %v", err)
+	}
+	if !strings.Contains(string(tsBody), `backstory: { file: "./hero_backstory.md" }`) {
+		t.Errorf("ts missing details ref: %s", tsBody)
+	}
+	mdBody, err := os.ReadFile(mdPath)
+	if err != nil {
+		t.Fatalf("md not created: %v", err)
+	}
+	got := string(mdBody)
+	for _, want := range []string{"---\n", "storyteller:\n", "type: character_detail", "entity_id: hero", "field: backstory"} {
+		if !strings.Contains(got, want) {
+			t.Errorf("md missing %q in %s", want, got)
+		}
+	}
+}
+
+func TestElement_AddDetails_MultipleFields(t *testing.T) {
+	root := t.TempDir()
+	cmd := New("character")
+	cctx, _, errBuf := newCtx(t, []string{"--id", "hero", "--add-details", "appearance,personality"}, false, root)
+	if code := cmd.Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	for _, field := range []string{"appearance", "personality"} {
+		mdPath := filepath.Join(root, "src/characters/hero_"+field+".md")
+		body, err := os.ReadFile(mdPath)
+		if err != nil {
+			t.Fatalf("md %s not created: %v", field, err)
+		}
+		if !strings.Contains(string(body), "field: "+field) {
+			t.Errorf("md %s missing field: %s", field, body)
+		}
+	}
+	tsBody, _ := os.ReadFile(filepath.Join(root, "src/characters/hero.ts"))
+	if !strings.Contains(string(tsBody), `appearance: { file: "./hero_appearance.md" }`) ||
+		!strings.Contains(string(tsBody), `personality: { file: "./hero_personality.md" }`) {
+		t.Errorf("ts missing details refs: %s", tsBody)
+	}
+}
+
+func TestElement_WithDetails_Empty(t *testing.T) {
+	root := t.TempDir()
+	cmd := New("setting")
+	cctx, _, errBuf := newCtx(t, []string{"--id", "castle", "--with-details"}, false, root)
+	if code := cmd.Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	tsBody, err := os.ReadFile(filepath.Join(root, "src/settings/castle.ts"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(tsBody), "details: {}") {
+		t.Errorf("expected empty details: %s", tsBody)
+	}
+}
+
+func TestElement_DetailFlags_RejectedForNonCharacterSetting(t *testing.T) {
+	cmd := New("timeline")
+	cctx, _, errBuf := newCtx(t, []string{"--id", "t", "--separate-files", "x"}, false, t.TempDir())
+	if code := cmd.Handle(cctx); code != 1 {
+		t.Fatalf("exit=%d want 1", code)
+	}
+	if !strings.Contains(errBuf.String(), "detail flags") {
+		t.Errorf("expected detail flag error: %q", errBuf.String())
+	}
+}
+
+func TestElement_DetailFile_AlreadyExists(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src/characters"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	existing := filepath.Join(root, "src/characters/hero_backstory.md")
+	if err := os.WriteFile(existing, []byte("existing"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := New("character")
+	cctx, _, errBuf := newCtx(t, []string{"--id", "hero", "--separate-files", "backstory"}, false, root)
+	if code := cmd.Handle(cctx); code != 1 {
+		t.Fatalf("exit=%d want 1 stderr=%q", code, errBuf.String())
+	}
+	body, _ := os.ReadFile(existing)
+	if string(body) != "existing" {
+		t.Errorf("existing md was modified: %q", body)
+	}
+}
+
 func TestElement_Usage(t *testing.T) {
 	cmd := New("character").(*Command)
 	if !strings.Contains(cmd.Usage(), "character") {
