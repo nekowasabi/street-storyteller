@@ -83,6 +83,15 @@ MCPツールは以下の3分類に整理されています。詳細は `referenc
 | `entity-timeline.md`      | タイムライン・イベント操作            | timeline_view、timeline_analyze           |
 | `entity-subplot.md`       | サブプロット・beat・intersection 操作 | subplot_view、beat/intersection_create    |
 
+## detail markdown 作成
+
+ユーザーが「キャラクターの背景設定（backstory）/ 外見（appearance）/ 設定の地理（geography）等を別ファイルに分けたい」と要求した場合は、必ず以下に従う:
+
+1. **CLI 経由で作成する**: `storyteller element character --name <id> --separate-files <field>`（setting の場合は `--separate-files` も同様に使用可能）
+2. **frontmatter は手書きしない**: CLI が frontmatter を自動生成する。AI が直接 .md ファイルを Write してはいけない。
+3. **既存 detail md への field 追加**: `storyteller element character --name <id> --add-details <field>` を使う。
+4. **手動編集後の検証**: ユーザーが detail md を編集した場合は `meta_check`（または `storyteller meta check`）を実行し、frontmatter スキーマ違反がないことを確認する。
+
 ## Out of Scope
 
 本スキルでは以下を扱いません。
