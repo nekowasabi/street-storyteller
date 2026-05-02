@@ -17,6 +17,7 @@ Available commands:
   lsp validate           Validate a manuscript via the detect pipeline
   mcp init               Manage the Go MCP server (storyteller mcp init [--stdio])
   mcp start              Manage the Go MCP server (storyteller mcp start [--stdio])
+  meta annotate          Add or update detail frontmatter (type/entity_id/field) on an existing markdown file
   meta check             Validate manuscript frontmatter
   migrate                Migrate storyteller projects between breaking schema versions (storyteller migrate plot-rename [--path <project>] [--dry-run|--apply])
   update                 Update project metadata for the Go engine (storyteller update [--path <project>] [--check|--apply])

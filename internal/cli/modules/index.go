@@ -46,6 +46,9 @@ func RegisterCore(r cli.Registry) error {
 	if err := r.Register("meta check", metamod.New()); err != nil {
 		return err
 	}
+	if err := r.Register("meta annotate", metamod.NewAnnotate()); err != nil {
+		return err
+	}
 	if err := r.Register("lint", lintmod.New()); err != nil {
 		return err
 	}
