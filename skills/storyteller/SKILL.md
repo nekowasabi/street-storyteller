@@ -16,7 +16,7 @@ description: SaC (StoryWriting as Code) で物語プロジェクトを管理す�
 | ユーザーの言いたいこと | 推奨コマンド |
 |--------------------|-------------|
 | 新しい物語プロジェクトを始めたい | `storyteller generate --name <name> --template basic\|novel\|screenplay` |
-| キャラクターを追加したい | `storyteller element character --name <id> --role protagonist\|antagonist\|supporting\|guest --summary "..."` |
+| キャラクターを追加したい | `storyteller element character --id <id> --name <表示名> --role protagonist\|antagonist\|supporting\|guest --summary "..." [--display-names <csv>] [--aliases <csv>] [--pronouns <csv>]` |
 | 設定 (世界観・場所) を追加したい | `storyteller element setting --name <id> --type location\|culture\|history --summary "..."` |
 | タイムラインを作りたい | `storyteller element timeline --name <id> --scope story\|world\|character\|arc` |
 | イベントをタイムラインに追加 | `storyteller element event --timeline <id> --title "..." --category plot_point --order N` |
@@ -48,6 +48,7 @@ description: SaC (StoryWriting as Code) で物語プロジェクトを管理す�
 ### 3. 信頼度システムを活用する
 
 LSP は原稿中のキャラクター/設定参照を自動検出しますが、信頼度 85% 以下は曖昧と判定されます。この場合は `@キャラクター名` 形式で明示参照に変換するか、`displayNames` / `aliases` を型側で拡充します。Code Action (`textDocument/codeAction`) で自動変換提案も得られます。
+キャラクター作成時点で原稿中の呼び方が分かっている場合は、`--display-names "アレン,勇者"`、`--aliases "英雄"`、`--pronouns "彼"` を指定して初期ファイルへ反映します。値は単純なカンマ区切りで、空白と空要素は除外されます。
 
 ### 4. 出力フォーマットを目的別に使い分ける
 
@@ -61,14 +62,14 @@ LSP は原稿中のキャラクター/設定参照を自動検出しますが、
 |------|-----------|
 | `--name is required` エラー | `storyteller generate --name <識別子>` を必須指定 |
 | `meta check` で参照不整合 | 削除済み要素が他要素から参照されている。`view <type> --list` で全体を確認し、関連を手動修正 |
-| LSP の検出信頼度が低い | `displayNames` / `aliases` を充実させる、`detectionHints.commonPatterns` を追加する |
+| LSP の検出信頼度が低い | 生成時に `--display-names` / `--aliases` / `--pronouns` を指定する。既存ファイルでは `displayNames` / `aliases` / `pronouns` や `detectionHints.commonPatterns` を追加する |
 | textlint が動かない | textlint v14.8.0+ が `npx textlint` で起動可能か確認。グレースフルデグラデーションのため textlint なしでも storyteller 診断は動作します |
 | 原稿に登場人物紐付けを設定したい | MCP の `manuscript_binding` ツールを `action: add\|remove\|set`, `entityType: characters\|settings\|...` で実行 |
 
 ## 推奨ワークフロー (新規プロジェクト)
 
 1. `storyteller generate --name my_story --template basic` でスキャフォールド
-2. `storyteller element character --name protagonist --role protagonist --summary "..."` で主要キャラを定義
+2. `storyteller element character --id protagonist --name "主人公名" --role protagonist --summary "..." --display-names "主人公名,呼び名"` で主要キャラを定義
 3. `storyteller element setting --name main_world --type location --summary "..."` で世界観を定義
 4. `storyteller element timeline --name main_story --scope story --summary "..."` でタイムラインを作成
 5. `storyteller element event --timeline main_story --title "..." --category plot_point --order 1` でイベント追加

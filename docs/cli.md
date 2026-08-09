@@ -86,7 +86,7 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 
 | Kind | 主要フラグ |
 |------|----------|
-| `character` | `--role protagonist\|antagonist\|supporting\|guest` |
+| `character` | `--role protagonist\|antagonist\|supporting\|guest`, `--display-names <csv>`, `--aliases <csv>`, `--pronouns <csv>` |
 | `setting` | `--type location\|culture\|...` |
 | `timeline` | `--scope story\|world\|character\|arc` |
 | `event` | `--timeline <id>` `--title` `--category` `--order` |
@@ -100,10 +100,13 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 ### 例
 
 ```bash
-storyteller element character --name hero --role protagonist --summary "勇者"
+storyteller element character --id hero --name "勇者アレン" --role protagonist \
+  --summary "勇者" --display-names "アレン,勇者" --aliases "英雄" --pronouns "彼"
 storyteller element foreshadowing --name "古びた剣" --type chekhov \
   --planting-chapter chapter_01 --planting-description "床板の下から発見"
 ```
+
+`--display-names`, `--aliases`, `--pronouns` は character 専用です。値は単純なカンマ区切りで、前後の空白と空要素は無視されます。未指定時は生成される `Character` に該当フィールドを出力しません。
 
 ---
 

@@ -130,6 +130,9 @@ func TestElement_ParseErrors(t *testing.T) {
 		{"--role"},    // missing value
 		{"--summary"}, // missing value
 		{"--path"},    // missing value
+		{"--display-names"},
+		{"--aliases"},
+		{"--pronouns"},
 	}
 	for _, args := range cases {
 		t.Run(args[0], func(t *testing.T) {
@@ -239,6 +242,107 @@ func TestElement_WithDetails_Empty(t *testing.T) {
 	}
 	if !strings.Contains(string(tsBody), "details: {}") {
 		t.Errorf("expected empty details: %s", tsBody)
+	}
+}
+
+func TestElement_CharacterNames_OutputOptionalFields(t *testing.T) {
+	root := t.TempDir()
+	cmd := New("character")
+	cctx, _, errBuf := newCtx(t, []string{
+		"--id", "hero",
+		"--name", "勇者アレン",
+		"--role", "protagonist",
+		"--summary", "村の少年",
+		"--display-names", "勇者,英雄",
+		"--aliases", "勇,若者",
+		"--pronouns", "彼",
+	}, false, root)
+	if code := cmd.Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	body, err := os.ReadFile(filepath.Join(root, "src/characters/hero.ts"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(body)
+	for _, want := range []string{
+		`displayNames: ["勇者", "英雄"]`,
+		`aliases: ["勇", "若者"]`,
+		`pronouns: ["彼"]`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in %s", want, got)
+		}
+	}
+}
+
+func TestElement_CharacterNames_EqualsTrimAndEmptyValues(t *testing.T) {
+	root := t.TempDir()
+	cmd := New("character")
+	cctx, _, errBuf := newCtx(t, []string{
+		"--id=hero",
+		"--display-names= 勇者, ,英雄,勇者 ",
+		"--aliases= 勇, 若者 ,,",
+		"--pronouns= 彼 ,",
+		"--with-details",
+	}, false, root)
+	if code := cmd.Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	body, err := os.ReadFile(filepath.Join(root, "src/characters/hero.ts"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(body)
+	for _, want := range []string{
+		`displayNames: ["勇者", "英雄"]`,
+		`aliases: ["勇", "若者"]`,
+		`pronouns: ["彼"]`,
+		`details: {}`,
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("missing %q in %s", want, got)
+		}
+	}
+	if strings.Contains(got, `""`) {
+		t.Errorf("empty string item should be omitted: %s", got)
+	}
+}
+
+func TestElement_CharacterNames_NotOutputWhenUnspecified(t *testing.T) {
+	root := t.TempDir()
+	cmd := New("character")
+	cctx, _, errBuf := newCtx(t, []string{"--id", "hero"}, false, root)
+	if code := cmd.Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	body, err := os.ReadFile(filepath.Join(root, "src/characters/hero.ts"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := string(body)
+	for _, unexpected := range []string{"displayNames", "aliases", "pronouns"} {
+		if strings.Contains(got, unexpected) {
+			t.Errorf("unexpected %s in %s", unexpected, got)
+		}
+	}
+}
+
+func TestElement_CharacterNames_RejectedForNonCharacter(t *testing.T) {
+	cmd := New("setting")
+	for _, args := range [][]string{
+		{"--id", "castle", "--display-names", "城"},
+		{"--id", "castle", "--display-names="},
+	} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			cctx, _, errBuf := newCtx(t, args, false, t.TempDir())
+			if code := cmd.Handle(cctx); code != 1 {
+				t.Fatalf("exit=%d want 1", code)
+			}
+			if !strings.Contains(errBuf.String(), "display name flags") {
+				t.Errorf("expected display name flag error: %q", errBuf.String())
+			}
+		})
 	}
 }
 

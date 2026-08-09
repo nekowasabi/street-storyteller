@@ -87,7 +87,8 @@ arguments: { genre: "ファンタジー", scale: "短編" }
 # 主人公
 storyteller element character \
   --id hero --name "勇者アレン" --role protagonist \
-  --summary "村の少年だったが、世界の崩壊を予感して旅立つ"
+  --summary "村の少年だったが、世界の崩壊を予感して旅立つ" \
+  --display-names "アレン,勇者,少年" --aliases "英雄" --pronouns "彼"
 
 # 敵対者
 storyteller element character \
@@ -112,12 +113,16 @@ export const hero: Character = {
   relationships: {},
   appearingChapters: [],
   summary: "村の少年だったが、世界の崩壊を予感して旅立つ",
+  displayNames: ["アレン", "勇者", "少年"],
+  aliases: ["英雄"],
+  pronouns: ["彼"],
 };
 ```
 
 ### 2.2 詳細を肉付け（手編集）
 
-`traits`、`relationships`、`displayNames`（原稿で使う名前のバリエーション）、`detectionHints`（LSP 検出用）を手で書き加えます。
+`traits`、`relationships`、`detectionHints`（LSP 検出用）を手で書き加えます。
+`displayNames` / `aliases` / `pronouns` は作成時にも指定できます。値はカンマ区切りで、空白と空要素は除外されます。
 
 ```typescript
 export const hero: Character = {
@@ -668,7 +673,7 @@ storyteller view list
 storyteller view browser
 
 # 要素作成
-storyteller element character     --id <id> --name <n> --role <r> --summary <s>
+storyteller element character     --id <id> --name <n> --role <r> --summary <s> [--display-names <csv>] [--aliases <csv>] [--pronouns <csv>]
 storyteller element setting       --id <id> --name <n>
 storyteller element timeline      --id <id> --name <n> --scope story|world|character|arc
 storyteller element event         --timeline <id> --title <t> --category <c> --order <n>

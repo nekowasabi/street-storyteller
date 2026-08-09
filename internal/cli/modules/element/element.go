@@ -54,6 +54,10 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 		cctx.Presenter.ShowError(fmt.Sprintf("detail flags are only supported for character/setting, not %q", c.kind))
 		return 1
 	}
+	if opts.hasCharacterNames() && c.kind != "character" {
+		cctx.Presenter.ShowError(fmt.Sprintf("display name flags are only supported for character, not %q", c.kind))
+		return 1
+	}
 
 	path, detailPaths, err := writeElement(opts.root, c.kind, opts)
 	if err != nil {
@@ -84,6 +88,10 @@ type options struct {
 	summary      string
 	withDetails  bool
 	detailFields []string // フィールド名のユニーク集合 (順序保持)
+	nameFlags    bool
+	displayNames []string
+	aliases      []string
+	pronouns     []string
 }
 
 // addDetailField は重複を排除しつつ順序を保持して field を追加する。
@@ -98,6 +106,27 @@ func (o *options) addDetailField(field string) {
 		}
 	}
 	o.detailFields = append(o.detailFields, field)
+}
+
+func (o options) hasCharacterNames() bool {
+	return o.nameFlags
+}
+
+func parseCSVList(value string) []string {
+	seen := make(map[string]struct{})
+	var out []string
+	for _, item := range strings.Split(value, ",") {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		if _, ok := seen[item]; ok {
+			continue
+		}
+		seen[item] = struct{}{}
+		out = append(out, item)
+	}
+	return out
 }
 
 func parseOptions(args []string) (options, error) {
@@ -145,6 +174,36 @@ func parseOptions(args []string) (options, error) {
 			i++
 		case strings.HasPrefix(a, "--summary="):
 			opts.summary = strings.TrimPrefix(a, "--summary=")
+		case a == "--display-names":
+			if i+1 >= len(args) {
+				return opts, fmt.Errorf("--display-names requires a value")
+			}
+			opts.nameFlags = true
+			opts.displayNames = parseCSVList(args[i+1])
+			i++
+		case strings.HasPrefix(a, "--display-names="):
+			opts.nameFlags = true
+			opts.displayNames = parseCSVList(strings.TrimPrefix(a, "--display-names="))
+		case a == "--aliases":
+			if i+1 >= len(args) {
+				return opts, fmt.Errorf("--aliases requires a value")
+			}
+			opts.nameFlags = true
+			opts.aliases = parseCSVList(args[i+1])
+			i++
+		case strings.HasPrefix(a, "--aliases="):
+			opts.nameFlags = true
+			opts.aliases = parseCSVList(strings.TrimPrefix(a, "--aliases="))
+		case a == "--pronouns":
+			if i+1 >= len(args) {
+				return opts, fmt.Errorf("--pronouns requires a value")
+			}
+			opts.nameFlags = true
+			opts.pronouns = parseCSVList(args[i+1])
+			i++
+		case strings.HasPrefix(a, "--pronouns="):
+			opts.nameFlags = true
+			opts.pronouns = parseCSVList(strings.TrimPrefix(a, "--pronouns="))
 		case a == "--with-details":
 			opts.withDetails = true
 		case a == "--separate-files":
@@ -270,6 +329,19 @@ func detailsLiteral(id string, opts options) string {
 	return b.String()
 }
 
+func tsStringArrayLiteral(values []string) string {
+	var b strings.Builder
+	b.WriteString("[")
+	for i, value := range values {
+		if i > 0 {
+			b.WriteString(", ")
+		}
+		fmt.Fprintf(&b, "%q", value)
+	}
+	b.WriteString("]")
+	return b.String()
+}
+
 func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 	summary := opts.summary
 	if summary == "" {
@@ -282,6 +354,15 @@ func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 			role = "supporting"
 		}
 		base := fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  role: %q,\n  traits: [],\n  relationships: {},\n  appearingChapters: [],\n  summary: %q,", opts.id, opts.name, role, summary)
+		if len(opts.displayNames) > 0 {
+			base += fmt.Sprintf("\n  displayNames: %s,", tsStringArrayLiteral(opts.displayNames))
+		}
+		if len(opts.aliases) > 0 {
+			base += fmt.Sprintf("\n  aliases: %s,", tsStringArrayLiteral(opts.aliases))
+		}
+		if len(opts.pronouns) > 0 {
+			base += fmt.Sprintf("\n  pronouns: %s,", tsStringArrayLiteral(opts.pronouns))
+		}
 		if dl := detailsLiteral(opts.id, opts); dl != "" {
 			base += fmt.Sprintf("\n  details: %s,", dl)
 		}
