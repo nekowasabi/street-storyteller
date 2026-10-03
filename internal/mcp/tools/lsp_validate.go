@@ -78,8 +78,17 @@ func (LSPValidateTool) Handle(ctx context.Context, args json.RawMessage, ec Exec
 }
 
 func storytellerDiagnostics(ctx context.Context, projectRoot, file string) ([]lspprotocol.Diagnostic, error) {
-	if projectRoot == "" || file == "" {
+	if file == "" {
 		return nil, nil
+	}
+	// mcp start --stdio without --path leaves ProjectRoot empty while the
+	// process working directory is the project root.
+	if projectRoot == "" {
+		wd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		projectRoot = wd
 	}
 	abs, err := filepath.Abs(file)
 	if err != nil {

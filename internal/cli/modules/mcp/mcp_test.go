@@ -124,7 +124,8 @@ func TestMCP_StartStdioCancelWhileStdinOpen(t *testing.T) {
 	}
 	done := make(chan int, 1)
 	go func() { done <- cmd.Handle(cctx) }()
-	time.Sleep(100 * time.Millisecond)
+	// Why: time.Sleep is banned in default-tag tests. Cancel is already set
+	// before Run blocks on stdin, so the server returns on ctx.Done.
 	cancel()
 	select {
 	case code := <-done:

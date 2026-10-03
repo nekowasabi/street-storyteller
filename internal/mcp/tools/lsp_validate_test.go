@@ -68,6 +68,44 @@ func TestLspValidateTool_LowConfidenceKeepsData(t *testing.T) {
 	}
 }
 
+func TestLspValidateTool_EmptyProjectRootUsesWorkingDirectory(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, ".storyteller.json"), `{"version":"1.0.0"}`)
+	writeFile(t, filepath.Join(root, "src", "characters", "hero.ts"), `export const hero = {
+  "id": "hero",
+  "name": "hero",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "主人公",
+  "pronouns": ["彼"]
+};`)
+	md := filepath.Join(root, "chapter.md")
+	writeFile(t, md, "彼は走った\n")
+	t.Chdir(root)
+
+	res, err := LSPValidateTool{}.Handle(context.Background(), json.RawMessage(`{"file":"`+md+`"}`), ExecutionContext{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res.IsError {
+		t.Fatalf("tool error: %+v", res)
+	}
+	text := res.Content[0].Text
+	var diags []struct {
+		Data *struct {
+			EntityID string `json:"entityId"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal([]byte(text), &diags); err != nil {
+		t.Fatalf("diagnostics dropped for empty root: %v text=%q", err, text)
+	}
+	if len(diags) != 1 || diags[0].Data == nil || diags[0].Data.EntityID != "hero" {
+		t.Fatalf("diags = %#v", diags)
+	}
+}
+
 func TestLspValidateTool_DiagnosticErrorIsError(t *testing.T) {
 	root := t.TempDir()
 	md := filepath.Join(root, "chapter.md")
