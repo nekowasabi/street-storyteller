@@ -53,9 +53,14 @@ func (LSPValidateTool) Handle(ctx context.Context, args json.RawMessage, ec Exec
 			IsError: true,
 		}, nil
 	}
-	text := fmt.Sprintf("%d entities detected", len(results))
 	diags, derr := storytellerDiagnostics(ctx, ec.ProjectRoot, a.File)
-	if derr == nil && len(diags) > 0 {
+	if derr != nil {
+		return &protocol.CallToolResult{
+			Content: []protocol.ContentBlock{{Type: "text", Text: derr.Error()}},
+			IsError: true,
+		}, nil
+	}
+	if len(diags) > 0 {
 		b, merr := json.Marshal(diags)
 		if merr != nil {
 			return &protocol.CallToolResult{
@@ -63,10 +68,12 @@ func (LSPValidateTool) Handle(ctx context.Context, args json.RawMessage, ec Exec
 				IsError: true,
 			}, nil
 		}
-		text += "\n" + string(b)
+		return &protocol.CallToolResult{
+			Content: []protocol.ContentBlock{{Type: "text", Text: string(b)}},
+		}, nil
 	}
 	return &protocol.CallToolResult{
-		Content: []protocol.ContentBlock{{Type: "text", Text: text}},
+		Content: []protocol.ContentBlock{{Type: "text", Text: fmt.Sprintf("%d entities detected", len(results))}},
 	}, nil
 }
 

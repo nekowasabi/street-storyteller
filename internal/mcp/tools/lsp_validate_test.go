@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"path/filepath"
-	"strings"
 	"testing"
 )
 
@@ -52,23 +51,37 @@ func TestLspValidateTool_LowConfidenceKeepsData(t *testing.T) {
 		t.Fatalf("tool error: %+v", res)
 	}
 	text := res.Content[0].Text
-	parts := strings.SplitN(text, "\n", 2)
-	if len(parts) != 2 {
-		t.Fatalf("diagnostics dropped: %q", text)
-	}
 	var diags []struct {
 		Data *struct {
 			Confidence float64 `json:"confidence"`
 			EntityID   string  `json:"entityId"`
 		} `json:"data"`
 	}
-	if err := json.Unmarshal([]byte(parts[1]), &diags); err != nil {
-		t.Fatal(err)
+	if err := json.Unmarshal([]byte(text), &diags); err != nil {
+		t.Fatalf("diagnostics dropped: %v text=%q", err, text)
 	}
 	if len(diags) != 1 || diags[0].Data == nil {
 		t.Fatalf("diags = %#v", diags)
 	}
 	if diags[0].Data.EntityID != "hero" || diags[0].Data.Confidence != 0.6 {
 		t.Fatalf("data = %+v", diags[0].Data)
+	}
+}
+
+func TestLspValidateTool_DiagnosticErrorIsError(t *testing.T) {
+	root := t.TempDir()
+	md := filepath.Join(root, "chapter.md")
+	writeFile(t, md, "本文\n")
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	res, err := LSPValidateTool{}.Handle(ctx, json.RawMessage(`{"file":"`+md+`"}`), ExecutionContext{ProjectRoot: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res == nil || !res.IsError {
+		t.Fatalf("want tool error, got %+v", res)
+	}
+	if len(res.Content) == 0 || res.Content[0].Text == "" {
+		t.Fatal("empty error text")
 	}
 }

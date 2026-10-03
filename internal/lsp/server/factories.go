@@ -99,7 +99,7 @@ func entityFiles(root string) map[detect.EntityRef]string {
 	walk := func(kind detect.EntityKind, dir string, idOf func(string) (string, bool)) {
 		entries, _ := os.ReadDir(filepath.Join(root, dir))
 		for _, e := range entries {
-			if e.IsDir() || !strings.HasSuffix(e.Name(), ".ts") {
+			if !isLocatedEntityFile(e) {
 				continue
 			}
 			path := filepath.Join(root, dir, e.Name())
@@ -115,6 +115,25 @@ func entityFiles(root string) map[detect.EntityRef]string {
 	walk(detect.EntitySetting, "src/settings", settingFileID)
 	walk(detect.EntityForeshadowing, "src/foreshadowings", foreshadowingFileID)
 	return out
+}
+
+// isLocatedEntityFile matches project.isEntityTSFile: index, tests, and
+// declarations are not entity sources, so they must not overwrite Locate.
+func isLocatedEntityFile(e os.DirEntry) bool {
+	if e.IsDir() {
+		return false
+	}
+	name := e.Name()
+	if strings.HasPrefix(name, ".") {
+		return false
+	}
+	if !strings.HasSuffix(name, ".ts") || name == "index.ts" || strings.HasSuffix(name, ".d.ts") {
+		return false
+	}
+	if strings.HasSuffix(name, "_test.ts") || strings.HasSuffix(name, ".test.ts") {
+		return false
+	}
+	return true
 }
 
 func characterFileID(path string) (string, bool) {

@@ -108,3 +108,30 @@ func TestMCP_StartStdioStaysOpenUntilEOF(t *testing.T) {
 		t.Fatal("did not return after stdin close")
 	}
 }
+
+func TestMCP_StartStdioCancelWhileStdinOpen(t *testing.T) {
+	cmd := NewStart()
+	r, w := io.Pipe()
+	defer w.Close()
+	defer r.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	var out, errBuf bytes.Buffer
+	cctx := cli.CommandContext{
+		Ctx:       ctx,
+		Args:      []string{"--stdio"},
+		Presenter: cli.NewTextPresenter(&out, &errBuf),
+		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf, Stdin: r},
+	}
+	done := make(chan int, 1)
+	go func() { done <- cmd.Handle(cctx) }()
+	time.Sleep(100 * time.Millisecond)
+	cancel()
+	select {
+	case code := <-done:
+		if code != 0 {
+			t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("cancel did not return while stdin stayed open")
+	}
+}

@@ -96,12 +96,23 @@ func (s *Server) RegisterStandardHandlers() {
 // until in returns EOF or ctx is cancelled.
 func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
 	for {
+		type readResult struct {
+			msg *protocol.Message
+			err error
+		}
+		readDone := make(chan readResult, 1)
+		go func() {
+			msg, err := protocol.Read(in)
+			readDone <- readResult{msg, err}
+		}()
+		var msg *protocol.Message
+		var err error
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		default:
+		case r := <-readDone:
+			msg, err = r.msg, r.err
 		}
-		msg, err := protocol.Read(in)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil

@@ -156,3 +156,34 @@ func TestLocate_UsesParsedIDNotFilename(t *testing.T) {
 		t.Fatal("filename stem was used as the id")
 	}
 }
+
+func TestLocate_IgnoresTestAndIndexFiles(t *testing.T) {
+	root := t.TempDir()
+	writeHeroProject(t, root)
+	sameID := `export const other = {
+  "id": "hero",
+  "name": "勇者",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "テスト"
+};`
+	mustWrite(t, filepath.Join(root, "src", "characters", "hero_test.ts"), sameID)
+	mustWrite(t, filepath.Join(root, "src", "characters", "hero.test.ts"), sameID)
+	mustWrite(t, filepath.Join(root, "src", "characters", "hero.d.ts"), sameID)
+	mustWrite(t, filepath.Join(root, "src", "characters", "index.ts"), sameID)
+
+	opts, err := NewServerOptions(context.Background(), "file://"+root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loc, ok := opts.Locator.Locate(detect.EntityRef{Kind: detect.EntityCharacter, ID: "hero"})
+	if !ok {
+		t.Fatal("Locate missed hero")
+	}
+	want := "file://" + filepath.Join(root, "src", "characters", "hero.ts")
+	if loc.URI != want {
+		t.Fatalf("URI = %q, want %q", loc.URI, want)
+	}
+}
