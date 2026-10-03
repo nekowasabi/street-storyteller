@@ -292,10 +292,11 @@ func setFMList(fm, key string, ids []string) string {
 
 		prefix := key + ":"
 		if strings.HasPrefix(strings.TrimSpace(line), prefix) {
-			// Emit the key with the new block sequence.
-			out = append(out, key+":")
+			// Keep the key under its parent. Column 0 would leave storyteller:.
+			indent := leadingSpace(line)
+			out = append(out, indent+key+":")
 			for _, id := range ids {
-				out = append(out, "  - "+id)
+				out = append(out, indent+"  - "+id)
 			}
 			skip = true
 			replaced = true
@@ -320,6 +321,14 @@ func setFMList(fm, key string, ids []string) string {
 	}
 
 	return strings.Join(out, "\n")
+}
+
+func leadingSpace(line string) string {
+	i := 0
+	for i < len(line) && (line[i] == ' ' || line[i] == '\t') {
+		i++
+	}
+	return line[:i]
 }
 
 // mergeUnique appends newItems to existing, skipping duplicates, preserving order.

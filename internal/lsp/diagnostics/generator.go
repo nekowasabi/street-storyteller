@@ -70,6 +70,10 @@ func (s *StorytellerSource) Generate(_ context.Context, uri, content string) ([]
 			Code:     string(r.Entity.Kind),
 			Source:   "storyteller",
 			Message:  messageFor(sev, r.MatchedText, r.Score),
+			Data: &protocol.DiagnosticData{
+				Confidence: r.Score,
+				EntityID:   r.Entity.ID,
+			},
 		})
 	}
 	return out, nil

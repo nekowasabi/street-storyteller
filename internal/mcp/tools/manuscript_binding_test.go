@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/takets/street-storyteller/internal/meta"
 )
 
 // sampleManuscript returns a minimal .md with YAML frontmatter.
@@ -220,5 +222,32 @@ func TestManuscriptBinding_MissingRequiredArgs(t *testing.T) {
 	}, dir)
 	if !isErr {
 		t.Error("missing manuscript should return IsError")
+	}
+}
+
+func TestSetFMList_KeepsStorytellerIndent(t *testing.T) {
+	in := "storyteller:\n  chapter_id: chapter03\n  title: \"食堂\"\n  order: 2\n  characters: [チエ, アンジェリ, ビッグママ]\n  settings: [ビッグママの食堂]\n"
+	got := setFMList(in, "characters", []string{"チエ", "アンジェリ", "ビッグ・マム"})
+	got = setFMList(got, "settings", []string{"ビッグ・マムの食堂"})
+	if !strings.Contains(got, "  chapter_id: chapter03\n") {
+		t.Fatalf("chapter_id indent changed:\n%s", got)
+	}
+	if !strings.Contains(got, "  title: \"食堂\"\n") {
+		t.Fatalf("title indent changed:\n%s", got)
+	}
+	if strings.Contains(got, "\ncharacters:") || strings.Contains(got, "\nsettings:") {
+		t.Fatalf("list key left storyteller:\n%s", got)
+	}
+	doc, err := meta.Parse([]byte("---\n" + got + "---\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantC := []string{"チエ", "アンジェリ", "ビッグ・マム"}
+	wantS := []string{"ビッグ・マムの食堂"}
+	if strings.Join(doc.FrontMatter.Characters, ",") != strings.Join(wantC, ",") {
+		t.Fatalf("characters = %#v", doc.FrontMatter.Characters)
+	}
+	if strings.Join(doc.FrontMatter.Settings, ",") != strings.Join(wantS, ",") {
+		t.Fatalf("settings = %#v", doc.FrontMatter.Settings)
 	}
 }

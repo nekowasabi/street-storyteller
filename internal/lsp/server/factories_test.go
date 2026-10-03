@@ -125,3 +125,34 @@ func mustWrite(t *testing.T, path, content string) {
 		t.Fatal(err)
 	}
 }
+
+func TestLocate_UsesParsedIDNotFilename(t *testing.T) {
+	root := t.TempDir()
+	writeHeroProject(t, root)
+	mustWrite(t, filepath.Join(root, "src", "characters", "ビッグママ.ts"), `export const bigmama = {
+  "id": "ビッグ・マム",
+  "name": "ビッグ・マム",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "食堂の主人"
+};`)
+
+	opts, err := NewServerOptions(context.Background(), "file://"+root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ref := detect.EntityRef{Kind: detect.EntityCharacter, ID: "ビッグ・マム"}
+	loc, ok := opts.Locator.Locate(ref)
+	if !ok {
+		t.Fatal("Locate missed parsed id")
+	}
+	want := "file://" + filepath.Join(root, "src", "characters", "ビッグママ.ts")
+	if loc.URI != want {
+		t.Fatalf("URI = %q, want %q", loc.URI, want)
+	}
+	if _, ok := opts.Locator.Locate(detect.EntityRef{Kind: detect.EntityCharacter, ID: "ビッグママ"}); ok {
+		t.Fatal("filename stem was used as the id")
+	}
+}

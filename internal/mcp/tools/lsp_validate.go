@@ -5,7 +5,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 
+	"github.com/takets/street-storyteller/internal/lsp/diagnostics"
+	lspprotocol "github.com/takets/street-storyteller/internal/lsp/protocol"
+	lspserver "github.com/takets/street-storyteller/internal/lsp/server"
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
 	"github.com/takets/street-storyteller/internal/service"
 )
@@ -27,10 +32,9 @@ func (LSPValidateTool) Definition() protocol.Tool {
 }
 
 // Handle delegates to ValidateService.Run and returns "<N> entities detected".
-// Why: replaced the inline filepath.Abs + os.ReadFile + detect.Detect sequence
-// with service.NewValidateService().Run to consolidate file-read and detection
-// logic in one place shared with the CLI adapter.
-func (LSPValidateTool) Handle(_ context.Context, args json.RawMessage, _ ExecutionContext) (*protocol.CallToolResult, error) {
+// Low-confidence diagnostics from the generator are appended as JSON so
+// Diagnostic.data (confidence, entityId) is not dropped.
+func (LSPValidateTool) Handle(ctx context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a lspValidateArgs
 	if len(args) > 0 {
 		_ = json.Unmarshal(args, &a)
@@ -49,7 +53,39 @@ func (LSPValidateTool) Handle(_ context.Context, args json.RawMessage, _ Executi
 			IsError: true,
 		}, nil
 	}
+	text := fmt.Sprintf("%d entities detected", len(results))
+	diags, derr := storytellerDiagnostics(ctx, ec.ProjectRoot, a.File)
+	if derr == nil && len(diags) > 0 {
+		b, merr := json.Marshal(diags)
+		if merr != nil {
+			return &protocol.CallToolResult{
+				Content: []protocol.ContentBlock{{Type: "text", Text: merr.Error()}},
+				IsError: true,
+			}, nil
+		}
+		text += "\n" + string(b)
+	}
 	return &protocol.CallToolResult{
-		Content: []protocol.ContentBlock{{Type: "text", Text: fmt.Sprintf("%d entities detected", len(results))}},
+		Content: []protocol.ContentBlock{{Type: "text", Text: text}},
 	}, nil
+}
+
+func storytellerDiagnostics(ctx context.Context, projectRoot, file string) ([]lspprotocol.Diagnostic, error) {
+	if projectRoot == "" || file == "" {
+		return nil, nil
+	}
+	abs, err := filepath.Abs(file)
+	if err != nil {
+		return nil, err
+	}
+	content, err := os.ReadFile(abs)
+	if err != nil {
+		return nil, err
+	}
+	opts, err := lspserver.NewServerOptions(ctx, "file://"+projectRoot)
+	if err != nil {
+		return nil, err
+	}
+	src := &diagnostics.StorytellerSource{Catalog: opts.Catalog}
+	return src.Generate(ctx, "file://"+abs, string(content))
 }
