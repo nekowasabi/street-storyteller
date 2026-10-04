@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 
@@ -81,15 +82,6 @@ func storytellerDiagnostics(ctx context.Context, projectRoot, file string) ([]ls
 	if file == "" {
 		return nil, nil
 	}
-	// mcp start --stdio without --path leaves ProjectRoot empty while the
-	// process working directory is the project root.
-	if projectRoot == "" {
-		wd, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		projectRoot = wd
-	}
 	abs, err := filepath.Abs(file)
 	if err != nil {
 		return nil, err
@@ -98,10 +90,32 @@ func storytellerDiagnostics(ctx context.Context, projectRoot, file string) ([]ls
 	if err != nil {
 		return nil, err
 	}
-	opts, err := lspserver.NewServerOptions(ctx, "file://"+projectRoot)
+	// Why: an empty root URI makes NewServerOptions use the working directory,
+	// which is the project root when mcp start runs without --path.
+	rootURI := ""
+	if projectRoot != "" {
+		if rootURI, err = fileURI(projectRoot); err != nil {
+			return nil, err
+		}
+	}
+	opts, err := lspserver.NewServerOptions(ctx, rootURI)
 	if err != nil {
 		return nil, err
 	}
 	src := &diagnostics.StorytellerSource{Catalog: opts.Catalog}
-	return src.Generate(ctx, "file://"+abs, string(content))
+	docURI, err := fileURI(abs)
+	if err != nil {
+		return nil, err
+	}
+	return src.Generate(ctx, docURI, string(content))
+}
+
+// fileURI builds an escaped file:// URI; plain "file://"+path breaks on
+// relative paths, which url.Parse reads as a host.
+func fileURI(path string) (string, error) {
+	abs, err := filepath.Abs(path)
+	if err != nil {
+		return "", err
+	}
+	return (&url.URL{Scheme: "file", Path: filepath.ToSlash(abs)}).String(), nil
 }

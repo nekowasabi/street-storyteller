@@ -11,6 +11,7 @@ import (
 
 	"github.com/takets/street-storyteller/internal/detect"
 	"github.com/takets/street-storyteller/internal/lsp/protocol"
+	"github.com/takets/street-storyteller/internal/meta"
 )
 
 // LSP diagnostic severities (mirrors protocol.Diagnostic.Severity codes).
@@ -39,8 +40,7 @@ type DiagnosticSource interface {
 // StorytellerSource produces diagnostics from the detect engine, flagging
 // low-confidence references so the writer can disambiguate them.
 type StorytellerSource struct {
-	Catalog  detect.EntityCatalog
-	Bindings map[detect.EntityKind][]string
+	Catalog detect.EntityCatalog
 }
 
 // Name implements DiagnosticSource.
@@ -55,7 +55,7 @@ func (s *StorytellerSource) Generate(_ context.Context, uri, content string) ([]
 		URI:      uri,
 		Content:  content,
 		Catalog:  s.Catalog,
-		Bindings: s.Bindings,
+		Bindings: frontMatterBindings(content),
 	})
 
 	out := make([]protocol.Diagnostic, 0, len(results))
@@ -77,6 +77,24 @@ func (s *StorytellerSource) Generate(_ context.Context, uri, content string) ([]
 		})
 	}
 	return out, nil
+}
+
+// frontMatterBindings reads the explicit entity bindings from the document's
+// own frontmatter so an id bound there outranks alias / pronoun hits.
+func frontMatterBindings(content string) map[detect.EntityKind][]string {
+	doc, err := meta.Parse([]byte(content))
+	if err != nil || !doc.HasFrontMatter {
+		return nil
+	}
+	fm := doc.FrontMatter
+	return map[detect.EntityKind][]string{
+		detect.EntityCharacter:     fm.Characters,
+		detect.EntitySetting:       fm.Settings,
+		detect.EntityForeshadowing: fm.Foreshadowings,
+		detect.EntityTimelineEvent: fm.TimelineEvents,
+		detect.EntityPhase:         fm.Phases,
+		detect.EntityTimeline:      fm.Timelines,
+	}
 }
 
 // severityFor maps a detect score to an LSP severity. Returns 0 for "no
