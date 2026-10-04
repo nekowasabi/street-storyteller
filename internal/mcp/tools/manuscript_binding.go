@@ -10,6 +10,7 @@ import (
 
 	apperrors "github.com/takets/street-storyteller/internal/errors"
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
+	"github.com/takets/street-storyteller/internal/meta"
 	"github.com/takets/street-storyteller/internal/project"
 )
 
@@ -186,10 +187,10 @@ func idExists(proj *project.Project, entityType, id string) bool {
 // in go.mod and adding one for this limited use case (list field read/write)
 // is heavier than a small dedicated parser.
 func updateFrontmatter(content, entityType, action string, ids []string) (string, error) {
-	fm, body, hasFM := splitFrontmatter(content)
+	fm, body, hasFM := meta.SplitFrontmatter(content)
 
 	// Parse the relevant list field from frontmatter.
-	current := parseFMList(fm, entityType)
+	current := meta.ParseList(fm, entityType)
 
 	// Apply action.
 	var next []string
@@ -209,67 +210,6 @@ func updateFrontmatter(content, entityType, action string, ids []string) (string
 		return "---\n" + fm + "---\n" + body, nil
 	}
 	return "---\n" + fm + "---\n" + body, nil
-}
-
-// splitFrontmatter splits a markdown document into frontmatter YAML text and body.
-// Returns (fmText, bodyText, hasFrontmatter).
-// fmText is the raw content between the --- delimiters (without the delimiters themselves).
-// bodyText is everything after the closing --- (including the leading newline if present).
-func splitFrontmatter(content string) (fm, body string, hasFM bool) {
-	if !strings.HasPrefix(content, "---\n") {
-		return "", content, false
-	}
-	rest := content[4:] // skip opening "---\n"
-	idx := strings.Index(rest, "\n---\n")
-	if idx < 0 {
-		// Closing delimiter not found — treat whole file as body.
-		return "", content, false
-	}
-	fm = rest[:idx+1]   // include trailing newline of last FM line
-	body = rest[idx+5:] // skip "\n---\n"
-	return fm, body, true
-}
-
-// parseFMList extracts the YAML sequence for key from a frontmatter string.
-// It handles both block sequences (- item) and inline sequences ([a,b]).
-// Why: a minimal bespoke parser avoids adding a YAML dependency while covering
-// the subset of YAML that storyteller manuscripts use.
-func parseFMList(fm, key string) []string {
-	lines := strings.Split(fm, "\n")
-	var result []string
-
-	inList := false
-	for _, line := range lines {
-		if inList {
-			stripped := strings.TrimSpace(line)
-			if strings.HasPrefix(stripped, "- ") {
-				result = append(result, strings.TrimPrefix(stripped, "- "))
-				continue
-			}
-			// Another top-level key or empty — list ended.
-			break
-		}
-		// Check for "key:" or "key: [...]"
-		prefix := key + ":"
-		if strings.HasPrefix(strings.TrimSpace(line), prefix) {
-			val := strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), prefix))
-			if val == "" {
-				// Block sequence follows.
-				inList = true
-				continue
-			}
-			// Inline sequence: [a, b, c]
-			val = strings.Trim(val, "[]")
-			for _, part := range strings.Split(val, ",") {
-				part = strings.TrimSpace(part)
-				if part != "" {
-					result = append(result, part)
-				}
-			}
-			return result
-		}
-	}
-	return result
 }
 
 // setFMList rewrites the entityType list in the frontmatter string, replacing

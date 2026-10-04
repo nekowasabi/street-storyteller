@@ -80,20 +80,21 @@ func (s *StorytellerSource) Generate(_ context.Context, uri, content string) ([]
 }
 
 // frontMatterBindings reads the explicit entity bindings from the document's
-// own frontmatter so an id bound there outranks alias / pronoun hits.
+// own frontmatter so an id bound there outranks alias / pronoun hits. It
+// accepts every layout manuscript_binding writes: top-level or nested under
+// storyteller:, block or inline lists.
 func frontMatterBindings(content string) map[detect.EntityKind][]string {
-	doc, err := meta.Parse([]byte(content))
-	if err != nil || !doc.HasFrontMatter {
+	fm, _, ok := meta.SplitFrontmatter(content)
+	if !ok {
 		return nil
 	}
-	fm := doc.FrontMatter
 	return map[detect.EntityKind][]string{
-		detect.EntityCharacter:     fm.Characters,
-		detect.EntitySetting:       fm.Settings,
-		detect.EntityForeshadowing: fm.Foreshadowings,
-		detect.EntityTimelineEvent: fm.TimelineEvents,
-		detect.EntityPhase:         fm.Phases,
-		detect.EntityTimeline:      fm.Timelines,
+		detect.EntityCharacter:     meta.ParseList(fm, "characters"),
+		detect.EntitySetting:       meta.ParseList(fm, "settings"),
+		detect.EntityForeshadowing: meta.ParseList(fm, "foreshadowings"),
+		detect.EntityTimelineEvent: meta.ParseList(fm, "timeline_events"),
+		detect.EntityPhase:         meta.ParseList(fm, "phases"),
+		detect.EntityTimeline:      meta.ParseList(fm, "timelines"),
 	}
 }
 

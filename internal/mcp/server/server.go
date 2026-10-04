@@ -94,9 +94,15 @@ func (s *Server) RegisterStandardHandlers() {
 }
 
 // Run reads newline-delimited JSON-RPC messages from in and writes responses
-// to out until in returns EOF or ctx is cancelled. On cancel Run closes in
-// when it is an io.Closer, so the pending read ends instead of outliving Run.
+// to out until in returns EOF or ctx is cancelled. Run closes in on every
+// return when it is an io.Closer, so the pending read ends instead of
+// outliving Run.
 func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	if c, ok := in.(io.Closer); ok {
+		defer c.Close()
+	}
 	type readResult struct {
 		msg *protocol.Message
 		err error
@@ -121,9 +127,6 @@ func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
 		var r readResult
 		select {
 		case <-ctx.Done():
-			if c, ok := in.(io.Closer); ok {
-				_ = c.Close()
-			}
 			return ctx.Err()
 		case r = <-reads:
 		}
