@@ -203,3 +203,16 @@ func TestLspValidateTool_InlineBindingSuppressesLowConfidence(t *testing.T) {
 		t.Fatalf("inline binding ignored: %q", got)
 	}
 }
+
+func TestLspValidateTool_CRLFBindingSuppressesLowConfidence(t *testing.T) {
+	root := t.TempDir()
+	md := writeHeroProject(t, root, "---\r\ncharacters: [hero]\r\n---\r\n彼は走った\r\n")
+
+	res, err := LSPValidateTool{}.Handle(context.Background(), json.RawMessage(`{"file":"`+md+`"}`), ExecutionContext{ProjectRoot: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := res.Content[0].Text; strings.Contains(got, "entityId") {
+		t.Fatalf("CRLF binding ignored: %q", got)
+	}
+}
