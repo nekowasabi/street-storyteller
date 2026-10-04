@@ -47,17 +47,23 @@ type StorytellerSource struct {
 // Name implements DiagnosticSource.
 func (s *StorytellerSource) Name() string { return "storyteller" }
 
-// Generate runs detect and converts low-confidence hits into diagnostics.
-func (s *StorytellerSource) Generate(_ context.Context, uri, content string) ([]protocol.Diagnostic, error) {
+// Detect runs the detect pipeline with the catalog and the document's own
+// frontmatter bindings.
+func (s *StorytellerSource) Detect(uri, content string) []detect.DetectedEntity {
 	if s.Catalog == nil {
-		return nil, nil
+		return nil
 	}
-	results := detect.Detect(detect.DetectionRequest{
+	return detect.Detect(detect.DetectionRequest{
 		URI:      uri,
 		Content:  content,
 		Catalog:  s.Catalog,
 		Bindings: frontMatterBindings(content),
 	})
+}
+
+// Generate runs detect and converts low-confidence hits into diagnostics.
+func (s *StorytellerSource) Generate(_ context.Context, uri, content string) ([]protocol.Diagnostic, error) {
+	results := s.Detect(uri, content)
 
 	out := make([]protocol.Diagnostic, 0, len(results))
 	for _, r := range results {
