@@ -143,3 +143,54 @@ func TestLspValidate_PositionalFileArg(t *testing.T) {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
 	}
 }
+
+func writeHeroProject(t *testing.T, root string) string {
+	t.Helper()
+	files := map[string]string{
+		".storyteller.json": `{"version":"1.0.0"}`,
+		"src/characters/hero.ts": `export const hero = {
+  "id": "hero",
+  "name": "勇者",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "主人公"
+};`,
+		"chapter.md": "勇者は走った\n",
+	}
+	for rel, body := range files {
+		p := filepath.Join(root, rel)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return filepath.Join(root, "chapter.md")
+}
+
+func TestLspValidate_CountsCatalogDetections(t *testing.T) {
+	root := t.TempDir()
+	md := writeHeroProject(t, root)
+	for name, cctxFor := range map[string]func() cli.GlobalOptions{
+		"--path":            func() cli.GlobalOptions { return cli.GlobalOptions{Path: root} },
+		"working directory": func() cli.GlobalOptions { t.Chdir(root); return cli.GlobalOptions{} },
+	} {
+		var out, errBuf bytes.Buffer
+		code := New().Handle(cli.CommandContext{
+			Ctx:        context.Background(),
+			Args:       []string{"--file", md},
+			Presenter:  cli.NewTextPresenter(&out, &errBuf),
+			Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+			GlobalOpts: cctxFor(),
+		})
+		if code != 0 {
+			t.Fatalf("%s: exit = %d, stderr=%q", name, code, errBuf.String())
+		}
+		if want := md + ": 1 entities detected"; !strings.Contains(out.String(), want) {
+			t.Errorf("%s: got %q, want %q", name, out.String(), want)
+		}
+	}
+}
