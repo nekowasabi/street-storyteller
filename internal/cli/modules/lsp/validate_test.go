@@ -52,14 +52,16 @@ func TestLspValidate_DetectionCount(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("hello world"), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
 	code := cmd.Handle(cli.CommandContext{
-		Ctx:       context.Background(),
-		Args:      []string{"--file", mdPath},
-		Presenter: cli.NewTextPresenter(&out, &errBuf),
-		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf},
+		Ctx:        context.Background(),
+		Args:       []string{"--file", mdPath},
+		Presenter:  cli.NewTextPresenter(&out, &errBuf),
+		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+		GlobalOpts: cli.GlobalOptions{Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
@@ -80,6 +82,7 @@ func TestLspValidate_JSONOutput(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("# Chapter 1\n\nHello world."), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
@@ -88,7 +91,7 @@ func TestLspValidate_JSONOutput(t *testing.T) {
 		Args:       []string{"--file", mdPath},
 		Presenter:  cli.NewTextPresenter(&out, &errBuf),
 		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
-		GlobalOpts: cli.GlobalOptions{JSON: true},
+		GlobalOpts: cli.GlobalOptions{JSON: true, Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
@@ -108,15 +111,17 @@ func TestLspValidate_SeverityFilter_HighThreshold(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("hello world"), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
 	// --severity error maps to confidence >= 0.9 threshold
 	code := cmd.Handle(cli.CommandContext{
-		Ctx:       context.Background(),
-		Args:      []string{"--file", mdPath, "--severity", "error"},
-		Presenter: cli.NewTextPresenter(&out, &errBuf),
-		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf},
+		Ctx:        context.Background(),
+		Args:       []string{"--file", mdPath, "--severity", "error"},
+		Presenter:  cli.NewTextPresenter(&out, &errBuf),
+		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+		GlobalOpts: cli.GlobalOptions{Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
@@ -129,18 +134,27 @@ func TestLspValidate_PositionalFileArg(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("hello world"), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
 	// Positional argument (no --file flag)
 	code := cmd.Handle(cli.CommandContext{
-		Ctx:       context.Background(),
-		Args:      []string{mdPath},
-		Presenter: cli.NewTextPresenter(&out, &errBuf),
-		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf},
+		Ctx:        context.Background(),
+		Args:       []string{mdPath},
+		Presenter:  cli.NewTextPresenter(&out, &errBuf),
+		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+		GlobalOpts: cli.GlobalOptions{Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
+	}
+}
+
+func writeManifest(t *testing.T, root string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(root, ".storyteller.json"), []byte(`{"version":"1.0.0"}`), 0o644); err != nil {
+		t.Fatal(err)
 	}
 }
 

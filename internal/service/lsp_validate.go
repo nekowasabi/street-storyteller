@@ -33,7 +33,8 @@ type ValidateResult struct {
 }
 
 // Run detects entities in file using the catalog of the project at
-// projectRoot. An empty projectRoot means the working directory.
+// projectRoot. An empty projectRoot means the working directory. A project
+// that fails to load is an error rather than an empty catalog.
 func (s *ValidateService) Run(ctx context.Context, projectRoot, file string) (ValidateResult, error) {
 	if file == "" {
 		return ValidateResult{}, ErrEmptyPath
@@ -46,22 +47,23 @@ func (s *ValidateService) Run(ctx context.Context, projectRoot, file string) (Va
 	if err != nil {
 		return ValidateResult{}, fmt.Errorf("read %s: %w", abs, err)
 	}
-	// Why: an empty root URI makes NewServerOptions use the working directory.
-	rootURI := ""
-	if projectRoot != "" {
-		if rootURI, err = fileURI(projectRoot); err != nil {
+	if projectRoot == "" {
+		if projectRoot, err = os.Getwd(); err != nil {
 			return ValidateResult{}, err
 		}
 	}
-	opts, err := lspserver.NewServerOptions(ctx, rootURI)
-	if err != nil {
+	if err := ctx.Err(); err != nil {
 		return ValidateResult{}, err
+	}
+	catalog, err := lspserver.LoadCatalog(projectRoot)
+	if err != nil {
+		return ValidateResult{}, fmt.Errorf("load project %s: %w", projectRoot, err)
 	}
 	docURI, err := fileURI(abs)
 	if err != nil {
 		return ValidateResult{}, err
 	}
-	src := &diagnostics.StorytellerSource{Catalog: opts.Catalog}
+	src := &diagnostics.StorytellerSource{Catalog: catalog}
 	diags, err := src.Generate(ctx, docURI, string(content))
 	if err != nil {
 		return ValidateResult{}, err
