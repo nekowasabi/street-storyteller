@@ -34,7 +34,7 @@ func ParseList(fm, key string) []string {
 		if inList {
 			stripped := strings.TrimSpace(line)
 			if strings.HasPrefix(stripped, "- ") {
-				result = append(result, strings.TrimPrefix(stripped, "- "))
+				result = append(result, unquote(strings.TrimSpace(strings.TrimPrefix(stripped, "- "))))
 				continue
 			}
 			// Another top-level key or empty — list ended.
@@ -54,7 +54,7 @@ func ParseList(fm, key string) []string {
 			for _, part := range strings.Split(val, ",") {
 				part = strings.TrimSpace(part)
 				if part != "" {
-					result = append(result, part)
+					result = append(result, unquote(part))
 				}
 			}
 			return result
