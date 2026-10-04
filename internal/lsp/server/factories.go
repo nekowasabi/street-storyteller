@@ -14,6 +14,7 @@ import (
 	"github.com/takets/street-storyteller/internal/lsp/protocol"
 	"github.com/takets/street-storyteller/internal/lsp/providers"
 	"github.com/takets/street-storyteller/internal/project"
+	"github.com/takets/street-storyteller/internal/project/entity"
 	"github.com/takets/street-storyteller/internal/project/store"
 	"github.com/takets/street-storyteller/internal/testkit/clock"
 )
@@ -95,20 +96,83 @@ func entityFiles(root string) map[detect.EntityRef]string {
 	if root == "" {
 		return out
 	}
-	walk := func(kind detect.EntityKind, dir string) {
+	walk := func(kind detect.EntityKind, dir string, idOf func(string) (string, bool)) {
 		entries, _ := os.ReadDir(filepath.Join(root, dir))
 		for _, e := range entries {
-			if e.IsDir() || !strings.HasSuffix(e.Name(), ".ts") {
+			if !isLocatedEntityFile(e) {
 				continue
 			}
-			id := strings.TrimSuffix(e.Name(), ".ts")
-			out[detect.EntityRef{Kind: kind, ID: id}] = filepath.Join(root, dir, e.Name())
+			path := filepath.Join(root, dir, e.Name())
+			id, ok := idOf(path)
+			if !ok || id == "" {
+				// Unparseable files stay on the filename stem so existing jumps keep working.
+				id = strings.TrimSuffix(e.Name(), ".ts")
+			}
+			out[detect.EntityRef{Kind: kind, ID: id}] = path
 		}
 	}
-	walk(detect.EntityCharacter, "src/characters")
-	walk(detect.EntitySetting, "src/settings")
-	walk(detect.EntityForeshadowing, "src/foreshadowings")
+	walk(detect.EntityCharacter, "src/characters", characterFileID)
+	walk(detect.EntitySetting, "src/settings", settingFileID)
+	walk(detect.EntityForeshadowing, "src/foreshadowings", foreshadowingFileID)
 	return out
+}
+
+// isLocatedEntityFile matches project.isEntityTSFile: index, tests, and
+// declarations are not entity sources, so they must not overwrite Locate.
+func isLocatedEntityFile(e os.DirEntry) bool {
+	if e.IsDir() {
+		return false
+	}
+	name := e.Name()
+	if strings.HasPrefix(name, ".") {
+		return false
+	}
+	if !strings.HasSuffix(name, ".ts") || name == "index.ts" || strings.HasSuffix(name, ".d.ts") {
+		return false
+	}
+	if strings.HasSuffix(name, "_test.ts") || strings.HasSuffix(name, ".test.ts") {
+		return false
+	}
+	return true
+}
+
+func characterFileID(path string) (string, bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", false
+	}
+	defer f.Close()
+	c, err := entity.LoadCharacter(f)
+	if err != nil || c.ID == "" {
+		return "", false
+	}
+	return c.ID, true
+}
+
+func settingFileID(path string) (string, bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", false
+	}
+	defer f.Close()
+	s, err := entity.LoadSetting(f)
+	if err != nil || s.ID == "" {
+		return "", false
+	}
+	return s.ID, true
+}
+
+func foreshadowingFileID(path string) (string, bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", false
+	}
+	defer f.Close()
+	item, err := entity.LoadForeshadowing(f)
+	if err != nil || item.ID == "" {
+		return "", false
+	}
+	return item.ID, true
 }
 
 func (a *projectAdapter) FindByID(kind detect.EntityKind, id string) (detect.EntityRef, bool) {

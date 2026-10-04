@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/takets/street-storyteller/internal/detect"
 	"github.com/takets/street-storyteller/internal/lsp/protocol"
 )
 
@@ -54,5 +55,55 @@ func TestAggregator_MergesMultipleSources(t *testing.T) {
 	}
 	if len(got) != 3 {
 		t.Errorf("len(got) = %d, want 3", len(got))
+	}
+}
+
+type pronounCatalog struct{}
+
+func (pronounCatalog) FindByID(kind detect.EntityKind, id string) (detect.EntityRef, bool) {
+	if kind == detect.EntityCharacter && id == "hero" {
+		return detect.EntityRef{Kind: kind, ID: id}, true
+	}
+	return detect.EntityRef{}, false
+}
+
+func (pronounCatalog) FindByName(name string) (detect.EntityRef, detect.MatchSource, bool) {
+	if name == "彼" {
+		return detect.EntityRef{Kind: detect.EntityCharacter, ID: "hero"}, detect.SourceName, true
+	}
+	return detect.EntityRef{}, "", false
+}
+
+func (pronounCatalog) ListNames(kind detect.EntityKind) []string {
+	if kind == detect.EntityCharacter {
+		return []string{"彼"}
+	}
+	return nil
+}
+
+func (pronounCatalog) DetectionHints(kind detect.EntityKind, id string) (detect.Hints, bool) {
+	if kind == detect.EntityCharacter && id == "hero" {
+		return detect.Hints{Pronouns: []string{"彼"}}, true
+	}
+	return detect.Hints{}, false
+}
+
+func TestStorytellerSource_LowConfidenceCarriesData(t *testing.T) {
+	src := &StorytellerSource{Catalog: pronounCatalog{}}
+	diags, err := src.Generate(context.Background(), "file:///c.md", "彼は走った")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(diags) != 1 {
+		t.Fatalf("len = %d, want 1", len(diags))
+	}
+	if diags[0].Data == nil {
+		t.Fatal("data is nil")
+	}
+	if diags[0].Data.EntityID != "hero" {
+		t.Fatalf("entityId = %q", diags[0].Data.EntityID)
+	}
+	if diags[0].Data.Confidence != 0.6 {
+		t.Fatalf("confidence = %v", diags[0].Data.Confidence)
 	}
 }

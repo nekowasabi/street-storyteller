@@ -93,18 +93,44 @@ func (s *Server) RegisterStandardHandlers() {
 	})
 }
 
-// Run reads framed JSON-RPC messages from in and writes responses to out
-// until in returns EOF or ctx is cancelled.
+// Run reads newline-delimited JSON-RPC messages from in and writes responses
+// to out until in returns EOF or ctx is cancelled. Run closes in on every
+// return when it is an io.Closer, so the pending read ends instead of
+// outliving Run.
 func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
-	// Why: one shared reader; a fresh bufio.Reader per message drops buffered bytes.
-	in = bufio.NewReader(in)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	if c, ok := in.(io.Closer); ok {
+		defer c.Close()
+	}
+	type readResult struct {
+		msg *protocol.Message
+		err error
+	}
+	reads := make(chan readResult)
+	go func() {
+		// Why: one shared reader; a fresh bufio.Reader per message drops buffered bytes.
+		br := bufio.NewReader(in)
+		for {
+			msg, err := protocol.Read(br)
+			select {
+			case reads <- readResult{msg, err}:
+			case <-ctx.Done():
+				return
+			}
+			if err != nil {
+				return
+			}
+		}
+	}()
 	for {
+		var r readResult
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		default:
+		case r = <-reads:
 		}
-		msg, err := protocol.Read(in)
+		msg, err := r.msg, r.err
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil

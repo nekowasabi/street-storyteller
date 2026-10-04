@@ -71,11 +71,18 @@ type Location struct {
 	Range Range  `json:"range"`
 }
 
+// DiagnosticData is the LSP Diagnostic.data payload for a storyteller hit.
+type DiagnosticData struct {
+	Confidence float64 `json:"confidence"`
+	EntityID   string  `json:"entityId"`
+}
+
 // Diagnostic captures a single problem.
 type Diagnostic struct {
-	Range    Range  `json:"range"`
-	Severity int    `json:"severity,omitempty"` // 1=Error, 2=Warning, 3=Info, 4=Hint
-	Code     string `json:"code,omitempty"`
-	Source   string `json:"source,omitempty"`
-	Message  string `json:"message"`
+	Range    Range           `json:"range"`
+	Severity int             `json:"severity,omitempty"` // 1=Error, 2=Warning, 3=Info, 4=Hint
+	Code     string          `json:"code,omitempty"`
+	Source   string          `json:"source,omitempty"`
+	Message  string          `json:"message"`
+	Data     *DiagnosticData `json:"data,omitempty"`
 }

@@ -3,8 +3,10 @@ package mcp
 import (
 	"bytes"
 	"context"
+	"io"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/takets/street-storyteller/internal/cli"
 )
@@ -74,4 +76,63 @@ func TestMCP_StartStdioImmediateClose(t *testing.T) {
 	}
 	// 戻り値は 0 (正常終了 or 2 秒タイムアウト後 cancel)。どちらでも OK。
 	_ = cmd.Handle(cctx)
+}
+
+func TestMCP_StartStdioStaysOpenUntilEOF(t *testing.T) {
+	cmd := NewStart()
+	r, w := io.Pipe()
+	defer r.Close()
+	var out, errBuf bytes.Buffer
+	cctx := cli.CommandContext{
+		Ctx:       context.Background(),
+		Args:      []string{"--stdio"},
+		Presenter: cli.NewTextPresenter(&out, &errBuf),
+		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf, Stdin: r},
+	}
+	done := make(chan int, 1)
+	go func() { done <- cmd.Handle(cctx) }()
+	select {
+	case code := <-done:
+		t.Fatalf("returned %d before stdin closed; stderr=%q", code, errBuf.String())
+	case <-time.After(2200 * time.Millisecond):
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case code := <-done:
+		if code != 0 {
+			t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("did not return after stdin close")
+	}
+}
+
+func TestMCP_StartStdioCancelWhileStdinOpen(t *testing.T) {
+	cmd := NewStart()
+	r, w := io.Pipe()
+	defer w.Close()
+	defer r.Close()
+	ctx, cancel := context.WithCancel(context.Background())
+	var out, errBuf bytes.Buffer
+	cctx := cli.CommandContext{
+		Ctx:       ctx,
+		Args:      []string{"--stdio"},
+		Presenter: cli.NewTextPresenter(&out, &errBuf),
+		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf, Stdin: r},
+	}
+	done := make(chan int, 1)
+	go func() { done <- cmd.Handle(cctx) }()
+	// Why: time.Sleep is banned in default-tag tests. Cancel is already set
+	// before Run blocks on stdin, so the server returns on ctx.Done.
+	cancel()
+	select {
+	case code := <-done:
+		if code != 0 {
+			t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("cancel did not return while stdin stayed open")
+	}
 }

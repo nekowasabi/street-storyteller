@@ -2,7 +2,7 @@ package mcp
 
 import (
 	"context"
-	"time"
+	"errors"
 
 	"github.com/takets/street-storyteller/internal/cli"
 	mcpserver "github.com/takets/street-storyteller/internal/mcp/server"
@@ -35,8 +35,6 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 		cctx.Presenter.ShowError("only --stdio is supported")
 		return 1
 	}
-	ctx, cancel := context.WithCancel(cctx.Ctx)
-	defer cancel()
 	s := mcpserver.New(mcpserver.ServerOptions{
 		ProjectRoot: cctx.GlobalOpts.Path,
 		Name:        "street-storyteller",
@@ -44,19 +42,12 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 	})
 	s.RegisterStandardHandlers()
 	registerTools(s)
-	done := make(chan error, 1)
-	go func() { done <- s.Run(ctx, cctx.Deps.Stdin, cctx.Deps.Stdout) }()
-	select {
-	case err := <-done:
-		if err != nil {
-			cctx.Presenter.ShowError(err.Error())
-			return 1
-		}
-		return 0
-	case <-time.After(2 * time.Second):
-		cancel()
-		return 0
+	err := s.Run(cctx.Ctx, cctx.Deps.Stdin, cctx.Deps.Stdout)
+	if err != nil && !errors.Is(err, context.Canceled) {
+		cctx.Presenter.ShowError(err.Error())
+		return 1
 	}
+	return 0
 }
 
 // registerTools wires every concrete MCP tool into the server's registry.
