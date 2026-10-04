@@ -38,6 +38,13 @@ func (d *Dispatcher) Register(method string, h Handler) {
 // with the error string.
 func (d *Dispatcher) Dispatch(ctx context.Context, msg *protocol.Message) (*protocol.Message, error) {
 	h, ok := d.handlers[msg.Method]
+	// Why: JSON-RPC notifications (no id) must never receive a response.
+	if len(msg.ID) == 0 {
+		if ok {
+			_, _ = h(ctx, msg.Params)
+		}
+		return nil, nil
+	}
 	if !ok {
 		return protocol.NewErrorResponse(msg.ID, protocol.CodeMethodNotFound, "method not found: "+msg.Method), nil
 	}

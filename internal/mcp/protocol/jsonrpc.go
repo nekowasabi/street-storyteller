@@ -3,69 +3,44 @@ package protocol
 import (
 	"bufio"
 	"encoding/json"
-	"fmt"
 	"io"
-	"strconv"
 	"strings"
 
 	apperrors "github.com/takets/street-storyteller/internal/errors"
 )
 
-// Read parses one Content-Length framed JSON-RPC message from r.
+// Read parses one newline-delimited JSON-RPC message from r, skipping blank
+// lines. MCP stdio frames each message as a single line of JSON.
 //
-// Why: bufio.Reader instead of io.ReadAll — MCP stdio is a long-lived stream
-// of multiple frames. Buffering header parsing while leaving the body bytes
-// available for the next call is what bufio is for.
+// Why: callers reading a stream must pass the same *bufio.Reader every call;
+// a fresh reader per call would drop bytes already buffered for later lines.
 func Read(r io.Reader) (*Message, error) {
 	br, ok := r.(*bufio.Reader)
 	if !ok {
 		br = bufio.NewReader(r)
 	}
-
-	contentLength := -1
 	for {
 		line, err := br.ReadString('\n')
-		if err != nil {
-			return nil, apperrors.Wrap(err, apperrors.CodeParse, "mcp: read header")
-		}
-		line = strings.TrimRight(line, "\r\n")
-		if line == "" {
-			break
-		}
-		if strings.HasPrefix(strings.ToLower(line), "content-length:") {
-			v := strings.TrimSpace(line[len("Content-Length:"):])
-			n, err := strconv.Atoi(v)
-			if err != nil {
-				return nil, apperrors.Wrap(err, apperrors.CodeParse, "mcp: invalid Content-Length")
+		if line = strings.TrimSpace(line); line != "" {
+			var msg Message
+			if uerr := json.Unmarshal([]byte(line), &msg); uerr != nil {
+				return nil, apperrors.Wrap(uerr, apperrors.CodeParse, "mcp: unmarshal message")
 			}
-			contentLength = n
+			return &msg, nil
+		}
+		if err != nil {
+			return nil, apperrors.Wrap(err, apperrors.CodeParse, "mcp: read message")
 		}
 	}
-	if contentLength < 0 {
-		return nil, apperrors.New(apperrors.CodeParse, "mcp: missing Content-Length header")
-	}
-
-	body := make([]byte, contentLength)
-	if _, err := io.ReadFull(br, body); err != nil {
-		return nil, apperrors.Wrap(err, apperrors.CodeParse, "mcp: read body")
-	}
-	var msg Message
-	if err := json.Unmarshal(body, &msg); err != nil {
-		return nil, apperrors.Wrap(err, apperrors.CodeParse, "mcp: unmarshal body")
-	}
-	return &msg, nil
 }
 
-// Write serializes msg as a Content-Length framed JSON-RPC message.
+// Write serializes msg as a newline-delimited JSON-RPC message (MCP stdio).
 func Write(w io.Writer, msg *Message) error {
 	body, err := json.Marshal(msg)
 	if err != nil {
 		return apperrors.Wrap(err, apperrors.CodeParse, "mcp: marshal message")
 	}
-	if _, err := fmt.Fprintf(w, "Content-Length: %d\r\n\r\n", len(body)); err != nil {
-		return apperrors.Wrap(err, apperrors.CodeIO, "mcp: write header")
-	}
-	if _, err := w.Write(body); err != nil {
+	if _, err := w.Write(append(body, '\n')); err != nil {
 		return apperrors.Wrap(err, apperrors.CodeIO, "mcp: write body")
 	}
 	return nil
