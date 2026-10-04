@@ -194,3 +194,24 @@ func TestLspValidate_CountsCatalogDetections(t *testing.T) {
 		}
 	}
 }
+
+func TestLspValidate_ProjectLoadFailureIsError(t *testing.T) {
+	broken := t.TempDir()
+	md := writeHeroProject(t, broken)
+	if err := os.WriteFile(filepath.Join(broken, "src", "characters", "bad.ts"), []byte("export const bad = {"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for name, root := range map[string]string{"malformed entity": broken, "missing project": t.TempDir()} {
+		var out, errBuf bytes.Buffer
+		code := New().Handle(cli.CommandContext{
+			Ctx:        context.Background(),
+			Args:       []string{"--file", md},
+			Presenter:  cli.NewTextPresenter(&out, &errBuf),
+			Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+			GlobalOpts: cli.GlobalOptions{Path: root},
+		})
+		if code != 1 {
+			t.Errorf("%s: exit = %d, out=%q, want 1", name, code, out.String())
+		}
+	}
+}
