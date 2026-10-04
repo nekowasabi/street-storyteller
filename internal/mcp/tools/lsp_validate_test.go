@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -121,5 +122,50 @@ func TestLspValidateTool_DiagnosticErrorIsError(t *testing.T) {
 	}
 	if len(res.Content) == 0 || res.Content[0].Text == "" {
 		t.Fatal("empty error text")
+	}
+}
+
+func writeHeroProject(t *testing.T, root, manuscript string) string {
+	t.Helper()
+	writeFile(t, filepath.Join(root, ".storyteller.json"), `{"version":"1.0.0"}`)
+	writeFile(t, filepath.Join(root, "src", "characters", "hero.ts"), `export const hero = {
+  "id": "hero",
+  "name": "勇者",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "主人公",
+  "pronouns": ["彼"]
+};`)
+	md := filepath.Join(root, "chapter.md")
+	writeFile(t, md, manuscript)
+	return md
+}
+
+func TestLspValidateTool_RelativeProjectRoot(t *testing.T) {
+	parent := t.TempDir()
+	md := writeHeroProject(t, filepath.Join(parent, "proj"), "彼は走った\n")
+	t.Chdir(parent)
+
+	res, err := LSPValidateTool{}.Handle(context.Background(), json.RawMessage(`{"file":"`+md+`"}`), ExecutionContext{ProjectRoot: "proj"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := res.Content[0].Text; !strings.Contains(got, `"entityId":"hero"`) {
+		t.Fatalf("relative root lost diagnostics: %q", got)
+	}
+}
+
+func TestLspValidateTool_FrontmatterBindingSuppressesLowConfidence(t *testing.T) {
+	root := t.TempDir()
+	md := writeHeroProject(t, root, "---\nstoryteller:\n  characters:\n    - hero\n---\n彼は走った\n")
+
+	res, err := LSPValidateTool{}.Handle(context.Background(), json.RawMessage(`{"file":"`+md+`"}`), ExecutionContext{ProjectRoot: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := res.Content[0].Text; strings.Contains(got, "entityId") {
+		t.Fatalf("bound entity still diagnosed: %q", got)
 	}
 }
