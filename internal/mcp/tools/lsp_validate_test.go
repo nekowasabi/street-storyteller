@@ -169,3 +169,37 @@ func TestLspValidateTool_FrontmatterBindingSuppressesLowConfidence(t *testing.T)
 		t.Fatalf("bound entity still diagnosed: %q", got)
 	}
 }
+
+func TestLspValidateTool_BindingFromMCPToolsSuppressesLowConfidence(t *testing.T) {
+	root := t.TempDir()
+	md := writeHeroProject(t, root, "彼は走った\n")
+	ctx := context.Background()
+	ec := ExecutionContext{ProjectRoot: root}
+	if res, err := (MetaGenerateTool{}).Handle(ctx, json.RawMessage(`{"path":"`+md+`"}`), ec); err != nil || res.IsError {
+		t.Fatalf("meta_generate: %v %+v", err, res)
+	}
+	if res, err := (ManuscriptBindingTool{}).Handle(ctx, json.RawMessage(`{"manuscript":"`+md+`","action":"add","entityType":"characters","ids":["hero"]}`), ec); err != nil || res.IsError {
+		t.Fatalf("manuscript_binding: %v %+v", err, res)
+	}
+
+	res, err := LSPValidateTool{}.Handle(ctx, json.RawMessage(`{"file":"`+md+`"}`), ec)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := res.Content[0].Text; strings.Contains(got, "entityId") {
+		t.Fatalf("binding written by manuscript_binding ignored: %q", got)
+	}
+}
+
+func TestLspValidateTool_InlineBindingSuppressesLowConfidence(t *testing.T) {
+	root := t.TempDir()
+	md := writeHeroProject(t, root, "---\ncharacters: [hero]\n---\n彼は走った\n")
+
+	res, err := LSPValidateTool{}.Handle(context.Background(), json.RawMessage(`{"file":"`+md+`"}`), ExecutionContext{ProjectRoot: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := res.Content[0].Text; strings.Contains(got, "entityId") {
+		t.Fatalf("inline binding ignored: %q", got)
+	}
+}
