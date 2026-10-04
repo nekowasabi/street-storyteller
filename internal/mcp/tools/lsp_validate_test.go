@@ -216,3 +216,16 @@ func TestLspValidateTool_CRLFBindingSuppressesLowConfidence(t *testing.T) {
 		t.Fatalf("CRLF binding ignored: %q", got)
 	}
 }
+
+func TestLspValidateTool_CountsCatalogDetections(t *testing.T) {
+	root := t.TempDir()
+	md := writeHeroProject(t, root, "勇者は走った\n")
+
+	res, err := LSPValidateTool{}.Handle(context.Background(), json.RawMessage(`{"file":"`+md+`"}`), ExecutionContext{ProjectRoot: root})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := res.Content[0].Text; got != "1 entities detected" {
+		t.Fatalf("got %q, want %q", got, "1 entities detected")
+	}
+}
