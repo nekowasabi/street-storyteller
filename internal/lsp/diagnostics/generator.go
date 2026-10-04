@@ -8,6 +8,7 @@ package diagnostics
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/takets/street-storyteller/internal/detect"
 	"github.com/takets/street-storyteller/internal/lsp/protocol"
@@ -84,7 +85,7 @@ func (s *StorytellerSource) Generate(_ context.Context, uri, content string) ([]
 // accepts every layout manuscript_binding writes: top-level or nested under
 // storyteller:, block or inline lists.
 func frontMatterBindings(content string) map[detect.EntityKind][]string {
-	fm, _, ok := meta.SplitFrontmatter(content)
+	fm, _, ok := meta.SplitFrontmatter(strings.ReplaceAll(content, "\r\n", "\n"))
 	if !ok {
 		return nil
 	}
