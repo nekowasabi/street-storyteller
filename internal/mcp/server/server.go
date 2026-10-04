@@ -1,6 +1,7 @@
 package server
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"errors"
@@ -95,6 +96,8 @@ func (s *Server) RegisterStandardHandlers() {
 // Run reads framed JSON-RPC messages from in and writes responses to out
 // until in returns EOF or ctx is cancelled.
 func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
+	// Why: one shared reader; a fresh bufio.Reader per message drops buffered bytes.
+	in = bufio.NewReader(in)
 	for {
 		select {
 		case <-ctx.Done():
