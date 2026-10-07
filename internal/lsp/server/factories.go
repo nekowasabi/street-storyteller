@@ -55,6 +55,17 @@ func NewServerOptions(ctx context.Context, rootURI string) (ServerOptions, error
 	}, nil
 }
 
+// LoadCatalog loads the project at root and returns its entity catalog.
+// Unlike NewServerOptions it returns the load error: a one-shot validation
+// must not report "0 entities" for a project it could not read.
+func LoadCatalog(root string) (detect.EntityCatalog, error) {
+	proj, err := project.Load(root)
+	if err != nil {
+		return nil, err
+	}
+	return newProjectAdapter(proj), nil
+}
+
 func pathFromFileURI(rootURI string) (string, error) {
 	if rootURI == "" {
 		wd, err := os.Getwd()

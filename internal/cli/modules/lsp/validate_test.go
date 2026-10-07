@@ -52,14 +52,16 @@ func TestLspValidate_DetectionCount(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("hello world"), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
 	code := cmd.Handle(cli.CommandContext{
-		Ctx:       context.Background(),
-		Args:      []string{"--file", mdPath},
-		Presenter: cli.NewTextPresenter(&out, &errBuf),
-		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf},
+		Ctx:        context.Background(),
+		Args:       []string{"--file", mdPath},
+		Presenter:  cli.NewTextPresenter(&out, &errBuf),
+		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+		GlobalOpts: cli.GlobalOptions{Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
@@ -80,6 +82,7 @@ func TestLspValidate_JSONOutput(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("# Chapter 1\n\nHello world."), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
@@ -88,7 +91,7 @@ func TestLspValidate_JSONOutput(t *testing.T) {
 		Args:       []string{"--file", mdPath},
 		Presenter:  cli.NewTextPresenter(&out, &errBuf),
 		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
-		GlobalOpts: cli.GlobalOptions{JSON: true},
+		GlobalOpts: cli.GlobalOptions{JSON: true, Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
@@ -108,15 +111,17 @@ func TestLspValidate_SeverityFilter_HighThreshold(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("hello world"), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
 	// --severity error maps to confidence >= 0.9 threshold
 	code := cmd.Handle(cli.CommandContext{
-		Ctx:       context.Background(),
-		Args:      []string{"--file", mdPath, "--severity", "error"},
-		Presenter: cli.NewTextPresenter(&out, &errBuf),
-		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf},
+		Ctx:        context.Background(),
+		Args:       []string{"--file", mdPath, "--severity", "error"},
+		Presenter:  cli.NewTextPresenter(&out, &errBuf),
+		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+		GlobalOpts: cli.GlobalOptions{Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
@@ -129,17 +134,98 @@ func TestLspValidate_PositionalFileArg(t *testing.T) {
 	if err := os.WriteFile(mdPath, []byte("hello world"), 0644); err != nil {
 		t.Fatal(err)
 	}
+	writeManifest(t, dir)
 
 	cmd := New()
 	var out, errBuf bytes.Buffer
 	// Positional argument (no --file flag)
 	code := cmd.Handle(cli.CommandContext{
-		Ctx:       context.Background(),
-		Args:      []string{mdPath},
-		Presenter: cli.NewTextPresenter(&out, &errBuf),
-		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf},
+		Ctx:        context.Background(),
+		Args:       []string{mdPath},
+		Presenter:  cli.NewTextPresenter(&out, &errBuf),
+		Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+		GlobalOpts: cli.GlobalOptions{Path: dir},
 	})
 	if code != 0 {
 		t.Errorf("exit = %d, stderr=%q", code, errBuf.String())
+	}
+}
+
+func writeManifest(t *testing.T, root string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(root, ".storyteller.json"), []byte(`{"version":"1.0.0"}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func writeHeroProject(t *testing.T, root string) string {
+	t.Helper()
+	files := map[string]string{
+		".storyteller.json": `{"version":"1.0.0"}`,
+		"src/characters/hero.ts": `export const hero = {
+  "id": "hero",
+  "name": "勇者",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "主人公"
+};`,
+		"chapter.md": "勇者は走った\n",
+	}
+	for rel, body := range files {
+		p := filepath.Join(root, rel)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return filepath.Join(root, "chapter.md")
+}
+
+func TestLspValidate_CountsCatalogDetections(t *testing.T) {
+	root := t.TempDir()
+	md := writeHeroProject(t, root)
+	for name, cctxFor := range map[string]func() cli.GlobalOptions{
+		"--path":            func() cli.GlobalOptions { return cli.GlobalOptions{Path: root} },
+		"working directory": func() cli.GlobalOptions { t.Chdir(root); return cli.GlobalOptions{} },
+	} {
+		var out, errBuf bytes.Buffer
+		code := New().Handle(cli.CommandContext{
+			Ctx:        context.Background(),
+			Args:       []string{"--file", md},
+			Presenter:  cli.NewTextPresenter(&out, &errBuf),
+			Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+			GlobalOpts: cctxFor(),
+		})
+		if code != 0 {
+			t.Fatalf("%s: exit = %d, stderr=%q", name, code, errBuf.String())
+		}
+		if want := md + ": 1 entities detected"; !strings.Contains(out.String(), want) {
+			t.Errorf("%s: got %q, want %q", name, out.String(), want)
+		}
+	}
+}
+
+func TestLspValidate_ProjectLoadFailureIsError(t *testing.T) {
+	broken := t.TempDir()
+	md := writeHeroProject(t, broken)
+	if err := os.WriteFile(filepath.Join(broken, "src", "characters", "bad.ts"), []byte("export const bad = {"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for name, root := range map[string]string{"malformed entity": broken, "missing project": t.TempDir()} {
+		var out, errBuf bytes.Buffer
+		code := New().Handle(cli.CommandContext{
+			Ctx:        context.Background(),
+			Args:       []string{"--file", md},
+			Presenter:  cli.NewTextPresenter(&out, &errBuf),
+			Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+			GlobalOpts: cli.GlobalOptions{Path: root},
+		})
+		if code != 1 {
+			t.Errorf("%s: exit = %d, out=%q, want 1", name, code, out.String())
+		}
 	}
 }

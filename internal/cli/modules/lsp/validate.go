@@ -103,7 +103,7 @@ func (c *validateCommand) Handle(cctx cli.CommandContext) int {
 
 	// Why: delegate file-read + DetectionRequest construction to ValidateService
 	// instead of duplicating os.ReadFile + detect.Detect here.
-	results, err := service.NewValidateService().Run(file)
+	res, err := service.NewValidateService().Run(cctx.Ctx, cctx.GlobalOpts.Path, file)
 	if err != nil {
 		if errors.Is(err, service.ErrEmptyPath) {
 			cctx.Presenter.ShowError("--file is required")
@@ -114,7 +114,7 @@ func (c *validateCommand) Handle(cctx cli.CommandContext) int {
 	}
 
 	// Apply severity threshold filter.
-	filtered := filterBySeverity(results, minScore)
+	filtered := filterBySeverity(res.Detected, minScore)
 
 	if cctx.GlobalOpts.JSON {
 		return c.writeJSON(cctx, file, filtered)
