@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p ~/.claude/stigmergy/doctrine-learning/)",
+      "Read(//home/takets/.claude/stigmergy/doctrine-learning/**)"
+    ]
+  }
+}
