@@ -20,7 +20,10 @@ func (c *checkCommand) Name() string        { return "meta check" }
 func (c *checkCommand) Description() string { return "Validate manuscript frontmatter" }
 
 func (c *checkCommand) Handle(cctx cli.CommandContext) int {
-	dir := defaultManuscriptsDir
+	dir := cctx.GlobalOpts.Path
+	if dir == "" {
+		dir = defaultManuscriptsDir
+	}
 	args := cctx.Args
 	for i := 0; i < len(args); i++ {
 		a := args[i]
