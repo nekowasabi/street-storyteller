@@ -81,7 +81,7 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 | Flag | 説明 |
 |------|------|
 | `--name <string>` | 要素名 |
-| `--id <string>` | エンティティ ID（省略時は name から派生） |
+| `--id <string>` | エンティティ ID（必須。`/` と `\` は使用不可） |
 | `--summary <string>` | 概要 |
 | `--json` | JSON 出力 |
 
@@ -103,13 +103,14 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 既存の要素ファイルは上書きしません。`--with-details` / `--add-details` /
 `--separate-files` は新規作成時の指定であり、既存要素への追記ではありません。
 詳細ファイルとの競合で作成に失敗した場合、その実行で作成したファイルは取り消されます。
+詳細フィールド名にもパス区切り文字は使用できません。
 
 ### 例
 
 ```bash
 storyteller element character --id hero --name "勇者アレン" --role protagonist \
   --summary "勇者" --display-names "アレン,勇者" --aliases "英雄" --pronouns "彼"
-storyteller element foreshadowing --name "古びた剣" --type chekhov \
+storyteller element foreshadowing --id old_sword --name "古びた剣" --type chekhov \
   --planting-chapter chapter_01 --planting-description "床板の下から発見"
 ```
 
