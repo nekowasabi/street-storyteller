@@ -187,10 +187,13 @@ func idExists(proj *project.Project, entityType, id string) bool {
 // in go.mod and adding one for this limited use case (list field read/write)
 // is heavier than a small dedicated parser.
 func updateFrontmatter(content, entityType, action string, ids []string) (string, error) {
-	fm, body, hasFM := meta.SplitFrontmatter(content)
+	fm, body, _ := meta.SplitFrontmatter(content)
+	if strings.TrimSpace(fm) == "" {
+		fm = "storyteller:\n"
+	}
 
 	// Parse the relevant list field from frontmatter.
-	current := meta.ParseList(fm, entityType)
+	current := bindingList(fm, entityType)
 
 	// Apply action.
 	var next []string
@@ -206,9 +209,6 @@ func updateFrontmatter(content, entityType, action string, ids []string) (string
 	// Rebuild the frontmatter with the updated field.
 	fm = setFMList(fm, entityType, next)
 
-	if hasFM {
-		return "---\n" + fm + "---\n" + body, nil
-	}
 	return "---\n" + fm + "---\n" + body, nil
 }
 
@@ -216,24 +216,18 @@ func updateFrontmatter(content, entityType, action string, ids []string) (string
 // or inserting as needed, and returns the updated frontmatter text.
 func setFMList(fm, key string, ids []string) string {
 	lines := strings.Split(fm, "\n")
+	start, end, indent := bindingScope(lines)
 	var out []string
 	skip := false
-
 	replaced := false
-	for _, line := range lines {
+	for i, line := range lines {
 		if skip {
-			stripped := strings.TrimSpace(line)
-			if strings.HasPrefix(stripped, "- ") {
-				continue // skip old list items
+			if i < end && len(leadingSpace(line)) > len(indent) && strings.HasPrefix(strings.TrimSpace(line), "- ") {
+				continue
 			}
 			skip = false
-			// This line is a new top-level key — fall through.
 		}
-
-		prefix := key + ":"
-		if strings.HasPrefix(strings.TrimSpace(line), prefix) {
-			// Keep the key under its parent. Column 0 would leave storyteller:.
-			indent := leadingSpace(line)
+		if i >= start && i < end && leadingSpace(line) == indent && strings.HasPrefix(strings.TrimSpace(line), key+":") {
 			out = append(out, indent+key+":")
 			for _, id := range ids {
 				out = append(out, indent+"  - "+id)
@@ -242,25 +236,55 @@ func setFMList(fm, key string, ids []string) string {
 			replaced = true
 			continue
 		}
-		if line != "" || !skip {
-			out = append(out, line)
-		}
+		out = append(out, line)
 	}
-
 	if !replaced {
-		// Key did not exist — append it.
-		// Remove trailing empty line if present.
-		for len(out) > 0 && out[len(out)-1] == "" {
-			out = out[:len(out)-1]
+		insertAt := end
+		for insertAt > start && strings.TrimSpace(out[insertAt-1]) == "" {
+			insertAt--
 		}
-		out = append(out, key+":")
+		updated := append([]string(nil), out[:insertAt]...)
+		updated = append(updated, indent+key+":")
 		for _, id := range ids {
-			out = append(out, "  - "+id)
+			updated = append(updated, indent+"  - "+id)
 		}
+		out = append(updated, out[insertAt:]...)
+	}
+	if len(out) == 0 || out[len(out)-1] != "" {
 		out = append(out, "")
 	}
-
 	return strings.Join(out, "\n")
+}
+
+func bindingList(fm, key string) []string {
+	lines := strings.Split(fm, "\n")
+	start, end, indent := bindingScope(lines)
+	for i := start; i < end; i++ {
+		if leadingSpace(lines[i]) == indent && strings.HasPrefix(strings.TrimSpace(lines[i]), key+":") {
+			return meta.ParseList(strings.Join(lines[i:end], "\n"), key)
+		}
+	}
+	return nil
+}
+
+// Existing flat frontmatter stays compatible; canonical lists belong only to
+// the direct children of storyteller, never another metadata parent.
+func bindingScope(lines []string) (start, end int, indent string) {
+	for i, line := range lines {
+		if strings.TrimSpace(line) != "storyteller:" || leadingSpace(line) != "" {
+			continue
+		}
+		end = len(lines)
+		for j := i + 1; j < len(lines); j++ {
+			trimmed := strings.TrimSpace(lines[j])
+			if trimmed != "" && !strings.HasPrefix(trimmed, "#") && leadingSpace(lines[j]) == "" {
+				end = j
+				break
+			}
+		}
+		return i + 1, end, "  "
+	}
+	return 0, len(lines), ""
 }
 
 func leadingSpace(line string) string {
