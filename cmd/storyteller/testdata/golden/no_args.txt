@@ -23,8 +23,8 @@ Available commands:
   update                 Update project metadata for the Go engine (storyteller update [--path <project>] [--check|--apply])
   version                Show storyteller version
   view character         Display a character entity
-  view foreshadowing     Display a foreshadowing entity (storyteller view foreshadowing --id <id> [--path <project>])
+  view foreshadowing     Display a foreshadowing entity (storyteller view foreshadowing --id <id> [--path <project>] [--format html] [--output <file>])
   view list              List project entities (storyteller view list --kind <characters|settings|timelines|foreshadowings|plots> [--path <project>])
-  view plot              Display a plot entity (storyteller view plot --id <id> [--path <project>])
-  view setting           Display a setting entity (storyteller view setting --id <id> [--path <project>])
-  view timeline          Display a timeline entity (storyteller view timeline --id <id> [--path <project>])
+  view plot              Display a plot entity (storyteller view plot --id <id> [--path <project>] [--format html] [--output <file>])
+  view setting           Display a setting entity (storyteller view setting --id <id> [--path <project>] [--format html] [--output <file>])
+  view timeline          Display a timeline entity (storyteller view timeline --id <id> [--path <project>] [--format html] [--output <file>])

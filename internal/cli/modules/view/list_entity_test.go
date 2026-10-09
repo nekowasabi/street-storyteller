@@ -294,3 +294,85 @@ func TestEntity_PathFromCwd(t *testing.T) {
 		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
 	}
 }
+
+func writeEventTimeline(t *testing.T, root string) {
+	t.Helper()
+	src := `import type { Timeline } from "@storyteller/types/v2/timeline.ts";
+export const req: Timeline = {
+  id: "req", name: "Req <b>", scope: "story",
+  summary: "s", events: [
+    { id: "e2", title: "second", category: "plot_point", time: { order: 2 }, summary: "later", characters: [], settings: [], chapters: [] },
+    { id: "e1", title: "first", category: "plot_point", time: { order: 1 }, summary: "earlier", characters: [], settings: [], chapters: [] },
+  ],
+};
+`
+	if err := os.WriteFile(filepath.Join(root, "src/timelines/req.ts"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestEntity_TimelineJSONIncludesEvents(t *testing.T) {
+	root := makeFullProject(t)
+	writeEventTimeline(t, root)
+	cctx, out, errBuf := newCtx([]string{"--id=req", "--path=" + root}, true, root)
+	if code := NewEntity("timeline").Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	var got struct {
+		Events []struct{ ID string } `json:"events"`
+	}
+	if err := json.Unmarshal(out.Bytes(), &got); err != nil {
+		t.Fatalf("json: %v: %q", err, out.String())
+	}
+	if len(got.Events) != 2 || got.Events[0].ID != "e1" {
+		t.Errorf("events = %+v, want [e1 e2] ordered", got.Events)
+	}
+}
+
+func TestEntity_HTMLStdoutAndOutputFile(t *testing.T) {
+	root := makeFullProject(t)
+	writeEventTimeline(t, root)
+	cctx, out, errBuf := newCtx([]string{"--id=req", "--path=" + root, "--format", "html"}, false, root)
+	if code := NewEntity("timeline").Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	html := out.String()
+	for _, want := range []string{"<!doctype html>", "Req &lt;b&gt;", "first", "second"} {
+		if !strings.Contains(html, want) {
+			t.Errorf("html missing %q: %q", want, html)
+		}
+	}
+	if strings.Index(html, "first") > strings.Index(html, "second") {
+		t.Errorf("events not ordered")
+	}
+
+	file := filepath.Join(t.TempDir(), "tl.html")
+	cctx, _, errBuf = newCtx([]string{"--id=req", "--path=" + root, "--format=html", "--output=" + file}, false, root)
+	if code := NewEntity("timeline").Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+	b, err := os.ReadFile(file)
+	if err != nil || !strings.Contains(string(b), "first") {
+		t.Errorf("output file: err=%v body=%q", err, b)
+	}
+}
+
+func TestEntity_HTMLAllKindsAndErrors(t *testing.T) {
+	root := makeFullProject(t)
+	for _, tc := range []struct{ kind, id string }{{"setting", "town"}, {"foreshadowing", "sword"}, {"plot", "love"}} {
+		cctx, out, errBuf := newCtx([]string{"--id", tc.id, "--path", root, "--format", "html"}, false, root)
+		if code := NewEntity(tc.kind).Handle(cctx); code != 0 || !strings.Contains(out.String(), "<html") {
+			t.Errorf("%s: exit=%d err=%q", tc.kind, code, errBuf.String())
+		}
+	}
+	for _, args := range [][]string{
+		{"--id=town", "--path=" + root, "--format=pdf"},
+		{"--id=town", "--path=" + root, "--output=x.html"},
+		{"--id=town", "--format"},
+	} {
+		cctx, _, _ := newCtx(args, false, root)
+		if code := NewEntity("setting").Handle(cctx); code != 1 {
+			t.Errorf("args=%v exit=%d want 1", args, code)
+		}
+	}
+}
