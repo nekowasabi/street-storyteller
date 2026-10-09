@@ -44,7 +44,10 @@ func (c *lintCommand) Description() string { return "Run manuscript lint checks"
 
 func (c *lintCommand) Handle(cctx cli.CommandContext) int {
 	// Parse flags.
-	path := "."
+	path := cctx.GlobalOpts.Path
+	if path == "" {
+		path = "."
+	}
 	var severityFilter string // "" = all, "error" = errors only
 	fix := false
 	args := cctx.Args
