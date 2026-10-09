@@ -105,6 +105,13 @@ func parseOptions(args []string) (options, error) {
 }
 
 func createProject(root, name, templateName string) error {
+	if err := os.MkdirAll(filepath.Dir(root), 0755); err != nil {
+		return err
+	}
+	// A project scaffold must never overwrite an existing manuscript or config.
+	if err := os.Mkdir(root, 0755); err != nil {
+		return fmt.Errorf("create project directory: %w", err)
+	}
 	dirs := []string{
 		"src/characters",
 		"src/settings",

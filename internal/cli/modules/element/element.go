@@ -231,24 +231,52 @@ func parseOptions(args []string) (options, error) {
 	return opts, nil
 }
 
-func writeElement(root, kind string, opts options) (string, []string, error) {
+func writeElement(root, kind string, opts options) (path string, detailPaths []string, err error) {
 	dir, typeName, body := elementTemplate(kind, opts)
-	path := filepath.Join(root, dir, opts.id+".ts")
+	path = filepath.Join(root, dir, opts.id+".ts")
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return "", nil, err
 	}
 	content := fmt.Sprintf("import type { %s } from \"@storyteller/types/v2/%s.ts\";\n\nexport const %s: %s = %s;\n", typeName, importTypeFile(kind), opts.id, typeName, body)
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+	if err := createFile(path, []byte(content)); err != nil {
 		return "", nil, err
 	}
+	createdSource := path
+	defer func() {
+		if err != nil {
+			_ = os.Remove(createdSource)
+		}
+	}()
 
 	// Why: detail md は --separate-files / --add-details に列挙された field 分のみ生成。
 	// --with-details (フィールド指定なし) は TS 側 details:{} のみで md は生成しない。
-	detailPaths, err := writeDetailFiles(filepath.Dir(path), kind, opts)
+	detailPaths, err = writeDetailFiles(filepath.Dir(path), kind, opts)
 	if err != nil {
+		for _, created := range detailPaths {
+			_ = os.Remove(created)
+		}
 		return "", nil, err
 	}
 	return path, detailPaths, nil
+}
+
+// createFile never replaces authored content, including a symlink target.
+func createFile(path string, content []byte) error {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		return err
+	}
+	_, writeErr := f.Write(content)
+	closeErr := f.Close()
+	if writeErr != nil {
+		_ = os.Remove(path)
+		return writeErr
+	}
+	if closeErr != nil {
+		_ = os.Remove(path)
+		return closeErr
+	}
+	return nil
 }
 
 // writeDetailFiles は detailFields ごとに <id>_<field>.md を生成する。
@@ -264,11 +292,6 @@ func writeDetailFiles(dir, kind string, opts options) ([]string, error) {
 	out := make([]string, 0, len(opts.detailFields))
 	for _, field := range opts.detailFields {
 		mdPath := filepath.Join(dir, opts.id+"_"+field+".md")
-		if _, err := os.Stat(mdPath); err == nil {
-			return out, fmt.Errorf("detail file already exists: %s", mdPath)
-		} else if !os.IsNotExist(err) {
-			return out, err
-		}
 		doc := &meta.Document{
 			HasFrontMatter: true,
 			FrontMatter: meta.FrontMatter{
@@ -286,7 +309,7 @@ func writeDetailFiles(dir, kind string, opts options) ([]string, error) {
 			return out, err
 		}
 		final := append(encoded, []byte(body)...)
-		if err := os.WriteFile(mdPath, final, 0644); err != nil {
+		if err := createFile(mdPath, final); err != nil {
 			return out, err
 		}
 		out = append(out, mdPath)
