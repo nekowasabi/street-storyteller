@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf16"
 	"unicode/utf8"
 )
 
@@ -528,6 +529,13 @@ func (p *parser) readEscape() (string, error) {
 		n, err := strconv.ParseUint(hex, 16, 32)
 		if err != nil {
 			return "", fmt.Errorf("invalid \\u escape %q", hex)
+		}
+		if n >= 0xD800 && n <= 0xDBFF && p.pos+6 <= len(p.src) && string(p.src[p.pos:p.pos+2]) == `\u` {
+			low, err := strconv.ParseUint(string(p.src[p.pos+2:p.pos+6]), 16, 32)
+			if err == nil && low >= 0xDC00 && low <= 0xDFFF {
+				p.pos += 6
+				return string(utf16.DecodeRune(rune(n), rune(low))), nil
+			}
 		}
 		return string(rune(n)), nil
 	}
