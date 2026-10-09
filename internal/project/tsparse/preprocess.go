@@ -1,8 +1,6 @@
 package tsparse
 
 import (
-	"bytes"
-	"unicode"
 	"unicode/utf8"
 )
 
@@ -14,39 +12,65 @@ func preprocessSource(source []byte) []byte {
 }
 
 func stripImportDeclarations(source []byte) []byte {
-	var out bytes.Buffer
-	for i := 0; i < len(source); {
-		lineStart := i
-		for i < len(source) && (source[i] == ' ' || source[i] == '\t') {
-			i++
+	out := append([]byte(nil), source...)
+	p := &parser{src: source}
+	for {
+		p.skipTrivia()
+		start := p.pos
+		if !p.consumeKeyword("import") {
+			return out
 		}
-		if hasKeywordAt(source, i, "import") {
-			for i < len(source) {
-				c := source[i]
-				i++
-				if c == ';' {
-					break
-				}
-				if c == '\n' {
-					break
-				}
-			}
-			if i < len(source) && source[i] == '\n' {
-				i++
-			}
-			continue
+		if !skipImportDeclaration(p) {
+			return out
 		}
-		i = lineStart
-		for i < len(source) {
-			c := source[i]
-			out.WriteByte(c)
-			i++
-			if c == '\n' {
-				break
+		blankSyntax(out, start, p.pos)
+	}
+}
+
+// Only leading import declarations are removed. Scanning the whole file by
+// line would also erase prose beginning with "import" inside template strings.
+func skipImportDeclaration(p *parser) bool {
+	depth := 0
+	for !p.eof() {
+		p.skipTrivia()
+		switch p.peekByte() {
+		case '\'', '"':
+			if _, err := p.parseQuotedString(p.peekByte()); err != nil {
+				return false
 			}
+			if depth == 0 {
+				p.skipTrivia()
+				p.consumeByte(';')
+				return true
+			}
+		case '{':
+			depth++
+			p.pos++
+		case '}':
+			if depth == 0 {
+				return false
+			}
+			depth--
+			p.pos++
+		case 0, ';', '=', '(':
+			return false
+		default:
+			if p.consumeKeyword("export") {
+				return false
+			}
+			p.pos++
 		}
 	}
-	return out.Bytes()
+	return false
+}
+
+// Retain newlines so diagnostics still refer to the original source lines.
+func blankSyntax(source []byte, start, end int) {
+	for i := start; i < end; i++ {
+		if source[i] != '\n' && source[i] != '\r' {
+			source[i] = ' '
+		}
+	}
 }
 
 func stripExportConstTypeAnnotation(source []byte) []byte {
@@ -74,9 +98,8 @@ func stripExportConstTypeAnnotation(source []byte) []byte {
 		return source
 	}
 
-	out := make([]byte, 0, len(source)-(end-colon))
-	out = append(out, source[:colon]...)
-	out = append(out, source[end:]...)
+	out := append([]byte(nil), source...)
+	blankSyntax(out, colon, end)
 	return out
 }
 
@@ -113,21 +136,4 @@ func findTypeAnnotationEnd(source []byte, start int) int {
 		i += size
 	}
 	return -1
-}
-
-func hasKeywordAt(source []byte, pos int, keyword string) bool {
-	if pos+len(keyword) > len(source) {
-		return false
-	}
-	if string(source[pos:pos+len(keyword)]) != keyword {
-		return false
-	}
-	beforeOK := pos == 0 || !isIdentRuneForPreprocess(rune(source[pos-1]))
-	after := pos + len(keyword)
-	afterOK := after >= len(source) || !isIdentRuneForPreprocess(rune(source[after]))
-	return beforeOK && afterOK
-}
-
-func isIdentRuneForPreprocess(r rune) bool {
-	return r == '_' || r == '$' || unicode.IsLetter(r) || unicode.IsDigit(r)
 }
