@@ -85,6 +85,31 @@ func TestNewRequest_GeneratesValidMessage(t *testing.T) {
 	}
 }
 
+func TestNewResponseIncludesNullResult(t *testing.T) {
+	msg := NewResponse(json.RawMessage("1"), nil)
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		t.Fatal(err)
+	}
+	if string(fields["result"]) != "null" {
+		t.Fatalf("successful null response must include result:null, got %s", raw)
+	}
+	if _, ok := fields["error"]; ok {
+		t.Fatalf("successful response contains an error: %s", raw)
+	}
+}
+
+func TestNewResponseReportsMarshalFailure(t *testing.T) {
+	msg := NewResponse(json.RawMessage("2"), make(chan int))
+	if msg.Error == nil || msg.Error.Code != CodeInternalError || len(msg.Result) != 0 {
+		t.Fatalf("unencodable result must produce a JSON-RPC error, got %+v", msg)
+	}
+}
+
 // itoa avoids importing strconv just for tests.
 func itoa(n int) string {
 	if n == 0 {

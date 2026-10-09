@@ -65,15 +65,11 @@ func NewRequest(id any, method string, params any) (*Message, error) {
 
 // NewResponse builds a successful JSON-RPC 2.0 response Message.
 func NewResponse(id json.RawMessage, result any) (*Message, error) {
-	msg := &Message{JSONRPC: "2.0", ID: id}
-	if result != nil {
-		r, err := json.Marshal(result)
-		if err != nil {
-			return nil, apperrors.Wrap(err, apperrors.CodeParse, "mcp: marshal result")
-		}
-		msg.Result = r
+	r, err := json.Marshal(result)
+	if err != nil {
+		return nil, apperrors.Wrap(err, apperrors.CodeParse, "mcp: marshal result")
 	}
-	return msg, nil
+	return &Message{JSONRPC: "2.0", ID: id, Result: r}, nil
 }
 
 // NewErrorResponse builds an error JSON-RPC 2.0 response Message.
