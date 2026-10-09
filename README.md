@@ -72,7 +72,7 @@ storyteller generate --name my-story --template basic
 cd my-story
 
 # 3. キャラクター作成
-storyteller element character --name hero --role protagonist \
+storyteller element character --id hero --name hero --role protagonist \
   --summary "Brave young warrior who seeks the lost sword"
 
 # 4. 原稿の整合性をチェック
