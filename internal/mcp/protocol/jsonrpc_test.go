@@ -58,3 +58,24 @@ func TestNewRequest_ID(t *testing.T) {
 		t.Errorf("ID round-trip failed: %v / %d", err, id)
 	}
 }
+
+func TestNewResponseIncludesNullResult(t *testing.T) {
+	msg, err := NewResponse(json.RawMessage("1"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := json.Marshal(msg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(raw, &fields); err != nil {
+		t.Fatal(err)
+	}
+	if string(fields["result"]) != "null" {
+		t.Fatalf("successful null response must include result:null, got %s", raw)
+	}
+	if _, ok := fields["error"]; ok {
+		t.Fatalf("successful response contains an error: %s", raw)
+	}
+}

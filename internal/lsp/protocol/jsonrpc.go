@@ -93,13 +93,11 @@ func NewRequest(id json.RawMessage, method string, params any) *Message {
 
 // NewResponse builds a successful JSON-RPC 2.0 response.
 func NewResponse(id json.RawMessage, result any) *Message {
-	msg := &Message{JSONRPC: "2.0", ID: id}
-	if result != nil {
-		if raw, err := json.Marshal(result); err == nil {
-			msg.Result = raw
-		}
+	raw, err := json.Marshal(result)
+	if err != nil {
+		return NewErrorResponse(id, CodeInternalError, "marshal result: "+err.Error())
 	}
-	return msg
+	return &Message{JSONRPC: "2.0", ID: id, Result: raw}
 }
 
 // NewErrorResponse builds a JSON-RPC 2.0 error response.
