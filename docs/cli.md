@@ -97,8 +97,6 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 
 実装: `internal/cli/modules/element/element.go`、ドメイン検証は `internal/domain/`。
 
-詳細フィールド名にもパス区切り文字は使用できません。
-
 ### 例
 
 ```bash
@@ -109,6 +107,8 @@ storyteller element foreshadowing --id old_sword --name "古びた剣" --type ch
 ```
 
 `--display-names`, `--aliases`, `--pronouns` は character 専用です。値は単純なカンマ区切りで、前後の空白と空要素は無視されます。未指定時は生成される `Character` に該当フィールドを出力しません。
+
+詳細フィールド名にもパス区切り文字は使用できません。
 
 ---
 
