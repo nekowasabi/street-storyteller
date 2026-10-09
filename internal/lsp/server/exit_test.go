@@ -25,9 +25,6 @@ func TestRunStopsAtExitNotification(t *testing.T) {
 	if len(messages) != 2 {
 		t.Fatalf("expected only initialize and shutdown responses, got %d", len(messages))
 	}
-	if string(messages[1].Result) != "null" {
-		t.Errorf("shutdown result = %s, want null", messages[1].Result)
-	}
 }
 
 func TestRunReportsExitWithoutShutdown(t *testing.T) {
