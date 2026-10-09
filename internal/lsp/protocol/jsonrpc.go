@@ -18,11 +18,16 @@ func Read(r io.Reader) (*Message, error) {
 		br = bufio.NewReader(r)
 	}
 	contentLength := -1
+	hasHeader := false
 	for {
 		line, err := br.ReadString('\n')
 		if err != nil {
+			if err == io.EOF && (hasHeader || len(line) > 0) {
+				err = io.ErrUnexpectedEOF
+			}
 			return nil, fmt.Errorf("read header: %w", err)
 		}
+		hasHeader = true
 		// Strip CRLF.
 		line = strings.TrimRight(line, "\r\n")
 		if line == "" {
@@ -49,6 +54,9 @@ func Read(r io.Reader) (*Message, error) {
 	}
 	body := make([]byte, contentLength)
 	if _, err := io.ReadFull(br, body); err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return nil, fmt.Errorf("read body: %w", err)
 	}
 	var msg Message
