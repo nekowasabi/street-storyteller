@@ -99,6 +99,10 @@ textlint MCP は textlint v14.8.0+ のネイティブサポートを使う（sto
 }
 ```
 
+#### `lsp_validate`
+
+CLI と同じ `ValidateService` を通る。診断があれば `Diagnostic[]` の JSON を返し、各要素の `data.entityId` と `data.confidence` で検出元を辿れる（例: name 一致 1.0、代名詞 0.6）。診断が 0 件のときは `"<N> entities detected"` の文字列を返す。診断の帯は Error < 0.7、Warning 0.7 以上 0.85 未満、0.85 以上は診断なし（CLI `--severity` の下限フィルタとは別概念）。
+
 #### `timeline_create`
 ```json
 {

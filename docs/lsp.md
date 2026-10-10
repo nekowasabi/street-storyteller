@@ -111,10 +111,13 @@ textlint 未インストール環境では `Available()` が false を返し、g
 ## 検出パターン
 
 ```markdown
-勇者は剣を抜いた。   → src/characters/hero.ts (confidence: 0.90)
-@勇者は剣を抜いた。  → src/characters/hero.ts (confidence: 1.00)
-王都の城門前で…      → src/settings/royal_capital.ts (confidence: 0.85)
+勇者は剣を抜いた。   → hero (name 一致: 1.0)
+主人公は剣を抜いた。 → hero (displayName 一致: 0.9)
+勇は剣を抜いた。     → hero (alias 一致: 0.8)
+彼は剣を抜いた。     → hero (代名詞: 0.6)
 ```
+
+FrontMatter の `characters` 等で明示バインドした id は 1.0。値は `internal/detect/reference.go` の `score*` 定数（name 1.0 / displayName 0.9 / alias 0.8 / pronoun 0.6 / frontmatter 1.0）。
 
 `internal/detect/` が `displayNames` / `aliases` / `detectionHints` を参照して信頼度を算出。低信頼度参照は Code Action で明示参照（`@id`）への置換を提案する。
 
@@ -152,20 +155,21 @@ storyteller lsp validate --dir manuscripts/ --recursive
 storyteller lsp validate --json
 ```
 
-JSON 出力:
+JSON 出力（検出エンティティの配列。`line` は 1 始まり）:
 ```json
-{
-  "type": "diagnostics",
-  "files": [
-    {
-      "uri": "file:///.../chapter01.md",
-      "diagnostics": [
-        { "range": {...}, "severity": 2, "message": "未定義のキャラ参照: 勇者", "source": "storyteller" }
-      ]
-    }
-  ]
-}
+[
+  { "file": "manuscripts/chapter01.md", "line": 1, "type": "character", "id": "hero", "confidence": 1.0 }
+]
 ```
+
+### 閾値は 2 系統（別概念）
+
+向きが逆なので、同じ定数にすると片方が逆転する。共通化していない。
+
+| 系統 | 対象 | 意味 |
+|------|------|------|
+| CLI `--severity` | `lsp validate` | 検出スコアの下限フィルタ。`error` >= 0.9、`warning` >= 0.7、`info` >= 0.0（`internal/cli/modules/lsp/validate.go`） |
+| LSP / MCP の診断 | `publishDiagnostics`, `lsp_validate` | スコアの帯。< 0.7 は Error、0.7 以上 0.85 未満は Warning、0.85 以上は診断なし（`internal/lsp/diagnostics/generator.go`） |
 
 ## 性能
 

@@ -213,6 +213,17 @@ storyteller lsp install nvim
 storyteller lsp install vscode
 ```
 
+`lsp validate --json` は検出エンティティの配列を返す。`line` は 1 始まり。
+
+```json
+[
+  { "file": "manuscripts/chapter01.md", "line": 1, "type": "character", "id": "hero", "confidence": 1.0 },
+  { "file": "manuscripts/chapter01.md", "line": 2, "type": "character", "id": "hero", "confidence": 0.6 }
+]
+```
+
+`confidence` は name 1.0 / displayName 0.9 / alias 0.8 / pronoun 0.6。`--severity` は検出スコアの下限フィルタ（`error` >= 0.9、`warning` >= 0.7、`info` 全件）。LSP 診断の帯とは別概念（[docs/lsp.md](./lsp.md)）。
+
 実装: `internal/cli/modules/lsp/{start,validate,install}.go`
 
 ---

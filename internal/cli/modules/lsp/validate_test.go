@@ -229,3 +229,57 @@ func TestLspValidate_ProjectLoadFailureIsError(t *testing.T) {
 		}
 	}
 }
+
+func TestLspValidate_JSONDetectionAndSeverityContract(t *testing.T) {
+	for _, tc := range []struct {
+		name, text, severity string
+		confidence           float64
+		count                int
+	}{
+		{"name", "勇者は走った", "", 1.0, 1},
+		{"pronoun", "彼は走った", "", 0.6, 1},
+		{"alias error", "勇は走った", "error", 0.8, 0},
+		{"alias warning", "勇は走った", "warning", 0.8, 1},
+		{"pronoun info", "彼は走った", "info", 0.6, 1},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			root := t.TempDir()
+			md := writeHeroProject(t, root)
+			character := filepath.Join(root, "src", "characters", "hero.ts")
+			if err := os.WriteFile(character, []byte(`export const hero = {"id":"hero","name":"勇者","role":"protagonist","traits":[],"relationships":{},"appearingChapters":[],"summary":"主人公","aliases":["勇"],"pronouns":["彼"]};`), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(md, []byte(tc.text), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			args := []string{"--file", md}
+			if tc.severity != "" {
+				args = append(args, "--severity", tc.severity)
+			}
+			var out, errBuf bytes.Buffer
+			code := New().Handle(cli.CommandContext{
+				Ctx: context.Background(), Args: args,
+				Presenter:  cli.NewTextPresenter(&out, &errBuf),
+				Deps:       cli.Deps{Stdout: &out, Stderr: &errBuf},
+				GlobalOpts: cli.GlobalOptions{JSON: true, Path: root},
+			})
+			if code != 0 {
+				t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+			}
+			var got []map[string]any
+			if err := json.Unmarshal(out.Bytes(), &got); err != nil {
+				t.Fatalf("decode JSON: %v, output=%q", err, out.String())
+			}
+			if got == nil || len(got) != tc.count {
+				t.Fatalf("results = %#v, want array of length %d", got, tc.count)
+			}
+			if tc.count == 0 {
+				return
+			}
+			row := got[0]
+			if len(row) != 5 || row["file"] != md || row["line"] != float64(1) || row["type"] != "character" || row["id"] != "hero" || row["confidence"] != tc.confidence {
+				t.Fatalf("result = %#v, want five keys for hero at line 1 with confidence %v", row, tc.confidence)
+			}
+		})
+	}
+}

@@ -3,6 +3,8 @@ package mcp
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -74,8 +76,72 @@ func TestMCP_StartStdioImmediateClose(t *testing.T) {
 		Presenter: cli.NewTextPresenter(&out, &errBuf),
 		Deps:      cli.Deps{Stdout: &out, Stderr: &errBuf, Stdin: stdin},
 	}
-	// 戻り値は 0 (正常終了 or 2 秒タイムアウト後 cancel)。どちらでも OK。
-	_ = cmd.Handle(cctx)
+	if code := cmd.Handle(cctx); code != 0 {
+		t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+	}
+}
+
+func TestMCP_StartStdioSequentialRequests(t *testing.T) {
+	stdin, input := io.Pipe()
+	output, stdout := io.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	defer stdin.Close()
+	defer input.Close()
+	defer output.Close()
+	defer stdout.Close()
+	var errBuf bytes.Buffer
+	done := make(chan int, 1)
+	go func() {
+		done <- NewStart().Handle(cli.CommandContext{
+			Ctx: ctx, Args: []string{"--stdio"},
+			Presenter: cli.NewTextPresenter(stdout, &errBuf),
+			Deps:      cli.Deps{Stdin: stdin, Stdout: stdout, Stderr: &errBuf},
+		})
+	}()
+	exchanged := make(chan error, 1)
+	go func() {
+		decoder := json.NewDecoder(output)
+		for i, request := range []string{
+			`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}`,
+			`{"jsonrpc":"2.0","id":2,"method":"tools/list"}`,
+		} {
+			if _, err := fmt.Fprintln(input, request); err != nil {
+				exchanged <- err
+				return
+			}
+			var response struct {
+				ID     int             `json:"id"`
+				Result json.RawMessage `json:"result"`
+				Error  json.RawMessage `json:"error"`
+			}
+			if err := decoder.Decode(&response); err != nil {
+				exchanged <- err
+				return
+			}
+			if response.ID != i+1 || len(response.Result) == 0 || len(response.Error) != 0 {
+				exchanged <- fmt.Errorf("response = %+v, want successful id=%d", response, i+1)
+				return
+			}
+		}
+		exchanged <- input.Close()
+	}()
+	select {
+	case err := <-exchanged:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("sequential requests did not receive both responses")
+	}
+	select {
+	case code := <-done:
+		if code != 0 {
+			t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("did not return after stdin close")
+	}
 }
 
 func TestMCP_StartStdioStaysOpenUntilEOF(t *testing.T) {
