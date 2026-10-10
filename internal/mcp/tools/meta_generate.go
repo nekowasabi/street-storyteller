@@ -28,12 +28,12 @@ func (MetaGenerateTool) Definition() protocol.Tool {
 	return protocol.Tool{
 		Name:        "meta_generate",
 		Description: "Insert YAML frontmatter skeleton into manuscript .md files (skips files that already have frontmatter)",
-		InputSchema: json.RawMessage(`{"type":"object","properties":{"path":{"type":"string","description":"Single .md file or directory"}},"required":["path"]}`),
+		InputSchema: json.RawMessage(`{"type":"object","properties":{"path":{"type":"string","description":"Absolute or project-relative .md file or directory"}},"required":["path"]}`),
 	}
 }
 
 // Handle resolves the target path and inserts frontmatter where absent.
-func (MetaGenerateTool) Handle(_ context.Context, args json.RawMessage, _ ExecutionContext) (*protocol.CallToolResult, error) {
+func (MetaGenerateTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a metaGenerateArgs
 	if len(args) > 0 {
 		_ = json.Unmarshal(args, &a)
@@ -46,6 +46,7 @@ func (MetaGenerateTool) Handle(_ context.Context, args json.RawMessage, _ Execut
 		}, nil
 	}
 
+	a.Path = resolveProjectPath(ec.ProjectRoot, a.Path)
 	info, err := os.Stat(a.Path)
 	if err != nil {
 		return &protocol.CallToolResult{
