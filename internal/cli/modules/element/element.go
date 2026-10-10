@@ -33,6 +33,16 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 		cctx.Presenter.ShowError("--id is required")
 		return 1
 	}
+	if strings.ContainsAny(opts.id, `/\`) {
+		cctx.Presenter.ShowError("--id must not contain path separators")
+		return 1
+	}
+	for _, field := range opts.detailFields {
+		if strings.ContainsAny(field, `/\`) {
+			cctx.Presenter.ShowError("detail field names must not contain path separators")
+			return 1
+		}
+	}
 	if opts.name == "" {
 		opts.name = opts.id
 	}

@@ -29,6 +29,10 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 		cctx.Presenter.ShowError("--name is required")
 		return 1
 	}
+	if opts.name == "." || opts.name == ".." || strings.ContainsAny(opts.name, `/\`) {
+		cctx.Presenter.ShowError("--name must be a project name, not a path; use --path for the parent directory")
+		return 1
+	}
 	if opts.templateName == "" {
 		opts.templateName = "basic"
 	}

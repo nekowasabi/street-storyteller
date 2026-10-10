@@ -52,6 +52,8 @@ storyteller --version
 
 新規 storyteller プロジェクトの雛形を生成する。
 
+`--name` には単一のディレクトリ名を指定する。`.` / `..` とパス区切り文字は書き込み前に拒否する。親ディレクトリは `--path` で指定する。
+
 ```bash
 storyteller generate --name my-story --path .
 ```
@@ -81,7 +83,7 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 | Flag | 説明 |
 |------|------|
 | `--name <string>` | 要素名 |
-| `--id <string>` | エンティティ ID（省略時は name から派生） |
+| `--id <string>` | エンティティ ID（必須。`/` と `\` は使用不可） |
 | `--summary <string>` | 概要 |
 | `--json` | JSON 出力 |
 
@@ -109,11 +111,13 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 ```bash
 storyteller element character --id hero --name "勇者アレン" --role protagonist \
   --summary "勇者" --display-names "アレン,勇者" --aliases "英雄" --pronouns "彼"
-storyteller element foreshadowing --name "古びた剣" --type chekhov \
+storyteller element foreshadowing --id old_sword --name "古びた剣" --type chekhov \
   --planting-chapter chapter_01 --planting-description "床板の下から発見"
 ```
 
 `--display-names`, `--aliases`, `--pronouns` は character 専用です。値は単純なカンマ区切りで、前後の空白と空要素は無視されます。未指定時は生成される `Character` に該当フィールドを出力しません。
+
+詳細フィールド名にもパス区切り文字は使用できません。
 
 ---
 
