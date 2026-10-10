@@ -32,6 +32,7 @@ description: SaC (StoryWriting as Code) で物語プロジェクトを管理す�
 | 物語要素を一覧で見る | `storyteller view character --list` / `view setting --list` / `view timeline --list` 等 |
 | 詳細をファイル参照解決して表示 | `storyteller view character --id <id> --details` |
 | HTML で可視化 | `storyteller view browser` |
+| 単一要素を HTML で出力 | `storyteller view timeline --id <id> --format html --output out.html` (timeline / plot / foreshadowing / setting 対応。`--output` 省略時は標準出力) |
 | MCP サーバとして起動 (Claude Desktop 連携) | `storyteller mcp start --stdio` |
 | MCP 設定の初期化 | `storyteller mcp init` |
 
@@ -53,6 +54,7 @@ LSP は原稿中のキャラクター/設定参照を自動検出しますが、
 ### 4. 出力フォーマットを目的別に使い分ける
 
 - `--json`: スクリプト連携・パイプ処理用 (全コマンド対応)
+- `--format html [--output <file>]`: `view <timeline|plot|foreshadowing|setting> --id <id>` の単体 HTML 出力。`--json` の timeline には `events` も含まれる
 - `--format mermaid`: タイムライン・サブプロットの構造を Markdown / Mermaid で可視化
 - `view browser`: 統計・カード・グラフ表示で全体把握
 
