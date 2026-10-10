@@ -34,7 +34,7 @@ func (LSPFindReferencesTool) Definition() protocol.Tool {
 "properties":{
   "entity_type":{"type":"string","enum":["character","setting"]},
   "entity_id":{"type":"string"},
-  "root":{"type":"string","description":"manuscripts directory; defaults to <project>/manuscripts"}
+  "root":{"type":"string","description":"Absolute or project-relative manuscripts directory; defaults to <project>/manuscripts"}
 },
 "required":["entity_type","entity_id"]
 }`),
@@ -79,6 +79,8 @@ func (LSPFindReferencesTool) Handle(_ context.Context, args json.RawMessage, ec 
 	manuscriptsRoot := a.Root
 	if manuscriptsRoot == "" {
 		manuscriptsRoot = filepath.Join(ec.ProjectRoot, "manuscripts")
+	} else {
+		manuscriptsRoot = resolveProjectPath(ec.ProjectRoot, manuscriptsRoot)
 	}
 
 	// --- scan files ---

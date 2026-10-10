@@ -21,7 +21,7 @@ func (LSPValidateTool) Definition() protocol.Tool {
 	return protocol.Tool{
 		Name:        "lsp_validate",
 		Description: "Run storyteller LSP-style entity detection on a manuscript",
-		InputSchema: json.RawMessage(`{"type":"object","properties":{"file":{"type":"string"}},"required":["file"]}`),
+		InputSchema: json.RawMessage(`{"type":"object","properties":{"file":{"type":"string","description":"Absolute or project-relative manuscript file"}},"required":["file"]}`),
 	}
 }
 
@@ -36,7 +36,7 @@ func (LSPValidateTool) Handle(ctx context.Context, args json.RawMessage, ec Exec
 	if a.File == "" {
 		return lspValidateError("file is required"), nil
 	}
-	res, err := service.NewValidateService().Run(ctx, ec.ProjectRoot, a.File)
+	res, err := service.NewValidateService().Run(ctx, ec.ProjectRoot, resolveProjectPath(ec.ProjectRoot, a.File))
 	if err != nil {
 		return lspValidateError(err.Error()), nil
 	}

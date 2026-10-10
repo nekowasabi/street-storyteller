@@ -22,7 +22,7 @@ func (MetaCheckTool) Definition() protocol.Tool {
 	return protocol.Tool{
 		Name:        "meta_check",
 		Description: "Validate manuscript metadata (YAML frontmatter)",
-		InputSchema: json.RawMessage(`{"type":"object","properties":{"path":{"type":"string"}}}`),
+		InputSchema: json.RawMessage(`{"type":"object","properties":{"path":{"type":"string","description":"Absolute or project-relative manuscript directory"}}}`),
 	}
 }
 
@@ -38,6 +38,8 @@ func (MetaCheckTool) Handle(_ context.Context, args json.RawMessage, ec Executio
 	target := a.Path
 	if target == "" {
 		target = filepath.Join(ec.ProjectRoot, "manuscripts")
+	} else {
+		target = resolveProjectPath(ec.ProjectRoot, target)
 	}
 
 	result, err := service.NewMetaCheckService().Run(target)

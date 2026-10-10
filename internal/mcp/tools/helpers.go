@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -27,4 +28,13 @@ func errResult(msg string) *protocol.CallToolResult {
 		Content: []protocol.ContentBlock{{Type: "text", Text: msg}},
 		IsError: true,
 	}
+}
+
+// resolveProjectPath anchors relative tool paths to the configured project.
+// Absolute paths remain explicit user-selected targets.
+func resolveProjectPath(root, path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(root, path)
 }
