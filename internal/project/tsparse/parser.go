@@ -347,10 +347,11 @@ func (p *parser) parseKey() (string, error) {
 		}
 		return s.(string), nil
 	}
-	if isIdentStart(rune(c)) {
+	r, _ := utf8.DecodeRune(p.src[p.pos:])
+	if isIdentStart(r) {
 		return p.readIdentifier()
 	}
-	return "", fmt.Errorf("expected object key (identifier or quoted string), got %q", string(c))
+	return "", fmt.Errorf("expected object key (identifier or quoted string), got %q", string(r))
 }
 
 // parseArray reads `[ value, ... ]`.
