@@ -93,5 +93,8 @@ func slugify(name string) string {
 	lower := strings.ToLower(name)
 	slug := slugRe.ReplaceAllString(lower, "_")
 	slug = strings.Trim(slug, "_")
+	if slug == "" {
+		return fmt.Sprintf("element_%x", name)
+	}
 	return slug
 }

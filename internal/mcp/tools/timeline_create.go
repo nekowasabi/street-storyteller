@@ -37,6 +37,9 @@ func timelineSlugify(name string) string {
 	s := strings.ToLower(name)
 	s = timelineSlugRe.ReplaceAllString(s, "_")
 	s = strings.Trim(s, "_")
+	if s == "" {
+		return fmt.Sprintf("timeline_%x", name)
+	}
 	return s
 }
 
