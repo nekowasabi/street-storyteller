@@ -34,7 +34,7 @@ func (EventCreateTool) Definition() protocol.Tool {
 			"properties": {
 				"timeline_id": {"type": "string", "description": "Target timeline ID"},
 				"title":       {"type": "string", "description": "Event title"},
-				"category":    {"type": "string", "description": "Event category (plot_point, character_event, world_event, backstory, foreshadow, climax, resolution)"},
+				"category":    {"type": "string", "enum": ["plot_point", "character_event", "world_event", "backstory", "foreshadow", "climax", "resolution"], "description": "Event category (plot_point, character_event, world_event, backstory, foreshadow, climax, resolution)"},
 				"summary":     {"type": "string", "description": "Event summary"},
 				"order":       {"type": "integer", "description": "Relative order within timeline (default 0)"},
 				"characters":  {"type": "array", "items": {"type": "string"}, "description": "Character IDs involved"},
@@ -65,6 +65,13 @@ func (EventCreateTool) Handle(_ context.Context, args json.RawMessage, _ Executi
 		return errorResult(fmt.Errorf("summary is required")), nil
 	}
 
+	category := domain.EventCategory(a.Category)
+	switch category {
+	case domain.EventCategoryPlotPoint, domain.EventCategoryCharacterEvent, domain.EventCategoryWorldEvent, domain.EventCategoryBackstory, domain.EventCategoryForeshadow, domain.EventCategoryClimax, domain.EventCategoryResolution:
+	default:
+		return errorResult(fmt.Errorf("invalid category %q: must be one of plot_point, character_event, world_event, backstory, foreshadow, climax, resolution", a.Category)), nil
+	}
+
 	// Generate event ID from order position.
 	// Why: simple deterministic ID rather than UUID — keeps output predictable
 	// and avoids importing extra dependencies for a tool that doesn't persist data.
@@ -86,7 +93,7 @@ func (EventCreateTool) Handle(_ context.Context, args json.RawMessage, _ Executi
 	ev := domain.TimelineEvent{
 		ID:         eventID,
 		Title:      a.Title,
-		Category:   domain.EventCategory(a.Category),
+		Category:   category,
 		Time:       domain.TimePoint{Order: a.Order},
 		Summary:    a.Summary,
 		Characters: chars,

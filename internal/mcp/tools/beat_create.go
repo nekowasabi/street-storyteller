@@ -31,7 +31,7 @@ func (BeatCreateTool) Definition() protocol.Tool {
 				"plot_id":          {"type": "string", "description": "Target plot ID (required)"},
 				"title":               {"type": "string", "description": "Beat title (required)"},
 				"summary":             {"type": "string", "description": "Beat summary (required)"},
-				"structure_position":  {"type": "string", "description": "Narrative position: setup/rising/climax/falling/resolution (default: rising)"},
+				"structure_position":  {"type": "string", "enum": ["setup", "rising", "climax", "falling", "resolution"], "description": "Narrative position: setup/rising/climax/falling/resolution (default: rising)"},
 				"id":                  {"type": "string", "description": "Optional explicit ID; auto-generated if omitted"}
 			},
 			"required": ["plot_id", "title", "summary"]
@@ -59,6 +59,12 @@ func (BeatCreateTool) Handle(_ context.Context, args json.RawMessage, _ Executio
 	pos := domain.StructurePosition(a.StructurePosition)
 	if pos == "" {
 		pos = domain.StructurePositionRising
+	}
+
+	switch pos {
+	case domain.StructurePositionSetup, domain.StructurePositionRising, domain.StructurePositionClimax, domain.StructurePositionFalling, domain.StructurePositionResolution:
+	default:
+		return errResult(fmt.Sprintf("invalid structure_position %q: must be one of setup, rising, climax, falling, resolution", a.StructurePosition)), nil
 	}
 
 	id := a.ID
