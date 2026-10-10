@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -182,11 +183,15 @@ func scanFile(path string, names []string) ([]reference, error) {
 	defer f.Close()
 
 	var refs []reference
-	scanner := bufio.NewScanner(f)
+	reader := bufio.NewReader(f)
 	lineNum := 0
-	for scanner.Scan() {
+	for {
+		line, readErr := reader.ReadString('\n')
+		if len(line) == 0 && readErr == io.EOF {
+			return refs, nil
+		}
 		lineNum++
-		line := scanner.Text()
+		line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
 		for _, name := range names {
 			if strings.Contains(line, name) {
 				refs = append(refs, reference{
@@ -197,8 +202,13 @@ func scanFile(path string, names []string) ([]reference, error) {
 				break // one match per line is enough
 			}
 		}
+		if readErr != nil {
+			if readErr == io.EOF {
+				return refs, nil
+			}
+			return refs, readErr
+		}
 	}
-	return refs, scanner.Err()
 }
 
 // formatReferences builds the human-readable result string.
