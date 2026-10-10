@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"net/url"
 	"os"
 	"path/filepath"
 	"testing"
@@ -148,9 +149,10 @@ func TestLocate_UsesParsedIDNotFilename(t *testing.T) {
 	if !ok {
 		t.Fatal("Locate missed parsed id")
 	}
-	want := "file://" + filepath.Join(root, "src", "characters", "ビッグママ.ts")
-	if loc.URI != want {
-		t.Fatalf("URI = %q, want %q", loc.URI, want)
+	want := filepath.Join(root, "src", "characters", "ビッグママ.ts")
+	uri, err := url.Parse(loc.URI)
+	if err != nil || uri.Scheme != "file" || uri.Path != want {
+		t.Fatalf("URI = %q, want file path %q (parse error: %v)", loc.URI, want, err)
 	}
 	if _, ok := opts.Locator.Locate(detect.EntityRef{Kind: detect.EntityCharacter, ID: "ビッグママ"}); ok {
 		t.Fatal("filename stem was used as the id")
