@@ -222,6 +222,10 @@ func setFMList(fm, key string, ids []string) string {
 	replaced := false
 	for i, line := range lines {
 		if skip {
+			if i < end && strings.TrimSpace(line) == "" {
+				out = append(out, line)
+				continue
+			}
 			if i < end && len(leadingSpace(line)) > len(indent) && strings.HasPrefix(strings.TrimSpace(line), "- ") {
 				continue
 			}
