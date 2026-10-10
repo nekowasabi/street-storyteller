@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	apperrors "github.com/takets/street-storyteller/internal/errors"
@@ -234,7 +235,7 @@ func setFMList(fm, key string, ids []string) string {
 		if i >= start && i < end && leadingSpace(line) == indent && strings.HasPrefix(strings.TrimSpace(line), key+":") {
 			out = append(out, indent+key+":")
 			for _, id := range ids {
-				out = append(out, indent+"  - "+id)
+				out = append(out, indent+"  - "+strconv.Quote(id))
 			}
 			skip = true
 			replaced = true
@@ -250,7 +251,7 @@ func setFMList(fm, key string, ids []string) string {
 		updated := append([]string(nil), out[:insertAt]...)
 		updated = append(updated, indent+key+":")
 		for _, id := range ids {
-			updated = append(updated, indent+"  - "+id)
+			updated = append(updated, indent+"  - "+strconv.Quote(id))
 		}
 		out = append(updated, out[insertAt:]...)
 	}
