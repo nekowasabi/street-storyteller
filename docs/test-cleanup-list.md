@@ -11,7 +11,7 @@ focused replacement.
 | ---------------------------- | -------------- | ----------------------------- |
 | Go `go test ./...`           | keep           | primary gate                  |
 | cmd/storyteller golden tests | keep           | CLI regression coverage       |
-| Deno authoring tests         | keep minimal   | `deno task test:authoring`    |
+| Deno authoring tests         | removed        | tsparse tests in `go test`    |
 | Legacy TS E2E                | remove from CI | targeted Go unit/golden tests |
 
 ## Policy

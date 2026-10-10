@@ -33,7 +33,6 @@ func TestGenerateAndElementWorkflow(t *testing.T) {
 		"manuscripts",
 		"drafts",
 		"output",
-		"tests",
 	} {
 		if _, err := os.Stat(filepath.Join(projectRoot, rel)); err != nil {
 			t.Fatalf("generated project missing %s: %v", rel, err)

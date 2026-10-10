@@ -8,24 +8,17 @@ This is a story project generated using the Street Storyteller framework.
 - `manuscripts/` - Actual story manuscripts
 - `drafts/` - Draft notes and ideas
 - `output/` - Generated output for AI collaboration
-- `tests/` - Story validation tests
 
 ## Template: novel
 
 ## Usage
 
 ```bash
-# Run the story
-deno run story.ts
+# Validate manuscripts against story elements
+storyteller meta check --path manuscripts
 
-# Run tests
-deno test
-
-# Format code
-deno fmt
-
-# Lint code
-deno lint
+# List story elements
+storyteller view list --kind characters
 ```
 
 ## Development

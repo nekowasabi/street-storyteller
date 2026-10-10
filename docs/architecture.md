@@ -40,7 +40,7 @@
 | ルート例 | `src/characters/`, `src/settings/`, `src/timelines/`, `src/foreshadowings/` |
 | サンプルプロジェクト | `samples/cinderella/src/`, `samples/momotaro/src/`, etc. |
 
-`samples/*/src/` で記述された TypeScript リテラルを Go の `internal/project/tsparse` が読み取り、Domain オブジェクトに変換する。Deno は authoring 時の型チェック用途で利用するが、CLI / LSP / MCP の実行には不要。
+`samples/*/src/` で記述された TypeScript リテラルを Go の `internal/project/tsparse` が読み取り、Domain オブジェクトに変換する。TypeScript は記述フォーマットであり、JS ランタイム（Deno / Node）はリポジトリのどの工程でも使わない。
 
 ## データフロー
 
@@ -71,7 +71,7 @@ flowchart LR
 - TypeScript で物語要素を記述できることを破壊しない。
 - `src/type/` と `samples/*/src/` を撤去しない。
 - Go パーサは samples が使う TypeScript subset を解釈し続ける。
-- Deno は通常の CLI / LSP / MCP 実行に不要。
+- JS ランタイム（Deno / Node）は実行・テスト・CI のいずれにも使わない（Deno は 2026-10 に開発終了が予告された）。
 - E2E カバレッジは小さく、追加には正当化（owner / purpose / failure signal）が必要。
 
 ## 移行履歴（参考）

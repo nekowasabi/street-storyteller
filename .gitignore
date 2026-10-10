@@ -1,5 +1,4 @@
 .aider*
-deno.lock
 .env
 .env.local
 

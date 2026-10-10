@@ -226,8 +226,8 @@ vim.g.storyteller_no_default_keymaps = 1
 ### storytellerコマンドが見つからない
 
 ```bash
-# グローバルインストール
-deno install -A --name storyteller jsr:@street-storyteller/cli
+# グローバルインストール（Go バイナリをビルドして ~/.local/bin へ配置）
+make install
 ```
 
 ### APIキーエラー（Neovim）

@@ -1,18 +1,9 @@
-# MCP lsp_validate Known Gaps (vs CLI)
+# MCP lsp_validate vs CLI (Go 実装の現状)
 
-Gap analysis from Process 50 (2026-04-21):
-
-| Gap            | Detail                                                     | Resolution   |
-| -------------- | ---------------------------------------------------------- | ------------ |
-| No --strict    | MCP has no strict parameter                                | Future Issue |
-| No confidence  | DiagnosticsGenerator drops confidence from PositionedMatch | Future Issue |
-| No entityId    | Same root cause as confidence                              | Future Issue |
-| No summary     | No ConfidenceSummary in MCP output                         | Future Issue |
-| Line numbering | CLI is 1-based, MCP is 0-based (LSP standard)              | By design    |
-
-Root cause: MCP delegates to DiagnosticsGenerator.generate() which produces
-LSP-protocol-shaped diagnostics without confidence/entityId. CLI bypasses this
-and maps PositionedMatch directly to richer DiagnosticOutput.
-
-Fix options: (a) MCP switch to CLI's direct-detection approach, or (b) extend
-DiagnosticsGenerator to optionally include confidence/entityId.
+| 項目 | 状態 |
+| ---- | ---- |
+| 診断生成経路 | CLI/MCP とも ValidateService + StorytellerSource を共有 |
+| confidence / entityId | 対応済み。MCP の Diagnostic.data にある |
+| 行番号 | CLI は 1 始まり、MCP(LSP) は 0 始まり（仕様） |
+| 閾値 | CLI --severity（下限フィルタ）と LSP/MCP の帯は別概念として意図的に分離 |
+| --strict / summary | MCP には無い（未要望） |
