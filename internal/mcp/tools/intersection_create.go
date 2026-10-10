@@ -92,7 +92,7 @@ func (IntersectionCreateTool) Handle(_ context.Context, args json.RawMessage, _ 
 
 	id := fmt.Sprintf("ix_%s_%s_%s_%s", a.SourcePlot, a.SourceBeat, a.TargetPlot, a.TargetBeat)
 
-	intersection := domain.PlotIntersection{
+	intersection := plotIntersectionScaffold{
 		ID:                 id,
 		SourcePlotID:       a.SourcePlot,
 		SourceBeatID:       a.SourceBeat,
