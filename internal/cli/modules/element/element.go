@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/takets/street-storyteller/internal/cli"
 	"github.com/takets/street-storyteller/internal/meta"
@@ -241,13 +242,33 @@ func parseOptions(args []string) (options, error) {
 	return opts, nil
 }
 
+// exportIdentifier keeps entity IDs independent of JavaScript binding syntax.
+// Existing valid bindings stay stable; filenames and the entity's ID are unchanged.
+func exportIdentifier(id string) string {
+	valid := id != ""
+	for i, r := range id {
+		if r != '_' && r != '$' && !unicode.IsLetter(r) && !(i > 0 && unicode.IsDigit(r)) {
+			valid = false
+			break
+		}
+	}
+	switch id {
+	case "await", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with", "yield", "implements", "interface", "let", "package", "private", "protected", "public", "static", "eval", "arguments":
+		valid = false
+	}
+	if valid {
+		return id
+	}
+	return fmt.Sprintf("element_%x", id)
+}
+
 func writeElement(root, kind string, opts options) (path string, detailPaths []string, err error) {
 	dir, typeName, body := elementTemplate(kind, opts)
 	path = filepath.Join(root, dir, opts.id+".ts")
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return "", nil, err
 	}
-	content := fmt.Sprintf("import type { %s } from \"@storyteller/types/v2/%s.ts\";\n\nexport const %s: %s = %s;\n", typeName, importTypeFile(kind), opts.id, typeName, body)
+	content := fmt.Sprintf("import type { %s } from \"@storyteller/types/v2/%s.ts\";\n\nexport const %s: %s = %s;\n", typeName, importTypeFile(kind), exportIdentifier(opts.id), typeName, body)
 	if err := createFile(path, []byte(content)); err != nil {
 		return "", nil, err
 	}
