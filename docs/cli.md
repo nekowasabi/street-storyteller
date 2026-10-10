@@ -53,13 +53,16 @@ storyteller --version
 新規 storyteller プロジェクトの雛形を生成する。
 
 ```bash
-storyteller generate --path my-story
+storyteller generate --name my-story --path .
 ```
 
 | Flag | 説明 |
 |------|------|
-| `--path <dir>` | 生成先ディレクトリ |
+| `--name <name>` | 新規プロジェクトのディレクトリ名（必須） |
+| `--path <dir>` | プロジェクトを配置する親ディレクトリ（既定: カレントディレクトリ） |
 | `--json` | 結果を JSON で返す |
+
+生成先が既に存在する場合はエラーになり、既存の原稿や設定を上書きしません。
 
 実装: `internal/cli/modules/generate/generate.go`
 
@@ -96,6 +99,10 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 | `intersection` | `--source-plot` `--source-beat` `--target-plot` `--target-beat` `--summary` `--influence-direction forward\|backward` |
 
 実装: `internal/cli/modules/element/element.go`、ドメイン検証は `internal/domain/`。
+
+既存の要素ファイルは上書きしません。`--with-details` / `--add-details` /
+`--separate-files` は新規作成時の指定であり、既存要素への追記ではありません。
+詳細ファイルとの競合で作成に失敗した場合、その実行で作成したファイルは取り消されます。
 
 ### 例
 
