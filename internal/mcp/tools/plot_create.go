@@ -104,13 +104,13 @@ func (PlotCreateTool) Handle(_ context.Context, args json.RawMessage, _ Executio
 		id = plotSlugify(a.Name)
 	}
 
-	sp := domain.Plot{
+	sp := plotScaffold{
 		ID:      id,
 		Name:    a.Name,
 		Type:    st,
 		Status:  domain.PlotStatusActive,
 		Summary: a.Summary,
-		Beats:   []domain.PlotBeat{},
+		Beats:   []plotBeatScaffold{},
 	}
 
 	b, _ := json.Marshal(sp)

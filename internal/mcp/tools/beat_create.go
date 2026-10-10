@@ -66,7 +66,7 @@ func (BeatCreateTool) Handle(_ context.Context, args json.RawMessage, _ Executio
 		id = fmt.Sprintf("beat_%s_%s", a.PlotID, sanitizeID(a.Title))
 	}
 
-	beat := domain.PlotBeat{
+	beat := plotBeatScaffold{
 		ID:                id,
 		Title:             a.Title,
 		Summary:           a.Summary,
