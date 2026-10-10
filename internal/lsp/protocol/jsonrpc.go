@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -52,15 +53,16 @@ func Read(r io.Reader) (*Message, error) {
 	if contentLength < 0 {
 		return nil, fmt.Errorf("missing Content-Length header")
 	}
-	body := make([]byte, contentLength)
-	if _, err := io.ReadFull(br, body); err != nil {
+	// Grow only as bytes arrive; a declared length alone must not allocate them.
+	var body bytes.Buffer
+	if _, err := io.CopyN(&body, br, int64(contentLength)); err != nil {
 		if err == io.EOF {
 			err = io.ErrUnexpectedEOF
 		}
 		return nil, fmt.Errorf("read body: %w", err)
 	}
 	var msg Message
-	if err := json.Unmarshal(body, &msg); err != nil {
+	if err := json.Unmarshal(body.Bytes(), &msg); err != nil {
 		return nil, fmt.Errorf("decode body: %w", err)
 	}
 	return &msg, nil
