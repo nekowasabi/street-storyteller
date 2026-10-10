@@ -44,8 +44,8 @@ type EntityLookup interface {
 // LSP-level null result.
 //
 // Why: by returning the first match in detect's natural order we avoid
-// re-sorting (Detect already dedups per (Kind, ID) keeping the highest
-// score). Multi-line spans are out of scope; manuscript references in
+// re-sorting. Detection retains each occurrence for position-based queries.
+// Multi-line spans are out of scope; manuscript references in
 // scope so far are single-token name matches.
 func Hover(
 	_ context.Context,
@@ -59,9 +59,10 @@ func Hover(
 	}
 
 	detected := detect.Detect(detect.DetectionRequest{
-		URI:     doc.URI(),
-		Content: doc.Content(),
-		Catalog: catalog,
+		URI:             doc.URI(),
+		Content:         doc.Content(),
+		Catalog:         catalog,
+		KeepOccurrences: true,
 	})
 
 	for _, d := range detected {

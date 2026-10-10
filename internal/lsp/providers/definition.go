@@ -34,20 +34,23 @@ func Definition(
 	}
 
 	detected := detect.Detect(detect.DetectionRequest{
-		URI:     doc.URI(),
-		Content: doc.Content(),
-		Catalog: catalog,
+		URI:             doc.URI(),
+		Content:         doc.Content(),
+		Catalog:         catalog,
+		KeepOccurrences: true,
 	})
 
 	out := protocol.DefinitionResult{}
+	seen := map[detect.EntityRef]bool{}
 	for _, d := range detected {
-		if !rangeContains(d.Location.Range, pos) {
+		if !rangeContains(d.Location.Range, pos) || seen[d.Entity] {
 			continue
 		}
 		loc, ok := locator.Locate(d.Entity)
 		if !ok {
 			continue
 		}
+		seen[d.Entity] = true
 		out = append(out, loc)
 	}
 	return out, nil
