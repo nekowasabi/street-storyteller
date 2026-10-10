@@ -62,7 +62,9 @@ func (TimelineCreateTool) Definition() protocol.Tool {
 func (TimelineCreateTool) Handle(_ context.Context, args json.RawMessage, _ ExecutionContext) (*protocol.CallToolResult, error) {
 	var a timelineCreateArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	if a.Name == "" {

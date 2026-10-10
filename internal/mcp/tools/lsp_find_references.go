@@ -49,7 +49,9 @@ func (LSPFindReferencesTool) Definition() protocol.Tool {
 func (LSPFindReferencesTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a lspFindReferencesArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	// --- validate required args ---

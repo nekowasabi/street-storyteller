@@ -52,7 +52,9 @@ func (EventUpdateTool) Definition() protocol.Tool {
 func (EventUpdateTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a eventUpdateArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	if a.TimelineID == "" {
