@@ -14,7 +14,7 @@ import (
 
 // frontmatterSkeleton is the YAML frontmatter block inserted into .md files
 // that do not already have one.
-const frontmatterSkeleton = "---\ncharacters: []\nsettings: []\nforeshadowings: []\ntimelines: []\nphases: []\n---\n"
+const frontmatterSkeleton = "---\nstoryteller:\n  characters: []\n  settings: []\n  foreshadowings: []\n  timelines: []\n  phases: []\n---\n"
 
 // MetaGenerateTool inserts YAML frontmatter skeletons into manuscript .md files.
 type MetaGenerateTool struct{}
