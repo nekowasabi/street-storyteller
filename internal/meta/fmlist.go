@@ -5,20 +5,18 @@ import "strings"
 // SplitFrontmatter splits a markdown document into frontmatter YAML text and body.
 // Returns (fmText, bodyText, hasFrontmatter).
 // fmText is the raw content between the --- delimiters (without the delimiters themselves).
-// bodyText is everything after the closing --- (including the leading newline if present).
+// bodyText is everything after the closing delimiter line, byte-for-byte.
 func SplitFrontmatter(content string) (fm, body string, hasFM bool) {
-	if !strings.HasPrefix(content, "---\n") {
+	data := []byte(content)
+	if !startsWithFrontMatter(data) {
 		return "", content, false
 	}
-	rest := content[4:] // skip opening "---\n"
-	idx := strings.Index(rest, "\n---\n")
-	if idx < 0 {
-		// Closing delimiter not found — treat whole file as body.
+	start := strings.IndexByte(content, '\n') + 1
+	closing, bodyStart, ok := findClosingDelimiter(data[start:])
+	if !ok {
 		return "", content, false
 	}
-	fm = rest[:idx+1]   // include trailing newline of last FM line
-	body = rest[idx+5:] // skip "\n---\n"
-	return fm, body, true
+	return content[start : start+closing], content[start+bodyStart:], true
 }
 
 // ParseList extracts the YAML sequence for key from a frontmatter string.
