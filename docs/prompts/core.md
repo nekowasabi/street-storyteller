@@ -45,8 +45,7 @@ project-root/
 │   ├── chapter01.md
 │   ├── chapter02.md
 │   └── ...
-├── storyteller.config.ts    # プロジェクト設定
-└── deno.json                # Deno設定
+└── .storyteller.json        # プロジェクト設定
 ```
 
 ### ディレクトリの役割

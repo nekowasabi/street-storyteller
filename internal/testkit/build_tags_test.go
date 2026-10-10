@@ -8,7 +8,7 @@ import (
 	"testing"
 )
 
-// Why: Process-100 Wave-pre N0d. deno.json と scripts/go_coverage.sh の存在/形を assert。
+// Why: Process-100 Wave-pre N0d. scripts/go_coverage.sh の存在/形を assert。
 
 func repoRootForTags(t *testing.T) string {
 	t.Helper()
@@ -17,30 +17,6 @@ func repoRootForTags(t *testing.T) string {
 		t.Fatal("runtime.Caller failed")
 	}
 	return filepath.Clean(filepath.Join(filepath.Dir(file), "..", ".."))
-}
-
-func TestDenoJsonHasGoTasks(t *testing.T) {
-	root := repoRootForTags(t)
-	data, err := os.ReadFile(filepath.Join(root, "deno.json"))
-	if err != nil {
-		t.Fatalf("read deno.json: %v", err)
-	}
-	content := string(data)
-	required := []string{
-		`"go:test":`,
-		`"go:test:integration":`,
-		`"go:test:external":`,
-		`"go:coverage":`,
-	}
-	missing := []string{}
-	for _, r := range required {
-		if !strings.Contains(content, r) {
-			missing = append(missing, r)
-		}
-	}
-	if len(missing) > 0 {
-		t.Fatalf("deno.json missing required Go tasks: %v", missing)
-	}
 }
 
 func TestGoCoverageScriptIsExecutable(t *testing.T) {

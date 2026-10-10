@@ -136,7 +136,7 @@ if not configs.storyteller then
     default_config = {
       cmd = { 'storyteller', 'lsp', 'start', '--stdio' },
       filetypes = { 'markdown' },
-      root_dir = lspconfig.util.root_pattern('deno.json', '.git'),
+      root_dir = lspconfig.util.root_pattern('.storyteller.json', '.git'),
     },
   }
 end

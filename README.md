@@ -264,24 +264,17 @@ GOCACHE=/tmp/sst-cache go test ./... -count=1
 
 ### Authoring Surface (TypeScript)
 
+`src/type/` と `samples/*/src/` の TypeScript は記述フォーマットであり、JS ランタイムは不要。
+Go 側の `internal/project/tsparse` が解釈し、`go test ./...` で検証される。
+
 ```bash
-# Format check
-deno fmt --check
-
-# Lint
-deno lint
-
-# TypeScript authoring tests
-deno task test:authoring
-
 # Meta check on samples
-deno task meta:check
+storyteller meta check --path samples/cinderella/manuscripts
 ```
 
 ### Quality Gates
 
 - **Go test**: `go test ./...` で全パッケージのテストが通ること
-- **Format/Lint**: `deno fmt --check` と `deno lint`
 - **Meta check**: `storyteller meta check` で原稿の整合性を確認
 
 ## Roadmap

@@ -10,32 +10,31 @@ code in this repository.
 
 ## 開発環境
 
-- **ランタイム**: Deno v2.2.12
-- **言語**: TypeScript
-- **テストフレームワーク**: Deno標準テストランナー
+- **ランタイム**: Go 1.25（単一バイナリ）。JS ランタイムは不要
+- **言語**: Go（処理エンジン）、TypeScript（物語要素の記述フォーマットのみ）
+- **テストフレームワーク**: `go test`
+
+Deno は 2026-10 の Cloudflare 参加に伴い開発終了が予告されたため、dev ツールとしても使用しない。
 
 ## コマンド一覧
 
 ### 基本コマンド
 
 ```bash
-# メインスクリプトの実行
-deno run main.ts
+# ビルドと ~/.local/bin への配置
+make build
 
-# テストの実行（必ず deno task test を使用）
-deno task test
+# テストの実行
+go test ./...
 
-# 特定のテストファイルを実行
-deno task test tests/main_test.ts
+# 特定パッケージのテスト
+go test ./internal/project/...
 
 # テスト名でフィルタリング
-deno task test --filter "test name"
+go test ./... -run "TestName"
 
-# ファイル監視モードでテスト
-deno task test --watch
-
-# カバレッジ付きテスト
-deno task test --coverage
+# カバレッジゲート
+bash scripts/go_coverage.sh
 ```
 
 ## MCP (Claude Desktop) 統合
@@ -118,97 +117,19 @@ MCPサーバーは以下を公開します：
 - `main.ts`にはコメントアウトされたサンプルコードが含まれている
 - 新機能追加時は、対応する型定義を`src/type/`に追加すること
 
-### Neovim LSP設定の注意点（Deno/TypeScript開発）
+### TypeScript ファイルのエディタ補完
 
-このプロジェクトではDeno
-LSP（denols）を使用しています。Neovimで開発する際の注意点：
+storyteller LSP（`storyteller lsp start --stdio`）を TypeScript ファイルにも有効化すると、補完候補選択時にドキュメントが表示される。TypeScript 用の言語サーバ（denols 等）は不要。
 
-#### LspSagaとdenolsの互換性問題
+### import 記法
 
-**問題**: LspSagaプラグインはdenolsと正しく連携できない場合があります。
-
-- `,cd`（goto_definition）や`,ck`（hover）などのLspSagaコマンドがdenolsで動作しない
-- `:lua vim.lsp.buf.definition()`等の直接呼び出しは正常に動作する
-
-**解決策**:
-TypeScriptファイルでは、LspSagaではなく`vim.lsp.buf`を直接使用するキーマッピングを設定する。
-
-```lua
--- ~/.config/nvim/rc/plugins/lsp.vim に追加
-vim.api.nvim_create_autocmd("FileType", {
-  pattern = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
-  callback = function()
-    local opts = { buffer = true, silent = true }
-    vim.keymap.set("n", ",cd", vim.lsp.buf.definition, opts)
-    vim.keymap.set("n", ",ck", vim.lsp.buf.hover, opts)
-    -- ... 他のマッピング
-  end,
-})
-```
-
-#### リテラル型値のホバードキュメント
-
-**制限事項**: denolsはUnion
-Typeのリテラル値（例：`"protagonist"`）にカーソルを合わせてもドキュメントを表示しません。
-
-- `CharacterRole`などの型名にカーソルを合わせればJSDocが表示される
-- 個別のリテラル値（`"protagonist"`、`"antagonist"`等）ではドキュメントが表示されない
-- これはdenolsの仕様であり、storyteller LSPの問題ではない
-
-**補完時のドキュメント表示**: storyteller
-LSPをTypeScriptファイルに有効化することで、補完候補選択時にドキュメントが表示されます。
-
-### src/配下でのimport mapエイリアス使用
-
-**新規ファイル作成時は、相対パスではなく`@storyteller/`エイリアスを使用してください。**
+`src/` と `samples/*/src/` の TypeScript では `@storyteller/types/` エイリアスで import を書く。
 
 ```typescript
-// ❌ 相対パス（非推奨）
-import { Result } from "../../shared/result.ts";
-import type { Character } from "../../../type/v2/character.ts";
-
-// ✅ import mapエイリアス（推奨）
-import { Result } from "@storyteller/shared/result.ts";
 import type { Character } from "@storyteller/types/v2/character.ts";
 ```
 
-`deno.json`で定義されているエイリアス:
-
-```json
-{
-  "imports": {
-    "@storyteller/": "./src/",
-    "@storyteller/types/": "./src/type/"
-  }
-}
-```
-
-### samples/プロジェクトでのimport map使用
-
-`samples/`ディレクトリ内のプロジェクト（cinderella,
-momotaroなど）では、**相対パスではなくimport mapを使用すること**。
-
-```typescript
-// ❌ 相対パス（コードジャンプが動作しない）
-import type { Character } from "../../../../src/type/v2/character.ts";
-
-// ✅ import map（推奨）
-import type { Character } from "@storyteller/types/v2/character.ts";
-```
-
-各サンプルプロジェクトの`deno.json`で定義されているimport map:
-
-```json
-{
-  "imports": {
-    "@storyteller/types/": "../../src/type/",
-    "@storyteller/": "../../src/"
-  }
-}
-```
-
-相対パスを使用するとDeno
-LSPが`import-map-remap`警告を表示し、コードジャンプが正しく動作しません。
+Go 側の `internal/project/tsparse` は import 文を解決せずリテラルだけを読むため、エイリアスは可読性と既存ファイルとの統一のための規約である。
 
 ## アクティブな仕様
 

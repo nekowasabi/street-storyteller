@@ -3,21 +3,19 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: install-precommit.sh [--dir DIR] [--no-recursive] [--force]
+Usage: install-precommit.sh [--dir DIR] [--force]
 
 Options:
   --dir DIR        Manuscripts directory to check (default: manuscripts)
-  --no-recursive   Do not use --recursive
   --force          Overwrite existing .git/hooks/pre-commit
   --help           Show this help message
 
 Installs a Git pre-commit hook that runs:
-  deno task meta:check -- --dir <DIR> [--recursive]
+  storyteller meta check --path <DIR>
 EOF
 }
 
 DIR="manuscripts"
-RECURSIVE="true"
 FORCE="false"
 
 while [[ $# -gt 0 ]]; do
@@ -25,10 +23,6 @@ while [[ $# -gt 0 ]]; do
     --dir)
       DIR="$2"
       shift 2
-      ;;
-    --no-recursive)
-      RECURSIVE="false"
-      shift
       ;;
     --force)
       FORCE="true"
@@ -59,21 +53,16 @@ if [[ "${FORCE}" == "false" && -f "${HOOK_PATH}" ]]; then
   exit 1
 fi
 
-RECURSIVE_ARGS=()
-if [[ "${RECURSIVE}" == "true" ]]; then
-  RECURSIVE_ARGS+=(--recursive)
-fi
-
 cat > "${HOOK_PATH}" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v deno >/dev/null 2>&1; then
-  echo "deno is required to run meta checks." >&2
+if ! command -v storyteller >/dev/null 2>&1; then
+  echo "storyteller is required to run meta checks (make install)." >&2
   exit 1
 fi
 
-deno task meta:check -- --dir "${DIR}" "${RECURSIVE_ARGS[@]}"
+storyteller meta check --path "${DIR}"
 EOF
 
 chmod +x "${HOOK_PATH}"
