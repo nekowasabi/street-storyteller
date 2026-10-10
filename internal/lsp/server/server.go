@@ -119,6 +119,12 @@ func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
 			}
 			return err
 		}
+		if msg.Method == "exit" && len(msg.ID) == 0 {
+			if !s.lifecycle.IsShutdown() {
+				return errors.New("LSP exit received before shutdown")
+			}
+			return nil
+		}
 		s.handle(ctx, msg)
 	}
 }
