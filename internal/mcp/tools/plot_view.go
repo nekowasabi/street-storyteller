@@ -45,7 +45,9 @@ func (PlotViewTool) Definition() protocol.Tool {
 func (t PlotViewTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a plotViewArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	st, err := t.resolveStore(ec)

@@ -40,7 +40,9 @@ func (ForeshadowingViewTool) Definition() protocol.Tool {
 func (ForeshadowingViewTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a foreshadowingViewArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	proj, err := project.Load(ec.ProjectRoot)

@@ -43,7 +43,9 @@ func (BeatCreateTool) Definition() protocol.Tool {
 func (BeatCreateTool) Handle(_ context.Context, args json.RawMessage, _ ExecutionContext) (*protocol.CallToolResult, error) {
 	var a beatCreateArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	if a.PlotID == "" {

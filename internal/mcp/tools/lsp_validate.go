@@ -31,7 +31,9 @@ func (LSPValidateTool) Definition() protocol.Tool {
 func (LSPValidateTool) Handle(ctx context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a lspValidateArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 	if a.File == "" {
 		return lspValidateError("file is required"), nil
