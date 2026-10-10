@@ -61,3 +61,28 @@ func TestEventUpdateValidatesImportance(t *testing.T) {
 		t.Fatalf("omitted importance: %v %+v", err, got)
 	}
 }
+
+func TestIntersectionCreateValidatesInfluence(t *testing.T) {
+	for _, tc := range []struct {
+		field  string
+		values []string
+	}{
+		{"influence_direction", []string{"", "forward", "backward", "mutual", "unknown", "FORWARD"}},
+		{"influence_level", []string{"", "high", "medium", "low", "unknown", "HIGH"}},
+	} {
+		for _, value := range tc.values {
+			t.Run(tc.field+"/"+value, func(t *testing.T) {
+				args := map[string]string{"source_plot": "a", "source_beat": "a1", "target_plot": "b", "target_beat": "b1", "summary": "Connection", tc.field: value}
+				raw, _ := json.Marshal(args)
+				got, err := (IntersectionCreateTool{}).Handle(context.Background(), raw, ExecutionContext{})
+				if err != nil {
+					t.Fatal(err)
+				}
+				wantError := value == "unknown" || value == "FORWARD" || value == "HIGH"
+				if got.IsError != wantError {
+					t.Errorf("%s=%q: IsError=%v, want %v", tc.field, value, got.IsError, wantError)
+				}
+			})
+		}
+	}
+}
