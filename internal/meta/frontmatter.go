@@ -341,6 +341,15 @@ func parseFrontMatterYAML(yamlBytes []byte, fm *FrontMatter) error {
 			continue
 		}
 
+		if strings.HasPrefix(valueStr, "[") && strings.HasSuffix(valueStr, "]") {
+			switch key {
+			case "characters", "settings", "foreshadowings", "timeline_events", "phases", "timelines":
+				assignList(fm, key, ParseList(key+": "+valueStr, key))
+				i++
+				continue
+			}
+		}
+
 		assignScalar(fm, key, unquote(valueStr))
 		i++
 	}

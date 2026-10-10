@@ -51,7 +51,7 @@ func ParseList(fm, key string) []string {
 			}
 			// Inline sequence: [a, b, c]
 			val = strings.Trim(val, "[]")
-			for _, part := range strings.Split(val, ",") {
+			for _, part := range splitInlineList(val) {
 				part = strings.TrimSpace(part)
 				if part != "" {
 					result = append(result, unquote(part))
@@ -61,4 +61,35 @@ func ParseList(fm, key string) []string {
 		}
 	}
 	return result
+}
+
+// splitInlineList recognizes separators only outside quoted scalar values.
+func splitInlineList(value string) []string {
+	var parts []string
+	start := 0
+	var quote byte
+	for i := 0; i < len(value); i++ {
+		c := value[i]
+		if quote != 0 {
+			if quote == '"' && c == '\\' && i+1 < len(value) {
+				i++
+				continue
+			}
+			if c == quote {
+				if quote == '\'' && i+1 < len(value) && value[i+1] == '\'' {
+					i++
+					continue
+				}
+				quote = 0
+			}
+			continue
+		}
+		if (c == '"' || c == '\'') && strings.TrimSpace(value[start:i]) == "" {
+			quote = c
+		} else if c == ',' {
+			parts = append(parts, value[start:i])
+			start = i + 1
+		}
+	}
+	return append(parts, value[start:])
 }
