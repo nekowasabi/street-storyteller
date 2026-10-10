@@ -486,6 +486,15 @@ func (p *parser) readEscape() (string, error) {
 		return "\b", nil
 	case 'f':
 		return "\f", nil
+	case 'v':
+		return "\v", nil
+	case '\n':
+		return "", nil
+	case '\r':
+		if p.peekByte() == '\n' {
+			p.pos++
+		}
+		return "", nil
 	case '0':
 		return "\x00", nil
 	case '$':
@@ -540,8 +549,13 @@ func (p *parser) readEscape() (string, error) {
 		}
 		return string(rune(n)), nil
 	}
-	// Unknown escape: per JS spec, becomes the literal character.
-	return string(c), nil
+	// Identity escapes consume a complete Unicode character, not one UTF-8 byte.
+	r, size := utf8.DecodeRune(p.src[p.pos-1:])
+	p.pos += size - 1
+	if r == '\u2028' || r == '\u2029' {
+		return "", nil // Unicode line continuation
+	}
+	return string(r), nil
 }
 
 // parseNumber reads an integer or float literal (possibly negative).
