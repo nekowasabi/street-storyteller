@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"path/filepath"
 	"testing"
 )
 
@@ -35,5 +36,28 @@ func TestEventCreateValidatesCategory(t *testing.T) {
 				t.Errorf("category %q: IsError=%v, want %v", value, got.IsError, wantError)
 			}
 		})
+	}
+}
+
+func TestEventUpdateValidatesImportance(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, ".storyteller.json"), `{"version":"1.0.0"}`)
+	writeFile(t, filepath.Join(root, "src/timelines/main.ts"), `export const main = { id: "main", name: "Main", scope: "story", summary: "Summary", events: [{id: "e1", title: "Opening", category: "plot_point", summary: "Summary", characters: [], settings: [], chapters: [], time: {order: 1}}] };`)
+	for _, value := range []string{"major", "minor", "background", "unknown", "MAJOR", ""} {
+		t.Run(value, func(t *testing.T) {
+			raw, _ := json.Marshal(map[string]string{"timeline_id": "main", "event_id": "e1", "importance": value})
+			got, err := (EventUpdateTool{}).Handle(context.Background(), raw, ExecutionContext{ProjectRoot: root})
+			if err != nil {
+				t.Fatal(err)
+			}
+			wantError := value == "unknown" || value == "MAJOR" || value == ""
+			if got.IsError != wantError {
+				t.Errorf("importance %q: IsError=%v, want %v; %s", value, got.IsError, wantError, got.Content[0].Text)
+			}
+		})
+	}
+	got, err := (EventUpdateTool{}).Handle(context.Background(), json.RawMessage(`{"timeline_id":"main","event_id":"e1","title":"Changed"}`), ExecutionContext{ProjectRoot: root})
+	if err != nil || got.IsError {
+		t.Fatalf("omitted importance: %v %+v", err, got)
 	}
 }

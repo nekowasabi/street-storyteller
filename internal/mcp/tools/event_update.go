@@ -37,7 +37,7 @@ func (EventUpdateTool) Definition() protocol.Tool {
 				"event_id":    {"type": "string", "description": "Event ID to update"},
 				"title":       {"type": "string", "description": "New event title"},
 				"summary":     {"type": "string", "description": "New event summary"},
-				"importance":  {"type": "string", "description": "Event importance (major, minor, background)"},
+				"importance":  {"type": "string", "enum": ["major", "minor", "background"], "description": "Event importance (major, minor, background)"},
 				"characters":  {"type": "array", "items": {"type": "string"}, "description": "Updated character IDs"},
 				"settings":    {"type": "array", "items": {"type": "string"}, "description": "Updated setting IDs"},
 				"chapters":    {"type": "array", "items": {"type": "string"}, "description": "Updated chapter IDs"}
@@ -60,6 +60,14 @@ func (EventUpdateTool) Handle(_ context.Context, args json.RawMessage, ec Execut
 	}
 	if a.EventID == "" {
 		return errorResult(fmt.Errorf("event_id is required")), nil
+	}
+
+	if a.Importance != nil {
+		switch domain.EventImportance(*a.Importance) {
+		case domain.EventImportanceMajor, domain.EventImportanceMinor, domain.EventImportanceBackground:
+		default:
+			return errorResult(fmt.Errorf("invalid importance %q: must be one of major, minor, background", *a.Importance)), nil
+		}
 	}
 
 	proj, err := project.Load(ec.ProjectRoot)
