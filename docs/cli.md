@@ -52,6 +52,8 @@ storyteller --version
 
 新規 storyteller プロジェクトの雛形を生成する。
 
+`--name` には単一のディレクトリ名を指定する。`.` / `..` とパス区切り文字は書き込み前に拒否する。親ディレクトリは `--path` で指定する。
+
 ```bash
 storyteller generate --path my-story
 ```
