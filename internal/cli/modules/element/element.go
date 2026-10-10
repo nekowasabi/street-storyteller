@@ -1,6 +1,7 @@
 package element
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -377,10 +378,21 @@ func detailsLiteral(id string, opts options) string {
 	var b strings.Builder
 	b.WriteString("{\n")
 	for _, f := range fields {
-		fmt.Fprintf(&b, "    %s: { file: \"./%s_%s.md\" },\n", f, id, f)
+		key := f
+		if exportIdentifier(f) != f || strings.IndexFunc(f, func(r rune) bool { return r > unicode.MaxASCII }) >= 0 {
+			key = tsStringLiteral(f)
+		}
+		fmt.Fprintf(&b, "    %s: { file: %s },\n", key, tsStringLiteral("./"+id+"_"+f+".md"))
 	}
 	b.WriteString("  }")
 	return b.String()
+}
+
+// JSON string literals are valid TypeScript strings. Go's %q can emit
+// escapes such as \a and \UXXXXXXXX that change meaning in JavaScript.
+func tsStringLiteral(value string) string {
+	encoded, _ := json.Marshal(value)
+	return string(encoded)
 }
 
 func tsStringArrayLiteral(values []string) string {
@@ -390,7 +402,7 @@ func tsStringArrayLiteral(values []string) string {
 		if i > 0 {
 			b.WriteString(", ")
 		}
-		fmt.Fprintf(&b, "%q", value)
+		b.WriteString(tsStringLiteral(value))
 	}
 	b.WriteString("]")
 	return b.String()
@@ -407,7 +419,7 @@ func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 		if role == "" {
 			role = "supporting"
 		}
-		base := fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  role: %q,\n  traits: [],\n  relationships: {},\n  appearingChapters: [],\n  summary: %q,", opts.id, opts.name, role, summary)
+		base := fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  role: %s,\n  traits: [],\n  relationships: {},\n  appearingChapters: [],\n  summary: %s,", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(role), tsStringLiteral(summary))
 		if len(opts.displayNames) > 0 {
 			base += fmt.Sprintf("\n  displayNames: %s,", tsStringArrayLiteral(opts.displayNames))
 		}
@@ -423,20 +435,20 @@ func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 		base += "\n}"
 		return "src/characters", "Character", base
 	case "setting":
-		base := fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"location\",\n  appearingChapters: [],\n  summary: %q,", opts.id, opts.name, summary)
+		base := fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  type: \"location\",\n  appearingChapters: [],\n  summary: %s,", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 		if dl := detailsLiteral(opts.id, opts); dl != "" {
 			base += fmt.Sprintf("\n  details: %s,", dl)
 		}
 		base += "\n}"
 		return "src/settings", "Setting", base
 	case "timeline":
-		return "src/timelines", "Timeline", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  scope: \"story\",\n  summary: %q,\n  events: [],\n}", opts.id, opts.name, summary)
+		return "src/timelines", "Timeline", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  scope: \"story\",\n  summary: %s,\n  events: [],\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	case "foreshadowing":
-		return "src/foreshadowings", "Foreshadowing", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"hint\",\n  summary: %q,\n  planting: { chapter: \"\", description: \"\" },\n  status: \"planted\",\n}", opts.id, opts.name, summary)
+		return "src/foreshadowings", "Foreshadowing", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  type: \"hint\",\n  summary: %s,\n  planting: { chapter: \"\", description: \"\" },\n  status: \"planted\",\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	case "plot", "beat", "intersection":
-		return "src/plots", "Plot", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"sub\",\n  status: \"active\",\n  summary: %q,\n  beats: [],\n}", opts.id, opts.name, summary)
+		return "src/plots", "Plot", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  type: \"sub\",\n  status: \"active\",\n  summary: %s,\n  beats: [],\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	case "phase":
-		return "src/characters", "CharacterPhase", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  summary: %q,\n}", opts.id, opts.name, summary)
+		return "src/characters", "CharacterPhase", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  summary: %s,\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	default:
 		return "src/" + kind + "s", "unknown", "{}"
 	}
