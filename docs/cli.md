@@ -52,14 +52,19 @@ storyteller --version
 
 新規 storyteller プロジェクトの雛形を生成する。
 
+`--name` には単一のディレクトリ名を指定する。`.` / `..` とパス区切り文字は書き込み前に拒否する。親ディレクトリは `--path` で指定する。
+
 ```bash
-storyteller generate --path my-story
+storyteller generate --name my-story --path .
 ```
 
 | Flag | 説明 |
 |------|------|
-| `--path <dir>` | 生成先ディレクトリ |
+| `--name <name>` | 新規プロジェクトのディレクトリ名（必須） |
+| `--path <dir>` | プロジェクトを配置する親ディレクトリ（既定: カレントディレクトリ） |
 | `--json` | 結果を JSON で返す |
+
+生成先が既に存在する場合はエラーになり、既存の原稿や設定を上書きしません。
 
 実装: `internal/cli/modules/generate/generate.go`
 
@@ -78,7 +83,7 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 | Flag | 説明 |
 |------|------|
 | `--name <string>` | 要素名 |
-| `--id <string>` | エンティティ ID（省略時は name から派生） |
+| `--id <string>` | エンティティ ID（必須。`/` と `\` は使用不可） |
 | `--summary <string>` | 概要 |
 | `--json` | JSON 出力 |
 
@@ -97,16 +102,22 @@ character | setting | timeline | foreshadowing | plot | beat | event | intersect
 
 実装: `internal/cli/modules/element/element.go`、ドメイン検証は `internal/domain/`。
 
+既存の要素ファイルは上書きしません。`--with-details` / `--add-details` /
+`--separate-files` は新規作成時の指定であり、既存要素への追記ではありません。
+詳細ファイルとの競合で作成に失敗した場合、その実行で作成したファイルは取り消されます。
+
 ### 例
 
 ```bash
 storyteller element character --id hero --name "勇者アレン" --role protagonist \
   --summary "勇者" --display-names "アレン,勇者" --aliases "英雄" --pronouns "彼"
-storyteller element foreshadowing --name "古びた剣" --type chekhov \
+storyteller element foreshadowing --id old_sword --name "古びた剣" --type chekhov \
   --planting-chapter chapter_01 --planting-description "床板の下から発見"
 ```
 
 `--display-names`, `--aliases`, `--pronouns` は character 専用です。値は単純なカンマ区切りで、前後の空白と空要素は無視されます。未指定時は生成される `Character` に該当フィールドを出力しません。
+
+詳細フィールド名にもパス区切り文字は使用できません。
 
 ---
 

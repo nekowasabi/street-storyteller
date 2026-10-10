@@ -271,7 +271,7 @@ func (a *projectAdapter) Locate(ref detect.EntityRef) (protocol.Location, bool) 
 		return protocol.Location{}, false
 	}
 	return protocol.Location{
-		URI: "file://" + path,
+		URI: (&url.URL{Scheme: "file", Path: filepath.ToSlash(path)}).String(),
 		Range: protocol.Range{
 			Start: protocol.Position{Line: 0, Character: 0},
 			End:   protocol.Position{Line: 0, Character: 0},

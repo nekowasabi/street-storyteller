@@ -341,6 +341,15 @@ func parseFrontMatterYAML(yamlBytes []byte, fm *FrontMatter) error {
 			continue
 		}
 
+		if strings.HasPrefix(valueStr, "[") && strings.HasSuffix(valueStr, "]") {
+			switch key {
+			case "characters", "settings", "foreshadowings", "timeline_events", "phases", "timelines":
+				assignList(fm, key, ParseList(key+": "+valueStr, key))
+				i++
+				continue
+			}
+		}
+
 		assignScalar(fm, key, unquote(valueStr))
 		i++
 	}
@@ -356,13 +365,15 @@ func stripCR(s string) string {
 
 func unquote(s string) string {
 	if len(s) >= 2 {
-		if (s[0] == '"' && s[len(s)-1] == '"') || (s[0] == '\'' && s[len(s)-1] == '\'') {
-			inner := s[1 : len(s)-1]
-			if s[0] == '"' {
-				inner = strings.ReplaceAll(inner, `\"`, `"`)
-				inner = strings.ReplaceAll(inner, `\\`, `\`)
+		if s[0] == '\'' && s[len(s)-1] == '\'' {
+			return strings.ReplaceAll(s[1:len(s)-1], "''", "'")
+		}
+		if s[0] == '"' && s[len(s)-1] == '"' {
+			if decoded, err := strconv.Unquote(s); err == nil {
+				return decoded
 			}
-			return inner
+			inner := strings.ReplaceAll(s[1:len(s)-1], `\"`, `"`)
+			return strings.ReplaceAll(inner, `\\`, `\`)
 		}
 	}
 	return s
@@ -409,9 +420,7 @@ func quoteIfNeeded(s string) string {
 		return `""`
 	}
 	if needsQuote(s) {
-		escaped := strings.ReplaceAll(s, `\`, `\\`)
-		escaped = strings.ReplaceAll(escaped, `"`, `\"`)
-		return `"` + escaped + `"`
+		return strconv.Quote(s)
 	}
 	return s
 }
@@ -421,7 +430,7 @@ func needsQuote(s string) bool {
 		return true
 	}
 	for _, r := range s {
-		if r > 127 {
+		if r < 32 || r >= 127 {
 			return true
 		}
 	}

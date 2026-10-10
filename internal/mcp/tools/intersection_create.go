@@ -35,8 +35,8 @@ func (IntersectionCreateTool) Definition() protocol.Tool {
 				"target_plot":      {"type": "string", "description": "Target plot ID (required)"},
 				"target_beat":         {"type": "string", "description": "Target beat ID (required)"},
 				"summary":             {"type": "string", "description": "Intersection summary (required)"},
-				"influence_direction": {"type": "string", "description": "forward/backward/mutual (default: forward)"},
-				"influence_level":     {"type": "string", "description": "high/medium/low (default: medium)"}
+				"influence_direction": {"type": "string", "enum": ["forward", "backward", "mutual"], "description": "forward/backward/mutual (default: forward)"},
+				"influence_level":     {"type": "string", "enum": ["high", "medium", "low"], "description": "high/medium/low (default: medium)"}
 			},
 			"required": ["source_plot", "source_beat", "target_plot", "target_beat", "summary"]
 		}`),
@@ -47,7 +47,9 @@ func (IntersectionCreateTool) Definition() protocol.Tool {
 func (IntersectionCreateTool) Handle(_ context.Context, args json.RawMessage, _ ExecutionContext) (*protocol.CallToolResult, error) {
 	var a intersectionCreateArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	if a.SourcePlot == "" {
@@ -71,14 +73,26 @@ func (IntersectionCreateTool) Handle(_ context.Context, args json.RawMessage, _ 
 		dir = domain.InfluenceDirectionForward
 	}
 
+	switch dir {
+	case domain.InfluenceDirectionForward, domain.InfluenceDirectionBackward, domain.InfluenceDirectionMutual:
+	default:
+		return errResult(fmt.Sprintf("invalid influence_direction %q: must be one of forward, backward, mutual", a.InfluenceDirection)), nil
+	}
+
 	level := domain.InfluenceLevel(a.InfluenceLevel)
 	if level == "" {
 		level = domain.InfluenceLevelMedium
 	}
 
+	switch level {
+	case domain.InfluenceLevelHigh, domain.InfluenceLevelMedium, domain.InfluenceLevelLow:
+	default:
+		return errResult(fmt.Sprintf("invalid influence_level %q: must be one of high, medium, low", a.InfluenceLevel)), nil
+	}
+
 	id := fmt.Sprintf("ix_%s_%s_%s_%s", a.SourcePlot, a.SourceBeat, a.TargetPlot, a.TargetBeat)
 
-	intersection := domain.PlotIntersection{
+	intersection := plotIntersectionScaffold{
 		ID:                 id,
 		SourcePlotID:       a.SourcePlot,
 		SourceBeatID:       a.SourceBeat,

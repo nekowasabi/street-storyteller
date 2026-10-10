@@ -8,6 +8,7 @@
         "inputSchema": {
           "properties": {
             "path": {
+              "description": "Absolute or project-relative manuscript directory",
               "type": "string"
             }
           },

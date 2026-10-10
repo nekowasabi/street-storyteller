@@ -33,9 +33,10 @@ func SemanticTokens(
 		return &protocol.SemanticTokens{Data: []uint32{}}, nil
 	}
 	detected := detect.Detect(detect.DetectionRequest{
-		URI:     doc.URI(),
-		Content: doc.Content(),
-		Catalog: catalog,
+		URI:             doc.URI(),
+		Content:         doc.Content(),
+		Catalog:         catalog,
+		KeepOccurrences: true,
 	})
 	sort.SliceStable(detected, func(i, j int) bool {
 		a := detected[i].Location.Range.Start
@@ -43,14 +44,18 @@ func SemanticTokens(
 		if a.Line != b.Line {
 			return a.Line < b.Line
 		}
-		return a.Character < b.Character
+		if a.Character != b.Character {
+			return a.Character < b.Character
+		}
+		// Prefer the longest match when aliases share a start position.
+		return detected[i].Location.Range.End.Character > detected[j].Location.Range.End.Character
 	})
 	return &protocol.SemanticTokens{Data: encodeSemanticTokens(detected)}, nil
 }
 
 func encodeSemanticTokens(detected []detect.DetectedEntity) []uint32 {
 	out := make([]uint32, 0, len(detected)*5)
-	var prevLine, prevStart uint32
+	var prevLine, prevStart, prevEnd uint32
 	for _, d := range detected {
 		tokenType, ok := tokenTypeFor(d.Entity.Kind)
 		if !ok {
@@ -58,10 +63,14 @@ func encodeSemanticTokens(detected []detect.DetectedEntity) []uint32 {
 		}
 		start := d.Location.Range.Start
 		end := d.Location.Range.End
+		if end.Line != start.Line || end.Character <= start.Character {
+			continue
+		}
 		line := uint32(start.Line)
 		character := uint32(start.Character)
 		length := uint32(end.Character - start.Character)
-		if length == 0 {
+		// Standard clients need non-overlapping tokens, even when aliases overlap.
+		if len(out) > 0 && line == prevLine && character < prevEnd {
 			continue
 		}
 		deltaLine := line - prevLine
@@ -72,6 +81,7 @@ func encodeSemanticTokens(detected []detect.DetectedEntity) []uint32 {
 		out = append(out, deltaLine, deltaStart, length, tokenType, modifierFor(d))
 		prevLine = line
 		prevStart = character
+		prevEnd = uint32(end.Character)
 	}
 	return out
 }

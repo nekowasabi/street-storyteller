@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -18,11 +19,16 @@ func Read(r io.Reader) (*Message, error) {
 		br = bufio.NewReader(r)
 	}
 	contentLength := -1
+	hasHeader := false
 	for {
 		line, err := br.ReadString('\n')
 		if err != nil {
+			if err == io.EOF && (hasHeader || len(line) > 0) {
+				err = io.ErrUnexpectedEOF
+			}
 			return nil, fmt.Errorf("read header: %w", err)
 		}
+		hasHeader = true
 		// Strip CRLF.
 		line = strings.TrimRight(line, "\r\n")
 		if line == "" {
@@ -47,12 +53,16 @@ func Read(r io.Reader) (*Message, error) {
 	if contentLength < 0 {
 		return nil, fmt.Errorf("missing Content-Length header")
 	}
-	body := make([]byte, contentLength)
-	if _, err := io.ReadFull(br, body); err != nil {
+	// Grow only as bytes arrive; a declared length alone must not allocate them.
+	var body bytes.Buffer
+	if _, err := io.CopyN(&body, br, int64(contentLength)); err != nil {
+		if err == io.EOF {
+			err = io.ErrUnexpectedEOF
+		}
 		return nil, fmt.Errorf("read body: %w", err)
 	}
 	var msg Message
-	if err := json.Unmarshal(body, &msg); err != nil {
+	if err := json.Unmarshal(body.Bytes(), &msg); err != nil {
 		return nil, fmt.Errorf("decode body: %w", err)
 	}
 	return &msg, nil
@@ -93,13 +103,11 @@ func NewRequest(id json.RawMessage, method string, params any) *Message {
 
 // NewResponse builds a successful JSON-RPC 2.0 response.
 func NewResponse(id json.RawMessage, result any) *Message {
-	msg := &Message{JSONRPC: "2.0", ID: id}
-	if result != nil {
-		if raw, err := json.Marshal(result); err == nil {
-			msg.Result = raw
-		}
+	raw, err := json.Marshal(result)
+	if err != nil {
+		return NewErrorResponse(id, CodeInternalError, "marshal result: "+err.Error())
 	}
-	return msg
+	return &Message{JSONRPC: "2.0", ID: id, Result: raw}
 }
 
 // NewErrorResponse builds a JSON-RPC 2.0 error response.

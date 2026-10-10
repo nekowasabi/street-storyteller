@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -33,7 +34,7 @@ func (LSPFindReferencesTool) Definition() protocol.Tool {
 "properties":{
   "entity_type":{"type":"string","enum":["character","setting"]},
   "entity_id":{"type":"string"},
-  "root":{"type":"string","description":"manuscripts directory; defaults to <project>/manuscripts"}
+  "root":{"type":"string","description":"Absolute or project-relative manuscripts directory; defaults to <project>/manuscripts"}
 },
 "required":["entity_type","entity_id"]
 }`),
@@ -48,7 +49,9 @@ func (LSPFindReferencesTool) Definition() protocol.Tool {
 func (LSPFindReferencesTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a lspFindReferencesArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 
 	// --- validate required args ---
@@ -78,6 +81,8 @@ func (LSPFindReferencesTool) Handle(_ context.Context, args json.RawMessage, ec 
 	manuscriptsRoot := a.Root
 	if manuscriptsRoot == "" {
 		manuscriptsRoot = filepath.Join(ec.ProjectRoot, "manuscripts")
+	} else {
+		manuscriptsRoot = resolveProjectPath(ec.ProjectRoot, manuscriptsRoot)
 	}
 
 	// --- scan files ---
@@ -182,11 +187,15 @@ func scanFile(path string, names []string) ([]reference, error) {
 	defer f.Close()
 
 	var refs []reference
-	scanner := bufio.NewScanner(f)
+	reader := bufio.NewReader(f)
 	lineNum := 0
-	for scanner.Scan() {
+	for {
+		line, readErr := reader.ReadString('\n')
+		if len(line) == 0 && readErr == io.EOF {
+			return refs, nil
+		}
 		lineNum++
-		line := scanner.Text()
+		line = strings.TrimSuffix(strings.TrimSuffix(line, "\n"), "\r")
 		for _, name := range names {
 			if strings.Contains(line, name) {
 				refs = append(refs, reference{
@@ -197,8 +206,13 @@ func scanFile(path string, names []string) ([]reference, error) {
 				break // one match per line is enough
 			}
 		}
+		if readErr != nil {
+			if readErr == io.EOF {
+				return refs, nil
+			}
+			return refs, readErr
+		}
 	}
-	return refs, scanner.Err()
 }
 
 // formatReferences builds the human-readable result string.

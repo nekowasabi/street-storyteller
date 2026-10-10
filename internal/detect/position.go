@@ -2,6 +2,7 @@ package detect
 
 import (
 	"fmt"
+	"sort"
 	"unicode/utf8"
 
 	apperrors "github.com/takets/street-storyteller/internal/errors"
@@ -23,13 +24,13 @@ type PositionTable struct {
 // lineEntry は 1 行ぶんの byte 範囲と rune 位置情報を保持する。
 //
 // Why: byteStart / byteEnd は line separator を含まない範囲。runeStarts と
-// utf16Lengths を別 slice にすることで、ByteOffset / PositionAt の双方で
+// utf16Ends を別 slice にすることで、ByteOffset / PositionAt の双方で
 // シンプルなインデックス操作だけで往復変換ができる。
 type lineEntry struct {
-	byteStart    int   // 行先頭 byte offset (separator 直後)
-	byteEnd      int   // 行終端 byte offset (separator 直前 or EOF)
-	runeStarts   []int // 各 rune の line-relative byte offset
-	utf16Lengths []int // 各 rune の UTF-16 code unit 数 (1 or 2)
+	byteStart  int   // 行先頭 byte offset (separator 直後)
+	byteEnd    int   // 行終端 byte offset (separator 直前 or EOF)
+	runeStarts []int // 各 rune の line-relative byte offset
+	utf16Ends  []int // 各 rune 終端までの累積 UTF-16 code unit 数
 }
 
 // NewPositionTable は content を一度だけ走査して PositionTable を構築する。
@@ -59,7 +60,11 @@ func NewPositionTable(content string) *PositionTable {
 		}
 		r, size := utf8.DecodeRuneInString(content[i:])
 		line.runeStarts = append(line.runeStarts, i-line.byteStart)
-		line.utf16Lengths = append(line.utf16Lengths, utf16Width(r))
+		end := utf16Width(r)
+		if len(line.utf16Ends) > 0 {
+			end += line.utf16Ends[len(line.utf16Ends)-1]
+		}
+		line.utf16Ends = append(line.utf16Ends, end)
 		i += size
 	}
 	// EOF または末尾改行直後でも常に最終行 (空行を含む) を 1 つ確定させる。
@@ -104,23 +109,26 @@ func (t *PositionTable) ByteOffset(line, charUTF16 int) (int, error) {
 	}
 
 	L := t.lines[line]
-	cum := 0
-	for i, ulen := range L.utf16Lengths {
-		if cum == charUTF16 {
-			return L.byteStart + L.runeStarts[i], nil
-		}
-		// surrogate pair の中央位置 (cum < charUTF16 < cum+ulen) は invalid。
-		if charUTF16 < cum+ulen {
+	if charUTF16 == 0 {
+		return L.byteStart, nil
+	}
+	i := sort.SearchInts(L.utf16Ends, charUTF16)
+	if i < len(L.utf16Ends) {
+		if L.utf16Ends[i] != charUTF16 {
 			return 0, apperrors.New(apperrors.CodeValidation,
 				fmt.Sprintf("character %d falls in middle of surrogate pair on line %d", charUTF16, line))
 		}
-		cum += ulen
-	}
-	if cum == charUTF16 {
+		if i+1 < len(L.runeStarts) {
+			return L.byteStart + L.runeStarts[i+1], nil
+		}
 		return L.byteEnd, nil
 	}
+	length := 0
+	if len(L.utf16Ends) > 0 {
+		length = L.utf16Ends[len(L.utf16Ends)-1]
+	}
 	return 0, apperrors.New(apperrors.CodeValidation,
-		fmt.Sprintf("character %d out of range [0,%d] on line %d", charUTF16, cum, line))
+		fmt.Sprintf("character %d out of range [0,%d] on line %d", charUTF16, length, line))
 }
 
 // PositionAt は絶対 byte offset を Position に変換する。
@@ -134,29 +142,21 @@ func (t *PositionTable) PositionAt(byteOffset int) (Position, error) {
 			fmt.Sprintf("byte offset %d out of range [0,%d]", byteOffset, len(t.raw)))
 	}
 
-	for li, L := range t.lines {
-		if byteOffset < L.byteStart || byteOffset > L.byteEnd {
-			continue
-		}
-		local := byteOffset - L.byteStart
-		cum := 0
-		for i, rs := range L.runeStarts {
-			if rs == local {
-				return Position{Line: li, Character: cum}, nil
-			}
-			if rs > local {
-				return Position{}, apperrors.New(apperrors.CodeValidation,
-					fmt.Sprintf("byte offset %d falls in middle of rune on line %d", byteOffset, li))
-			}
-			cum += L.utf16Lengths[i]
-		}
-		// 全 rune を超えた行末位置 (separator 直前 / EOF) は (line, cum) を返す。
-		if local == L.byteEnd-L.byteStart {
-			return Position{Line: li, Character: cum}, nil
-		}
+	li := sort.Search(len(t.lines), func(i int) bool { return t.lines[i].byteEnd >= byteOffset })
+	if li == len(t.lines) || byteOffset < t.lines[li].byteStart {
 		return Position{}, apperrors.New(apperrors.CodeValidation,
-			fmt.Sprintf("byte offset %d unreachable on line %d", byteOffset, li))
+			fmt.Sprintf("byte offset %d falls inside line separator", byteOffset))
 	}
-	return Position{}, apperrors.New(apperrors.CodeValidation,
-		fmt.Sprintf("byte offset %d falls inside line separator", byteOffset))
+	L := t.lines[li]
+	local := byteOffset - L.byteStart
+	i := sort.SearchInts(L.runeStarts, local)
+	if local != L.byteEnd-L.byteStart && (i == len(L.runeStarts) || L.runeStarts[i] != local) {
+		return Position{}, apperrors.New(apperrors.CodeValidation,
+			fmt.Sprintf("byte offset %d falls in middle of rune on line %d", byteOffset, li))
+	}
+	character := 0
+	if i > 0 {
+		character = L.utf16Ends[i-1]
+	}
+	return Position{Line: li, Character: character}, nil
 }

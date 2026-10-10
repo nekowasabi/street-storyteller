@@ -1,11 +1,13 @@
 package element
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+	"unicode"
 
 	"github.com/takets/street-storyteller/internal/cli"
 	"github.com/takets/street-storyteller/internal/meta"
@@ -32,6 +34,16 @@ func (c *Command) Handle(cctx cli.CommandContext) int {
 	if opts.id == "" {
 		cctx.Presenter.ShowError("--id is required")
 		return 1
+	}
+	if strings.ContainsAny(opts.id, `/\`) {
+		cctx.Presenter.ShowError("--id must not contain path separators")
+		return 1
+	}
+	for _, field := range opts.detailFields {
+		if strings.ContainsAny(field, `/\`) {
+			cctx.Presenter.ShowError("detail field names must not contain path separators")
+			return 1
+		}
 	}
 	if opts.name == "" {
 		opts.name = opts.id
@@ -231,24 +243,72 @@ func parseOptions(args []string) (options, error) {
 	return opts, nil
 }
 
-func writeElement(root, kind string, opts options) (string, []string, error) {
+// exportIdentifier keeps entity IDs independent of JavaScript binding syntax.
+// Existing valid bindings stay stable; filenames and the entity's ID are unchanged.
+func exportIdentifier(id string) string {
+	valid := id != ""
+	for i, r := range id {
+		if r != '_' && r != '$' && !unicode.IsLetter(r) && !(i > 0 && unicode.IsDigit(r)) {
+			valid = false
+			break
+		}
+	}
+	switch id {
+	case "await", "break", "case", "catch", "class", "const", "continue", "debugger", "default", "delete", "do", "else", "enum", "export", "extends", "false", "finally", "for", "function", "if", "import", "in", "instanceof", "new", "null", "return", "super", "switch", "this", "throw", "true", "try", "typeof", "var", "void", "while", "with", "yield", "implements", "interface", "let", "package", "private", "protected", "public", "static", "eval", "arguments":
+		valid = false
+	}
+	if valid {
+		return id
+	}
+	return fmt.Sprintf("element_%x", id)
+}
+
+func writeElement(root, kind string, opts options) (path string, detailPaths []string, err error) {
 	dir, typeName, body := elementTemplate(kind, opts)
-	path := filepath.Join(root, dir, opts.id+".ts")
+	path = filepath.Join(root, dir, opts.id+".ts")
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return "", nil, err
 	}
-	content := fmt.Sprintf("import type { %s } from \"@storyteller/types/v2/%s.ts\";\n\nexport const %s: %s = %s;\n", typeName, importTypeFile(kind), opts.id, typeName, body)
-	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+	content := fmt.Sprintf("import type { %s } from \"@storyteller/types/v2/%s.ts\";\n\nexport const %s: %s = %s;\n", typeName, importTypeFile(kind), exportIdentifier(opts.id), typeName, body)
+	if err := createFile(path, []byte(content)); err != nil {
 		return "", nil, err
 	}
+	createdSource := path
+	defer func() {
+		if err != nil {
+			_ = os.Remove(createdSource)
+		}
+	}()
 
 	// Why: detail md は --separate-files / --add-details に列挙された field 分のみ生成。
 	// --with-details (フィールド指定なし) は TS 側 details:{} のみで md は生成しない。
-	detailPaths, err := writeDetailFiles(filepath.Dir(path), kind, opts)
+	detailPaths, err = writeDetailFiles(filepath.Dir(path), kind, opts)
 	if err != nil {
+		for _, created := range detailPaths {
+			_ = os.Remove(created)
+		}
 		return "", nil, err
 	}
 	return path, detailPaths, nil
+}
+
+// createFile never replaces authored content, including a symlink target.
+func createFile(path string, content []byte) error {
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
+	if err != nil {
+		return err
+	}
+	_, writeErr := f.Write(content)
+	closeErr := f.Close()
+	if writeErr != nil {
+		_ = os.Remove(path)
+		return writeErr
+	}
+	if closeErr != nil {
+		_ = os.Remove(path)
+		return closeErr
+	}
+	return nil
 }
 
 // writeDetailFiles は detailFields ごとに <id>_<field>.md を生成する。
@@ -264,11 +324,6 @@ func writeDetailFiles(dir, kind string, opts options) ([]string, error) {
 	out := make([]string, 0, len(opts.detailFields))
 	for _, field := range opts.detailFields {
 		mdPath := filepath.Join(dir, opts.id+"_"+field+".md")
-		if _, err := os.Stat(mdPath); err == nil {
-			return out, fmt.Errorf("detail file already exists: %s", mdPath)
-		} else if !os.IsNotExist(err) {
-			return out, err
-		}
 		doc := &meta.Document{
 			HasFrontMatter: true,
 			FrontMatter: meta.FrontMatter{
@@ -286,7 +341,7 @@ func writeDetailFiles(dir, kind string, opts options) ([]string, error) {
 			return out, err
 		}
 		final := append(encoded, []byte(body)...)
-		if err := os.WriteFile(mdPath, final, 0644); err != nil {
+		if err := createFile(mdPath, final); err != nil {
 			return out, err
 		}
 		out = append(out, mdPath)
@@ -323,10 +378,21 @@ func detailsLiteral(id string, opts options) string {
 	var b strings.Builder
 	b.WriteString("{\n")
 	for _, f := range fields {
-		fmt.Fprintf(&b, "    %s: { file: \"./%s_%s.md\" },\n", f, id, f)
+		key := f
+		if exportIdentifier(f) != f || strings.IndexFunc(f, func(r rune) bool { return r > unicode.MaxASCII }) >= 0 {
+			key = tsStringLiteral(f)
+		}
+		fmt.Fprintf(&b, "    %s: { file: %s },\n", key, tsStringLiteral("./"+id+"_"+f+".md"))
 	}
 	b.WriteString("  }")
 	return b.String()
+}
+
+// JSON string literals are valid TypeScript strings. Go's %q can emit
+// escapes such as \a and \UXXXXXXXX that change meaning in JavaScript.
+func tsStringLiteral(value string) string {
+	encoded, _ := json.Marshal(value)
+	return string(encoded)
 }
 
 func tsStringArrayLiteral(values []string) string {
@@ -336,7 +402,7 @@ func tsStringArrayLiteral(values []string) string {
 		if i > 0 {
 			b.WriteString(", ")
 		}
-		fmt.Fprintf(&b, "%q", value)
+		b.WriteString(tsStringLiteral(value))
 	}
 	b.WriteString("]")
 	return b.String()
@@ -353,7 +419,7 @@ func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 		if role == "" {
 			role = "supporting"
 		}
-		base := fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  role: %q,\n  traits: [],\n  relationships: {},\n  appearingChapters: [],\n  summary: %q,", opts.id, opts.name, role, summary)
+		base := fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  role: %s,\n  traits: [],\n  relationships: {},\n  appearingChapters: [],\n  summary: %s,", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(role), tsStringLiteral(summary))
 		if len(opts.displayNames) > 0 {
 			base += fmt.Sprintf("\n  displayNames: %s,", tsStringArrayLiteral(opts.displayNames))
 		}
@@ -369,20 +435,20 @@ func elementTemplate(kind string, opts options) (dir, typeName, body string) {
 		base += "\n}"
 		return "src/characters", "Character", base
 	case "setting":
-		base := fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"location\",\n  appearingChapters: [],\n  summary: %q,", opts.id, opts.name, summary)
+		base := fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  type: \"location\",\n  appearingChapters: [],\n  summary: %s,", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 		if dl := detailsLiteral(opts.id, opts); dl != "" {
 			base += fmt.Sprintf("\n  details: %s,", dl)
 		}
 		base += "\n}"
 		return "src/settings", "Setting", base
 	case "timeline":
-		return "src/timelines", "Timeline", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  scope: \"story\",\n  summary: %q,\n  events: [],\n}", opts.id, opts.name, summary)
+		return "src/timelines", "Timeline", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  scope: \"story\",\n  summary: %s,\n  events: [],\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	case "foreshadowing":
-		return "src/foreshadowings", "Foreshadowing", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"hint\",\n  summary: %q,\n  planting: { chapter: \"\", description: \"\" },\n  status: \"planted\",\n}", opts.id, opts.name, summary)
+		return "src/foreshadowings", "Foreshadowing", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  type: \"hint\",\n  summary: %s,\n  planting: { chapter: \"\", description: \"\" },\n  status: \"planted\",\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	case "plot", "beat", "intersection":
-		return "src/plots", "Plot", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  type: \"sub\",\n  status: \"active\",\n  summary: %q,\n  beats: [],\n}", opts.id, opts.name, summary)
+		return "src/plots", "Plot", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  type: \"sub\",\n  status: \"active\",\n  summary: %s,\n  beats: [],\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	case "phase":
-		return "src/characters", "CharacterPhase", fmt.Sprintf("{\n  id: %q,\n  name: %q,\n  summary: %q,\n}", opts.id, opts.name, summary)
+		return "src/characters", "CharacterPhase", fmt.Sprintf("{\n  id: %s,\n  name: %s,\n  summary: %s,\n}", tsStringLiteral(opts.id), tsStringLiteral(opts.name), tsStringLiteral(summary))
 	default:
 		return "src/" + kind + "s", "unknown", "{}"
 	}

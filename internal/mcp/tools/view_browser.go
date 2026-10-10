@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"html"
 
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
 	"github.com/takets/street-storyteller/internal/project"
@@ -31,7 +32,9 @@ func (ViewBrowserTool) Definition() protocol.Tool {
 func (ViewBrowserTool) Handle(_ context.Context, args json.RawMessage, ec ExecutionContext) (*protocol.CallToolResult, error) {
 	var a viewBrowserArgs
 	if len(args) > 0 {
-		_ = json.Unmarshal(args, &a)
+		if err := json.Unmarshal(args, &a); err != nil {
+			return errResult("invalid arguments: " + err.Error()), nil
+		}
 	}
 	if a.Entity == "" || a.ID == "" {
 		return &protocol.CallToolResult{
@@ -69,9 +72,9 @@ func (ViewBrowserTool) Handle(_ context.Context, args json.RawMessage, ec Execut
 		}, nil
 	}
 
-	html := fmt.Sprintf("<html><body><h1>%s</h1><p>%s</p></body></html>", name, summary)
+	rendered := fmt.Sprintf("<html><body><h1>%s</h1><p>%s</p></body></html>", html.EscapeString(name), html.EscapeString(summary))
 	return &protocol.CallToolResult{
-		Content: []protocol.ContentBlock{{Type: "text", Text: html}},
+		Content: []protocol.ContentBlock{{Type: "text", Text: rendered}},
 	}, nil
 }
 

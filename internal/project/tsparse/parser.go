@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
+	"unicode/utf16"
 	"unicode/utf8"
 )
 
@@ -347,10 +348,11 @@ func (p *parser) parseKey() (string, error) {
 		}
 		return s.(string), nil
 	}
-	if isIdentStart(rune(c)) {
+	r, _ := utf8.DecodeRune(p.src[p.pos:])
+	if isIdentStart(r) {
 		return p.readIdentifier()
 	}
-	return "", fmt.Errorf("expected object key (identifier or quoted string), got %q", string(c))
+	return "", fmt.Errorf("expected object key (identifier or quoted string), got %q", string(r))
 }
 
 // parseArray reads `[ value, ... ]`.
@@ -484,6 +486,15 @@ func (p *parser) readEscape() (string, error) {
 		return "\b", nil
 	case 'f':
 		return "\f", nil
+	case 'v':
+		return "\v", nil
+	case '\n':
+		return "", nil
+	case '\r':
+		if p.peekByte() == '\n' {
+			p.pos++
+		}
+		return "", nil
 	case '0':
 		return "\x00", nil
 	case '$':
@@ -529,10 +540,22 @@ func (p *parser) readEscape() (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("invalid \\u escape %q", hex)
 		}
+		if n >= 0xD800 && n <= 0xDBFF && p.pos+6 <= len(p.src) && string(p.src[p.pos:p.pos+2]) == `\u` {
+			low, err := strconv.ParseUint(string(p.src[p.pos+2:p.pos+6]), 16, 32)
+			if err == nil && low >= 0xDC00 && low <= 0xDFFF {
+				p.pos += 6
+				return string(utf16.DecodeRune(rune(n), rune(low))), nil
+			}
+		}
 		return string(rune(n)), nil
 	}
-	// Unknown escape: per JS spec, becomes the literal character.
-	return string(c), nil
+	// Identity escapes consume a complete Unicode character, not one UTF-8 byte.
+	r, size := utf8.DecodeRune(p.src[p.pos-1:])
+	p.pos += size - 1
+	if r == '\u2028' || r == '\u2029' {
+		return "", nil // Unicode line continuation
+	}
+	return string(r), nil
 }
 
 // parseNumber reads an integer or float literal (possibly negative).

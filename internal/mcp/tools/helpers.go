@@ -1,6 +1,8 @@
 package tools
 
 import (
+	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -12,9 +14,15 @@ var nonAlphanumRe = regexp.MustCompile(`[^a-zA-Z0-9]+`)
 // sanitizeID converts an arbitrary string into a lowercase snake_case identifier
 // suitable for use as an auto-generated ID suffix.
 func sanitizeID(s string) string {
+	original := s
 	s = strings.ToLower(s)
 	s = nonAlphanumRe.ReplaceAllString(s, "_")
 	s = strings.Trim(s, "_")
+	if s == "" {
+		// Preserve the whole name, as plot and foreshadowing IDs do, rather than
+		// collapsing distinct non-ASCII titles to an empty suffix.
+		return fmt.Sprintf("%x", original)
+	}
 	if len(s) > 20 {
 		s = s[:20]
 	}
@@ -27,4 +35,13 @@ func errResult(msg string) *protocol.CallToolResult {
 		Content: []protocol.ContentBlock{{Type: "text", Text: msg}},
 		IsError: true,
 	}
+}
+
+// resolveProjectPath anchors relative tool paths to the configured project.
+// Absolute paths remain explicit user-selected targets.
+func resolveProjectPath(root, path string) string {
+	if filepath.IsAbs(path) {
+		return path
+	}
+	return filepath.Join(root, path)
 }
