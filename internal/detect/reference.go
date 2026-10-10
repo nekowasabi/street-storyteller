@@ -20,15 +20,17 @@ type DetectionRequest struct {
 	Content  string
 	Catalog  EntityCatalog
 	Bindings map[EntityKind][]string
+	// KeepOccurrences retains distinct source ranges for position-based consumers.
+	// The default remains one result per entity for manuscript binding detection.
+	KeepOccurrences bool
 }
 
-// DetectedEntity is the deduped per-entity result of a single Detect call.
+// DetectedEntity is a detected entity or occurrence from a single Detect call.
 //
-// Score is the highest-confidence value observed across all raw candidates
-// for the same (Kind, ID); Source records the attribution that produced that
-// score. Location points to the FIRST byte offset where the winning text was
-// matched in the manuscript body (FrontMatter candidates carry a zero
-// location). Warnings collects non-fatal anomalies, currently:
+// By default, Score is the highest-confidence value for the entity and Location
+// retains its first matched range. With KeepOccurrences, scores and locations
+// remain specific to each distinct range. FrontMatter candidates carry a zero
+// location. Warnings collects non-fatal anomalies, currently:
 //   - "catalog_miss": a FrontMatter binding referenced an id absent from the catalog.
 type DetectedEntity struct {
 	Entity      EntityRef
@@ -109,7 +111,7 @@ func Detect(req DetectionRequest) []DetectedEntity {
 	cands = append(cands, fromBindings(req.Bindings, req.Catalog)...)
 
 	// Phase 4: dedup.
-	deduped := dedup(cands)
+	deduped := dedup(cands, req.KeepOccurrences)
 
 	// Why: PositionTable で UTF-16 char position に正規化。placeholder byteOffset は
 	// LSP consumer (UTF-16 契約) と mismatch するため process-04 を待たず本実装に置換。
@@ -286,18 +288,24 @@ func fromBindings(bindings map[EntityKind][]string, cat EntityCatalog) []candida
 }
 
 // dedup merges candidates with the same (Kind, ID). The retained record
-// keeps the highest score and the FIRST byte offset observed (mirrors TS
-// mergeDetections L246-279, where occurrences accumulate but location of the
-// first hit is preserved). Warnings union across duplicates.
-func dedup(cands []candidate) []candidate {
+// keeps the highest score and the FIRST byte offset observed. With
+// keepOccurrences, only identical source ranges for the same entity merge.
+// The default mirrors TS mergeDetections L246-279, where occurrences
+// accumulate but location of the
+// first hit is preserved. Warnings union across duplicates.
+func dedup(cands []candidate, keepOccurrences bool) []candidate {
 	type key struct {
-		kind EntityKind
-		id   string
+		kind           EntityKind
+		id             string
+		offset, length int
 	}
 	idx := map[key]int{}
 	out := []candidate{}
 	for _, c := range cands {
-		k := key{c.entity.Kind, c.entity.ID}
+		k := key{kind: c.entity.Kind, id: c.entity.ID}
+		if keepOccurrences {
+			k.offset, k.length = c.byteOffset, len(c.matched)
+		}
 		if pos, ok := idx[k]; ok {
 			cur := out[pos]
 			// keep highest score; on tie prefer existing source for stability
