@@ -251,6 +251,10 @@ func (s *Server) handleDidClose(_ context.Context, params json.RawMessage) (any,
 		return nil, nil
 	}
 	s.docs.Close(p.TextDocument.URI)
+	if s.aggregator != nil {
+		// Diagnostics describe the discarded in-memory snapshot, not the file on disk.
+		s.writeDiagnostics(p.TextDocument.URI, nil)
+	}
 	return nil, nil
 }
 
@@ -336,6 +340,10 @@ func (s *Server) publishDiagnostics(ctx context.Context, uri, content string) {
 		debugf(s.debug, "diagnostics uri=%q err=%v", uri, err)
 		return
 	}
+	s.writeDiagnostics(uri, diags)
+}
+
+func (s *Server) writeDiagnostics(uri string, diags []protocol.Diagnostic) {
 	if diags == nil {
 		diags = []protocol.Diagnostic{}
 	}
