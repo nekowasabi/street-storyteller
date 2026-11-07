@@ -89,7 +89,7 @@ ping の登録前（`missing` に当たる）は、id 1・2・4 がすべて `-3
 - `internal/mcp/protocol/jsonrpc.go` の `Read` と `ErrMalformed`
 - `internal/mcp/server/server_test.go` の `TestServer_PingAnsweredInEverySessionState`
 
-同期コミット: `SYNC_COMMIT_PENDING`。対象のファイルがこのコミットより後に変わったら、検査を走らせたうえで、モデルの 1 手が `Server.Run` の 1 周を写しているかを読んで確かめる。確かめてから同期コミットを進める。検査が通っただけでは進めない。検査をせずに対象が変わってしまったときは `/maintain-formal-verification-skill` を使う。
+同期コミット: `0d3a6d55e976b92fef7999fc95684792c0d5e592`（2026-11-07 に、モデルが上の関数を写していることを確認）。対象のファイルがこのコミットより後に変わったら、検査を走らせたうえで、モデルの 1 手が `Server.Run` の 1 周を写しているかを読んで確かめる。確かめてから同期コミットを進める。検査が通っただけでは進めない。検査をせずに対象が変わってしまったときは `/maintain-formal-verification-skill` を使う。
 
 ## 範囲外
 
