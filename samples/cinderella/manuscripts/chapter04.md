@@ -12,6 +12,10 @@ storyteller:
     - kingdom
     - castle
     - glass_slipper
+  reader_requires:
+    - "glass_slipper_fit:shown"
+  reader_shows:
+    - "glass_slipper_fit:convinced"
 ---
 
 # 第4章：ガラスの靴

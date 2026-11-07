@@ -57,7 +57,7 @@ textlint MCP は textlint v14.8.0+ のネイティブサポートを使う（sto
 
 | Tool | 実装 | 概要 |
 |------|------|------|
-| `meta_check` | `meta_check.go` | manuscripts の YAML frontmatter 検証 |
+| `meta_check` | `meta_check.go` | manuscripts の YAML frontmatter 検証と Clarity 検査（違反があれば isError で違反行を返す） |
 | `meta_generate` | `meta_generate.go` | frontmatter テンプレ生成 |
 | `element_create` | `element_create.go` | 物語要素作成 |
 | `view_browser` | `view_browser.go` | HTML ビュー生成 |
@@ -93,7 +93,8 @@ textlint MCP は textlint v14.8.0+ のネイティブサポートを使う（sto
     "action": { "enum": ["add", "remove", "set"] },
     "entityType": {
       "enum": ["characters", "settings", "foreshadowings",
-               "timeline_events", "phases", "timelines"]
+               "timeline_events", "phases", "timelines",
+               "reader_shows", "reader_requires"]
     },
     "ids": { "type": "array", "items": { "type": "string" } },
     "validate": { "type": "boolean", "default": true }

@@ -14,6 +14,7 @@ const storytellerJSON = `{"version":"1.0.0"}
 const cinderellaTS = `import type { Character } from "@storyteller/types/v2/character.ts";
 
 export const cinderella: Character = {
+  id: "cinderella",
   name: "Cinderella",
   role: "protagonist",
   traits: ["kind"],
@@ -26,8 +27,10 @@ export const cinderella: Character = {
 const castleTS = `import type { Setting } from "@storyteller/types/v2/setting.ts";
 
 export const castle: Setting = {
+  id: "castle",
   name: "Royal Castle",
   type: "location",
+  appearingChapters: ["chapter01"],
   summary: "The grand royal castle.",
 };
 `

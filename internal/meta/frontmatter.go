@@ -29,6 +29,9 @@ type FrontMatter struct {
 	TimelineEvents []string `yaml:"timeline_events"`
 	Phases         []string `yaml:"phases"`
 	Timelines      []string `yaml:"timelines"`
+	// Clarity: "propId:stance" entries, order is presentation order within the chapter.
+	ReaderShows    []string `yaml:"reader_shows"`
+	ReaderRequires []string `yaml:"reader_requires"`
 }
 
 // DocumentKind は Document が manuscript か detail md かを表す。
@@ -122,7 +125,9 @@ func (f FrontMatter) isEmpty() bool {
 		len(f.Foreshadowings) == 0 &&
 		len(f.TimelineEvents) == 0 &&
 		len(f.Phases) == 0 &&
-		len(f.Timelines) == 0
+		len(f.Timelines) == 0 &&
+		len(f.ReaderShows) == 0 &&
+		len(f.ReaderRequires) == 0
 }
 
 // Encode は FrontMatter を YAML として再生成し、保持していた Body raw bytes と結合する。
@@ -174,6 +179,8 @@ func (d *Document) Encode() ([]byte, error) {
 	writeList(&buf, "timeline_events", d.FrontMatter.TimelineEvents)
 	writeList(&buf, "phases", d.FrontMatter.Phases)
 	writeList(&buf, "timelines", d.FrontMatter.Timelines)
+	writeList(&buf, "reader_shows", d.FrontMatter.ReaderShows)
+	writeList(&buf, "reader_requires", d.FrontMatter.ReaderRequires)
 	buf.WriteString("---\n")
 	buf.Write(d.bodyRaw)
 	return buf.Bytes(), nil
@@ -343,7 +350,8 @@ func parseFrontMatterYAML(yamlBytes []byte, fm *FrontMatter) error {
 
 		if strings.HasPrefix(valueStr, "[") && strings.HasSuffix(valueStr, "]") {
 			switch key {
-			case "characters", "settings", "foreshadowings", "timeline_events", "phases", "timelines":
+			case "characters", "settings", "foreshadowings", "timeline_events", "phases", "timelines",
+				"reader_shows", "reader_requires":
 				assignList(fm, key, ParseList(key+": "+valueStr, key))
 				i++
 				continue
@@ -412,6 +420,10 @@ func assignList(fm *FrontMatter, key string, list []string) {
 		fm.Phases = list
 	case "timelines":
 		fm.Timelines = list
+	case "reader_shows":
+		fm.ReaderShows = list
+	case "reader_requires":
+		fm.ReaderRequires = list
 	}
 }
 

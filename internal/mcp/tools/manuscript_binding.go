@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/takets/street-storyteller/internal/domain"
 	apperrors "github.com/takets/street-storyteller/internal/errors"
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
 	"github.com/takets/street-storyteller/internal/meta"
@@ -30,14 +31,14 @@ type manuscriptBindingArgs struct {
 func (ManuscriptBindingTool) Definition() protocol.Tool {
 	return protocol.Tool{
 		Name:        "manuscript_binding",
-		Description: "Add, remove, or replace entity ID lists in a manuscript YAML frontmatter (characters, settings, foreshadowings, timeline_events, phases, timelines).",
+		Description: "Add, remove, or replace entity ID lists in a manuscript YAML frontmatter (characters, settings, foreshadowings, timeline_events, phases, timelines, reader_shows, reader_requires). reader_* entries are \"propositionId:stance\" (reader_requires may omit \":stance\").",
 		InputSchema: json.RawMessage(`{
 			"type": "object",
 			"required": ["manuscript", "action", "entityType", "ids"],
 			"properties": {
 				"manuscript":  {"type": "string", "description": "Absolute or project-relative path to the manuscript .md file"},
 				"action":      {"type": "string", "enum": ["add", "remove", "set"]},
-				"entityType":  {"type": "string", "enum": ["characters", "settings", "foreshadowings", "timeline_events", "phases", "timelines"]},
+				"entityType":  {"type": "string", "enum": ["characters", "settings", "foreshadowings", "timeline_events", "phases", "timelines", "reader_shows", "reader_requires"]},
 				"ids":         {"type": "array", "items": {"type": "string"}},
 				"validate":    {"type": "boolean", "description": "When true (default), verify each ID exists in the project store"}
 			}
@@ -71,9 +72,13 @@ func (ManuscriptBindingTool) Handle(_ context.Context, args json.RawMessage, ec 
 	validEntityTypes := map[string]bool{
 		"characters": true, "settings": true, "foreshadowings": true,
 		"timeline_events": true, "phases": true, "timelines": true,
+		"reader_shows": true, "reader_requires": true,
 	}
 	if !validEntityTypes[a.EntityType] {
-		return bindingErrorResult("entityType must be one of: characters, settings, foreshadowings, timeline_events, phases, timelines"), nil
+		return bindingErrorResult("entityType must be one of: characters, settings, foreshadowings, timeline_events, phases, timelines, reader_shows, reader_requires"), nil
+	}
+	if err := validateClarityEntries(a.EntityType, a.IDs); err != nil {
+		return bindingErrorResult(err.Error()), nil
 	}
 
 	// --- resolve manuscript path ---
@@ -149,9 +154,31 @@ func validateIDs(projectRoot, entityType string, ids []string) error {
 	return nil
 }
 
+// validateClarityEntries rejects malformed "propId:stance" strings before any
+// store lookup, so a typo in the stance is reported even with validate=false.
+func validateClarityEntries(entityType string, ids []string) error {
+	for _, id := range ids {
+		var err error
+		switch entityType {
+		case "reader_shows":
+			_, err = domain.ParseDisclosure(id)
+		case "reader_requires":
+			_, err = domain.ParseRequirement(id)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // idExists returns true when id is found in the store for the given entityType.
 func idExists(proj *project.Project, entityType, id string) bool {
 	switch entityType {
+	case "reader_shows", "reader_requires":
+		propID, _, _ := strings.Cut(id, ":")
+		_, err := proj.Store.Proposition(propID)
+		return err == nil
 	case "characters":
 		_, err := proj.Store.Character(id)
 		return err == nil

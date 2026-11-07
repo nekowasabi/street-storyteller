@@ -29,6 +29,31 @@ type ServerCapabilities struct {
 	HoverProvider          bool                   `json:"hoverProvider"`
 	DefinitionProvider     bool                   `json:"definitionProvider"`
 	SemanticTokensProvider *SemanticTokensOptions `json:"semanticTokensProvider,omitempty"`
+	CompletionProvider     *CompletionOptions     `json:"completionProvider,omitempty"`
+}
+
+// CompletionOptions advertises completion support.
+type CompletionOptions struct {
+	TriggerCharacters []string `json:"triggerCharacters,omitempty"`
+}
+
+// CompletionParams is the params for `textDocument/completion`.
+type CompletionParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Position     Position               `json:"position"`
+}
+
+// CompletionItem is one completion candidate.
+type CompletionItem struct {
+	Label  string `json:"label"`
+	Kind   int    `json:"kind,omitempty"` // 12=Value, 13=Enum
+	Detail string `json:"detail,omitempty"`
+}
+
+// CompletionList is the result for `textDocument/completion`.
+type CompletionList struct {
+	IsIncomplete bool             `json:"isIncomplete"`
+	Items        []CompletionItem `json:"items"`
 }
 
 // SemanticTokensOptions advertises semantic-tokens support.

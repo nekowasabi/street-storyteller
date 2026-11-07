@@ -137,25 +137,56 @@ storyteller update apply    # 適用
 
 ## `storyteller meta check`
 
-`manuscripts/*.md` の YAML frontmatter（characters / settings / timeline_events 等）を検証する。
+`manuscripts/*.md` の YAML frontmatter（characters / settings / timeline_events 等）を検証し、続けて Clarity（`reader_shows` / `reader_requires`、[docs/clarity.md](clarity.md)）を検査する。章はファイル名順に読み、命題の定義は `manuscripts/` の親にある `src/propositions/` から読む。
 
 ```bash
 storyteller meta check
 storyteller meta check --json
-storyteller meta check --path manuscripts/chapter01.md
+storyteller meta check --path manuscripts
+```
+
+Clarity の違反があると終了コード 1 で、違反ごとに 1 行を標準エラーに出す。
+
+```
+manuscripts/chapter03.md:5 RDR-102 命題 loc の前提 shown が前の章に無い
+1 clarity violations
+```
+
+| コード | 規則 |
+|---|---|
+| RDR-101 | 命題 ID が `src/propositions/` に無い、または態度の綴りが違う |
+| RDR-102 | `reader_requires` の前提が、より前の章の `reader_shows` に無い |
+| RDR-103 | `corrected` の前に同じ命題の `misled` が無い |
+| RDR-104 | `must-correct-if-false` の命題が最終章で `corrected` になっていない |
+
+JSON 出力例（通過時と違反時）:
+
+```json
+{"ok":true,"files_checked":4}
+{"ok":false,"files_checked":4,"violations":[{"file":"manuscripts/chapter03.md","line":5,"code":"RDR-102","message":"命題 loc の前提 shown が前の章に無い"}]}
+```
+
+実装: `internal/cli/modules/meta/check.go`、ロジックは `internal/service.MetaCheckService.Run` と `internal/service.ReaderPrereqService.Run`。
+
+---
+
+## `storyteller manuscript build`
+
+`drafts/` の原稿を `meta check` と同じ検査にかけ、すべて通ったときだけ `manuscripts/` へ写す。1 件でも落ちたら何も書かず終了コード 1。frontmatter を持たない `drafts/ideas.md` のようなメモは写さない。
+
+```bash
+storyteller manuscript build
+storyteller manuscript build --from drafts --to manuscripts
+storyteller manuscript build --json
 ```
 
 JSON 出力例:
 
 ```json
-{
-  "type": "success",
-  "checked": 12,
-  "errors": []
-}
+{"ok":true,"built":4,"files_checked":4,"to":"./manuscripts"}
 ```
 
-実装: `internal/cli/modules/meta/check.go`、ロジックは `internal/service.MetaCheckService.Run`。
+実装: `internal/cli/modules/manuscript/build.go`。
 
 ---
 

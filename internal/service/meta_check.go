@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/takets/street-storyteller/internal/meta"
+	"github.com/takets/street-storyteller/internal/project/manifest"
 )
 
 // MetaCheckService validates manuscript YAML frontmatter under a directory.
@@ -26,9 +27,12 @@ import (
 // unifying on depth-1 here is the corrected behavior.
 type MetaCheckService struct{}
 
-// MetaCheckResult is the adapter-agnostic return contract.
+// MetaCheckResult is the adapter-agnostic return contract. Violations are
+// Clarity failures (docs/clarity.md); they are data, not an error, so adapters
+// can print every one of them before exiting non-zero.
 type MetaCheckResult struct {
 	FilesChecked int
+	Violations   []ClarityViolation
 }
 
 // NewMetaCheckService returns a stateless service instance.
@@ -55,7 +59,32 @@ func (s *MetaCheckService) Run(root string) (MetaCheckResult, error) {
 			return MetaCheckResult{}, err
 		}
 	}
-	return MetaCheckResult{FilesChecked: len(files)}, nil
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return MetaCheckResult{}, err
+	}
+	clarity, err := NewReaderPrereqService().Run(root, findProjectRoot(abs))
+	if err != nil {
+		return MetaCheckResult{}, err
+	}
+	return MetaCheckResult{FilesChecked: len(files), Violations: clarity.Violations}, nil
+}
+
+// findProjectRoot returns the nearest ancestor of dir (dir included) holding
+// the manifest, or "" when none does. Why walk up: manuscripts may be nested
+// (manuscripts/01/v2), and guessing the parent would silently disable
+// proposition checks (RDR-101) whenever the guess misses the manifest.
+func findProjectRoot(dir string) string {
+	for {
+		if _, err := os.Stat(filepath.Join(dir, manifest.ManifestFileName)); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
+	}
 }
 
 // ValidDetailTypes lists the allowed values for the "type" field in detail md.

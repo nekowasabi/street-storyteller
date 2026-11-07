@@ -1,0 +1,25 @@
+---
+title: "雨夜の鍵 - 読者の前提の状態図 (原稿 frontmatter 方式)"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: 設置
+    lg1: 回収
+  }
+  class lg0 blue
+  class lg1 orange
+  s0: 開幕前
+  s1: ch-01 雨の夜
+  s2: ch-02 鍵の不在#12290;所在を見せ#12289;来歴は伏せる
+  s3: ch-03 店主への疑い#12290;所在を確信#12289;コートで誤信
+  s4: ch-04 荷物の底#12290;所在の誤りが露見し訂正
+  [*] --> s0
+  s0 --> s1: 読者が ch-01 を読む
+  s1 --> s2: 読者が ch-02 を読む
+  s2 --> s3: 読者が ch-03 を読む
+  s3 --> s4: 読者が ch-04 を読む
+  class s0 blue
+  class s1 blue
+  class s2 blue
+  class s3 orange
+  class s4 orange

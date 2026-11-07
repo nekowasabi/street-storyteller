@@ -22,6 +22,7 @@ const (
 	KindTimeline       Kind = "timeline"
 	KindPlot           Kind = "plot"
 	KindCharacterPhase Kind = "character_phase"
+	KindProposition    Kind = "proposition"
 )
 
 // kindIndex bundles the three structures we maintain per entity kind:
@@ -63,6 +64,7 @@ type Store struct {
 	timelines  kindIndex[domain.Timeline]
 	plots      kindIndex[domain.Plot]
 	phases     kindIndex[domain.CharacterPhase]
+	props      kindIndex[domain.Proposition]
 }
 
 // New constructs a ready-to-use Store with empty indices.
@@ -74,6 +76,7 @@ func New() *Store {
 		timelines:  newKindIndex[domain.Timeline](),
 		plots:      newKindIndex[domain.Plot](),
 		phases:     newKindIndex[domain.CharacterPhase](),
+		props:      newKindIndex[domain.Proposition](),
 	}
 }
 
@@ -219,6 +222,34 @@ func (s *Store) AllForeshadowings() []*domain.Foreshadowing {
 	defer s.mu.RUnlock()
 	out := make([]*domain.Foreshadowing, len(s.fores.order))
 	copy(out, s.fores.order)
+	return out
+}
+
+// ---------------------------------------------------------------------------
+// Proposition
+// ---------------------------------------------------------------------------
+
+func (s *Store) AddProposition(p *domain.Proposition) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	id := ""
+	if p != nil {
+		id = p.ID
+	}
+	return addEntity(&s.props, p, id, nil)
+}
+
+func (s *Store) Proposition(id string) (*domain.Proposition, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return getByID(&s.props, KindProposition, id)
+}
+
+func (s *Store) AllPropositions() []*domain.Proposition {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	out := make([]*domain.Proposition, len(s.props.order))
+	copy(out, s.props.order)
 	return out
 }
 

@@ -6,7 +6,7 @@
 
 | ツール名                                   | 分類  | 目的                                                               | 典型入出力                                                  | 前提READ                           |
 | ------------------------------------------ | ----- | ------------------------------------------------------------------ | ----------------------------------------------------------- | ---------------------------------- |
-| meta_check                                 | READ  | プロジェクトメタデータ検証                                         | 入: なし / 出: メタデータ妥当性チェック結果                 | -                                  |
+| meta_check                                 | READ  | frontmatter 検証と Clarity 検査（RDR-101〜104）                     | 入: path(オプション) / 出: 通過なら件数、違反なら isError と違反行 | -                                  |
 | view_browser                               | READ  | HTMLビジュアル表示                                                 | 入: なし / 出: HTML(統計・カード表示)                       | -                                  |
 | lsp_validate                               | READ  | 原稿の参照整合性検証                                               | 入: ファイルパス / 出: 診断リスト                           | -                                  |
 | lsp_find_references                        | READ  | シンボル参照検索                                                   | 入: シンボル名 / 出: 参照位置リスト                         | -                                  |
@@ -22,7 +22,7 @@
 | **ユーザー承認必須: subplot_create**       | WRITE | サブプロット作成                                                   | 入: --name/--type/--summary / 出: subplot ID                | subplot_view --list                |
 | **ユーザー承認必須: beat_create**          | WRITE | ビート作成                                                         | 入: --subplot/--title/--summary / 出: beat ID               | subplot_view --id {id}             |
 | **ユーザー承認必須: intersection_create**  | WRITE | インターセクション作成                                             | 入: --source-subplot/--target-subplot / 出: intersection ID | subplot_view --list                |
-| **ユーザー承認必須: manuscript_binding**   | WRITE | FrontMatter操作(add/remove/set)                                    | 入: --manuscript/--action/--entityType/--ids / 出: 操作結果 | storyteller://characters等で先読み |
+| **ユーザー承認必須: manuscript_binding**   | WRITE | FrontMatter操作(add/remove/set)。entityType に reader_shows / reader_requires を含む | 入: --manuscript/--action/--entityType/--ids / 出: 操作結果 | storyteller://characters等で先読み |
 | **ユーザー承認必須: meta_generate**        | WRITE | メタデータ自動生成                                                 | 入: --type(character等) / 出: テンプレートJSON              | meta_check で現状確認              |
 
 ## DESTRUCTIVE操作

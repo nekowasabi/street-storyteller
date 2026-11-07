@@ -13,6 +13,7 @@ import (
 	helpmod "github.com/takets/street-storyteller/internal/cli/modules/help"
 	lintmod "github.com/takets/street-storyteller/internal/cli/modules/lint"
 	lspmod "github.com/takets/street-storyteller/internal/cli/modules/lsp"
+	manuscriptmod "github.com/takets/street-storyteller/internal/cli/modules/manuscript"
 	mcpmod "github.com/takets/street-storyteller/internal/cli/modules/mcp"
 	metamod "github.com/takets/street-storyteller/internal/cli/modules/meta"
 	migratemod "github.com/takets/street-storyteller/internal/cli/modules/migrate"
@@ -47,6 +48,9 @@ func RegisterCore(r cli.Registry) error {
 		return err
 	}
 	if err := r.Register("meta annotate", metamod.NewAnnotate()); err != nil {
+		return err
+	}
+	if err := r.Register("manuscript build", manuscriptmod.NewBuild()); err != nil {
 		return err
 	}
 	if err := r.Register("lint", lintmod.New()); err != nil {

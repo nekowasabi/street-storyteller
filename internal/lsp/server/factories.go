@@ -44,10 +44,15 @@ func NewServerOptions(ctx context.Context, rootURI string) (ServerOptions, error
 		debugf(os.Stderr, "project load root=%q ok=true characters=%d settings=%d foreshadowings=%d", root, len(proj.Store.AllCharacters()), len(proj.Store.AllSettings()), len(proj.Store.AllForeshadowings()))
 	}
 	adapter := newProjectAdapter(proj)
+	var props []string
+	for _, p := range proj.Store.AllPropositions() {
+		props = append(props, p.ID)
+	}
 	return ServerOptions{
-		Catalog: adapter,
-		Lookup:  adapter,
-		Locator: adapter,
+		Catalog:      adapter,
+		Lookup:       adapter,
+		Locator:      adapter,
+		Propositions: props,
 		Aggregator: &diagnostics.Aggregator{Sources: []diagnostics.DiagnosticSource{
 			&diagnostics.StorytellerSource{Catalog: adapter},
 		}},
@@ -127,20 +132,30 @@ func entityFiles(root string, paths manifest.PathConfig) map[detect.EntityRef]st
 	if root == "" {
 		return out
 	}
+	// Mirrors project.walkKindDir: recursive, phases/ excluded.
 	walk := func(kind detect.EntityKind, dir string, idOf func(string) (string, bool)) {
-		entries, _ := os.ReadDir(filepath.Join(root, dir))
-		for _, e := range entries {
-			if !isLocatedEntityFile(e) {
-				continue
+		base := filepath.Join(root, dir)
+		_ = filepath.WalkDir(base, func(path string, e os.DirEntry, err error) error {
+			if err != nil {
+				return nil
 			}
-			path := filepath.Join(root, dir, e.Name())
+			if e.IsDir() {
+				if path != base && e.Name() == "phases" {
+					return filepath.SkipDir
+				}
+				return nil
+			}
+			if !isLocatedEntityFile(e) {
+				return nil
+			}
 			id, ok := idOf(path)
 			if !ok || id == "" {
 				// Unparseable files stay on the filename stem so existing jumps keep working.
 				id = strings.TrimSuffix(e.Name(), ".ts")
 			}
 			out[detect.EntityRef{Kind: kind, ID: id}] = path
-		}
+			return nil
+		})
 	}
 	walk(detect.EntityCharacter, paths.Characters, characterFileID)
 	walk(detect.EntitySetting, paths.Settings, settingFileID)

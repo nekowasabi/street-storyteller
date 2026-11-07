@@ -294,6 +294,32 @@ func TestLoad_SkipsNonTSAndIndexFiles(t *testing.T) {
 	}
 }
 
+// TestLoad_NestedEntityDirectories verifies that per-episode subdirectories
+// (src/<kind>/01/) are loaded while character phases stay excluded.
+func TestLoad_NestedEntityDirectories(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, ".storyteller.json"), minimalManifest)
+	writeFile(t, filepath.Join(root, "src", "settings", "town.ts"),
+		minimalSettingTS("town", "村"))
+	writeFile(t, filepath.Join(root, "src", "settings", "01", "castle.ts"),
+		minimalSettingTS("castle", "城"))
+	writeFile(t, filepath.Join(root, "src", "characters", "01", "hero.ts"),
+		minimalCharacterTS("hero", "勇者"))
+	writeFile(t, filepath.Join(root, "src", "characters", "hero", "phases", "p1.ts"),
+		`export const p1 = { "id": "p1" };`)
+
+	p, err := project.Load(root)
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if got := len(p.Store.AllSettings()); got != 2 {
+		t.Errorf("AllSettings = %d, want 2", got)
+	}
+	if got := len(p.Store.AllCharacters()); got != 1 {
+		t.Errorf("AllCharacters = %d, want 1", got)
+	}
+}
+
 // TestLoad_ParseErrorBubblesUp ensures a syntax error inside an entity .ts
 // surfaces as CodeParse, not Validation.
 func TestLoad_ParseErrorBubblesUp(t *testing.T) {

@@ -53,6 +53,7 @@ flowchart LR
 | `textDocument/didClose` | 〃 | クローズ |
 | `textDocument/definition` | `providers/definition.go` | 定義ジャンプ |
 | `textDocument/hover` | `providers/hover.go` | ホバー |
+| `textDocument/completion` | `server/completion.go` | frontmatter の `reader_shows` / `reader_requires` で命題 ID と態度を補完（`:` と `"` で発火） |
 | `textDocument/codeAction` | `providers/` (in-progress) | 低信頼度参照 → 明示参照変換 |
 | `textDocument/publishDiagnostics` | `diagnostics/generator.go` | 診断 push |
 | `textDocument/semanticTokens/full` | `providers/semantic_tokens.go` | キャラクター / 設定 / 伏線ハイライト |

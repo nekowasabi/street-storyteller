@@ -56,6 +56,7 @@ MCPツールは以下の3分類に整理されています。詳細は `referenc
 - **原稿保存/シーン完了のたびに**: `lsp_validate` を実行
 - **改稿完了時**: `timeline_analyze` と
   `foreshadowing_view --status=planted`（未回収伏線チェック）も実行
+- **章の順序や前提（reader_shows / reader_requires）を変えたとき、提出前**: `meta_check`（CLI は `storyteller meta check`）で Clarity を検査。違反（RDR-101〜104）が 1 件でもあれば提出しない。提出用に写すときは `storyteller manuscript build`（落ちたら何も書かない）
 
 ## ワークフロー選択ロジック
 
@@ -67,6 +68,7 @@ MCPツールは以下の3分類に整理されています。詳細は `referenc
 | 「整合性を確認して」「矛盾を検出して」                | 整合性検証ワークフロー         | `workflow-integrity.md`   |
 | 「新しいシーンを書いて」「初稿を生成して」            | シーン初稿生成ワークフロー     | `workflow-scene-draft.md` |
 | 「FrontMatterに情報を追加」「エンティティを紐付けて」 | バインディング操作ワークフロー | `workflow-binding.md`     |
+| 「読者が分かるか確認して」「前提が揃っているか」「提出用に出して」 | Clarity 検査ワークフロー | `workflow-clarity.md` |
 
 ## Router（references読み分け）
 
@@ -77,6 +79,7 @@ MCPツールは以下の3分類に整理されています。詳細は `referenc
 | `workflow-integrity.md`   | 整合性検証依頼                        | 検証3種の実行タイミング、矛盾パターン例   |
 | `workflow-scene-draft.md` | シーン初稿生成依頼                    | 情報収集→執筆→検証の流れ                  |
 | `workflow-binding.md`     | FrontMatter操作依頼                   | manuscript_binding の操作方法             |
+| `workflow-clarity.md`     | 読者の前提・提出前の検査              | Proposition、reader_shows / reader_requires、meta_check の違反の直し方、manuscript build |
 | `entity-character.md`     | キャラクター操作                      | キャラビュー、create、多言語対応          |
 | `entity-setting.md`       | 設定操作                              | 設定ビュー、create、type フィルタ         |
 | `entity-foreshadow.md`    | 伏線操作・未回収検出                  | 伏線ビュー、create、見落とし削減の要      |
