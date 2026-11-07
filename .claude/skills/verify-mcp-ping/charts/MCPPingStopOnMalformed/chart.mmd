@@ -1,0 +1,52 @@
+---
+title: "MCP ping over stdio"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: open
+    lg1: done
+    lg2: broken
+    lg3: Breaks EveryPingAnsweredBeforeExit
+    lg4: Path to the EveryPingAnsweredBeforeExit bug
+  }
+  class lg0 blue
+  class lg1 teal
+  class lg2 orange
+  class lg3 breaks
+  class lg4 bugPath
+  s0: Not initialized yet, stdin open
+  s1: Ended because the caller cancelled
+  s2: Not initialized yet, stdin closed
+  s3: Ended after stdin closed
+  s4: Initialized, stdin open
+  s5: Ended with a ping unanswered
+  s6: Initialized, stdin closed
+  [*] --> s0
+  s0 --> s1: caller cancels
+  s0 --> s2: client closes stdin
+  s0 --> s0: client sends a malformed line or client sends ping
+  s2 --> s1: caller cancels
+  s2 --> s3: every line is read and stdin hits EOF or server reads the malformed line
+  s0 --> s4: server answers initialize
+  s0 --> s3: server reads the malformed line
+  s2 --> s6: server answers initialize
+  s4 --> s1: caller cancels
+  s4 --> s6: client closes stdin
+  s0 --> s5: server reads the malformed line
+  s6 --> s1: caller cancels
+  s6 --> s3: every line is read and stdin hits EOF or server reads the malformed line
+  s2 --> s5: server reads the malformed line
+  s4 --> s3: server reads the malformed line
+  s4 --> s5: server reads the malformed line
+  s6 --> s5: server reads the malformed line
+  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
+  class s0 blue
+  class s0 bugPath
+  class s1 teal
+  class s2 blue
+  class s3 teal
+  class s4 blue
+  class s5 orange
+  class s5 breaks
+  class s5 bugPath
+  class s6 blue

@@ -106,6 +106,42 @@ func TestServer_MalformedLineGetsParseErrorAndSessionContinues(t *testing.T) {
 	}
 }
 
+func TestServer_PingAnsweredInEverySessionState(t *testing.T) {
+	// Why: one path of .claude/skills/verify-mcp-ping/MCPPing.tla, replayed on the real Run:
+	// ping before initialize, ping after a malformed line, ping as the last line before EOF.
+	in := strings.NewReader(`{"jsonrpc":"2.0","id":1,"method":"ping"}` + "\n" +
+		"{garbage\n" +
+		`{"jsonrpc":"2.0","id":2,"method":"ping"}` + "\n" +
+		`{"jsonrpc":"2.0","id":3,"method":"initialize","params":{}}` + "\n" +
+		`{"jsonrpc":"2.0","id":4,"method":"ping"}` + "\n")
+	s := New(ServerOptions{Name: "test-server", Version: "0.0.1"})
+	s.RegisterStandardHandlers()
+	var out bytes.Buffer
+	if err := s.Run(context.Background(), in, &out); err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	answers := map[string]int{}
+	for _, line := range strings.Split(strings.TrimSpace(out.String()), "\n") {
+		var resp protocol.Message
+		if err := json.Unmarshal([]byte(line), &resp); err != nil {
+			t.Fatal(err)
+		}
+		id := string(resp.ID)
+		if id != "1" && id != "2" && id != "4" {
+			continue
+		}
+		answers[id]++
+		if resp.Error != nil || string(resp.Result) != "{}" {
+			t.Errorf("ping id %s = %s, want result {}", id, line)
+		}
+	}
+	for _, id := range []string{"1", "2", "4"} {
+		if answers[id] != 1 {
+			t.Errorf("ping id %s answered %d times, want 1", id, answers[id])
+		}
+	}
+}
+
 // stubTool is a fixed-shape Tool used by the server-level integration tests.
 type stubTool struct{}
 
