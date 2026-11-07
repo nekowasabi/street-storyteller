@@ -1,0 +1,67 @@
+---
+title: "MCP stdio session"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: open
+    lg1: done
+    lg2: broken
+    lg3: Breaks SessionHoldsWhileInputOpen
+    lg4: Path to the SessionHoldsWhileInputOpen bug
+  }
+  class lg0 blue
+  class lg1 teal
+  class lg2 orange
+  class lg3 breaks
+  class lg4 bugPath
+  s0: Waiting with stdin open
+  s1: Ended because stdin closed
+  s2: Ended while stdin was still open
+  s3: Ended because the caller cancelled
+  s4: Both messages are buffered
+  s5: One message is still buffered
+  s6: Stdin closed with both messages left
+  s7: Answered and still listening
+  s8: Stdin closed with one message left
+  s9: Timer fired after stdin had closed
+  s10: Finishing after stdin closed
+  [*] --> s0
+  s0 --> s1: client closes stdin
+  s0 --> s2: two-second timer fires
+  s0 --> s3: caller cancels
+  s0 --> s4: client writes initialize and tools/call together
+  s4 --> s5: server reads one message and answers
+  s4 --> s6: client closes stdin
+  s4 --> s2: two-second timer fires
+  s4 --> s3: caller cancels
+  s5 --> s7: server reads one message and answers
+  s5 --> s8: client closes stdin
+  s5 --> s2: two-second timer fires
+  s5 --> s3: caller cancels
+  s6 --> s8: server reads one message and answers
+  s6 --> s9: two-second timer fires
+  s6 --> s3: caller cancels
+  s7 --> s1: client closes stdin
+  s7 --> s2: two-second timer fires
+  s7 --> s3: caller cancels
+  s8 --> s10: server reads one message and answers
+  s8 --> s9: two-second timer fires
+  s8 --> s3: caller cancels
+  s10 --> s1: buffer is empty and the session ends
+  s10 --> s9: two-second timer fires
+  s10 --> s3: caller cancels
+  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
+  class s0 blue
+  class s0 bugPath
+  class s1 teal
+  class s2 orange
+  class s2 breaks
+  class s2 bugPath
+  class s3 teal
+  class s4 blue
+  class s5 blue
+  class s6 blue
+  class s7 blue
+  class s8 blue
+  class s9 orange
+  class s10 blue

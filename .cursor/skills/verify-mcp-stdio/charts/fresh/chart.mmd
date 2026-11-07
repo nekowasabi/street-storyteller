@@ -1,0 +1,50 @@
+---
+title: "MCP stdio session"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: open
+    lg1: done
+    lg2: broken
+    lg3: Breaks BufferedSecondMessageDispatched
+    lg4: Path to the BufferedSecondMessageDispatched bug
+  }
+  class lg0 blue
+  class lg1 teal
+  class lg2 orange
+  class lg3 breaks
+  class lg4 bugPath
+  s0: Waiting with stdin open
+  s1: Ended because stdin closed
+  s2: Ended because the caller cancelled
+  s3: Both messages are buffered
+  s4: Second message dropped, still waiting
+  s5: Stdin closed with both messages left
+  s6: Ended after dropping the second message
+  s7: Finishing after stdin closed
+  [*] --> s0
+  s0 --> s1: client closes stdin
+  s0 --> s2: caller cancels
+  s0 --> s3: client writes initialize and tools/call together
+  s3 --> s4: server reads one message and answers
+  s3 --> s5: client closes stdin
+  s3 --> s2: caller cancels
+  s4 --> s6: client closes stdin
+  s4 --> s2: caller cancels
+  s5 --> s7: server reads one message and answers
+  s5 --> s2: caller cancels
+  s7 --> s6: buffer is empty and the session ends
+  s7 --> s2: caller cancels
+  classDef breaks fill:#ffecee,stroke:#e72e3b,stroke-width:2.5px,color:#cd2834
+  class s0 blue
+  class s0 bugPath
+  class s1 teal
+  class s3 blue
+  class s3 bugPath
+  class s4 orange
+  class s4 bugPath
+  class s5 blue
+  class s6 orange
+  class s6 breaks
+  class s6 bugPath
+  class s7 orange

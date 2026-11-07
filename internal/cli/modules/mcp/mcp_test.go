@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -133,6 +135,97 @@ func TestMCP_StartStdioSequentialRequests(t *testing.T) {
 		}
 	case <-time.After(3 * time.Second):
 		t.Fatal("sequential requests did not receive both responses")
+	}
+	select {
+	case code := <-done:
+		if code != 0 {
+			t.Fatalf("exit=%d stderr=%q", code, errBuf.String())
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("did not return after stdin close")
+	}
+}
+
+func TestMCP_StartStdioBackToBackManuscriptBinding(t *testing.T) {
+	// Why: issue 19 writes initialize and tools/call on one stdin before any
+	// read. A fresh bufio.Reader per Read keeps only the first response.
+	dir := t.TempDir()
+	manuscript := filepath.Join(dir, "chapter.md")
+	initial := "---\nstoryteller:\n  title: t\n---\n\n本文\n"
+	if err := os.WriteFile(manuscript, []byte(initial), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	stdin, input := io.Pipe()
+	output, stdout := io.Pipe()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	defer stdin.Close()
+	defer input.Close()
+	defer output.Close()
+	defer stdout.Close()
+	var errBuf bytes.Buffer
+	done := make(chan int, 1)
+	go func() {
+		done <- NewStart().Handle(cli.CommandContext{
+			Ctx: ctx, Args: []string{"--stdio"},
+			Presenter:  cli.NewTextPresenter(stdout, &errBuf),
+			Deps:       cli.Deps{Stdin: stdin, Stdout: stdout, Stderr: &errBuf},
+			GlobalOpts: cli.GlobalOptions{Path: dir},
+		})
+	}()
+	exchanged := make(chan error, 1)
+	go func() {
+		payload := strings.Join([]string{
+			`{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"1"}}}`,
+			`{"jsonrpc":"2.0","method":"notifications/initialized"}`,
+			fmt.Sprintf(`{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"manuscript_binding","arguments":{"manuscript":%q,"action":"set","entityType":"characters","ids":["hero"],"validate":false}}}`, manuscript),
+		}, "\n") + "\n"
+		if _, err := io.WriteString(input, payload); err != nil {
+			exchanged <- err
+			return
+		}
+		decoder := json.NewDecoder(output)
+		for i := 1; i <= 2; i++ {
+			var response struct {
+				ID     int             `json:"id"`
+				Result json.RawMessage `json:"result"`
+				Error  json.RawMessage `json:"error"`
+			}
+			if err := decoder.Decode(&response); err != nil {
+				exchanged <- err
+				return
+			}
+			if response.ID != i || len(response.Result) == 0 || len(response.Error) != 0 {
+				exchanged <- fmt.Errorf("response = %+v, want successful id=%d", response, i)
+				return
+			}
+		}
+		updated, err := os.ReadFile(manuscript)
+		if err != nil {
+			exchanged <- err
+			return
+		}
+		if !strings.Contains(string(updated), `"hero"`) {
+			exchanged <- fmt.Errorf("manuscript missing bound id:\n%s", updated)
+			return
+		}
+		exchanged <- nil
+	}()
+	select {
+	case err := <-exchanged:
+		if err != nil {
+			t.Fatal(err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("back-to-back initialize and tools/call did not both complete")
+	}
+	select {
+	case code := <-done:
+		t.Fatalf("returned %d before stdin closed; stderr=%q", code, errBuf.String())
+	default:
+	}
+	if err := input.Close(); err != nil {
+		t.Fatal(err)
 	}
 	select {
 	case code := <-done:
