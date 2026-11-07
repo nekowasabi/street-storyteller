@@ -49,7 +49,7 @@ If the Go tests pass and the shared model fails, the model has drifted. Fix the 
 
 ## Coverage record
 
-Checked against commit `SYNC_COMMIT`. Move that commit forward only after you confirm the spec still describes `Server.Run` and `Command.Handle` at the new commit.
+Checked against commit `7f82a9c49a86ae575584f59a0d9fc5f4139cd298`. Move that commit forward only after you confirm the spec still describes `Server.Run` and `Command.Handle` at the new commit.
 
 Covered:
 
