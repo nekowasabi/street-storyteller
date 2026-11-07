@@ -5,7 +5,7 @@ description: Clarity（わかりやすさ）の設計（docs/designs/reader-prer
 
 # verify-reader-prereq
 
-対象は設計であり、まだ製品コードではない。モデルは `docs/designs/reader-prereq-sketch.ts` を写したもので、検査の合格は「スケッチの物語がこの 3 つの規則を満たす」ことまでを言う。用語は `docs/glossary.md`、経緯は `docs/clarity.md`。`internal/service/` に `ReaderPrereqService` が実装されたら、その時点で `/maintain-formal-verification-skill` を走らせ、モデルが実装の 1 手順を 1 手順として写しているかを確かめてから、下の同期コミットを進める。
+モデルは設計スケッチ `docs/designs/reader-prereq-sketch.ts` を写したもので、実装 `internal/service/reader_prereq.go` の `ReaderPrereqService.Run` と同じ 3 規則を、同じ見本の物語に対して全経路で検査する。検査の合格は「見本の物語がこの 3 つの規則を満たし、壊し方ごとに対応する規則が落ちる」ことまでを言う。用語は `docs/glossary.md`、経緯は `docs/clarity.md`、実装側の検証項目は `verify-clarity-impl`。実装を変えたら `/maintain-formal-verification-skill` を走らせ、モデルが実装の 1 手順（原稿 1 ファイルの処理）を 1 手順として写しているかを確かめてから、下の同期コミットを進める。
 
 ## 守る性質と、破れたときの害
 
@@ -61,10 +61,9 @@ TLA+ と TLC。提示順という「順序」の問題なので、小さなモ�
 ## カバレッジと同期コミット
 
 - 対象（設計）: `docs/designs/reader-prereq-sketch.ts` の `propositions` と `manuscripts` 全体。
-- 対象（コード）: `internal/meta/frontmatter.go` の FrontMatter（`characters` / `settings` / `foreshadowings` / `timeline_events` / `phases` / `timelines`）。`reader_shows` / `reader_requires` はまだ無い。`PlotBeat` は変えない設計なので対象に含めない。
+- 対象（コード）: `internal/meta/frontmatter.go` の FrontMatter（`reader_shows` / `reader_requires` を含む）、`internal/service/reader_prereq.go`、`internal/domain/clarity.go`、`internal/domain/proposition.go`。`PlotBeat` は変えない設計なので対象に含めない。
 - 実装: `internal/service/reader_prereq.go` の `ReaderPrereqService.Run`（2026-11-07）。モデルの `ReadChapter` は、この関数の `for _, f := range files` の 1 周（原稿 1 ファイル）に対応する。`Shows` / `Requires` は `internal/service/testdata/clarity_rainkey/manuscripts/` の frontmatter と同じ内容で、`reader_prereq_test.go` の壊し版 6 通りがこのスキルの「落ちる検証を見た記録」の表と一致することを確認した。`/maintain-formal-verification-skill` での読み直しと同期コミットの更新は、実装がコミットされてから行う。
-- 同期コミット（コード側）: `2872dc9`（2026-11-07 に、FrontMatter に上の 6 欄だけがあることを確認）。
-- 同期コミット（設計側）: 未確定。`docs/designs/reader-prereq-sketch.ts` とこのスキルは 2026-11-07 時点で未コミット。これらを最初に取り込んだコミットが設計側の同期点になるので、取り込んだらここに書く。本編が 3 規則を満たすことは、そのスケッチの内容で確認した。
+- 同期コミット: `ef565eb`（2026-11-07）。このコミットで、スケッチ `docs/designs/reader-prereq-sketch.ts`、`internal/meta/frontmatter.go` の `ReaderShows` / `ReaderRequires`、`internal/service/reader_prereq.go` の `ReaderPrereqService.Run`、テストデータ `clarity_rainkey` が、このモデルの `Shows` / `Requires` / `Policy` と 3 規則を言い表していることを確認した。根拠は `reader_prereq_test.go` の壊し版 6 通りが「落ちる検証を見た記録」の表と一致すること。
 - 対象のファイルが同期コミットより後に変わったら、検査を走らせたうえで、モデルがスケッチと型を言い表しているかを読んで確かめる。確かめてから、この行の同期コミットを進める。検査が通っただけでは進めない。
 
 ## 範囲外

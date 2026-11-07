@@ -12,7 +12,8 @@
 | V6 | `internal/cli/modules/manuscript/build.go`。`drafts/` を検査して `manuscripts/` に写す | `go test ./internal/cli/...`、実バイナリ | 308 件通過。落ちたら 1 ファイルも書かない |
 | V7 | `textDocument/completion`。frontmatter の `reader_*` で命題 ID と態度 | `go test ./internal/lsp/...` | 78 件通過。golden を更新 |
 | V8 | サンプル cinderella に命題 1 つと宣言、文書 4 本、スキル 5 本 | `go run ./cmd/storyteller meta check --path samples/cinderella/manuscripts` | `4 files validated`。開示を消した写しは RDR-102 で落ちる |
-| 全体 | | `go test ./...`、`go vet`、`gofmt -l` | 1167 件通過、警告なし、未整形なし |
+| 全体 | | `go test ./...`、`go build ./...`、`go vet`、`gofmt -l` | 1168 件通過、ビルド成功、警告なし、未整形なし |
+| V9 | ブランチ `feat/clarity-reader-prereq` にコミット `ef565eb`。両 verify スキルの同期コミットを更新 | 読み合わせ | `ReadChapter` と `Run` の 1 周が対応 |
 
 ## 判断
 

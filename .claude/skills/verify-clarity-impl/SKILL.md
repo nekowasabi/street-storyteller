@@ -7,7 +7,7 @@ description: Clarity（わかりやすさ）の実装（Proposition の要素種
 
 設計は `docs/clarity.md`、用語は `docs/glossary.md`、型のスケッチは `docs/designs/reader-prereq-sketch.ts`。設計そのものの検査は `verify-reader-prereq`（TLA+）にあり、このスキルは実装がその設計どおりに動くかを見る。
 
-状態（2026-11-07）: V0 から V8 まで実装し、各項目を走らせて通った（末尾の記録）。V9 はコミットが要るので未了。項目を走らせて通ったら、末尾の記録に日付と結果を書く。走らせていない項目は通ったことにしない。
+状態（2026-11-07）: V0 から V9 まで通った（末尾の記録）。項目を走らせて通ったら、末尾の記録に日付と結果を書く。走らせていない項目は通ったことにしない。
 
 ## 決めたこと（実装の前提）
 
@@ -133,7 +133,7 @@ description: Clarity（わかりやすさ）の実装（Proposition の要素種
   - V6: `internal/cli/modules/manuscript/build.go`
   - V7: `internal/lsp/server/completion.go`、`internal/lsp/protocol/messages.go`（`CompletionParams` ほか）
   - V8: `samples/cinderella/src/propositions/glass_slipper_fit.ts`、`samples/cinderella/manuscripts/chapter02.md` / `chapter04.md`、`docs/cli.md`、`docs/mcp.md`、`docs/lsp.md`、`CLAUDE.md`、`.claude/skills/storyteller-writing/`（`references/workflow-clarity.md` 新規）、`.claude/commands/story-check.md`
-- 同期コミット: 未確定。上のファイルは 2026-11-07 時点で未コミット。最初に取り込んだコミットをここに書く。
+- 同期コミット: `ef565eb`（2026-11-07。V1 から V8 の実装と、この記録の内容が一致することを確認）。
 - 実装と設計の差: `RDR-104` は `resolutionPolicy` だけを見て `authorTruth` を読まない（TLA+ モデルと同じ）。`reader_requires` は章の先頭で評価し、同じ章の `reader_shows` では満たせない。
 
 ## 記録
@@ -150,4 +150,5 @@ description: Clarity（わかりやすさ）の実装（Proposition の要素種
 | V7 | 2026-11-07 | `go test ./internal/lsp/...` 78 件通過。golden `initialize_response.json` に `completionProvider` を追加 |
 | V8 | 2026-11-07 | `go run ./cmd/storyteller meta check --path samples/cinderella/manuscripts` → `4 files validated`。写しから第 2 章の `reader_shows` を消すと `chapter04.md:16 RDR-102` で終了コード 1 |
 | V4 追加 | 2026-11-07 | 読めないプロジェクト（壊れた `.ts`）は検査を落とす（静かに通さない）。manifest が無い場合だけ RDR-101 を飛ばす。サンプル cinderella の写しで `nope:shown` を書くと `chapter02.md:19 RDR-101` が出ることを実バイナリで確認（命題が実際に読み込まれている証拠） |
-| 全体 | 2026-11-07 | `go test ./...` 1168 件通過、`go vet` 変更パッケージ無警告、`gofmt -l` 空 |
+| 全体 | 2026-11-07 | `go test ./...` 1168 件通過、`go build ./...` 成功、`go vet` 変更パッケージ無警告、`gofmt -l` 空 |
+| V9 | 2026-11-07 | 実装を `ef565eb` にコミット。`verify-reader-prereq` の同期コミットを `ef565eb` に進め、モデルの `ReadChapter` が `ReaderPrereqService.Run` の原稿 1 ファイルの処理に対応することを読んで確認 |
