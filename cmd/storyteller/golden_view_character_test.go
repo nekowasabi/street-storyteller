@@ -9,8 +9,7 @@ import (
 
 // TestGolden_ViewCharacter_Cinderella exercises `view character --id cinderella`
 // against the deterministic cinderella minimal fixture and golden-compares the
-// canonicalized stdout. Red phase: the golden file may be empty/TBD; run with
-// `-update` to regenerate once the command produces the intended output.
+// canonicalized stdout.
 //
 // Why: reuse existing runGolden / *updateGolden helpers from golden_test.go
 // (same package) instead of defining parallel runViewGolden helpers — keeps a
@@ -29,12 +28,7 @@ func TestGolden_ViewCharacter_Cinderella(t *testing.T) {
 
 	assertGolden(t, "view_character_cinderella.txt", canonical)
 
-	// Why: Instead of expecting exit 0, pin exit 1 as the current contract.
-	// The Go implementation does not yet have a TS character loader, so
-	// `view character --id cinderella` returns "character not found" (exit 1)
-	// with empty stdout. When the Refactor phase lands a working TS loader,
-	// flip this expectation to `code != 0` and regenerate the golden file.
-	if code != 1 {
-		t.Errorf("expected exit 1 (TS loader not yet implemented), got %d", code)
+	if code != 0 {
+		t.Errorf("exit = %d, want 0", code)
 	}
 }

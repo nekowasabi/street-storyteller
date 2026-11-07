@@ -1,0 +1,3 @@
+name: Cinderella
+role: protagonist
+summary: The kind protagonist.
