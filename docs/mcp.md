@@ -47,7 +47,9 @@ textlint MCP は textlint v14.8.0+ のネイティブサポートを使う（sto
 | `internal/mcp/resources` | Resource プロバイダ |
 | `internal/mcp/prompts` | Prompt 定義 |
 
-サーバは `initialize`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list` を実装する（`internal/mcp/server/server.go`）。
+サーバは `initialize`, `ping`, `tools/list`, `tools/call`, `resources/list`, `resources/read`, `prompts/list` を実装する（`internal/mcp/server/server.go`）。
+
+`ping` は初期化の前を含むどの状態でも、同じ id で空の結果 `{}` を返す。この性質は `.claude/skills/verify-mcp-ping/` の TLA+ モデルと `TestServer_PingAnsweredInEverySessionState` で検査している。
 
 ## Tools (18)
 
@@ -192,12 +194,22 @@ CLI と同じ `ValidateService` を通る。診断があれば `Diagnostic[]` �
 }
 ```
 
-エラーコードは `internal/mcp/protocol/messages.go` を参照。
+エラーコードは `internal/mcp/protocol/types.go` を参照。
+
+JSON として読めない行には、`id` を `null` にした `-32700`（Parse error）を返し、セッションは続ける。
+
+```json
+{"jsonrpc":"2.0","id":null,"error":{"code":-32700,"message":"Parse: mcp: unmarshal message: mcp: malformed message: ..."}}
+```
 
 ## 動作確認
 
 ```bash
 echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+  | storyteller mcp start --stdio
+
+# 生存確認。{"jsonrpc":"2.0","id":1,"result":{}} が返る
+echo '{"jsonrpc":"2.0","id":1,"method":"ping"}' \
   | storyteller mcp start --stdio
 ```
 
