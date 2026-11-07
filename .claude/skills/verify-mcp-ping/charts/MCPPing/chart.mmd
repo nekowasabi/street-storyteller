@@ -1,0 +1,33 @@
+---
+title: "MCP ping over stdio"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: open
+    lg1: done
+  }
+  class lg0 blue
+  class lg1 teal
+  s0: Not initialized yet, stdin open
+  s1: Ended because the caller cancelled
+  s2: Not initialized yet, stdin closed
+  s3: Ended after stdin closed
+  s4: Initialized, stdin open
+  s5: Initialized, stdin closed
+  [*] --> s0
+  s0 --> s1: caller cancels
+  s0 --> s2: client closes stdin
+  s2 --> s1: caller cancels
+  s2 --> s3: every line is read and stdin hits EOF
+  s0 --> s4: server answers initialize
+  s2 --> s5: server answers initialize
+  s4 --> s1: caller cancels
+  s4 --> s5: client closes stdin
+  s5 --> s1: caller cancels
+  s5 --> s3: every line is read and stdin hits EOF
+  class s0 blue
+  class s1 teal
+  class s2 blue
+  class s3 teal
+  class s4 blue
+  class s5 blue

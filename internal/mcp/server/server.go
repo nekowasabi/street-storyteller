@@ -66,6 +66,11 @@ func (s *Server) RegisterStandardHandlers() {
 		}, nil
 	})
 
+	// Why: MCP allows ping in any lifecycle state, so this handler must never check s.lifecycle.
+	s.dispatcher.Register("ping", func(_ context.Context, _ json.RawMessage) (any, error) {
+		return struct{}{}, nil
+	})
+
 	s.dispatcher.Register("tools/list", func(_ context.Context, _ json.RawMessage) (any, error) {
 		return protocol.ListToolsResult{Tools: s.registry.List()}, nil
 	})
