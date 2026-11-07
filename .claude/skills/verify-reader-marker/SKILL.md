@@ -65,7 +65,8 @@ TLA+ と TLC。問いは「frontmatter と本文がどう食い違えば検査�
 - 対象（設計）: 方法 1 の印の書式 `<!-- shows: 命題ID:態度 -->`、RDR-105 の意味（frontmatter の `reader_shows` と本文の印の集合が一致する）、章内順序と最後の態度の出所（本文の印の出現順）。原典は `docs/clarity.md` の「決めたこと（2026-11-07）」。
 - 対象（コード、実装済み）: `internal/service/reader_prereq.go` の `ReaderPrereqService.Run` と、印を取り出す `internal/meta/markers.go` の `ShowMarkers`。モデルの `ReadChapter` は `for _, f := range files` の 1 周に当たる。`Src(c)` は `for _, raw := range markers` が回す列（本文の印）。RDR-105 は同じループの後で集合比較する。`lastC` は `last[d.PropositionID]`、`seenC` は `seenBefore`。本文は `internal/meta/frontmatter.go` の `Parse` が返す `Document.Body` から取る。
 - モデルの範囲: 命題 1 つ（loc）、態度 3 つ（shown / misled / corrected）、2 章、各章の frontmatter と本文の印はそれぞれ長さ 2 まで、`reader_requires` は ch-02 の `{}` か `{loc:shown}`、方針は must-correct-if-false か may-remain-misled。この範囲のすべての組み合わせを調べた。
-- 同期コミット: `bb36c94`（2026-11-07）。設計だけを写した時点で、実装は無い。実装をコミットしたら、`/maintain-formal-verification-skill` で `Src` / `lastC` / `seenC` が実装のどの変数に当たるかを読み直す。そのうえで実装を壊したテスト（印を逆順にした原稿）が落ちることを確かめ、それから同期コミットを進める。検査が通っただけでは進めない。
+- 同期コミット: `8af14d0`（2026-11-07）。このコミットの `Run` で、`Src` が印のループ、`lastC` が `last`、`seenC` が `seenBefore` に当たることを読んで確かめた。印のループを frontmatter に戻す壊しで 2 つのテストが落ちることも確かめた（「落ちる検証を見た記録」）。
+- 対象のファイルが同期コミットより後に変わったら、検査を走らせ、`/maintain-formal-verification-skill` で上の対応を読み直してから、この行の同期コミットを進める。検査が通っただけでは進めない。
 
 ## 範囲外
 
