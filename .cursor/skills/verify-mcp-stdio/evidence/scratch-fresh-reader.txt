@@ -1,0 +1,10 @@
+Scratch change, not committed: move bufio.NewReader inside the Run read loop
+so each protocol.Read gets a new buffer. Restored before commit.
+
+command: go test ./internal/cli/modules/mcp/ -count=1 -run TestMCP_StartStdioBackToBackManuscriptBinding -timeout 20s
+exit: 1
+
+--- FAIL: TestMCP_StartStdioBackToBackManuscriptBinding (3.00s)
+    mcp_test.go:220: back-to-back initialize and tools/call did not both complete
+FAIL
+FAIL	github.com/takets/street-storyteller/internal/cli/modules/mcp	3.005s

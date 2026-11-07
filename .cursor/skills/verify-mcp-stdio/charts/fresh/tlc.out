@@ -1,0 +1,60 @@
+TLC2 Version 2.19 of 08 August 2024 (rev: 5a47802)
+Warning: Please run the Java VM which executes TLC with a throughput optimized garbage collector by passing the "-XX:+UseParallelGC" property.
+(Use the -nowarning option to disable this warning.)
+Running breadth-first search Model-Checking with fp 0 and seed 9070613899110347315 with 1 worker on 4 cores with 3746MB heap and 64MB offheap memory [pid: 13645] (Linux 6.12.113+ amd64, Ubuntu 21.0.12.1 x86_64, MSBDiskFPSet, DiskStateQueue).
+Parsing file /workspace/.cursor/skills/verify-mcp-stdio/MCPStdio.tla
+Parsing file /tmp/statechart-VZd3ZI/statechart-U4wOUo/tmp-verdict-1/Integers.tla
+Parsing file /tmp/statechart-VZd3ZI/statechart-U4wOUo/tmp-verdict-1/Naturals.tla
+Semantic processing of module Naturals
+Semantic processing of module Integers
+Semantic processing of module MCPStdio
+Starting... (2026-11-07 04:45:37)
+Computing initial states...
+Finished computing initial states: 1 distinct state generated at 2026-11-07 04:45:37.
+Error: Invariant BufferedSecondMessageDispatched is violated.
+Error: The behavior up to this point is:
+State 1: <Initial predicate>
+/\ pending = 0
+/\ cancelled = FALSE
+/\ dropped = 0
+/\ stdinOpen = TRUE
+/\ phase = "serving"
+/\ written = FALSE
+/\ delivered = 0
+/\ exitReason = "none"
+
+State 2: <ClientWritesBurst line 36, col 3 to line 41, col 78 of module MCPStdio>
+/\ pending = 2
+/\ cancelled = FALSE
+/\ dropped = 0
+/\ stdinOpen = TRUE
+/\ phase = "serving"
+/\ written = TRUE
+/\ delivered = 0
+/\ exitReason = "none"
+
+State 3: <ReadOne line 46, col 3 to line 54, col 67 of module MCPStdio>
+/\ pending = 0
+/\ cancelled = FALSE
+/\ dropped = 1
+/\ stdinOpen = TRUE
+/\ phase = "serving"
+/\ written = TRUE
+/\ delivered = 1
+/\ exitReason = "none"
+
+State 4: <CloseStdin line 57, col 3 to line 64, col 66 of module MCPStdio>
+/\ pending = 0
+/\ cancelled = FALSE
+/\ dropped = 1
+/\ stdinOpen = FALSE
+/\ phase = "exited"
+/\ written = TRUE
+/\ delivered = 1
+/\ exitReason = "eof"
+
+10 states generated, 8 distinct states found, 2 states left on queue.
+The depth of the complete state graph search is 4.
+The average outdegree of the complete state graph is 2 (minimum is 0, the maximum 3 and the 95th percentile is 3).
+Finished in 00s at (2026-11-07 04:45:37)
+

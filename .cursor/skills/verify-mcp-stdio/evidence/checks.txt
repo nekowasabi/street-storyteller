@@ -1,0 +1,22 @@
+gofmt -l internal/cli/modules/mcp/mcp_test.go .cursor/skills/verify-mcp-stdio
+(no output, exit 0)
+
+go test ./internal/cli/modules/mcp/ ./internal/mcp/server/ ./internal/mcp/protocol/ -count=1
+ok internal/cli/modules/mcp 2.204s
+ok internal/mcp/server 0.002s
+ok internal/mcp/protocol 0.002s
+
+go vet ./internal/cli/modules/mcp/ ./internal/mcp/server/ ./internal/mcp/protocol/
+exit 0
+
+GOBIN=/tmp/go-bin go install honnef.co/go/tools/cmd/staticcheck@latest
+(module required go 1.26; toolchain switched to go1.26.10)
+/tmp/go-bin/staticcheck ./internal/cli/modules/mcp/ ./internal/mcp/server/ ./internal/mcp/protocol/
+exit 0, no findings
+
+go test ./... -count=1
+all packages ok (see the run log). No package failed.
+
+golangci-lint: not configured in this repo and not installed. CI linters are go vet and staticcheck (.github/workflows/ci.yml).
+
+macOS: not run. The issue's original poll was on macOS. This environment is Linux.

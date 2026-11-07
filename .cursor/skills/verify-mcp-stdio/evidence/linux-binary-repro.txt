@@ -1,0 +1,14 @@
+command: go build -trimpath -o /tmp/storyteller ./cmd/storyteller
+then a Linux process against that binary (not macOS)
+
+poll_after_3.20s rc=None
+idle_close_rc 0
+idle_stdout b''
+idle_stderr b''
+burst_rc_before_close None
+burst_lines 2
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","capabilities":{"tools":{},"resources":{},"prompts":{}},"serverInfo":{"name":"street-storyteller","version":"go"}}}
+{"jsonrpc":"2.0","id":2,"result":{"content":[{"type":"text","text":"manuscript binding updated: action=set entity=characters ids=hero"}]}}
+burst_close_rc 0
+burst_stderr b''
+manuscript_has_hero True
