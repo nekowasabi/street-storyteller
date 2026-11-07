@@ -76,6 +76,34 @@ func TestReaderPrereq_MainStoryPasses(t *testing.T) {
 	}
 }
 
+func TestMetaCheck_NestedManuscriptsFindAncestorManifest(t *testing.T) {
+	ms, _ := rainkey(t, func(ms string) {
+		replaceIn(t, filepath.Join(ms, "chapter02.md"), "\"loc:shown\"", "\"key:shown\"")
+	})
+	nested := filepath.Join(ms, "01", "v2")
+	tmp := ms + ".tmp"
+	if err := os.Rename(ms, tmp); err != nil {
+		t.Fatalf("rename: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(nested), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := os.Rename(tmp, nested); err != nil {
+		t.Fatalf("rename: %v", err)
+	}
+	res, err := service.NewMetaCheckService().Run(nested)
+	if err != nil {
+		t.Fatalf("Run: %v", err)
+	}
+	got := make([]string, len(res.Violations))
+	for i, v := range res.Violations {
+		got[i] = v.Code
+	}
+	if !strings.Contains(strings.Join(got, " "), "RDR-101") {
+		t.Errorf("unknown proposition must be reported from a nested dir, got %v", got)
+	}
+}
+
 func TestReaderPrereq_BreakTable(t *testing.T) {
 	cases := []struct {
 		name   string

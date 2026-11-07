@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/takets/street-storyteller/internal/meta"
+	"github.com/takets/street-storyteller/internal/project/manifest"
 )
 
 // MetaCheckService validates manuscript YAML frontmatter under a directory.
@@ -58,18 +59,32 @@ func (s *MetaCheckService) Run(root string) (MetaCheckResult, error) {
 			return MetaCheckResult{}, err
 		}
 	}
-	// Why parent dir as project root: `meta check` targets manuscripts/, which
-	// by convention sits directly under the project root. When no manifest is
-	// there, ReaderPrereqService skips proposition lookup but still orders.
 	abs, err := filepath.Abs(root)
 	if err != nil {
 		return MetaCheckResult{}, err
 	}
-	clarity, err := NewReaderPrereqService().Run(root, filepath.Dir(abs))
+	clarity, err := NewReaderPrereqService().Run(root, findProjectRoot(abs))
 	if err != nil {
 		return MetaCheckResult{}, err
 	}
 	return MetaCheckResult{FilesChecked: len(files), Violations: clarity.Violations}, nil
+}
+
+// findProjectRoot returns the nearest ancestor of dir (dir included) holding
+// the manifest, or "" when none does. Why walk up: manuscripts may be nested
+// (manuscripts/01/v2), and guessing the parent would silently disable
+// proposition checks (RDR-101) whenever the guess misses the manifest.
+func findProjectRoot(dir string) string {
+	for {
+		if _, err := os.Stat(filepath.Join(dir, manifest.ManifestFileName)); err == nil {
+			return dir
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return ""
+		}
+		dir = parent
+	}
 }
 
 // ValidDetailTypes lists the allowed values for the "type" field in detail md.

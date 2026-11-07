@@ -47,6 +47,14 @@ func TestClarityCompletions_RemovedPropositionDisappears(t *testing.T) {
 	}
 }
 
+func TestClarityCompletions_NonASCIIPrefixUsesUTF16Offset(t *testing.T) {
+	doc := "---\nstoryteller:\n  reader_requires:\n    - \"鍵\n---\n"
+	items := clarityCompletions(doc, protocol.Position{Line: 3, Character: 8}, []string{"鍵穴", "鏡"})
+	if got := labels(items); got != "鍵穴" {
+		t.Errorf("ids = %q, want 鍵穴", got)
+	}
+}
+
 func TestServer_CompletionHandler(t *testing.T) {
 	srv := NewServer(ServerOptions{Propositions: []string{"loc", "hist"}})
 	srv.RegisterStandardHandlers()

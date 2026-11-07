@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"strings"
 
+	"github.com/takets/street-storyteller/internal/detect"
 	"github.com/takets/street-storyteller/internal/domain"
 	"github.com/takets/street-storyteller/internal/lsp/protocol"
 )
@@ -47,8 +48,8 @@ func clarityCompletions(content string, pos protocol.Position, propIDs []string)
 		return []protocol.CompletionItem{}
 	}
 	line := lines[pos.Line]
-	cut := int(pos.Character)
-	if cut > len(line) {
+	cut, err := detect.NewPositionTable(line).ByteOffset(0, int(pos.Character))
+	if err != nil {
 		cut = len(line)
 	}
 	before := strings.TrimSpace(line[:cut])
