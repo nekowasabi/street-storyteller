@@ -244,3 +244,128 @@ func TestDefinition_ResolvesParsedIDToDifferentFilename(t *testing.T) {
 		t.Fatalf("URI = %q, want file path %q (parse error: %v)", got[0].URI, path, err)
 	}
 }
+
+func writeCustomPathsProject(t *testing.T, root string) {
+	t.Helper()
+	mustWrite(t, filepath.Join(root, ".storyteller.json"), `{"version":"1.0.0","paths":{"characters":"src/chars","settings":"src/places","foreshadowings":"src/hints"}}`)
+}
+
+func TestLocate_UsesManifestConfiguredPaths(t *testing.T) {
+	root := t.TempDir()
+	writeCustomPathsProject(t, root)
+	mustWrite(t, filepath.Join(root, "src", "chars", "ビッグママ.ts"), `export const bigmama = {
+  "id": "ビッグ・マム",
+  "name": "ビッグ・マム",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "食堂の主人"
+};`)
+	mustWrite(t, filepath.Join(root, "src", "chars", "ビッグママ_test.ts"), `export const bigmamaTest = {
+  "id": "ビッグ・マム",
+  "name": "ビッグ・マム",
+  "role": "protagonist",
+  "traits": [],
+  "relationships": {},
+  "appearingChapters": [],
+  "summary": "食堂の主人"
+};`)
+
+	opts, err := NewServerOptions(context.Background(), "file://"+root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ref, _, ok := opts.Catalog.FindByName("ビッグ・マム")
+	if !ok {
+		t.Fatal("FindByName did not find ビッグ・マム")
+	}
+	if ref != (detect.EntityRef{Kind: detect.EntityCharacter, ID: "ビッグ・マム"}) {
+		t.Fatalf("ref = %+v, want character ビッグ・マム", ref)
+	}
+	loc, ok := opts.Locator.Locate(ref)
+	if !ok {
+		t.Fatal("Locate missed parsed id in manifest-configured path")
+	}
+	want := filepath.Join(root, "src", "chars", "ビッグママ.ts")
+	uri, err := url.Parse(loc.URI)
+	if err != nil || uri.Scheme != "file" || uri.Path != want {
+		t.Fatalf("URI = %q, want file path %q (parse error: %v)", loc.URI, want, err)
+	}
+	if _, ok := opts.Locator.Locate(detect.EntityRef{Kind: detect.EntityCharacter, ID: "ビッグママ"}); ok {
+		t.Fatal("filename stem was used as the id")
+	}
+}
+
+func TestLocate_UsesManifestConfiguredPathsForSettingAndForeshadowing(t *testing.T) {
+	for _, tc := range []struct {
+		kind detect.EntityKind
+		dir  string
+		body string
+	}{
+		{detect.EntitySetting, "places", `export const place = {"id":"royal-capital","name":"王都","type":"location","appearingChapters":[],"summary":"王国の都"};`},
+		{detect.EntityForeshadowing, "hints", `export const hint = {"id":"royal-capital","name":"王都の秘密","type":"hint","summary":"隠された秘密","planting":{"chapter":"chapter01","description":"手紙"},"status":"planted"};`},
+	} {
+		t.Run(string(tc.kind), func(t *testing.T) {
+			root := t.TempDir()
+			writeCustomPathsProject(t, root)
+			path := filepath.Join(root, "src", tc.dir, "capital.ts")
+			mustWrite(t, path, tc.body)
+			opts, err := NewServerOptions(context.Background(), "file://"+root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			loc, ok := opts.Locator.Locate(detect.EntityRef{Kind: tc.kind, ID: "royal-capital"})
+			if !ok {
+				t.Fatal("Locate missed parsed id")
+			}
+			uri, err := url.Parse(loc.URI)
+			if err != nil || uri.Scheme != "file" || uri.Path != path {
+				t.Fatalf("URI = %q, want file path %q (parse error: %v)", loc.URI, path, err)
+			}
+			if _, ok := opts.Locator.Locate(detect.EntityRef{Kind: tc.kind, ID: "capital"}); ok {
+				t.Fatal("filename stem was used as the id")
+			}
+		})
+	}
+}
+
+func TestDefinition_UsesManifestConfiguredPaths(t *testing.T) {
+	root := t.TempDir()
+	writeCustomPathsProject(t, root)
+	path := filepath.Join(root, "src", "chars", "ビッグママ.ts")
+	mustWrite(t, path, `export const bigmama = {"id":"ビッグ・マム","name":"ビッグ・マム","role":"supporting","traits":[],"relationships":{},"appearingChapters":[],"summary":"食堂の主人"};`)
+	opts, err := NewServerOptions(context.Background(), "file://"+root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := providers.Definition(context.Background(), documentSnapshot{
+		uri: "file:///chapter.md", content: "ビッグ・マムは笑った。",
+	}, protocol.Position{Line: 0, Character: 3}, opts.Catalog, opts.Locator)
+	if err != nil || len(got) != 1 {
+		t.Fatalf("Definition = %+v, err = %v, want one location", got, err)
+	}
+	uri, err := url.Parse(got[0].URI)
+	if err != nil || uri.Scheme != "file" || uri.Path != path {
+		t.Fatalf("URI = %q, want file path %q (parse error: %v)", got[0].URI, path, err)
+	}
+}
+
+func TestLocate_StemFallbackUsesManifestPaths(t *testing.T) {
+	root := t.TempDir()
+	writeCustomPathsProject(t, root)
+	path := filepath.Join(root, "src", "chars", "draft.ts")
+	mustWrite(t, path, `export const draft = {"name": "下書き"};`)
+	opts, err := NewServerOptions(context.Background(), "file://"+root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loc, ok := opts.Locator.Locate(detect.EntityRef{Kind: detect.EntityCharacter, ID: "draft"})
+	if !ok {
+		t.Fatal("Locate missed stem fallback in manifest-configured path")
+	}
+	uri, err := url.Parse(loc.URI)
+	if err != nil || uri.Scheme != "file" || uri.Path != path {
+		t.Fatalf("URI = %q, want file path %q (parse error: %v)", loc.URI, path, err)
+	}
+}

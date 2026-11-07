@@ -15,6 +15,7 @@ import (
 	"github.com/takets/street-storyteller/internal/lsp/providers"
 	"github.com/takets/street-storyteller/internal/project"
 	"github.com/takets/street-storyteller/internal/project/entity"
+	"github.com/takets/street-storyteller/internal/project/manifest"
 	"github.com/takets/street-storyteller/internal/project/store"
 	"github.com/takets/street-storyteller/internal/testkit/clock"
 )
@@ -99,10 +100,46 @@ func newProjectAdapter(proj *project.Project) *projectAdapter {
 			st = proj.Store
 		}
 	}
-	return &projectAdapter{root: root, store: st, files: entityFiles(root)}
+	return &projectAdapter{root: root, store: st, files: entityFiles(root, entityPaths(proj))}
 }
 
-func entityFiles(root string) map[detect.EntityRef]string {
+// entityPaths resolves the directories Locate scans for each entity kind.
+//
+// Why: project.Load reads entities from the manifest-configured paths, so
+// scanning the default layout instead makes Locate miss every entity in a
+// project that customizes paths, while detection keeps working off the
+// store. A degraded load drops the manifest together with the project, so
+// re-read it from root before falling back to the default layout.
+func entityPaths(proj *project.Project) manifest.PathConfig {
+	paths := manifest.PathConfig{
+		Characters:     "src/characters",
+		Settings:       "src/settings",
+		Foreshadowings: "src/foreshadowings",
+	}
+	if proj == nil {
+		return paths
+	}
+	if proj.Manifest != nil {
+		paths = proj.Manifest.Paths
+	} else if proj.Root != "" {
+		if m, err := manifest.Load(proj.Root); err == nil {
+			paths = m.Paths
+		}
+	}
+	// A hand-built manifest can leave a path empty; never scan the root itself.
+	if paths.Characters == "" {
+		paths.Characters = "src/characters"
+	}
+	if paths.Settings == "" {
+		paths.Settings = "src/settings"
+	}
+	if paths.Foreshadowings == "" {
+		paths.Foreshadowings = "src/foreshadowings"
+	}
+	return paths
+}
+
+func entityFiles(root string, paths manifest.PathConfig) map[detect.EntityRef]string {
 	out := map[detect.EntityRef]string{}
 	if root == "" {
 		return out
@@ -122,9 +159,9 @@ func entityFiles(root string) map[detect.EntityRef]string {
 			out[detect.EntityRef{Kind: kind, ID: id}] = path
 		}
 	}
-	walk(detect.EntityCharacter, "src/characters", characterFileID)
-	walk(detect.EntitySetting, "src/settings", settingFileID)
-	walk(detect.EntityForeshadowing, "src/foreshadowings", foreshadowingFileID)
+	walk(detect.EntityCharacter, paths.Characters, characterFileID)
+	walk(detect.EntitySetting, paths.Settings, settingFileID)
+	walk(detect.EntityForeshadowing, paths.Foreshadowings, foreshadowingFileID)
 	return out
 }
 
