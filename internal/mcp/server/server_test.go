@@ -78,6 +78,34 @@ func TestServer_ToolsListReturnsRegistered(t *testing.T) {
 	}
 }
 
+func TestServer_MalformedLineGetsParseErrorAndSessionContinues(t *testing.T) {
+	in := strings.NewReader("{garbage\n" +
+		"Content-Length: 40\n" +
+		`{"jsonrpc":"2.0","id":7,"method":"tools/list"}` + "\n")
+	s := New(ServerOptions{Name: "test-server", Version: "0.0.1"})
+	s.RegisterStandardHandlers()
+	var out bytes.Buffer
+	if err := s.Run(context.Background(), in, &out); err != nil {
+		t.Fatalf("Run returned %v; a malformed line must not end the session", err)
+	}
+	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("want 3 responses, got %d:\n%s", len(lines), out.String())
+	}
+	for i, line := range lines[:2] {
+		var resp protocol.Message
+		if err := json.Unmarshal([]byte(line), &resp); err != nil {
+			t.Fatal(err)
+		}
+		if resp.Error == nil || resp.Error.Code != protocol.CodeParseError || string(resp.ID) != "null" {
+			t.Errorf("response %d = %s, want parse error with id null", i, line)
+		}
+	}
+	if !strings.Contains(lines[2], `"id":7`) || !strings.Contains(lines[2], `"result"`) {
+		t.Errorf("request after malformed lines = %s, want success for id 7", lines[2])
+	}
+}
+
 // stubTool is a fixed-shape Tool used by the server-level integration tests.
 type stubTool struct{}
 

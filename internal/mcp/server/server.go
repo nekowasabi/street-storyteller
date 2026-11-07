@@ -118,7 +118,7 @@ func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
 			case <-ctx.Done():
 				return
 			}
-			if err != nil {
+			if err != nil && !errors.Is(err, protocol.ErrMalformed) {
 				return
 			}
 		}
@@ -131,15 +131,17 @@ func (s *Server) Run(ctx context.Context, in io.Reader, out io.Writer) error {
 		case r = <-reads:
 		}
 		msg, err := r.msg, r.err
+		if errors.Is(err, protocol.ErrMalformed) {
+			// Why: JSON-RPC 2.0 answers an unparseable request with id null; the id is unknowable.
+			if werr := protocol.Write(out, protocol.NewErrorResponse(json.RawMessage("null"), protocol.CodeParseError, err.Error())); werr != nil {
+				return werr
+			}
+			continue
+		}
+		if errors.Is(err, io.EOF) {
+			return nil
+		}
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			// Why: unwrap and check for EOF wrapped inside our typed error.
-			var ae *apperrors.Error
-			if errors.As(err, &ae) && errors.Is(ae.Cause, io.EOF) {
-				return nil
-			}
 			return err
 		}
 		resp, derr := s.dispatcher.Dispatch(ctx, msg)

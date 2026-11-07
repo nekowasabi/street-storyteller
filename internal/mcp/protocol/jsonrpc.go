@@ -3,11 +3,17 @@ package protocol
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io"
 	"strings"
 
 	apperrors "github.com/takets/street-storyteller/internal/errors"
 )
+
+// ErrMalformed marks a line that is not valid JSON-RPC. The stream is still
+// readable, so a server answers with CodeParseError and keeps reading.
+var ErrMalformed = errors.New("mcp: malformed message")
 
 // Read parses one newline-delimited JSON-RPC message from r, skipping blank
 // lines. MCP stdio frames each message as a single line of JSON.
@@ -24,7 +30,7 @@ func Read(r io.Reader) (*Message, error) {
 		if line = strings.TrimSpace(line); line != "" {
 			var msg Message
 			if uerr := json.Unmarshal([]byte(line), &msg); uerr != nil {
-				return nil, apperrors.Wrap(uerr, apperrors.CodeParse, "mcp: unmarshal message")
+				return nil, apperrors.Wrap(fmt.Errorf("%w: %w", ErrMalformed, uerr), apperrors.CodeParse, "mcp: unmarshal message")
 			}
 			return &msg, nil
 		}
