@@ -111,32 +111,15 @@ func newProjectAdapter(proj *project.Project) *projectAdapter {
 // store. A degraded load drops the manifest together with the project, so
 // re-read it from root before falling back to the default layout.
 func entityPaths(proj *project.Project) manifest.PathConfig {
-	paths := manifest.PathConfig{
-		Characters:     "src/characters",
-		Settings:       "src/settings",
-		Foreshadowings: "src/foreshadowings",
+	if proj != nil && proj.Manifest != nil {
+		return proj.Manifest.Paths
 	}
-	if proj == nil {
-		return paths
-	}
-	if proj.Manifest != nil {
-		paths = proj.Manifest.Paths
-	} else if proj.Root != "" {
+	if proj != nil && proj.Root != "" {
 		if m, err := manifest.Load(proj.Root); err == nil {
-			paths = m.Paths
+			return m.Paths
 		}
 	}
-	// A hand-built manifest can leave a path empty; never scan the root itself.
-	if paths.Characters == "" {
-		paths.Characters = "src/characters"
-	}
-	if paths.Settings == "" {
-		paths.Settings = "src/settings"
-	}
-	if paths.Foreshadowings == "" {
-		paths.Foreshadowings = "src/foreshadowings"
-	}
-	return paths
+	return manifest.DefaultPathConfig()
 }
 
 func entityFiles(root string, paths manifest.PathConfig) map[detect.EntityRef]string {

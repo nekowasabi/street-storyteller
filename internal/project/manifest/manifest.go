@@ -159,7 +159,7 @@ func decode(data []byte) (*Manifest, error) {
 
 	m := &Manifest{
 		Version: *raw.Version,
-		Paths:   defaultPathConfig(),
+		Paths:   DefaultPathConfig(),
 	}
 	if raw.Project != nil {
 		m.Project = ProjectInfo{
@@ -173,8 +173,8 @@ func decode(data []byte) (*Manifest, error) {
 	return m, nil
 }
 
-// defaultPathConfig は PathConfig の既定値を返す。
-func defaultPathConfig() PathConfig {
+// DefaultPathConfig は PathConfig の既定値を返す。
+func DefaultPathConfig() PathConfig {
 	return PathConfig{
 		Characters:     defaultCharactersPath,
 		Settings:       defaultSettingsPath,
