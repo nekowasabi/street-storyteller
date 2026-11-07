@@ -20,6 +20,8 @@ storyteller:
 
 # 第4章：ガラスの靴
 
+<!-- shows: glass_slipper_fit:convinced -->
+
 ## Scene 1
 
 王子は、階段に残されたガラスの靴を大切に持ち帰った。

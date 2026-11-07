@@ -7,4 +7,7 @@ storyteller:
     - "loc:inferring"
     - "hist:withheld"
 ---
+<!-- shows: loc:shown -->
+<!-- shows: loc:inferring -->
+<!-- shows: hist:withheld -->
 鍵が無いと騒ぎになる。

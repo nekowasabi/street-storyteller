@@ -21,6 +21,8 @@ storyteller:
 
 # 第2章：舞踏会への招待
 
+<!-- shows: glass_slipper_fit:shown -->
+
 ## Scene 1
 
 ある日、王宮からの使者が屋敷を訪れた。

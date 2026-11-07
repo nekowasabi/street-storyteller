@@ -21,13 +21,15 @@ description: Clarity（わかりやすさ）の実装（Proposition の要素種
 
 - **P1 前提は先に渡す（RDR-102）**: 章の `reader_requires` の各項目は、ファイル名順でより前の章の `reader_shows` に在る。態度なしは何らかの態度（`withheld` を含む）で足りる。
   害: 読者が受け取っていない事実に場面が寄りかかり、「分からない」で読みが止まる。
-- **P2 訂正は誤信のあと（RDR-103）**: `corrected` は、同じ命題の `misled` が前の章か同じ章の列でより前に在る。
+- **P2 訂正は誤信のあと（RDR-103）**: `corrected` は、同じ命題の `misled` が前の章か同じ章の本文の印でより前に在る。
   害: 誤信していないものを訂正しても読者に何も起きない。
 - **P3 偽の命題は最後までに訂正する（RDR-104）**: `must-correct-if-false` の命題は最終章で `corrected`。
   害: 正すと決めた誤信が残って終わる。
 - **P4 参照は存在する（RDR-101）**: frontmatter の命題 ID は `src/propositions/` に在り、態度は 6 値のどれか。
   害: 綴りの誤りが検査をすり抜ける。
-- **P5 ゲートは写さない**: `manuscript build` は P1 から P4 のどれかが落ちたら 1 ファイルも `manuscripts/` に書かない。
+- **P4b 申告は本文と揃う（RDR-105）**: frontmatter の `reader_shows` と本文の印 `<!-- shows: -->` の組が集合として一致する。章内の順序と最後の態度は印の順で決める。設計の検査は `verify-reader-marker`、確かめ方は `go test ./internal/service/ ./internal/meta/ -run 'ReaderPrereq|ShowMarkers'`。
+  害: 本文で見せていない命題を見せたことにして、検査が通る。
+- **P5 ゲートは写さない**: `manuscript build` は P1 から P4b のどれかが落ちたら 1 ファイルも `manuscripts/` に書かない。
   害: 落ちた原稿が提出用に混ざる。
 
 ## 項目
@@ -53,7 +55,7 @@ description: Clarity（わかりやすさ）の実装（Proposition の要素種
 
 - 単位: `internal/meta/frontmatter.go` の `FrontMatter` に `ReaderShows []string` と `ReaderRequires []string`（yaml `reader_shows` / `reader_requires`）。`emitter.go` の書き出し順にも足す。`manuscript_binding` の `entityType` に `reader_shows` / `reader_requires` を足す。
 - 確かめ方: `go test ./internal/meta/... ./internal/mcp/tools/... -run 'Reader|Binding'`。
-- 期待: 読み書きで値と順序が保たれる（列の順が提示順なので、並べ替えてはいけない）。`manuscript_binding` の add / remove / set が動く。
+- 期待: 読み書きで値と順序が保たれる（frontmatter の列は申告の要約で、章内の提示順は本文の印の順。RDR-105 が両者の集合を突き合わせる）。`manuscript_binding` の add / remove / set が動く。
 - 落ちる形: emitter が `reader_shows` をソートするように変えると、順序のテストが落ちる。
 
 ### V3 文字列の解釈

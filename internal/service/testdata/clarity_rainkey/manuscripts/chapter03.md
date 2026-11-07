@@ -9,4 +9,6 @@ storyteller:
     - "loc:convinced"
     - "coat:misled"
 ---
+<!-- shows: loc:convinced -->
+<!-- shows: coat:misled -->
 旅人が店主を疑う。

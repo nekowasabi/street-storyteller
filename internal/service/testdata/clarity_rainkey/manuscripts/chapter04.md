@@ -8,4 +8,6 @@ storyteller:
     - "loc:misled"
     - "loc:corrected"
 ---
+<!-- shows: loc:misled -->
+<!-- shows: loc:corrected -->
 鍵は旅人の荷物にあった。
