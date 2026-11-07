@@ -1,7 +1,6 @@
 ---- MODULE MCPStdio ----
 EXTENDS Integers
 
-\* Behavior is the reader the session actually uses.
 \* "shared" matches Server.Run: one bufio.Reader for the whole loop.
 \* "fresh" matches the issue 19 failure: each Read buffers ahead and drops the rest.
 \* "timeout" matches the removed Handle select: exit while stdin is still open.
@@ -40,8 +39,7 @@ ClientWritesBurst ==
   /\ pending' = 2
   /\ UNCHANGED <<phase, exitReason, stdinOpen, cancelled, dropped, delivered>>
 
-\* One protocol.Read. A shared reader keeps every later line. A fresh reader
-\* returns the first line and discards the bytes it already buffered.
+\* protocol.Read.
 ReadOne ==
   /\ phase = "serving"
   /\ pending > 0
@@ -63,8 +61,6 @@ CloseStdin ==
      ELSE UNCHANGED <<phase, exitReason>>
   /\ UNCHANGED <<cancelled, written, pending, dropped, delivered>>
 
-\* Lines still in the shared buffer are read after the writer closes.
-\* When the buffer is empty, EOF ends the session.
 DrainExit ==
   /\ phase = "serving"
   /\ ~stdinOpen
@@ -82,7 +78,7 @@ Cancel ==
   /\ exitReason' = "cancel"
   /\ UNCHANGED <<stdinOpen, written, pending, dropped, delivered>>
 
-\* The 2 second select. Only the timeout behavior enables it.
+\* Handle's removed 2s select.
 TimerExit ==
   /\ Behavior = "timeout"
   /\ phase = "serving"
@@ -105,12 +101,10 @@ Next ==
 
 Spec == Init /\ [][Next]_vars
 
-\* Serving ends because stdin closed or the caller cancelled.
 \* The idle timer exits while stdin is still open, so it breaks this rule.
 SessionHoldsWhileInputOpen ==
   phase = "exited" => ~stdinOpen \/ cancelled
 
-\* Clean EOF after the two-message burst has dispatched both messages.
 BufferedSecondMessageDispatched ==
   (phase = "exited" /\ exitReason = "eof" /\ written) =>
     delivered = 2 /\ dropped = 0
