@@ -16,6 +16,8 @@
 - `timeline_events`: タイムラインイベント ID
 - `phases`: キャラクターフェーズ ID
 - `timelines`: タイムライン ID
+- `reader_shows`: `命題ID:態度`（この章で読者に見せたもの。列の順は章内の提示順。`add` は末尾に足す）
+- `reader_requires`: `命題ID:態度` または `命題ID`（この章を読むのに要る前提）
 
 ## 実行ステップ
 

@@ -97,6 +97,7 @@ func Load(projectRoot string) (*Project, error) {
 		{kind: "foreshadowing", dir: m.Paths.Foreshadowings, load: loadForeshadowingIntoStore(st)},
 		{kind: "timeline", dir: m.Paths.Timelines, load: loadTimelineIntoStore(st)},
 		{kind: "plot", dir: m.Paths.Plots, load: loadPlotIntoStore(st)},
+		{kind: "proposition", dir: m.Paths.Propositions, load: loadPropositionIntoStore(st)},
 	}
 	for _, w := range walkers {
 		if err := walkKindDir(abs, w); err != nil {
@@ -120,43 +121,41 @@ type entityKindWalker struct {
 	load func(path string) error
 }
 
-// walkKindDir lists files in <root>/<dir>, filters them with isEntityTSFile,
-// and invokes the kind-specific loader on each. An absent directory is not
-// an error.
+// walkKindDir walks <root>/<dir> recursively, filters files with
+// isEntityTSFile, and invokes the kind-specific loader on each. An absent
+// directory is not an error.
 //
-// Why depth=1 (no recursion): v1 sample projects keep entities flat under
-// src/characters/ etc. Adding recursion would require also loading
-// CharacterPhase from src/characters/<id>/phases/ which is intentionally
-// deferred. Documented in CLAUDE.md / process-02.
+// Why recursive: projects split entities per episode (src/foreshadowings/01/).
+// Why skip phases/: CharacterPhase files under src/characters/<id>/phases/
+// are not Characters and their loading is still deferred.
 func walkKindDir(root string, w entityKindWalker) error {
 	dir := filepath.Join(root, w.dir)
-	entries, err := os.ReadDir(dir)
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			// Absent directory: silently skip. This is intentionally not an
-			// error so partial projects (e.g. no foreshadowings yet) load.
+	return filepath.WalkDir(dir, func(path string, e fs.DirEntry, err error) error {
+		if err != nil {
+			if path == dir && errors.Is(err, fs.ErrNotExist) {
+				// Absent directory: partial projects (e.g. no foreshadowings yet) load.
+				return filepath.SkipAll
+			}
+			return apperrors.Wrap(err, apperrors.CodeIO,
+				"read "+w.kind+" directory "+path).
+				WithHints("ensure the directory is readable")
+		}
+		if e.IsDir() {
+			if path != dir && e.Name() == "phases" {
+				return filepath.SkipDir
+			}
 			return nil
 		}
-		return apperrors.Wrap(err, apperrors.CodeIO,
-			"read "+w.kind+" directory "+dir).
-			WithHints("ensure the directory is readable")
-	}
-
-	for _, e := range entries {
 		if !isEntityTSFile(e) {
-			continue
+			return nil
 		}
-		full := filepath.Join(dir, e.Name())
-		if err := w.load(full); err != nil {
-			return err
-		}
-	}
-	return nil
+		return w.load(path)
+	})
 }
 
 // isEntityTSFile decides whether a directory entry should be parsed as an
 // entity definition. Rules:
-//   - must be a regular file (no subdirectories — depth 1 only)
+//   - must be a regular file
 //   - must end in `.ts`
 //   - must NOT be `index.ts` (re-export aggregator, not an entity)
 //   - must NOT end in `_test.ts` or `.test.ts`
@@ -267,6 +266,21 @@ func loadPlotIntoStore(st *store.Store) func(string) error {
 			return err
 		}
 		return st.AddPlot(sp)
+	}
+}
+
+func loadPropositionIntoStore(st *store.Store) func(string) error {
+	return func(path string) error {
+		f, err := os.Open(path)
+		if err != nil {
+			return apperrors.Wrap(err, apperrors.CodeIO, "open "+path)
+		}
+		defer f.Close()
+		p, err := entity.LoadProposition(f)
+		if err != nil {
+			return err
+		}
+		return st.AddProposition(p)
 	}
 }
 

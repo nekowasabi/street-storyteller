@@ -26,9 +26,12 @@ import (
 // unifying on depth-1 here is the corrected behavior.
 type MetaCheckService struct{}
 
-// MetaCheckResult is the adapter-agnostic return contract.
+// MetaCheckResult is the adapter-agnostic return contract. Violations are
+// Clarity failures (docs/clarity.md); they are data, not an error, so adapters
+// can print every one of them before exiting non-zero.
 type MetaCheckResult struct {
 	FilesChecked int
+	Violations   []ClarityViolation
 }
 
 // NewMetaCheckService returns a stateless service instance.
@@ -55,7 +58,18 @@ func (s *MetaCheckService) Run(root string) (MetaCheckResult, error) {
 			return MetaCheckResult{}, err
 		}
 	}
-	return MetaCheckResult{FilesChecked: len(files)}, nil
+	// Why parent dir as project root: `meta check` targets manuscripts/, which
+	// by convention sits directly under the project root. When no manifest is
+	// there, ReaderPrereqService skips proposition lookup but still orders.
+	abs, err := filepath.Abs(root)
+	if err != nil {
+		return MetaCheckResult{}, err
+	}
+	clarity, err := NewReaderPrereqService().Run(root, filepath.Dir(abs))
+	if err != nil {
+		return MetaCheckResult{}, err
+	}
+	return MetaCheckResult{FilesChecked: len(files), Violations: clarity.Violations}, nil
 }
 
 // ValidDetailTypes lists the allowed values for the "type" field in detail md.

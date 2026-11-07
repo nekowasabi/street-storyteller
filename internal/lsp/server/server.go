@@ -34,6 +34,8 @@ type Server struct {
 	locator     providers.EntityLocator
 	clock       clock.Clock
 	useInitRoot bool
+	// propositions are the ids offered by frontmatter completion (Clarity).
+	propositions []string
 
 	writeMu sync.Mutex
 	writer  io.Writer
@@ -52,6 +54,8 @@ type ServerOptions struct {
 	Aggregator *diagnostics.Aggregator
 	Clock      clock.Clock
 	Debug      io.Writer
+	// Propositions lists proposition ids from src/propositions for completion.
+	Propositions []string
 	// UseInitializeRoot reloads project-backed dependencies from the LSP
 	// initialize.rootUri. CLI start enables this when --root is omitted.
 	UseInitializeRoot bool
@@ -66,16 +70,17 @@ type ServerOptions struct {
 // server constructor is the smaller blast radius.
 func NewServer(opts ServerOptions) *Server {
 	return &Server{
-		lifecycle:   NewLifecycle(),
-		dispatcher:  New(),
-		docs:        NewDocumentStore(),
-		aggregator:  opts.Aggregator,
-		catalog:     opts.Catalog,
-		lookup:      opts.Lookup,
-		locator:     opts.Locator,
-		clock:       opts.Clock,
-		debug:       opts.Debug,
-		useInitRoot: opts.UseInitializeRoot,
+		lifecycle:    NewLifecycle(),
+		dispatcher:   New(),
+		docs:         NewDocumentStore(),
+		aggregator:   opts.Aggregator,
+		catalog:      opts.Catalog,
+		lookup:       opts.Lookup,
+		locator:      opts.Locator,
+		clock:        opts.Clock,
+		debug:        opts.Debug,
+		useInitRoot:  opts.UseInitializeRoot,
+		propositions: opts.Propositions,
 	}
 }
 
@@ -92,6 +97,7 @@ func (s *Server) RegisterStandardHandlers() {
 	s.dispatcher.Register("textDocument/hover", s.handleHover)
 	s.dispatcher.Register("textDocument/definition", s.handleDefinition)
 	s.dispatcher.Register("textDocument/semanticTokens/full", s.handleSemanticTokens)
+	s.dispatcher.Register("textDocument/completion", s.handleCompletion)
 }
 
 // Run reads framed JSON-RPC messages from in and writes responses to out
@@ -182,6 +188,7 @@ func (s *Server) handleInitialize(ctx context.Context, params json.RawMessage) (
 			s.aggregator = opts.Aggregator
 			s.clock = opts.Clock
 			s.debug = opts.Debug
+			s.propositions = opts.Propositions
 			debugf(s.debug, "initialize rootUri=%q reconfigured=true", p.RootURI)
 		} else {
 			debugf(s.debug, "initialize rootUri=%q reconfigured=false err=%v", p.RootURI, err)

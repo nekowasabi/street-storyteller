@@ -139,6 +139,7 @@ func TestLoad_AppliesDefaultPaths_WhenPathsOmitted(t *testing.T) {
 		Foreshadowings: "src/foreshadowings",
 		Timelines:      "src/timelines",
 		Plots:          "src/plots",
+		Propositions:   "src/propositions",
 		Manuscripts:    "manuscripts",
 	}
 	if got.Paths != want {

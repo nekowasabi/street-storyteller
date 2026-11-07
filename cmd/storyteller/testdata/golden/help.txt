@@ -15,10 +15,11 @@ Available commands:
   lsp install            Print editor setup for the Go LSP server (storyteller lsp install <nvim|vscode>)
   lsp start              Start the Go LSP server (storyteller lsp start --stdio)
   lsp validate           Validate a manuscript via the detect pipeline
+  manuscript build       Check drafts (frontmatter + Clarity) and copy them to manuscripts; writes nothing on failure
   mcp init               Manage the Go MCP server (storyteller mcp init [--stdio])
   mcp start              Manage the Go MCP server (storyteller mcp start [--stdio])
   meta annotate          Add or update detail frontmatter (type/entity_id/field) on an existing markdown file
-  meta check             Validate manuscript frontmatter
+  meta check             Validate manuscript frontmatter and Clarity
   migrate                Migrate storyteller projects between breaking schema versions (storyteller migrate plot-rename [--path <project>] [--dry-run|--apply])
   update                 Update project metadata for the Go engine (storyteller update [--path <project>] [--check|--apply])
   version                Show storyteller version

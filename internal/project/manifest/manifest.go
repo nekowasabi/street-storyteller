@@ -31,6 +31,7 @@ const (
 	defaultForeshadowingsPath = "src/foreshadowings"
 	defaultTimelinesPath      = "src/timelines"
 	defaultPlotsPath          = "src/plots"
+	defaultPropositionsPath   = "src/propositions"
 	defaultManuscriptsPath    = "manuscripts"
 )
 
@@ -63,6 +64,7 @@ type PathConfig struct {
 	Foreshadowings string
 	Timelines      string
 	Plots          string
+	Propositions   string
 	Manuscripts    string
 }
 
@@ -89,6 +91,7 @@ type rawPathConfig struct {
 	Foreshadowings string `json:"foreshadowings"`
 	Timelines      string `json:"timelines"`
 	Plots          string `json:"plots"`
+	Propositions   string `json:"propositions"`
 	Manuscripts    string `json:"manuscripts"`
 }
 
@@ -181,6 +184,7 @@ func DefaultPathConfig() PathConfig {
 		Foreshadowings: defaultForeshadowingsPath,
 		Timelines:      defaultTimelinesPath,
 		Plots:          defaultPlotsPath,
+		Propositions:   defaultPropositionsPath,
 		Manuscripts:    defaultManuscriptsPath,
 	}
 }
@@ -205,6 +209,9 @@ func mergePathConfig(base PathConfig, override rawPathConfig) PathConfig {
 	}
 	if override.Plots != "" {
 		base.Plots = override.Plots
+	}
+	if override.Propositions != "" {
+		base.Propositions = override.Propositions
 	}
 	if override.Manuscripts != "" {
 		base.Manuscripts = override.Manuscripts

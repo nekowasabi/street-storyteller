@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/takets/street-storyteller/internal/mcp/protocol"
 	"github.com/takets/street-storyteller/internal/service"
@@ -48,6 +49,17 @@ func (MetaCheckTool) Handle(_ context.Context, args json.RawMessage, ec Executio
 	if err != nil {
 		return &protocol.CallToolResult{
 			Content: []protocol.ContentBlock{{Type: "text", Text: err.Error()}},
+			IsError: true,
+		}, nil
+	}
+	if len(result.Violations) > 0 {
+		lines := make([]string, 0, len(result.Violations)+1)
+		for _, v := range result.Violations {
+			lines = append(lines, v.String())
+		}
+		lines = append(lines, fmt.Sprintf("%d clarity violations", len(result.Violations)))
+		return &protocol.CallToolResult{
+			Content: []protocol.ContentBlock{{Type: "text", Text: strings.Join(lines, "\n")}},
 			IsError: true,
 		}, nil
 	}

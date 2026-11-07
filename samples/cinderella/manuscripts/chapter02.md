@@ -15,6 +15,8 @@ storyteller:
   foreshadowings:
     - ガラスの靴の伏線
     - 真夜中の期限
+  reader_shows:
+    - "glass_slipper_fit:shown"
 ---
 
 # 第2章：舞踏会への招待

@@ -60,6 +60,15 @@ func LoadPlot(r io.Reader) (*domain.Plot, error) {
 	return mapPlot(root)
 }
 
+// LoadProposition reads a TS source describing a Proposition entity.
+func LoadProposition(r io.Reader) (*domain.Proposition, error) {
+	root, err := readRoot(r)
+	if err != nil {
+		return nil, err
+	}
+	return mapProposition(root)
+}
+
 // LoadCharacterPhase reads a TS source describing a CharacterPhase entity.
 func LoadCharacterPhase(r io.Reader) (*domain.CharacterPhase, error) {
 	root, err := readRoot(r)
@@ -869,6 +878,34 @@ func mapPlot(o map[string]any) (*domain.Plot, error) {
 		s.Relations = sr
 	}
 	return s, nil
+}
+
+func mapProposition(o map[string]any) (*domain.Proposition, error) {
+	p := &domain.Proposition{}
+	var err error
+	if p.ID, err = decodeRequiredString(o, "id"); err != nil {
+		return nil, err
+	}
+	if p.Statement, err = decodeRequiredString(o, "statement"); err != nil {
+		return nil, err
+	}
+	if !hasKey(o, "authorTruth") {
+		return nil, validationf("authorTruth is required (use null when undecided)")
+	}
+	if b, ok, err := getBool(o, "authorTruth"); err != nil {
+		return nil, err
+	} else if ok {
+		p.AuthorTruth = &b
+	}
+	pol, err := decodeRequiredString(o, "resolutionPolicy")
+	if err != nil {
+		return nil, err
+	}
+	p.ResolutionPolicy = domain.ResolutionPolicy(pol)
+	if !domain.IsValidResolutionPolicy(p.ResolutionPolicy) {
+		return nil, validationf("unknown resolutionPolicy %q", pol)
+	}
+	return p, nil
 }
 
 func mapPlotBeat(o map[string]any) (domain.PlotBeat, error) {
