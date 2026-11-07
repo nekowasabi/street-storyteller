@@ -98,6 +98,7 @@ func (s *Server) RegisterStandardHandlers() {
 	s.dispatcher.Register("textDocument/definition", s.handleDefinition)
 	s.dispatcher.Register("textDocument/semanticTokens/full", s.handleSemanticTokens)
 	s.dispatcher.Register("textDocument/completion", s.handleCompletion)
+	s.dispatcher.Register("textDocument/inlayHint", s.handleInlayHint)
 }
 
 // Run reads framed JSON-RPC messages from in and writes responses to out
@@ -286,6 +287,9 @@ func (s *Server) handleHover(ctx context.Context, params json.RawMessage) (any, 
 	if !ok {
 		return nil, nil
 	}
+	if r := s.clarityHover(content, p.Position); r != nil {
+		return r, nil
+	}
 	snap := documentSnapshot{uri: p.TextDocument.URI, content: content}
 	result, err := providers.Hover(ctx, snap, p.Position, s.catalog, s.lookup)
 	debugf(s.debug, "hover uri=%q line=%d character=%d hit=%t err=%v", p.TextDocument.URI, p.Position.Line, p.Position.Character, result != nil, err)
@@ -306,6 +310,9 @@ func (s *Server) handleDefinition(ctx context.Context, params json.RawMessage) (
 	content, ok := s.docs.Get(p.TextDocument.URI)
 	if !ok {
 		return protocol.DefinitionResult{}, nil
+	}
+	if loc, ok := s.clarityDefinition(content, p.Position); ok {
+		return protocol.DefinitionResult{loc}, nil
 	}
 	snap := documentSnapshot{uri: p.TextDocument.URI, content: content}
 	result, err := providers.Definition(ctx, snap, p.Position, s.catalog, s.locator)

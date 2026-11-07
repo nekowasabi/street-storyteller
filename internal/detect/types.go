@@ -33,6 +33,7 @@ const (
 	EntityTimelineEvent EntityKind = "timeline_event"
 	EntityPhase         EntityKind = "phase"
 	EntityTimeline      EntityKind = "timeline"
+	EntityProposition   EntityKind = "proposition"
 )
 
 // EntityRef は ID と種別による参照。

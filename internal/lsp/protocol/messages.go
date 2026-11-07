@@ -30,6 +30,20 @@ type ServerCapabilities struct {
 	DefinitionProvider     bool                   `json:"definitionProvider"`
 	SemanticTokensProvider *SemanticTokensOptions `json:"semanticTokensProvider,omitempty"`
 	CompletionProvider     *CompletionOptions     `json:"completionProvider,omitempty"`
+	InlayHintProvider      bool                   `json:"inlayHintProvider,omitempty"`
+}
+
+// InlayHintParams is the params for `textDocument/inlayHint`.
+type InlayHintParams struct {
+	TextDocument TextDocumentIdentifier `json:"textDocument"`
+	Range        Range                  `json:"range"`
+}
+
+// InlayHint is a label the editor draws inline at Position.
+type InlayHint struct {
+	Position    Position `json:"position"`
+	Label       string   `json:"label"`
+	PaddingLeft bool     `json:"paddingLeft,omitempty"`
 }
 
 // CompletionOptions advertises completion support.
