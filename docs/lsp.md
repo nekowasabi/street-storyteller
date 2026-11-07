@@ -51,8 +51,9 @@ flowchart LR
 | `textDocument/didOpen` | `server/textsync.go` | ドキュメント取り込み |
 | `textDocument/didChange` | 〃 | 増分同期 |
 | `textDocument/didClose` | 〃 | クローズ |
-| `textDocument/definition` | `providers/definition.go` | 定義ジャンプ |
-| `textDocument/hover` | `providers/hover.go` | ホバー |
+| `textDocument/definition` | `providers/definition.go` | 定義ジャンプ。frontmatter の `reader_shows` / `reader_requires` では命題 ID から `src/propositions/` の定義へ飛ぶ（`server/completion.go`） |
+| `textDocument/hover` | `providers/hover.go` | ホバー。`reader_*` の命題 ID には statement、態度（`shown` など）には意味を出す（`server/completion.go`） |
+| `textDocument/inlayHint` | `server/completion.go` | frontmatter の `reader_shows` / `reader_requires` の各行末に命題の statement を表示（ブロック形式 `- "id:stance"` のみ） |
 | `textDocument/completion` | `server/completion.go` | frontmatter の `reader_shows` / `reader_requires` で命題 ID と態度を補完（`:` と `"` で発火） |
 | `textDocument/codeAction` | `providers/` (in-progress) | 低信頼度参照 → 明示参照変換 |
 | `textDocument/publishDiagnostics` | `diagnostics/generator.go` | 診断 push |

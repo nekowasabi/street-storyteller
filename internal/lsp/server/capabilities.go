@@ -33,6 +33,7 @@ func StandardCapabilities() protocol.ServerCapabilities {
 		// Why ":" and "\"": frontmatter entries are written as "- \"loc:shown\"",
 		// so the id list opens after the quote and the stance list after the colon.
 		CompletionProvider: &protocol.CompletionOptions{TriggerCharacters: []string{":", "\""}},
+		InlayHintProvider:  true,
 	}
 }
 

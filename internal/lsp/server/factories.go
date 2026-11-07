@@ -160,6 +160,7 @@ func entityFiles(root string, paths manifest.PathConfig) map[detect.EntityRef]st
 	walk(detect.EntityCharacter, paths.Characters, characterFileID)
 	walk(detect.EntitySetting, paths.Settings, settingFileID)
 	walk(detect.EntityForeshadowing, paths.Foreshadowings, foreshadowingFileID)
+	walk(detect.EntityProposition, paths.Propositions, propositionFileID)
 	return out
 }
 
@@ -219,6 +220,19 @@ func foreshadowingFileID(path string) (string, bool) {
 		return "", false
 	}
 	return item.ID, true
+}
+
+func propositionFileID(path string) (string, bool) {
+	f, err := os.Open(path)
+	if err != nil {
+		return "", false
+	}
+	defer f.Close()
+	p, err := entity.LoadProposition(f)
+	if err != nil || p.ID == "" {
+		return "", false
+	}
+	return p.ID, true
 }
 
 func (a *projectAdapter) FindByID(kind detect.EntityKind, id string) (detect.EntityRef, bool) {
@@ -295,6 +309,12 @@ func (a *projectAdapter) Lookup(ref detect.EntityRef) (providers.EntityInfo, boo
 			return providers.EntityInfo{}, false
 		}
 		return providers.EntityInfo{Name: f.Name, Kind: string(ref.Kind), Summary: f.Summary}, true
+	case detect.EntityProposition:
+		p, err := a.store.Proposition(ref.ID)
+		if err != nil {
+			return providers.EntityInfo{}, false
+		}
+		return providers.EntityInfo{Name: p.ID, Kind: string(ref.Kind), Summary: p.Statement}, true
 	default:
 		return providers.EntityInfo{}, false
 	}
