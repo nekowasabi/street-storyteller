@@ -53,7 +53,7 @@ description: Clarity（わかりやすさ）の実装（Proposition の要素種
 
 - 単位: `internal/meta/frontmatter.go` の `FrontMatter` に `ReaderShows []string` と `ReaderRequires []string`（yaml `reader_shows` / `reader_requires`）。`emitter.go` の書き出し順にも足す。`manuscript_binding` の `entityType` に `reader_shows` / `reader_requires` を足す。
 - 確かめ方: `go test ./internal/meta/... ./internal/mcp/tools/... -run 'Reader|Binding'`。
-- 期待: 読み書きで値と順序が保たれる（列の順が提示順なので、並べ替えてはいけない）。`manuscript_binding` の add / remove / set が動く。
+- 期待: 読み書きで値と順序が保たれる（frontmatter の列は申告の要約で、章内の提示順は本文の印の順。RDR-105 が両者の集合を突き合わせる）。`manuscript_binding` の add / remove / set が動く。
 - 落ちる形: emitter が `reader_shows` をソートするように変えると、順序のテストが落ちる。
 
 ### V3 文字列の解釈

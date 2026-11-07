@@ -15,7 +15,8 @@ import (
 
 // ClarityViolation is one failed Clarity rule, located in a manuscript.
 // Codes follow docs/clarity.md: RDR-101 reference, RDR-102 prerequisite,
-// RDR-103 correction, RDR-104 policy.
+// RDR-103 correction, RDR-104 policy, RDR-105 reader_shows and the body's
+// <!-- shows: ... --> markers disagree as sets.
 type ClarityViolation struct {
 	File    string `json:"file"`
 	Line    int    `json:"line"`
@@ -37,7 +38,9 @@ type ReaderPrereqResult struct {
 // every reader_requires entry was disclosed by an earlier chapter, that every
 // corrected stance follows a misled one, and that must-correct-if-false
 // propositions end corrected. Presentation order is file-name order, and the
-// reader_shows list order inside a chapter (docs/clarity.md 決めたこと).
+// order of the body's <!-- shows: ... --> markers inside a chapter; the
+// reader_shows frontmatter is only the declared summary, compared with the
+// markers as sets (RDR-105) (docs/clarity.md 決めたこと).
 type ReaderPrereqService struct{}
 
 func NewReaderPrereqService() *ReaderPrereqService { return &ReaderPrereqService{} }
@@ -81,7 +84,8 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 		}
 		res.ChaptersChecked++
 		fm := doc.FrontMatter
-		if len(fm.ReaderShows) > 0 || len(fm.ReaderRequires) > 0 {
+		markers := meta.ShowMarkers(doc.Body)
+		if len(fm.ReaderShows) > 0 || len(fm.ReaderRequires) > 0 || len(markers) > 0 {
 			anyClarity = true
 		}
 		add := func(code, entry, msg string) {
@@ -109,25 +113,51 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 			}
 		}
 
+		addAt := func(code, raw, msg string) {
+			res.Violations = append(res.Violations, ClarityViolation{
+				File: f, Line: lineOf(data, "shows: "+raw), Code: code, Message: msg,
+			})
+		}
+
 		inChapter := map[disclosureKey]bool{}
-		for _, raw := range fm.ReaderShows {
+		for _, raw := range markers {
 			d, err := domain.ParseDisclosure(raw)
 			if err != nil {
-				add("RDR-101", raw, err.Error())
+				addAt("RDR-101", raw, err.Error())
 				continue
 			}
 			if propsKnown && props[d.PropositionID] == nil {
-				add("RDR-101", raw, fmt.Sprintf("命題 %s は src/propositions に無い", d.PropositionID))
+				addAt("RDR-101", raw, fmt.Sprintf("命題 %s は src/propositions に無い", d.PropositionID))
 				continue
 			}
 			if d.Stance == domain.StanceCorrected {
 				k := disclosureKey{d.PropositionID, domain.StanceMisled}
 				if !seenBefore[k] && !inChapter[k] {
-					add("RDR-103", raw, fmt.Sprintf("命題 %s は誤信させる前に訂正されている", d.PropositionID))
+					addAt("RDR-103", raw, fmt.Sprintf("命題 %s は誤信させる前に訂正されている", d.PropositionID))
 				}
 			}
 			inChapter[disclosureKey{d.PropositionID, d.Stance}] = true
 			last[d.PropositionID] = d.Stance
+		}
+
+		declared := map[string]bool{}
+		for _, raw := range fm.ReaderShows {
+			declared[raw] = true
+		}
+		marked := map[string]bool{}
+		for _, raw := range markers {
+			marked[raw] = true
+		}
+		for _, raw := range fm.ReaderShows {
+			if !marked[raw] {
+				add("RDR-105", raw, fmt.Sprintf("reader_shows の %s に対応する本文の印が無い", raw))
+			}
+		}
+		for _, raw := range markers {
+			if !declared[raw] {
+				addAt("RDR-105", raw, fmt.Sprintf("本文の印 %s が reader_shows に無い", raw))
+				declared[raw] = true // report each undeclared entry once
+			}
 		}
 		for k := range inChapter {
 			seenBefore[k] = true

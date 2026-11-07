@@ -65,6 +65,7 @@ Clarity では、伏せたい命題を `withheld` と宣言する。宣言のあ
 | RDR-102 前提 | `reader_requires` の各組が、提示順でより前の `reader_shows` に在る |
 | RDR-103 訂正 | `corrected` は、同じ命題の `misled` がより前に在る |
 | RDR-104 方針 | `must-correct-if-false` の命題は、最終章で `corrected` |
+| RDR-105 印 | `reader_shows` の組と本文の印 `<!-- shows: ... -->` の組が、集合として一致する |
 
 走査は `MetaCheckService` と同じ深さ 1 で、CLI と MCP の両方から呼ぶ。
 
@@ -96,7 +97,10 @@ Dラボの関連回（Q&A89、超記憶力#2、モナシュ大学教授との対
 
 - 章の順序は `manuscripts/` のファイル名順。順序を明示する欄は足さない。
 - `reader_requires` の Stance は null にできる。null は、その命題が何らかの態度（`withheld` を含む）で開示されていればよい。脇役のように動機を持たない人物について、読者に態度を求めずに「触れてある」ことだけを前提にするために使う。
-- 同じ章の `reader_shows` の列の中の順序も検査する。RDR-103 は前の章か、同じ章の列でより前の `misled` を見る。
+- 同じ章の中の順序は、本文の印の出現順で見る。RDR-103 は前の章か、同じ章でより前の印の `misled` を見る。RDR-104 の最後の態度も印の順で決める。
+- 本文に `<!-- shows: loc:convinced -->` の形で印を置く（1 コメントに 1 組、重複可、コードブロックは区別しない）。読者が実際に受け取る順序は印の順で、frontmatter の列ではない。
+- RDR-105 は frontmatter の `reader_shows` と本文の印を集合で比べる。申告にあって印が無いもの、印にあって申告が無いものを報告する。同じ印の重複と並びの違いは違反にしない（列で比べると、読者に問題の無い原稿を落とす）。
+- `reader_shows` の frontmatter は申告の要約として残す。LSP の補完・ホバー、`manuscript_binding` が読む。検証は `.claude/skills/verify-reader-marker/SKILL.md`。
 - 複数 plot と回想は範囲内。どちらも章の順にしか影響しないので、Clarity の検査に plot と Event は要らない。回想は章の並びとして扱う。
 - frontmatter の書式は文字列リスト。`reader_shows: ["loc:shown", "hist:withheld"]`、`reader_requires: ["loc:shown", "hist"]`。既存の frontmatter 解析はスカラーと文字列リストしか読まないので、オブジェクトの列にはしない。
 - frontmatter の `order` 欄は提示順に使わない。
