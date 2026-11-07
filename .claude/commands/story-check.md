@@ -30,7 +30,7 @@ storyteller meta check --path manuscripts --json
 1. **参照エラー**: 未定義のキャラクターや設定への参照
 2. **整合性警告**: 低信頼度の暗黙的参照
 3. **情報**: 改善提案
-4. **Clarity 違反**（`meta check` の RDR-101〜104）: 前提が前の章に無い、訂正が誤信より先、正すと決めた命題が未訂正。直し方は `.claude/skills/storyteller-writing/references/workflow-clarity.md`
+4. **Clarity 違反**（`meta check` の RDR-101〜105）: 前提が前の章に無い、訂正が誤信より先、正すと決めた命題が未訂正、`reader_shows` と本文の印 `<!-- shows: -->` が食い違う。直し方は `.claude/skills/storyteller-writing/references/workflow-clarity.md`
 
 ### 修正優先度
 

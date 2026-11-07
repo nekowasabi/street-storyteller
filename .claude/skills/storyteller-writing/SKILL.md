@@ -56,7 +56,7 @@ MCPツールは以下の3分類に整理されています。詳細は `referenc
 - **原稿保存/シーン完了のたびに**: `lsp_validate` を実行
 - **改稿完了時**: `timeline_analyze` と
   `foreshadowing_view --status=planted`（未回収伏線チェック）も実行
-- **章の順序や前提（reader_shows / reader_requires）を変えたとき、提出前**: `meta_check`（CLI は `storyteller meta check`）で Clarity を検査。違反（RDR-101〜104）が 1 件でもあれば提出しない。提出用に写すときは `storyteller manuscript build`（落ちたら何も書かない）
+- **章の順序や前提（reader_shows / reader_requires / 本文の印 `<!-- shows: -->`）を変えたとき、提出前**: `meta_check`（CLI は `storyteller meta check`）で Clarity を検査。改稿で段落を動かしたら印も一緒に動かす。違反（RDR-101〜105）が 1 件でもあれば提出しない。提出用に写すときは `storyteller manuscript build`（落ちたら何も書かない）
 
 ## ワークフロー選択ロジック
 

@@ -24,7 +24,7 @@
 
 - **概要**: 各章を読むのに要る前提（reader_requires）が、より前の章の開示（reader_shows）で揃っているか
 - **ツール**: `meta_check`（CLI は `storyteller meta check`）
-- **検出内容**: RDR-101 参照なし、RDR-102 前提が前に無い、RDR-103 訂正が誤信より先、RDR-104 最後まで訂正されない。直し方は `workflow-clarity.md`
+- **検出内容**: RDR-101 参照なし、RDR-102 前提が前に無い、RDR-103 訂正が誤信より先、RDR-104 最後まで訂正されない、RDR-105 reader_shows と本文の印 `<!-- shows: -->` が食い違う。直し方は `workflow-clarity.md`
 
 ## 発火タイミング表
 
