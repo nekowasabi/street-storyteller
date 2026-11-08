@@ -295,6 +295,29 @@ func TestReaderPrereq_MarkerWithoutDeclaration(t *testing.T) {
 	}
 }
 
+func TestReaderPrereq_UnreferencedPropositionIsReported(t *testing.T) {
+	for _, policy := range []string{"may-remain-misled", "must-correct-if-false"} {
+		t.Run(policy, func(t *testing.T) {
+			res := runMarker(t, policy, map[string]string{
+				"ch01.md": chapter("ch-01", "", "x\n"),
+				"ch02.md": chapter("ch-02", "", "y\n"),
+			})
+			if got := strings.Join(codes(res), " "); got != "RDR-106@ch02.md" {
+				t.Errorf("a proposition no chapter mentions must fail once, got %v", res.Violations)
+			}
+		})
+	}
+}
+
+func TestReaderPrereq_RequiredOnlyIsNotUnreferenced(t *testing.T) {
+	res := runMarker(t, "may-remain-misled", map[string]string{
+		"ch01.md": chapter("ch-01", "  reader_requires:\n    - \"loc\"\n", "x\n"),
+	})
+	if got := strings.Join(codes(res), " "); got != "RDR-102@ch01.md" {
+		t.Errorf("want only RDR-102, got %v", res.Violations)
+	}
+}
+
 func TestReaderPrereq_LastStanceComesFromBody(t *testing.T) {
 	res := runMarker(t, "must-correct-if-false", map[string]string{
 		"ch01.md": chapter("ch-01", "  reader_shows:\n    - \"loc:misled\"\n", "<!-- shows: loc:misled -->\n"),

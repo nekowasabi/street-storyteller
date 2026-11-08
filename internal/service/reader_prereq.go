@@ -16,7 +16,8 @@ import (
 // ClarityViolation is one failed Clarity rule, located in a manuscript.
 // Codes follow docs/clarity.md: RDR-101 reference, RDR-102 prerequisite,
 // RDR-103 correction, RDR-104 policy, RDR-105 reader_shows and the body's
-// <!-- shows: ... --> markers disagree as sets.
+// <!-- shows: ... --> markers disagree as sets, RDR-106 a proposition no
+// chapter references.
 type ClarityViolation struct {
 	File    string `json:"file"`
 	Line    int    `json:"line"`
@@ -68,6 +69,7 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 	res := ReaderPrereqResult{}
 	seenBefore := map[disclosureKey]bool{}
 	last := map[string]domain.Stance{}
+	referenced := map[string]bool{}
 	anyClarity := false
 
 	for _, f := range files {
@@ -100,6 +102,7 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 				add("RDR-101", raw, err.Error())
 				continue
 			}
+			referenced[req.PropositionID] = true
 			if propsKnown && props[req.PropositionID] == nil {
 				add("RDR-101", raw, fmt.Sprintf("命題 %s は src/propositions に無い", req.PropositionID))
 				continue
@@ -126,6 +129,7 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 				addAt("RDR-101", raw, err.Error())
 				continue
 			}
+			referenced[d.PropositionID] = true
 			if propsKnown && props[d.PropositionID] == nil {
 				addAt("RDR-101", raw, fmt.Sprintf("命題 %s は src/propositions に無い", d.PropositionID))
 				continue
@@ -143,6 +147,9 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 		declared := map[string]bool{}
 		for _, raw := range fm.ReaderShows {
 			declared[raw] = true
+			if d, err := domain.ParseDisclosure(raw); err == nil {
+				referenced[d.PropositionID] = true
+			}
 		}
 		marked := map[string]bool{}
 		for _, raw := range markers {
@@ -164,7 +171,7 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 		}
 	}
 
-	if propsKnown && anyClarity && len(files) > 0 {
+	if propsKnown && len(files) > 0 {
 		lastFile := files[len(files)-1]
 		ids := make([]string, 0, len(props))
 		for id := range props {
@@ -173,7 +180,16 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 		sort.Strings(ids)
 		for _, id := range ids {
 			p := props[id]
-			if p.ResolutionPolicy != domain.ResolutionMustCorrectIfFalse {
+			// RDR-106 is not gated on anyClarity: writing the first proposition
+			// into a project with no reader_* fields yet must already fail.
+			if !referenced[id] {
+				res.Violations = append(res.Violations, ClarityViolation{
+					File: lastFile, Line: 1, Code: "RDR-106",
+					Message: fmt.Sprintf("命題 %s はどの章からも参照されていない（reader_shows・reader_requires・本文の印のいずれにも無い）", id),
+				})
+				continue
+			}
+			if !anyClarity || p.ResolutionPolicy != domain.ResolutionMustCorrectIfFalse {
 				continue
 			}
 			if last[id] != domain.StanceCorrected {

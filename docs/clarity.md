@@ -66,6 +66,7 @@ Clarity では、伏せたい命題を `withheld` と宣言する。宣言のあ
 | RDR-103 訂正 | `corrected` は、同じ命題の `misled` がより前に在る |
 | RDR-104 方針 | `must-correct-if-false` の命題は、最終章で `corrected` |
 | RDR-105 印 | `reader_shows` の組と本文の印 `<!-- shows: ... -->` の組が、集合として一致する |
+| RDR-106 未参照 | `src/propositions` の各命題が、どこかの章の `reader_shows`・`reader_requires`・本文の印のいずれかに在る |
 
 走査は `MetaCheckService` と同じ深さ 1 で、CLI と MCP の両方から呼ぶ。
 
@@ -100,6 +101,7 @@ Dラボの関連回（Q&A89、超記憶力#2、モナシュ大学教授との対
 - 同じ章の中の順序は、本文の印の出現順で見る。RDR-103 は前の章か、同じ章でより前の印の `misled` を見る。RDR-104 の最後の態度も印の順で決める。
 - 本文に `<!-- shows: loc:convinced -->` の形で印を置く（1 コメントに 1 組、重複可、コードブロックは区別しない）。読者が実際に受け取る順序は印の順で、frontmatter の列ではない。
 - RDR-105 は frontmatter の `reader_shows` と本文の印を集合で比べる。申告にあって印が無いもの、印にあって申告が無いものを報告する。同じ印の重複と並びの違いは違反にしない（列で比べると、読者に問題の無い原稿を落とす）。
+- RDR-106 は、どの章からも参照されない命題を落とす。命題を先に書き、検査が落ちるのを見てから場面と印を書く順（テスト駆動の執筆）で、最初の一歩を必ず失敗にするための規則である。原稿にまだ `reader_*` が 1 つも無いプロジェクトでも走る。参照は在るが開示が足りない場合は RDR-102 か RDR-105 が報告するので、RDR-106 は重ねて出さない。未参照の `must-correct-if-false` の命題にも RDR-104 は重ねない。
 - `reader_shows` の frontmatter は申告の要約として残す。LSP の補完・ホバー、`manuscript_binding` が読む。検証は `.claude/skills/verify-reader-marker/SKILL.md`。
 - 複数 plot と回想は範囲内。どちらも章の順にしか影響しないので、Clarity の検査に plot と Event は要らない。回想は章の並びとして扱う。
 - frontmatter の書式は文字列リスト。`reader_shows: ["loc:shown", "hist:withheld"]`、`reader_requires: ["loc:shown", "hist"]`。既存の frontmatter 解析はスカラーと文字列リストしか読まないので、オブジェクトの列にはしない。
