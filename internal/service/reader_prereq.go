@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"sort"
 
@@ -51,6 +52,68 @@ type disclosureKey struct {
 	stance domain.Stance
 }
 
+// StanceAt is a proposition's last stance after some chapter, located at the
+// body marker that set it.
+type StanceAt struct {
+	Stance domain.Stance
+	Since  int // 1-based number of the chapter where the proposition took Stance
+	Line   int // line of that marker in chapter Since
+}
+
+// ChapterStances is one manuscript chapter in presentation order, with every
+// proposition's stance once the reader has finished it.
+type ChapterStances struct {
+	File    string
+	Number  int
+	Stances map[string]StanceAt
+
+	data    []byte
+	fm      meta.FrontMatter
+	markers []string
+}
+
+// WalkStances reads manuscriptsDir (depth 1, file-name order, manuscripts
+// only) and replays the body's <!-- shows: --> markers. Invalid markers are
+// skipped here; ReaderPrereqService reports them as RDR-101.
+func WalkStances(manuscriptsDir string) ([]ChapterStances, error) {
+	files, err := collectMarkdown(manuscriptsDir)
+	if err != nil {
+		return nil, err
+	}
+	sort.Strings(files)
+	var out []ChapterStances
+	cur := map[string]StanceAt{}
+	for _, f := range files {
+		data, err := os.ReadFile(f)
+		if err != nil {
+			return nil, fmt.Errorf("read %s: %w", f, err)
+		}
+		doc, err := meta.Parse(data)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", f, err)
+		}
+		if doc.Kind() != meta.DocumentKindManuscript {
+			continue
+		}
+		n := len(out) + 1
+		markers := meta.ShowMarkers(doc.Body)
+		for _, raw := range markers {
+			d, err := domain.ParseDisclosure(raw)
+			if err != nil {
+				continue
+			}
+			if cur[d.PropositionID].Stance != d.Stance {
+				cur[d.PropositionID] = StanceAt{Stance: d.Stance, Since: n, Line: lineOf(data, "shows: "+raw)}
+			}
+		}
+		out = append(out, ChapterStances{
+			File: f, Number: n, Stances: maps.Clone(cur),
+			data: data, fm: doc.FrontMatter, markers: markers,
+		})
+	}
+	return out, nil
+}
+
 // Run checks manuscriptsDir. projectRoot locates src/propositions; when the
 // project cannot be loaded, proposition ids are not validated (RDR-101 is
 // skipped) but the ordering rules still run on whatever the frontmatter says.
@@ -66,27 +129,22 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 		return ReaderPrereqResult{}, err
 	}
 
-	res := ReaderPrereqResult{}
+	chapters, err := WalkStances(manuscriptsDir)
+	if err != nil {
+		return ReaderPrereqResult{}, err
+	}
+
+	res := ReaderPrereqResult{ChaptersChecked: len(chapters)}
 	seenBefore := map[disclosureKey]bool{}
-	last := map[string]domain.Stance{}
+	last := map[string]StanceAt{}
+	if len(chapters) > 0 {
+		last = chapters[len(chapters)-1].Stances
+	}
 	referenced := map[string]bool{}
 	anyClarity := false
 
-	for _, f := range files {
-		data, err := os.ReadFile(f)
-		if err != nil {
-			return ReaderPrereqResult{}, fmt.Errorf("read %s: %w", f, err)
-		}
-		doc, err := meta.Parse(data)
-		if err != nil {
-			return ReaderPrereqResult{}, fmt.Errorf("%s: %w", f, err)
-		}
-		if doc.Kind() != meta.DocumentKindManuscript {
-			continue
-		}
-		res.ChaptersChecked++
-		fm := doc.FrontMatter
-		markers := meta.ShowMarkers(doc.Body)
+	for _, ch := range chapters {
+		f, data, fm, markers := ch.File, ch.data, ch.fm, ch.markers
 		if len(fm.ReaderShows) > 0 || len(fm.ReaderRequires) > 0 || len(markers) > 0 {
 			anyClarity = true
 		}
@@ -141,7 +199,6 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 				}
 			}
 			inChapter[disclosureKey{d.PropositionID, d.Stance}] = true
-			last[d.PropositionID] = d.Stance
 		}
 
 		declared := map[string]bool{}
@@ -192,10 +249,10 @@ func (s *ReaderPrereqService) Run(manuscriptsDir, projectRoot string) (ReaderPre
 			if !anyClarity || p.ResolutionPolicy != domain.ResolutionMustCorrectIfFalse {
 				continue
 			}
-			if last[id] != domain.StanceCorrected {
+			if last[id].Stance != domain.StanceCorrected {
 				res.Violations = append(res.Violations, ClarityViolation{
 					File: lastFile, Line: 1, Code: "RDR-104",
-					Message: fmt.Sprintf("命題 %s は must-correct-if-false だが最終章で corrected になっていない（最後の態度: %s）", id, stanceOrUnshown(last[id])),
+					Message: fmt.Sprintf("命題 %s は must-correct-if-false だが最終章で corrected になっていない（最後の態度: %s）", id, stanceOrUnshown(last[id].Stance)),
 				})
 			}
 		}
