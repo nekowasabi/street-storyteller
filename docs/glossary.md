@@ -104,6 +104,22 @@ street-storyteller で使う物語要素と、Clarity（わかりやすさ）に
 - 問い: 読者はどの順に章を読むか。
 - 定義: `manuscripts/` のファイル名順。同じ章の中は `reader_shows` の列の順で、列の中の順序も検査する。世界時間（Event の `time.order`）とは別で、回想で入れ替わってよい。複数 plot は章の順にしか影響しない。
 
+### Observation（既存）
+
+- 日本語: 観測。
+- 問い: 模擬読者は、その章を読み終えた時点で命題をどう持っているか。
+- 値: `stated`（書かれたとおり持っている）、`inferred`（推し量っている）、`wrong`（誤って持っている）、`absent`（持っていない）。claim の `dropped` は absent に戻す申告。
+- 置き場所: `storyteller reader check --observations` に渡す TSV。claim が出た章から次の claim まで持ち越す。
+- 関係: 作者の Stance と章ごとに突き合わせる（RDR-201〜206、`docs/clarity.md`）。合否ではなく候補。
+
+### Box（既存）
+
+- 日本語: 箱。
+- 問い: 読者のつまずき（event）は、どの種類の原因に当たるか。
+- 値: Proposition、誘導、意図、早すぎ、台帳の穴、表現。
+- 置き場所: `storyteller reader check` の出力。
+- 関係: 分類であって違反ではない。命題 id の event は、その章の Stance で箱が決まる。
+
 ## Clarity の検査（設計中）
 
 設計比較文書の診断名に対応させる。

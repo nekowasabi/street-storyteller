@@ -76,6 +76,66 @@ Clarity では、伏せたい命題を `withheld` と宣言する。宣言のあ
 
 加えて `storyteller manuscript build` を `internal/cli/modules/` に足す。今のリポジトリに draft から manuscript への出力コマンドは無く、`drafts/` は雛形生成と `meta check` の除外にだけ出てくる。`build` は `drafts/` の原稿を同じ検査にかけ、通れば `manuscripts/` へ写し、落ちたら 1 ファイルも書かない。これが「コンパイル」に当たる。
 
+## 読者観測の突き合わせ（RDR-201〜206）
+
+`storyteller reader check --path <manuscripts> --observations <tsv> [--main <file>] [--json]` は、模擬読者が章ごとに書いた像（観測）を、作者が本文の印で宣言した態度と突き合わせる。LLM が担うのは観測と命題 id への対応づけまでで、判定・分類・表の計算はこのコマンドが決定論的に行う。
+
+### 観測 TSV
+
+タブ区切りの固定 9 列。`#` 始まりの行はコメント、先頭列が `kind` の行は見出しとして読み飛ばす。
+
+```
+kind	persona	chapter	ref	fact	state	where	category	words
+claim	P1	3	世界#1	loc	stated			
+event	P1	3	E:3:13	loc	-	3:13	理屈	なぜ店主だと思うのか
+```
+
+- `kind`: `claim`（読者が持っている像の 1 行）か `event`（つまずき 1 件）。
+- `chapter`: 読者がその行を書いた章。1 始まりで、原稿のファイル名順の番号と同じ。
+- `fact`: 命題 id、`-`（命題に当たらない）、`NEW`（命題に無い事実の欠落）。
+- `state`: claim は `stated`／`inferred`／`wrong`／`dropped`（もう思っていない）。event は `-`。
+- `where`・`category`・`words`: event の発現点 `章:行`、読者が選んだ種別、読者の言葉。検査せずにそのまま出す。
+- 複数ペルソナが混ざってよい。判定はペルソナごとに行う。
+
+観測は持ち越す。ある命題の観測は、claim が出た章から次の claim が出るまで同じ値を保つ。読者は各欄を数行しか書かないので、書かれなかった章を absent にしない。absent に戻るのは `dropped` のときだけで、claim が一度も無ければ absent。同じ章に同じ命題の claim が複数あれば wrong > stated > inferred の順で採る。
+
+期待は本文の印から求める。章 n を読み終えた時点の、その命題の最後の態度である（frontmatter の `reader_shows` ではない。印の順が読者の受け取る順だから）。
+
+### 判定表
+
+章 n で、命題ごとに 期待 × 観測 を見る。
+
+| 宣言された態度 | 正しい観測 | 違反 |
+|---|---|---|
+| shown / convinced / corrected | stated | absent → RDR-201 未受領、wrong → RDR-202 誤読、inferred → RDR-205 推論止まり（情報） |
+| inferring | inferred か stated | absent → RDR-201 |
+| misled | wrong | stated → RDR-203 早バレ、absent → RDR-206 誘導不成立（情報） |
+| withheld | absent（inferred も可） | stated → RDR-204 漏れ。wrong は違反にしない |
+| 未提示 | 何でもよい | なし（読者が先に推測するのは自由） |
+
+違反は（ペルソナ, 命題, コード）ごとに、連続する章をまとめて 1 件にする。位置はその態度を宣言した印の章と行。
+
+### つまずきの箱
+
+event 行は違反ではなく、次の箱に分類して出す。
+
+| 箱 | 条件 |
+|---|---|
+| Proposition | fact が命題 id で、その章までに shown／convinced／corrected／inferring で宣言済み |
+| 誘導 | fact が命題 id で、その章の宣言が misled |
+| 意図 | fact が命題 id で、その章の宣言が withheld |
+| 早すぎ | fact が命題 id で、その章までに宣言が無い |
+| 台帳の穴 | fact が `NEW` |
+| 表現 | fact が `-` |
+
+各 event には、箱と、原因点（その命題が最初に宣言された章のファイル名。無ければ `-`）を付ける。
+
+### 終了コード
+
+読者観測は「候補として出す」側である（[機械が確かめられる範囲](#機械が確かめられる範囲)）。模擬読者の読みは人の読者実験の代わりで、作者の宣言と構造の一致のように機械が確定できるものではない。だから既定の終了コードは 0 で、`manuscript build` のゲートにも入れない。`--main` に本筋の命題 id を 1 行 1 つ書いたファイルを渡したときだけ、本筋の命題に RDR-201〜204 が 1 件でもあれば 1 を返す。RDR-205 と RDR-206 は情報で、終了コードに数えない。
+
+出力は、テキストでは違反を 1 行ずつ `ファイル:行 RDR-2xx 説明`、続けて箱ごとの件数、最後に `N chapters, M observations`。`--json` では `ok`・`chapters_checked`・`findings`・`matrix`（命題 × 章の `期待/観測`、ペルソナごと）・`stumbles` を返す。
+
 ## 形式検証
 
 検査が信用できることを、実装の前に TLA+ で確かめた。モデルと走らせ方は `.claude/skills/verify-reader-prereq/` にある。

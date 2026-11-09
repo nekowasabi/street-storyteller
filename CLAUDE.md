@@ -740,6 +740,7 @@ Claude Desktop設定例：
 - **原稿 frontmatter**: `reader_shows: ["loc:shown"]`（この章で見せた）、`reader_requires: ["loc:shown", "hist"]`（この章を読むのに要る。態度なしは何らかの開示があればよい）
 - **検査**: `storyteller meta check` が RDR-101 から RDR-104 を報告し、違反があれば終了コード 1。MCP の `meta_check` も同じ
 - **出口**: `storyteller manuscript build` が `drafts/` を検査し、通ったときだけ `manuscripts/` に写す
+- **読者観測**: `storyteller reader check --path <manuscripts> --observations <tsv> [--main <file>]` が模擬読者の観測 TSV を本文の印と突き合わせ、RDR-201〜206 とつまずきの箱を出す。既定は終了コード 0、`--main` の本筋の命題に RDR-201〜204 があれば 1
 - **補完**: LSP が frontmatter の `reader_*` で命題 ID と態度を補完
 - **検証**: `.claude/skills/verify-reader-prereq`（設計の TLA+）と `.claude/skills/verify-clarity-impl`（実装の検証項目）
 
