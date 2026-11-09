@@ -79,7 +79,7 @@ func TestReaderPrereq_MainStoryPasses(t *testing.T) {
 func TestMetaCheck_NestedManuscriptsFindAncestorManifest(t *testing.T) {
 	ms, _ := rainkey(t, func(ms string) {
 		replaceIn(t, filepath.Join(ms, "chapter02.md"), "\"loc:shown\"", "\"key:shown\"")
-				replaceIn(t, filepath.Join(ms, "chapter02.md"), "shows: loc:shown", "shows: key:shown")
+		replaceIn(t, filepath.Join(ms, "chapter02.md"), "shows: loc:shown", "shows: key:shown")
 	})
 	nested := filepath.Join(ms, "01", "v2")
 	tmp := ms + ".tmp"
