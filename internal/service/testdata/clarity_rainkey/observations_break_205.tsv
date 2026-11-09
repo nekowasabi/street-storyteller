@@ -1,0 +1,12 @@
+# 「雨夜の鍵」の宣言に合う読者 P1 の観測。壊し版 observations_break_2xx.tsv はここから 1 か所だけ変える。
+kind	persona	chapter	ref	fact	state	where	category	words
+claim	P1	2	問題#1	loc	inferred			
+claim	P1	3	世界#1	loc	stated			
+claim	P1	3	問題#2	coat	wrong			
+event	P1	1	E:1:6	loc	-	1:6	前提	鍵の話がまだ出ていないのに鍵が気になる
+event	P1	1	E:1:6b	-	-	1:6	語	旅人という呼び方が硬い
+event	P1	2	E:2:12	hist	-	2:12	前提	鍵の来歴が分からない
+event	P1	3	E:3:13	loc	-	3:13	理屈	なぜ店主だと思うのか
+event	P1	3	E:3:13b	coat	-	3:13	理屈	濡れたコートは犯行の証なのか
+event	P1	4	E:4:13	NEW	-	4:13	前提	旅人がいつ荷物に鍵を入れたのか
+claim	P1	4	問題#1	loc	inferred			
