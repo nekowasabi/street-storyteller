@@ -100,12 +100,15 @@ type Stumble struct {
 // a proposition named by --main.
 type ReaderCheckResult struct {
 	ChaptersChecked int
-	Observations    int
-	Findings        []ClarityViolation
-	Matrix          []MatrixRow
-	Stumbles        []Stumble
-	OK              bool
-	MainFailed      bool
+	// ChaptersRead is, per persona, the last chapter with any of its rows;
+	// findings and the matrix stop there.
+	ChaptersRead map[string]int
+	Observations int
+	Findings     []ClarityViolation
+	Matrix       []MatrixRow
+	Stumbles     []Stumble
+	OK           bool
+	MainFailed   bool
 }
 
 // ReaderCheckService matches a reader's per-chapter picture against the
@@ -206,6 +209,7 @@ func CheckReader(chapters []ChapterStances, obs []Observation, main map[string]b
 	res := ReaderCheckResult{
 		ChaptersChecked: len(chapters), Observations: len(obs), OK: true,
 		Findings: []ClarityViolation{}, Matrix: []MatrixRow{}, Stumbles: []Stumble{},
+		ChaptersRead: map[string]int{},
 	}
 
 	// claims[persona][fact][chapter] is the strongest claim state written there.
@@ -222,6 +226,7 @@ func CheckReader(chapters []ChapterStances, obs []Observation, main map[string]b
 	}
 	for _, o := range obs {
 		personaSet[o.Persona] = true
+		res.ChaptersRead[o.Persona] = max(res.ChaptersRead[o.Persona], o.Chapter)
 		if o.Kind != "claim" || !isPropositionFact(o.Fact) {
 			continue
 		}
@@ -244,8 +249,11 @@ func CheckReader(chapters []ChapterStances, obs []Observation, main map[string]b
 		end      ChapterStances
 	}
 	for _, p := range sortedKeys(personaSet) {
+		// A reader who stopped at chapter n has not met later chapters, so
+		// judging them would report every later proposition as absent.
+		read := chapters[:res.ChaptersRead[p]]
 		for _, fact := range sortedKeys(factSet) {
-			row := MatrixRow{Persona: p, Fact: fact, Cells: make([]MatrixCell, 0, len(chapters))}
+			row := MatrixRow{Persona: p, Fact: fact, Cells: make([]MatrixCell, 0, len(read))}
 			cur := ObservedAbsent
 			var open *run
 			flush := func() {
@@ -266,7 +274,7 @@ func CheckReader(chapters []ChapterStances, obs []Observation, main map[string]b
 				}
 				open = nil
 			}
-			for _, ch := range chapters {
+			for _, ch := range read {
 				if s, ok := claims[p][fact][ch.Number]; ok {
 					cur = Observed(s)
 					if s == "dropped" {

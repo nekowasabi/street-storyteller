@@ -135,6 +135,50 @@ func TestParseObservations_RejectsBadRows(t *testing.T) {
 	}
 }
 
+func TestReaderCheck_StopsAtLastChapterRead(t *testing.T) {
+	res := runReaderCheck(t, "observations_partial.tsv", "")
+	if res.ChaptersRead["P1"] != 2 {
+		t.Errorf("ChaptersRead = %v, want P1:2", res.ChaptersRead)
+	}
+	if len(res.Findings) != 0 || !res.OK {
+		t.Errorf("ch3 coat:misled and ch4 loc:corrected are unread, want no findings, got %v", res.Findings)
+	}
+	full := runReaderCheck(t, "observations_pass.tsv", "")
+	for _, row := range res.Matrix {
+		if len(row.Cells) != 2 {
+			t.Fatalf("%s/%s has %d cells, want 2", row.Persona, row.Fact, len(row.Cells))
+		}
+		for ch := 1; ch <= 2; ch++ {
+			if got, want := row.Cells[ch-1], cell(t, full, row.Persona, row.Fact, ch); got != want {
+				t.Errorf("%s ch%d = %+v, want %+v as with the full read", row.Fact, ch, got, want)
+			}
+		}
+	}
+
+	chapters, err := service.WalkStances(filepath.Join(localTestdata(t, "clarity_rainkey"), "manuscripts"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	obs, err := service.ParseObservations(strings.NewReader("claim\tP1\t2\ta\thist\tstated\t\t\t\n"), 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// loc is inferring at ch2 with no claim, so its RDR-201 is expected beside hist's RDR-204.
+	r := service.CheckReader(chapters, obs, nil)
+	found := false
+	for _, f := range r.Findings {
+		if f.Code == "RDR-204" && strings.Contains(f.Message, "命題 hist") && strings.Contains(f.Message, "chapter02 まで") {
+			found = true
+		}
+		if strings.Contains(f.Message, "chapter03") || strings.Contains(f.Message, "chapter04") {
+			t.Errorf("finding past the last chapter read: %v", f)
+		}
+	}
+	if !found {
+		t.Errorf("hist stated at ch2 must still be RDR-204 up to chapter02, got %v", r.Findings)
+	}
+}
+
 func TestReaderCheck_SameChapterClaimsPreferWrong(t *testing.T) {
 	chapters, err := service.WalkStances(filepath.Join(localTestdata(t, "clarity_rainkey"), "manuscripts"))
 	if err != nil {

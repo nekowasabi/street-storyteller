@@ -63,10 +63,11 @@ func (c *checkCommand) Handle(cctx cli.CommandContext) int {
 		_ = cctx.Presenter.WriteJSON(struct {
 			OK              bool                       `json:"ok"`
 			ChaptersChecked int                        `json:"chapters_checked"`
+			ChaptersRead    map[string]int             `json:"chapters_read"`
 			Findings        []service.ClarityViolation `json:"findings"`
 			Matrix          []service.MatrixRow        `json:"matrix"`
 			Stumbles        []service.Stumble          `json:"stumbles"`
-		}{res.OK, res.ChaptersChecked, res.Findings, res.Matrix, res.Stumbles})
+		}{res.OK, res.ChaptersChecked, res.ChaptersRead, res.Findings, res.Matrix, res.Stumbles})
 		return code
 	}
 

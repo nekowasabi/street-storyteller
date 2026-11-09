@@ -1,0 +1,6 @@
+# observations_pass.tsv の 1〜2 章だけ。読者 P1 は 2 章で読むのを止めた。
+kind	persona	chapter	ref	fact	state	where	category	words
+claim	P1	2	問題#1	loc	inferred			
+event	P1	1	E:1:6	loc	-	1:6	前提	鍵の話がまだ出ていないのに鍵が気になる
+event	P1	1	E:1:6b	-	-	1:6	語	旅人という呼び方が硬い
+event	P1	2	E:2:12	hist	-	2:12	前提	鍵の来歴が分からない
