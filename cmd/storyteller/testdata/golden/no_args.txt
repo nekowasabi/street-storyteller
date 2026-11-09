@@ -21,6 +21,7 @@ Available commands:
   meta annotate          Add or update detail frontmatter (type/entity_id/field) on an existing markdown file
   meta check             Validate manuscript frontmatter and Clarity
   migrate                Migrate storyteller projects between breaking schema versions (storyteller migrate plot-rename [--path <project>] [--dry-run|--apply])
+  reader check           Compare reader observations with the body's shows markers (storyteller reader check --path <manuscripts> --observations <tsv> [--main <file>])
   update                 Update project metadata for the Go engine (storyteller update [--path <project>] [--check|--apply])
   version                Show storyteller version
   view character         Display a character entity

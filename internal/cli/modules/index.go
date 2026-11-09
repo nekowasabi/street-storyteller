@@ -17,6 +17,7 @@ import (
 	mcpmod "github.com/takets/street-storyteller/internal/cli/modules/mcp"
 	metamod "github.com/takets/street-storyteller/internal/cli/modules/meta"
 	migratemod "github.com/takets/street-storyteller/internal/cli/modules/migrate"
+	readermod "github.com/takets/street-storyteller/internal/cli/modules/reader"
 	updatemod "github.com/takets/street-storyteller/internal/cli/modules/update"
 	versionmod "github.com/takets/street-storyteller/internal/cli/modules/version"
 	viewmod "github.com/takets/street-storyteller/internal/cli/modules/view"
@@ -48,6 +49,9 @@ func RegisterCore(r cli.Registry) error {
 		return err
 	}
 	if err := r.Register("meta annotate", metamod.NewAnnotate()); err != nil {
+		return err
+	}
+	if err := r.Register("reader check", readermod.New()); err != nil {
 		return err
 	}
 	if err := r.Register("manuscript build", manuscriptmod.NewBuild()); err != nil {
