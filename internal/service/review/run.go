@@ -149,7 +149,7 @@ func Run(ctx context.Context, req Request, deps Deps) Report {
 			r.Sent.JudgeQueries += 1 + len(f.Ask.Answer.Must)
 		}
 		if p.config.Judge != "openrouter:"+p.spec.profile().JudgeModel {
-			return failReport(r, Author, "probe", "REV-303", "review.judge に openrouter:"+p.spec.profile().JudgeModel+" を設定してください")
+			return failReport(r, Author, "probe", "REV-303", "review.judge に openrouter:<モデル> を設定してください（例: openrouter:"+DefaultProfile().JudgeModel+"）")
 		}
 	}
 	if req.DryRun {

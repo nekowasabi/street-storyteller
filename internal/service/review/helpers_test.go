@@ -206,14 +206,18 @@ type fakeDecider struct {
 	values map[string]float64
 	err    error
 	calls  []review.Query
+	models map[string]bool
 }
 
-func newFakeDecider() *fakeDecider { return &fakeDecider{values: map[string]float64{}} }
+func newFakeDecider() *fakeDecider {
+	return &fakeDecider{values: map[string]float64{}, models: map[string]bool{}}
+}
 
 func (d *fakeDecider) Decide(_ context.Context, model string, q review.Query) (float64, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 	d.calls = append(d.calls, q)
+	d.models[model] = true
 	if d.err != nil {
 		return 0, d.err
 	}

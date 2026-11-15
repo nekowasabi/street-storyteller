@@ -138,9 +138,25 @@ func TestRun_NoJudgeConfigIsAuthorAndSendsNothing(t *testing.T) {
 	}
 
 	r2 := newRig(t)
-	r2.manifestReplace(`openrouter:google/gemini-decision-1`, `openrouter:other/model`)
+	r2.manifestReplace(`openrouter:google/gemini-decision-1`, `anthropic:other/model`)
 	if rep := r2.clarity(true); rep.Verdict != review.Author || !strings.Contains(findingCodes(rep), "REV-303") || r2.decider.Calls() != 0 {
-		t.Errorf("wrong judge model: %s %s calls=%d", rep.Verdict, findingCodes(rep), r2.decider.Calls())
+		t.Errorf("non-openrouter judge: %s %s calls=%d", rep.Verdict, findingCodes(rep), r2.decider.Calls())
+	}
+}
+
+func TestRun_JudgeModelComesFromManifest(t *testing.T) {
+	base := newRig(t).clarity(true)
+	r := newRig(t)
+	r.manifestReplace(`openrouter:google/gemini-decision-1`, `openrouter:other/model`)
+	rep := r.clarity(true)
+	if strings.Contains(findingCodes(rep), "REV-303") || r.decider.Calls() == 0 {
+		t.Fatalf("swapped model: %s %s calls=%d", rep.Verdict, findingCodes(rep), r.decider.Calls())
+	}
+	if len(r.decider.models) != 1 || !r.decider.models["other/model"] {
+		t.Errorf("models sent = %v, want only other/model", r.decider.models)
+	}
+	if rep.Criteria == base.Criteria {
+		t.Errorf("criteria did not change with the judge model: %s", rep.Criteria)
 	}
 }
 
