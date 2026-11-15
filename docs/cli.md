@@ -37,6 +37,9 @@ storyteller --version
 | `meta check` | `modules/meta` | 原稿 frontmatter 検証 |
 | `lint` | `modules/lint` | textlint + storyteller 診断 |
 | `lint install-hooks` | `modules/lint` | Git pre-commit hook 配置 |
+| `review <clarity\|typo\|interest\|consult>` | `modules/review` | 原稿のレビュー。詳細は [`review.md`](review.md) |
+| `review turn` | `modules/review` | 読者の AI エージェントが記録と答えを返す |
+| `review resolve` | `modules/review` | 著者が保留を解く |
 | `lsp start` | `modules/lsp` | LSP サーバ起動 (stdio) |
 | `lsp validate` | `modules/lsp` | ワンショット検証 |
 | `lsp install` | `modules/lsp` | エディタ設定の生成 |

@@ -1,6 +1,6 @@
 ---
 name: storyteller
-description: SaC (StoryWriting as Code) で物語プロジェクトを管理するための storyteller CLI ツールキット。物語の要素 (キャラクター、設定、タイムライン、伏線、plot/sub) を型安全に作成・検証・可視化したいときに必ずこの skill を使ってください。`storyteller generate` で新規プロジェクトをスキャフォールドし、`storyteller element ...` で要素を追加し、`storyteller meta check` / `storyteller lint` / `storyteller lsp validate` で整合性を検証し、`storyteller view browser` で HTML 可視化します。ユーザーが「物語を作りたい」「キャラクターを追加したい」「伏線を管理したい」「タイムラインを整理したい」「物語の整合性をチェックしたい」と言ったら、明示的にコマンドを指定していなくても必ずこの skill を使ってください。
+description: SaC (StoryWriting as Code) で物語プロジェクトを管理するための storyteller CLI ツールキット。物語の要素 (キャラクター、設定、タイムライン、伏線、plot/sub) を型安全に作成・検証・可視化したいときに必ずこの skill を使ってください。`storyteller generate` で新規プロジェクトをスキャフォールドし、`storyteller element ...` で要素を追加し、`storyteller meta check` / `storyteller lint` / `storyteller lsp validate` で整合性を検証し、`storyteller review` で読者に分かるか・誤字・面白さを確かめ、`storyteller view browser` で HTML 可視化します。ユーザーが「物語を作りたい」「キャラクターを追加したい」「伏線を管理したい」「タイムラインを整理したい」「物語の整合性をチェックしたい」「読者に分かるか確かめたい」「原稿をレビューしてほしい」「読者に読ませたい」「この場面を相談したい」と言ったら、明示的にコマンドを指定していなくても必ずこの skill を使ってください。
 ---
 
 # storyteller skill
@@ -27,6 +27,13 @@ description: SaC (StoryWriting as Code) で物語プロジェクトを管理す�
 | メタデータを再生成 | `storyteller meta generate` (既存 src/ から meta を構築) |
 | 文章の表記ゆれをチェック | `storyteller lint --path manuscripts/chapter01.md` |
 | 文章を自動修正 | `storyteller lint --path manuscripts/chapter01.md --fix` |
+| 読者に分かるかを確かめる（AI エージェントは起動しない） | `storyteller review clarity --path manuscripts [--criteria <指紋>] --json` |
+| AI エージェントの読者に読ませる | `storyteller review clarity --path manuscripts --team`（終了コード 5 の間は同じ行を打ち直す） |
+| 誤字を確かめる | `storyteller review typo --path manuscripts --json` |
+| 面白さを読者に聞く | `storyteller review interest --path manuscripts "<頼み>"` |
+| 場面や案を相談する | `storyteller review consult --path manuscripts "<相談>"` |
+| レビューの保留を解く（著者だけ） | `storyteller review resolve --path manuscripts <agent>:<fact>:<ask\|reask> --accept\|--reject --why "..."` |
+| 送る予定だけを見る | `storyteller review <kind> --path manuscripts --dry-run` |
 | LSP で原稿を検証 | `storyteller lsp validate manuscripts/chapter01.md` |
 | エディタ用 LSP 設定をインストール | `storyteller lsp install nvim\|vscode` |
 | 物語要素を一覧で見る | `storyteller view character --list` / `view setting --list` / `view timeline --list` 等 |
@@ -55,6 +62,17 @@ LSP は原稿中のキャラクター/設定参照を自動検出しますが、
 - `--json`: スクリプト連携・パイプ処理用 (全コマンド対応)
 - `--format mermaid`: タイムライン・plot/sub の構造を Markdown / Mermaid で可視化
 - `view browser`: 統計・カード・グラフ表示で全体把握
+
+### 5. レビューは終了コードで次に動く人を決める
+
+`storyteller review` の詳細は `docs/review.md`。守ることは次のとおり。
+
+- 終了コード: 0 合格（`pass`・`done`）、1 本文を直す（`edit`）、2 呼び出しの誤り、3 著者の番（`author`）、4 環境の失敗（`error`）、5 読者がまだ読んでいる（`reading`）。3 と 4 では本文を直さず、出力を著者に渡す。5 では本文を直さず、同じ行を打ち直す。
+- 準備: 命題（`src/propositions/*.ts`）に `ask` 欄（`main`・`question`・`answer.must`・`answer.extra`・`reask`）を書き、原稿に `<!-- shows: <id>:shown -->` の印を置く。期限章は印が最初に出る章。`.storyteller.json` に `review`（`judge`・`launcher.ateam`・`agents`・`stallMinutes`）を書く。`agents[].runtime` は `claude-code`・`codex`・`grok-build` のどれか。
+- `/goal` のループでは `--team` を付けない。工程1（構造）と工程2（判定モデル）だけを回し、読者に読ませるかは著者が決める。条件文には、最初に走らせた出力の `criteria` を `--criteria` で写す。
+- 直してよいのは本文だけ。命題の `statement`・`ask`、本文の印、名簿、`src/reviews/` は止まる条件なので、エージェントは変えない。変える必要があれば止まって著者に渡す。保留を解く `review resolve` は著者だけが打つ。
+- 読者の AI エージェントは作品の外のディレクトリで、写されたファイルだけを読む。読者の役を頼まれた AI エージェントは、作業ディレクトリの `README.md` に従い、ほかのファイルを開かない。
+- 判定モデル（OpenRouter）と、各 AI エージェントのサービスに本文を送る。送る前に `--dry-run` で予定を見る。`.storyteller/review/` は git に入れない。
 
 ## トラブルシューティング
 
@@ -85,4 +103,5 @@ LSP は原稿中のキャラクター/設定参照を自動検出しますが、
 - `docs/lsp.md` — LSP プロトコルと診断仕様
 - `docs/mcp.md` — MCP Tools / Resources / Prompts 一覧
 - `docs/lint.md` — textlint 統合
+- `docs/review.md` — `storyteller review`（設定・終了コード・保存先・送り先）
 - `docs/architecture.md` — 二層構造 (Go 処理エンジン + TS authoring surface) 憲章

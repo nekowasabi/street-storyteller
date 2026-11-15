@@ -150,6 +150,10 @@ ASCII 版:
 | `storyteller meta check` | メタデータ整合性を検証 (CI / pre-commit 向け) |
 | `storyteller meta watch` | 原稿の変更を監視して `.meta.ts` を更新 |
 | `storyteller lint` | 原稿に textlint を実行（`--fix` で自動修正） |
+| `storyteller review clarity` | 読者に分かるかを確かめる。判定モデルで本文を調べ、`--team` で AI エージェントの読者に 1 章ずつ読ませる |
+| `storyteller review typo` | 誤字を textlint で確かめる（合否を出す） |
+| `storyteller review interest` / `consult` | AI エージェントの読者に面白さを聞く、著者の相談に答えさせる（合否は出さない） |
+| `storyteller review resolve` | 著者が保留を解く |
 | `storyteller lsp start --stdio` | LSP サーバーを stdio で起動 |
 | `storyteller lsp install <editor>` | エディタ統合設定を生成 (nvim / vscode) |
 | `storyteller lsp validate <path>` | ワンショット原稿検証 |
@@ -242,6 +246,7 @@ story-project/
 | [`docs/lsp.md`](docs/lsp.md) | LSP サーバーと診断機能 |
 | [`docs/mcp.md`](docs/mcp.md) | MCP tools / resources / prompts |
 | [`docs/lint.md`](docs/lint.md) | textlint 統合と Git hooks |
+| [`docs/review.md`](docs/review.md) | `storyteller review`（分かりやすさ・誤字・面白さ・相談のレビュー） |
 | [`docs/meta-generate.md`](docs/meta-generate.md) | `.meta.ts` 生成の仕組み |
 | [`docs/character-phase.md`](docs/character-phase.md) | キャラクターフェーズ管理 |
 | [`docs/plot.md`](docs/plot.md) | plot/sub 機能の詳細 |
