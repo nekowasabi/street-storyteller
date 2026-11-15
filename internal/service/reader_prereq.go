@@ -72,6 +72,12 @@ type ChapterStances struct {
 	markers []string
 }
 
+func (c ChapterStances) Markers() []string { return append([]string(nil), c.markers...) }
+
+func (c ChapterStances) ReaderRequires() []string {
+	return append([]string(nil), c.fm.ReaderRequires...)
+}
+
 // WalkStances reads manuscriptsDir (depth 1, file-name order, manuscripts
 // only) and replays the body's <!-- shows: --> markers. Invalid markers are
 // skipped here; ReaderPrereqService reports them as RDR-101.

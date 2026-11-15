@@ -227,9 +227,9 @@ AI エージェントは「役 × ハーネス」である。名簿は `.storyte
   "launcher": {"ateam": "~/.agents/skills/ateam/scripts/ateam.sh"},
   "stallMinutes": 60,
   "agents": [
-    {"agent": "P1", "runtime": "claude", "model": "fable",       "effort": "medium"},
+    {"agent": "P1", "runtime": "claude-code", "model": "claude-fable-5-1", "effort": "medium"},
     {"agent": "P2", "runtime": "codex",  "model": "gpt-6.1-sol", "effort": "medium"},
-    {"agent": "P3", "runtime": "local"}
+    {"agent": "P3", "runtime": "grok-build", "model": "grok-4.7", "effort": "medium"}
   ]
 }
 ```

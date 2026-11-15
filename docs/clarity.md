@@ -76,6 +76,12 @@ Clarity では、伏せたい命題を `withheld` と宣言する。宣言のあ
 
 加えて `storyteller manuscript build` を `internal/cli/modules/` に足す。今のリポジトリに draft から manuscript への出力コマンドは無く、`drafts/` は雛形生成と `meta check` の除外にだけ出てくる。`build` は `drafts/` の原稿を同じ検査にかけ、通れば `manuscripts/` へ写し、落ちたら 1 ファイルも書かない。これが「コンパイル」に当たる。
 
+## review による合否の確認
+
+`storyteller review clarity` は構造検査のあと、判定モデルと模擬読者を使って本筋の問いを確認する。LLM を外で動かして観測だけを受け取る従来の方針を、このコマンドでは改めた。判定モデルへの送信は `.storyteller.json` の `review.judge` で設定し、読者の起動は `--team` があるときだけ行う。使い方、終了コード、送り先は [原稿のレビュー](review.md) に記す。
+
+`reader check` は従来の観測 TSV の診断として残す。レビューの合否は `review clarity` で確かめる。`lint` も残す。
+
 ## 読者観測の突き合わせ（RDR-201〜206）
 
 `storyteller reader check --path <manuscripts> --observations <tsv> [--main <file>] [--json]` は、模擬読者が章ごとに書いた像（観測）を、作者が本文の印で宣言した態度と突き合わせる。LLM が担うのは観測と命題 id への対応づけまでで、判定・分類・表の計算はこのコマンドが決定論的に行う。

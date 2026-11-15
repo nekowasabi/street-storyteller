@@ -1,0 +1,5 @@
++ /home/user/.agents/skills/agmsg/scripts/despawn.sh dispatch ateam-1010633ecc0a claude-1010633ecc0a --force
+status=forced name=claude-1010633ecc0a team=dispatch
+Left team dispatch (team retained — identity history is preserved)
+despawned claude-1010633ecc0a team=dispatch
+closed run_id=1010633ecc0a

@@ -9,7 +9,27 @@ type Proposition struct {
 	// AuthorTruth is nil when the author leaves the truth undecided (TS null).
 	AuthorTruth      *bool
 	ResolutionPolicy ResolutionPolicy
+	Ask              *Ask
 }
+
+type Ask struct {
+	Main     bool      `json:"main"`
+	Question string    `json:"question"`
+	Answer   AnswerKey `json:"answer"`
+	Reask    Reask     `json:"reask"`
+}
+
+type AnswerKey struct {
+	Must  []string `json:"must"`
+	Extra string   `json:"extra"`
+}
+
+type Reask string
+
+const (
+	ReaskNow        Reask = "now"
+	ReaskAtDeadline Reask = "at-deadline"
+)
 
 // ResolutionPolicy says how a proposition may end.
 type ResolutionPolicy string

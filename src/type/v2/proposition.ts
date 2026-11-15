@@ -44,4 +44,11 @@ export type Proposition = {
 
   /** 扱いの方針 */
   resolutionPolicy: ResolutionPolicy;
+
+  ask?: {
+    main?: boolean;
+    question: string;
+    answer: { must: string[]; extra?: string };
+    reask?: "now" | "at-deadline";
+  };
 };

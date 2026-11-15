@@ -27,8 +27,8 @@ func ParseGlobalOptions(args []string) (GlobalOptions, []string, error) {
 			opts.Verbose = true
 			i++
 		case a == "--path":
-			if i+1 >= len(args) {
-				return opts, nil, fmt.Errorf("--path requires a value")
+			if i+1 >= len(args) || strings.HasPrefix(args[i+1], "--") {
+				return opts, rem, fmt.Errorf("--path requires a value")
 			}
 			opts.Path = args[i+1]
 			i += 2

@@ -11,6 +11,9 @@ coverage/
 # Temporary files
 tmp/
 
+# storyteller review の生成物（判定のキャッシュ、読者の記録）。docs/review.md「保存先」
+.storyteller/review/
+
 # compiled binary
 /storyteller
 
