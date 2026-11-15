@@ -18,6 +18,7 @@ import (
 	metamod "github.com/takets/street-storyteller/internal/cli/modules/meta"
 	migratemod "github.com/takets/street-storyteller/internal/cli/modules/migrate"
 	readermod "github.com/takets/street-storyteller/internal/cli/modules/reader"
+	reviewmod "github.com/takets/street-storyteller/internal/cli/modules/review"
 	updatemod "github.com/takets/street-storyteller/internal/cli/modules/update"
 	versionmod "github.com/takets/street-storyteller/internal/cli/modules/version"
 	viewmod "github.com/takets/street-storyteller/internal/cli/modules/view"
@@ -25,6 +26,14 @@ import (
 
 // RegisterCore registers every built-in command into r.
 func RegisterCore(r cli.Registry) error {
+	if err := r.Register("review", reviewmod.New()); err != nil {
+		return err
+	}
+	for _, kind := range []string{"clarity", "typo", "interest", "consult", "turn", "resolve"} {
+		if err := r.Register("review "+kind, reviewmod.New(kind)); err != nil {
+			return err
+		}
+	}
 	if err := r.Register("version", versionmod.New()); err != nil {
 		return err
 	}

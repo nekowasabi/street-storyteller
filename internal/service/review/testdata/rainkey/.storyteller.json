@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "project": {"name": "雨夜の鍵"},
+  "review": {
+    "judge": "openrouter:google/gemini-decision-1",
+    "launcher": {"ateam": "ateam.sh"},
+    "stallMinutes": 60,
+    "agents": [
+      {"agent": "P1", "runtime": "claude-code", "model": "claude-fable-5-1", "effort": "medium"},
+      {"agent": "P2", "runtime": "codex", "model": "gpt-6.1-sol", "effort": "medium"},
+      {"agent": "P3", "runtime": "grok-build", "model": "grok-4.7", "effort": "medium"}
+    ]
+  }
+}

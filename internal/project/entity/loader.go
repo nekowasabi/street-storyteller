@@ -3,6 +3,7 @@ package entity
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/takets/street-storyteller/internal/domain"
 	apperrors "github.com/takets/street-storyteller/internal/errors"
@@ -904,6 +905,45 @@ func mapProposition(o map[string]any) (*domain.Proposition, error) {
 	p.ResolutionPolicy = domain.ResolutionPolicy(pol)
 	if !domain.IsValidResolutionPolicy(p.ResolutionPolicy) {
 		return nil, validationf("unknown resolutionPolicy %q", pol)
+	}
+	if _, exists := o["ask"]; exists {
+		a, ok, err := getObject(o, "ask")
+		if err != nil || !ok {
+			return nil, validationf("ask はオブジェクトで指定してください")
+		}
+		ask := &domain.Ask{}
+		if ask.Question, err = decodeRequiredString(a, "question"); err != nil {
+			return nil, err
+		}
+		if ask.Main, _, err = getBool(a, "main"); err != nil {
+			return nil, err
+		}
+		answer, ok, err := getObject(a, "answer")
+		if err != nil || !ok {
+			return nil, validationf("ask.answer はオブジェクトで指定してください")
+		}
+		if ask.Answer.Must, err = decodeOptionalStringSlice(answer, "must"); err != nil {
+			return nil, err
+		}
+		if len(ask.Answer.Must) == 0 {
+			return nil, validationf("ask.answer.must には空でない配列が必要です")
+		}
+		for _, item := range ask.Answer.Must {
+			if strings.TrimSpace(item) == "" {
+				return nil, validationf("ask.answer.must の各項目には空でない文字列が必要です")
+			}
+		}
+		if ask.Answer.Extra, _, err = getString(answer, "extra"); err != nil {
+			return nil, err
+		}
+		if _, exists := a["reask"]; exists {
+			r, ok, err := getString(a, "reask")
+			if err != nil || !ok || (r != "now" && r != "at-deadline") {
+				return nil, validationf("ask.reask は now または at-deadline を指定してください")
+			}
+			ask.Reask = domain.Reask(r)
+		}
+		p.Ask = ask
 	}
 	return p, nil
 }

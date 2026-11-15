@@ -39,6 +39,21 @@ func Run(ctx context.Context, args []string, deps Deps) int {
 func RunWithRegistry(ctx context.Context, args []string, deps Deps, r Registry) int {
 	opts, rem, err := ParseGlobalOptions(args)
 	if err != nil {
+		if cmd, sub, ok := r.Resolve(rem); ok {
+			if handler, ok := cmd.(interface {
+				HandleParseError(CommandContext, error) int
+			}); ok {
+				for _, arg := range args {
+					if arg == "--json" {
+						opts.JSON = true
+					}
+				}
+				return handler.HandleParseError(CommandContext{
+					Ctx: ctx, Args: sub, Presenter: selectPresenter(opts, deps),
+					Deps: deps, GlobalOpts: opts,
+				}, err)
+			}
+		}
 		fmt.Fprintln(deps.Stderr, err.Error())
 		return 2
 	}

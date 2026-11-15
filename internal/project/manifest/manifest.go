@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	apperrors "github.com/takets/street-storyteller/internal/errors"
 )
@@ -48,8 +49,29 @@ type Manifest struct {
 	Project ProjectInfo
 	// Paths は entity ディレクトリへの相対パス群。未指定フィールドは
 	// 既定値で埋められる。
-	Paths PathConfig
+	Paths  PathConfig
+	Review *ReviewConfig
 }
+
+type ReviewConfig struct {
+	Judge        string         `json:"judge"`
+	Launcher     LauncherConfig `json:"launcher"`
+	Agents       []ReviewAgent  `json:"agents"`
+	StallMinutes int            `json:"stallMinutes"`
+}
+
+type LauncherConfig struct {
+	Ateam string `json:"ateam"`
+}
+
+type ReviewAgent struct {
+	Agent   string `json:"agent"`
+	Runtime string `json:"runtime"`
+	Model   string `json:"model"`
+	Effort  string `json:"effort"`
+}
+
+var reviewAgentName = regexp.MustCompile(`^[A-Za-z0-9_-]+$`)
 
 // ProjectInfo は manifest の "project" セクション。
 type ProjectInfo struct {
@@ -78,6 +100,7 @@ type rawManifest struct {
 	Version *string         `json:"version"`
 	Project *rawProjectInfo `json:"project"`
 	Paths   *rawPathConfig  `json:"paths"`
+	Review  *ReviewConfig   `json:"review"`
 }
 
 type rawProjectInfo struct {
@@ -172,6 +195,28 @@ func decode(data []byte) (*Manifest, error) {
 	}
 	if raw.Paths != nil {
 		m.Paths = mergePathConfig(m.Paths, *raw.Paths)
+	}
+	if raw.Review != nil {
+		r := raw.Review
+		if r.StallMinutes < 0 {
+			return nil, apperrors.New(apperrors.CodeManifestInvalid, "review.stallMinutes は 0 以上が必要です")
+		}
+		if r.StallMinutes == 0 {
+			r.StallMinutes = 60
+		}
+		seen := map[string]bool{}
+		for _, a := range r.Agents {
+			if !reviewAgentName.MatchString(a.Agent) || seen[a.Agent] {
+				return nil, apperrors.New(apperrors.CodeManifestInvalid, "review.agents の名前が不正か重複しています")
+			}
+			seen[a.Agent] = true
+			switch a.Runtime {
+			case "claude-code", "codex", "grok-build":
+			default:
+				return nil, apperrors.New(apperrors.CodeManifestInvalid, "review.agents の runtime が不正です")
+			}
+		}
+		m.Review = r
 	}
 	return m, nil
 }
