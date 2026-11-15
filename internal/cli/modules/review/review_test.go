@@ -216,7 +216,13 @@ func TestReviewCLI_ResolveParsesCellAndFlags(t *testing.T) {
 
 type constantDecider float64
 
-func (c constantDecider) Decide(context.Context, string, svc.Query) (float64, error) { return float64(c), nil }
+func (c constantDecider) Decide(_ context.Context, _ string, qs []svc.Query) ([]float64, error) {
+	out := make([]float64, len(qs))
+	for i := range out {
+		out[i] = float64(c)
+	}
+	return out, nil
+}
 
 type recordingLauncher struct{ ids []string }
 

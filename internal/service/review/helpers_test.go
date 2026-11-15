@@ -195,6 +195,25 @@ func canonicalJSON(t *testing.T, v any) string {
 	return string(out)
 }
 
+// asQ0 renames the single question of a golden request to q0, the name the
+// bundled request gives the first question.
+func asQ0(t *testing.T, request json.RawMessage) any {
+	t.Helper()
+	var r map[string]any
+	if err := json.Unmarshal(request, &r); err != nil {
+		t.Fatal(err)
+	}
+	qs := r["questions"].(map[string]any)
+	if len(qs) != 1 {
+		t.Fatalf("golden request has %d questions, want 1", len(qs))
+	}
+	for name, q := range qs {
+		delete(qs, name)
+		qs["q0"] = q
+	}
+	return r
+}
+
 func sameJSON(t *testing.T, a, b any) bool {
 	t.Helper()
 	return reflect.DeepEqual(canonicalJSON(t, a), canonicalJSON(t, b))
@@ -207,25 +226,43 @@ type fakeDecider struct {
 	err    error
 	calls  []review.Query
 	models map[string]bool
+	// requests holds each request's questions; short drops the last value of
+	// every response.
+	requests [][]review.Query
+	short    bool
 }
 
 func newFakeDecider() *fakeDecider {
 	return &fakeDecider{values: map[string]float64{}, models: map[string]bool{}}
 }
 
-func (d *fakeDecider) Decide(_ context.Context, model string, q review.Query) (float64, error) {
+func (d *fakeDecider) Decide(_ context.Context, model string, qs []review.Query) ([]float64, error) {
 	d.mu.Lock()
 	defer d.mu.Unlock()
-	d.calls = append(d.calls, q)
+	d.calls = append(d.calls, qs...)
+	d.requests = append(d.requests, qs)
 	d.models[model] = true
 	if d.err != nil {
-		return 0, d.err
+		return nil, d.err
 	}
-	v, ok := d.values[q.Key(model)]
-	if !ok {
-		return 0.9, nil
+	out := make([]float64, len(qs))
+	for i, q := range qs {
+		v, ok := d.values[q.Key(model)]
+		if !ok {
+			v = 0.9
+		}
+		out[i] = v
 	}
-	return v, nil
+	if d.short {
+		out = out[:len(out)-1]
+	}
+	return out, nil
+}
+
+func (d *fakeDecider) Requests() int {
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	return len(d.requests)
 }
 
 func (d *fakeDecider) Calls() int {

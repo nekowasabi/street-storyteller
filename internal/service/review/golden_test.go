@@ -18,11 +18,8 @@ func TestGolden_ProbeRequestsMatch(t *testing.T) {
 	}
 	for i, want := range g.Probe {
 		q := queries[i]
-		if q.Name != "fact" {
-			t.Errorf("[%s] Name = %q, want fact", want.Fact, q.Name)
-		}
-		got := q.Request(g.Model)
-		if !sameJSON(t, got, want.Request) {
+		got := review.BundleRequest(g.Model, []review.Query{q})
+		if !sameJSON(t, got, asQ0(t, want.Request)) {
 			t.Errorf("[%s] request differs\n got: %s\nwant: %s", want.Fact, canonicalJSON(t, got), canonicalJSON(t, want.Request))
 		}
 		// KeyState is the encoding/json form of the state array.
@@ -50,14 +47,11 @@ func TestGolden_JudgeRequestsAndKeysMatch(t *testing.T) {
 		for i, want := range cell.Queries {
 			q := queries[i]
 			total++
-			if q.Name != "f" {
-				t.Errorf("[%s:%s/%s] Name = %q, want f", cell.Fact, cell.Ref, want.Item, q.Name)
-			}
 			if q.Instructions != want.Instructions {
 				t.Errorf("[%s:%s/%s] instructions differ\n got: %q\nwant: %q", cell.Fact, cell.Ref, want.Item, q.Instructions, want.Instructions)
 			}
-			if !sameJSON(t, q.Request(g.Model), want.Request) {
-				t.Errorf("[%s:%s/%s] request differs\n got: %s\nwant: %s", cell.Fact, cell.Ref, want.Item, canonicalJSON(t, q.Request(g.Model)), canonicalJSON(t, want.Request))
+			if got := review.BundleRequest(g.Model, []review.Query{q}); !sameJSON(t, got, asQ0(t, want.Request)) {
+				t.Errorf("[%s:%s/%s] request differs\n got: %s\nwant: %s", cell.Fact, cell.Ref, want.Item, canonicalJSON(t, got), canonicalJSON(t, want.Request))
 			}
 			if got := q.Key(g.Model); got != want.Key {
 				t.Errorf("[%s:%s/%s] key = %s, want %s", cell.Fact, cell.Ref, want.Item, got, want.Key)

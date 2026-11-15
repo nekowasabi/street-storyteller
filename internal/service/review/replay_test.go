@@ -134,6 +134,23 @@ func TestReplay_SecondPanelMatchesJudgeTSV(t *testing.T) {
 			t.Errorf("%+v: status %s, judge.tsv %s", c.Cell, c.Status, w.status)
 		}
 	}
+
+	// R22: with an empty cache, how many requests the 780 questions take when
+	// bundled by state. The decider is a fake fed from the cache; nothing is sent.
+	fake := newFakeDecider()
+	fake.values = values
+	bundled := review.NewCache(filepath.Join(t.TempDir(), "judge-cache.jsonl"), fake)
+	bundled.Plan(queries)
+	for _, q := range queries {
+		v, err := bundled.Decide(context.Background(), spec.Profile.JudgeModel, q)
+		if err != nil || v != values[q.Key(spec.Profile.JudgeModel)] {
+			t.Fatalf("bundled value differs: %v, %v", v, err)
+		}
+	}
+	if fake.Requests() >= len(queries) {
+		t.Errorf("bundled requests = %d for %d questions", fake.Requests(), len(queries))
+	}
+	t.Logf("bundled: %d requests for %d questions (%d distinct)", fake.Requests(), len(queries), fake.Calls())
 }
 
 func close3(a, b float64) bool { return math.Abs(a-b) < 0.0005 }

@@ -192,7 +192,8 @@ type Matrix struct {
 	Tally   Tally
 }
 type Decider interface {
-	Decide(context.Context, string, Query) (float64, error)
+	// 問いは全部同じ state。値は問いの順に返す。
+	Decide(context.Context, string, []Query) ([]float64, error)
 }
 type Launcher interface {
 	Launch(ctx context.Context, id, dir string, agent AgentLaunch) (LaunchHandle, error)

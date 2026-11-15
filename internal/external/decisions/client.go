@@ -24,13 +24,13 @@ type Client struct {
 func New() *Client {
 	return &Client{HTTPClient: &http.Client{Timeout: 60 * time.Second}, URL: Endpoint, APIKey: os.Getenv("OPENROUTER_API_KEY")}
 }
-func (c *Client) Decide(ctx context.Context, model string, q review.Query) (float64, error) {
+func (c *Client) Decide(ctx context.Context, model string, qs []review.Query) ([]float64, error) {
 	if c.APIKey == "" {
-		return 0, fmt.Errorf("OPENROUTER_API_KEY がありません")
+		return nil, fmt.Errorf("OPENROUTER_API_KEY がありません")
 	}
-	body, err := json.Marshal(q.Request(model))
+	body, err := json.Marshal(review.BundleRequest(model, qs))
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	endpoint := c.URL
 	if endpoint == "" {
@@ -38,7 +38,7 @@ func (c *Client) Decide(ctx context.Context, model string, q review.Query) (floa
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(body))
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+c.APIKey)
 	req.Header.Set("Content-Type", "application/json")
@@ -48,11 +48,11 @@ func (c *Client) Decide(ctx context.Context, model string, q review.Query) (floa
 	}
 	res, err := client.Do(req)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != http.StatusOK {
-		return 0, fmt.Errorf("判定モデルの応答が異常です: HTTP %d", res.StatusCode)
+		return nil, fmt.Errorf("判定モデルの応答が異常です: HTTP %d", res.StatusCode)
 	}
 	var result struct {
 		Answers map[string]struct {
@@ -61,17 +61,21 @@ func (c *Client) Decide(ctx context.Context, model string, q review.Query) (floa
 	}
 	dec := json.NewDecoder(io.LimitReader(res.Body, 1024*1024))
 	if err := dec.Decode(&result); err != nil {
-		return 0, fmt.Errorf("判定モデルの応答を読めません: %w", err)
+		return nil, fmt.Errorf("判定モデルの応答を読めません: %w", err)
 	}
 	var extra any
 	if err := dec.Decode(&extra); err != io.EOF {
-		return 0, fmt.Errorf("判定モデルの応答が単一の JSON ではありません")
+		return nil, fmt.Errorf("判定モデルの応答が単一の JSON ではありません")
 	}
-	a, ok := result.Answers[q.Name]
-	if !ok || a.Noul == nil || *a.Noul < 0 || *a.Noul > 1 {
-		return 0, fmt.Errorf("判定モデルの応答に確率がありません")
+	out := make([]float64, len(qs))
+	for i := range qs {
+		a, ok := result.Answers[review.QuestionName(i)]
+		if !ok || a.Noul == nil || *a.Noul < 0 || *a.Noul > 1 {
+			return nil, fmt.Errorf("判定モデルの応答に確率がありません")
+		}
+		out[i] = *a.Noul
 	}
-	return *a.Noul, nil
+	return out, nil
 }
 
 var _ review.Decider = (*Client)(nil)
