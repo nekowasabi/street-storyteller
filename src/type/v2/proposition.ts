@@ -48,7 +48,8 @@ export type Proposition = {
   ask?: {
     main?: boolean;
     question: string;
-    answer: { must: string[]; extra?: string };
+    /** 模範解答。main: true では必須。本筋でない問いは判定にかけないので省ける */
+    answer?: { must: string[]; extra?: string };
     reask?: "now" | "at-deadline";
   };
 };

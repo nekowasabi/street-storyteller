@@ -918,23 +918,26 @@ func mapProposition(o map[string]any) (*domain.Proposition, error) {
 		if ask.Main, _, err = getBool(a, "main"); err != nil {
 			return nil, err
 		}
-		answer, ok, err := getObject(a, "answer")
-		if err != nil || !ok {
-			return nil, validationf("ask.answer はオブジェクトで指定してください")
-		}
-		if ask.Answer.Must, err = decodeOptionalStringSlice(answer, "must"); err != nil {
-			return nil, err
-		}
-		if len(ask.Answer.Must) == 0 {
-			return nil, validationf("ask.answer.must には空でない配列が必要です")
-		}
-		for _, item := range ask.Answer.Must {
-			if strings.TrimSpace(item) == "" {
-				return nil, validationf("ask.answer.must の各項目には空でない文字列が必要です")
+		// Why: a non-main ask is put to readers but never judged, so it needs no answer key.
+		if _, exists := a["answer"]; exists || ask.Main {
+			answer, ok, err := getObject(a, "answer")
+			if err != nil || !ok {
+				return nil, validationf("ask.answer はオブジェクトで指定してください（main: true では必須）")
 			}
-		}
-		if ask.Answer.Extra, _, err = getString(answer, "extra"); err != nil {
-			return nil, err
+			if ask.Answer.Must, err = decodeOptionalStringSlice(answer, "must"); err != nil {
+				return nil, err
+			}
+			if len(ask.Answer.Must) == 0 {
+				return nil, validationf("ask.answer.must には空でない配列が必要です")
+			}
+			for _, item := range ask.Answer.Must {
+				if strings.TrimSpace(item) == "" {
+					return nil, validationf("ask.answer.must の各項目には空でない文字列が必要です")
+				}
+			}
+			if ask.Answer.Extra, _, err = getString(answer, "extra"); err != nil {
+				return nil, err
+			}
 		}
 		if _, exists := a["reask"]; exists {
 			r, ok, err := getString(a, "reask")

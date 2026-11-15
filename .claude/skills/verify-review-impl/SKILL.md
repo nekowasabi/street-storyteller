@@ -26,7 +26,7 @@ description: storyteller review（clarity・typo・interest・consult・turn・r
 ### データ
 
 - `domain.Proposition` に `Ask *Ask` を足す（`ask` が無ければ nil）。`Ask{Main bool; Question string; Answer AnswerKey; Reask Reask}`、`AnswerKey{Must []string; Extra string}`、`Reask` は `"now"` か `"at-deadline"`（空は未指定）。
-- 読み込み（`mapProposition`）: `ask` は任意。あるときは `question`（文字列）と `answer.must`（空でない文字列の配列）が要る。`main` は任意で既定 false。`reask` は任意で、あれば 2 値のどちらか。違えば validation error。
+- 読み込み（`mapProposition`）: `ask` は任意。あるときは `question`（文字列）が要る。`answer.must`（空でない文字列の配列）は `main: true` のとき要る。本筋でない `ask` は判定にかけないので `answer` を省ける（2026-11-15、prayground の本筋でない 16 件に模範解答が無いため）。`answer` を書いたときは、`main` によらず `must` を検査する。`main` は任意で既定 false。`reask` は任意で、あれば 2 値のどちらか。違えば validation error。
 - `src/type/v2/proposition.ts` に `ask?: { main?: boolean; question: string; answer: { must: string[]; extra?: string }; reask?: "now" | "at-deadline" }` を足す。
 - `manifest.Manifest` に `Review *ReviewConfig` を足す（`review` が無ければ nil）。`ReviewConfig{Judge string; Launcher LauncherConfig{Ateam string}; Agents []ReviewAgent{Agent, Runtime, Model, Effort string}; StallMinutes int}`。`stallMinutes` が無いか 0 なら 60。負は invalid。`runtime` は `claude-code`・`codex`・`grok-build` のどれか。`agent` は `^[A-Za-z0-9_-]+$` で重複なし。
 

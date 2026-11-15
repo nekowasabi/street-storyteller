@@ -124,6 +124,20 @@ func TestLoadProposition_AskRequiresNonEmptyMust(t *testing.T) {
 	};`)
 	wantValidation(t, `export const x = {
 		id: "x", statement: "s", authorTruth: true, resolutionPolicy: "may-remain-misled",
-		ask: { question: "q" },
+		ask: { main: true, question: "q" },
 	};`)
+}
+
+// A non-main ask is asked but not judged, so it may omit the answer key.
+func TestLoadProposition_NonMainAskMayOmitAnswer(t *testing.T) {
+	p, err := entity.LoadProposition(strings.NewReader(`export const x = {
+		id: "x", statement: "s", authorTruth: true, resolutionPolicy: "may-remain-misled",
+		ask: { question: "q" },
+	};`))
+	if err != nil {
+		t.Fatalf("LoadProposition: %v", err)
+	}
+	if p.Ask == nil || p.Ask.Question != "q" || len(p.Ask.Answer.Must) != 0 {
+		t.Fatalf("Ask = %+v", p.Ask)
+	}
 }
