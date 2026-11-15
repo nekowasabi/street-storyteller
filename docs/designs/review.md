@@ -215,7 +215,7 @@ AI エージェントの作業ディレクトリにファイルを写すのは�
 
 - CLI: `review <clarity|typo|interest|consult> [--path] [--team] [--criteria] [--dry-run] [--wait 秒] [--json] [指示]`、`review turn`（AI エージェントが打つ）、`review resolve`（著者が打つ）。
 - Go: `review.Run`、`review.Turn`、`review.Resolve`。MCP の道具は同じ service を呼ぶ。
-- 工程を飛ばすフラグ、読者を絞るフラグ、観測を受け取るフラグ、閾値やモデルのフラグは作らない。モデル・問いの組み方・閾値は一緒に測った 1 組（`Profile`）で、Go の定数にする。`--team` は工程を飛ばさない。AI エージェントを起動してよいかを決めるだけである。
+- 工程を飛ばすフラグ、読者を絞るフラグ、観測を受け取るフラグ、閾値やモデルのフラグは作らない。問いの組み方・閾値は一緒に測った 1 組（`Profile`）で、Go の定数にする。モデルだけは `.storyteller.json` の `review.judge`（`openrouter:<モデル>`）で差し替えられる（2026-11-15、著者の指示）。閾値は `google/gemini-decision-1` で測った値のままで、別のモデルでは測っていない。モデルは `criteria` とキャッシュの鍵に入るので、差し替えると条件文が合わなくなり、判定は取り直しになる。`--team` は工程を飛ばさない。AI エージェントを起動してよいかを決めるだけである。
 
 ### 読者の動かし方
 

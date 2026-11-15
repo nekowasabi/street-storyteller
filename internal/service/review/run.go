@@ -149,7 +149,7 @@ func Run(ctx context.Context, req Request, deps Deps) Report {
 			r.Sent.JudgeQueries += 1 + len(f.Ask.Answer.Must)
 		}
 		if p.config.Judge != "openrouter:"+p.spec.profile().JudgeModel {
-			return failReport(r, Author, "probe", "REV-303", "review.judge に openrouter:"+p.spec.profile().JudgeModel+" を設定してください")
+			return failReport(r, Author, "probe", "REV-303", "review.judge に openrouter:<モデル> を設定してください（例: openrouter:"+DefaultProfile().JudgeModel+"）")
 		}
 	}
 	if req.DryRun {
@@ -186,7 +186,9 @@ func Run(ctx context.Context, req Request, deps Deps) Report {
 	}
 	cache := NewCache(filepath.Join(reviewDir(p.root), "judge-cache.jsonl"), d.Decider)
 	if req.Kind == Clarity {
-		for _, q := range ProbeQueries(p.spec, p.text) {
+		probes := ProbeQueries(p.spec, p.text)
+		cache.Plan(probes)
+		for _, q := range probes {
 			v, err := cache.Decide(ctx, p.spec.profile().JudgeModel, q)
 			r.Sent.CacheHits = cache.Hits
 			r.Sent.Calls = cache.Calls
@@ -211,7 +213,9 @@ func Run(ctx context.Context, req Request, deps Deps) Report {
 		return failReport(r, Error, "judge", "REV-401", err.Error())
 	}
 	values := Values{}
-	for _, q := range JudgeQueries(p.spec, answers) {
+	judges := JudgeQueries(p.spec, answers)
+	cache.Plan(judges)
+	for _, q := range judges {
 		v, err := cache.Decide(ctx, p.spec.profile().JudgeModel, q)
 		if err == nil {
 			values[q.Key(p.spec.profile().JudgeModel)] = v

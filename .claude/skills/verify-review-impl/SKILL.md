@@ -7,11 +7,11 @@ description: storyteller review（clarity・typo・interest・consult・turn・r
 
 設計は `docs/designs/review.md`（3 版）。このスキルは、実装がその設計どおりに動くかを見る。設計と食い違うときは、このスキルの「決めたこと」が実装の契約である（設計書の書き方が足りない所を埋めたもの）。
 
-状態（2026-11-15）: R1〜R17 通った（末尾の記録）。R18 は記録を見る。項目を走らせて通ったら、末尾の記録に日付と結果を書く。走らせていない項目は通ったことにしない。
+状態（2026-11-15）: R1〜R17 通った（末尾の記録）。R18 は記録を見る。R19〜R24（問いを束ねて送る）も通った。R22 の再生のデータでの回数だけ、まだ走らせていない。項目を走らせて通ったら、末尾の記録に日付と結果を書く。走らせていない項目は通ったことにしない。
 
 ## 範囲
 
-作るもの: R1〜R16。
+作るもの: R1〜R16、R19〜R24。
 
 作らないもの（この範囲の外）:
 
@@ -42,15 +42,15 @@ description: storyteller review（clarity・typo・interest・consult・turn・r
 
 正解は `internal/service/review/testdata/rainkey/golden-queries.json`。prayground の `decide-probe.py` と `judge-answers.py` の実物から、送るはずだった本文を捕まえて作った（API は呼んでいない）。
 
-- `Query{Name string; State any; KeyState string; Instructions string}`。送る本文は `{"model": <model>, "state": State, "questions": {Name: {"type": "noul", "instructions": Instructions}}}`。
+- `Query{State any; KeyState string; Instructions string}`。送る本文は「問いを束ねて送る」の形（`BundleRequest`）。prayground の Python は問いの名前を `fact`・`f` にして 1 問ずつ送っていた。正解の `request` とは、名前を `q0` に読み替えて比べる。
 - 鍵は `hex(sha256(model + "\n" + KeyState + "\n" + Instructions))`。
-- 工程2: `Name="fact"`、`State` は期限章までの本文の配列、`KeyState` はその配列の `encoding/json` の出力。指示文は正解の `request.questions.fact.instructions` と同じ（事実の文は命題の `statement`）。
-- 工程3b: `Name="f"`、`State` と `KeyState` は読者の答えの文字列。1 セルにつき「模範解答の 1 文」1 問と、必須項目ごとに 1 問。指示文は正解と同じ。必須項目は `；` ではなく配列で持つ。補足が空なら「。補足（無くてよい）: …」を付けない。
+- 工程2: `State` は期限章までの本文の配列、`KeyState` はその配列の `encoding/json` の出力。指示文は正解の `request.questions.fact.instructions` と同じ（事実の文は命題の `statement`）。
+- 工程3b: `State` と `KeyState` は読者の答えの文字列。1 セルにつき「模範解答の 1 文」1 問と、必須項目ごとに 1 問。指示文は正解と同じ。必須項目は `；` ではなく配列で持つ。補足が空なら「。補足（無くてよい）: …」を付けない。
 - 問いの文: `ask` は `Ask.Question`。`reask` は、`at-deadline` なら `"（" + 期限章の数字 + "章を読み終えた時点で）" + Ask.Question`、`now` なら `Ask.Question`。
 
 ### 判定
 
-- `Profile{Name, JudgeModel string; ProbeMin, WholeMin, ItemMin float64}` を 1 つだけ Go の定数で持つ: `google/gemini-decision-1`、0.2、0.6、0.5。設定で変えない。
+- `Profile{Name, JudgeModel string; ProbeMin, WholeMin, ItemMin float64}` を 1 つだけ Go の定数で持つ: `google/gemini-decision-1`、0.2、0.6、0.5。閾値は設定で変えない。モデルだけは `review.judge` が `openrouter:<モデル>` のとき、その `<モデル>` を `Name` と `JudgeModel` に入れる（既定と同じなら `Profile` は変えない）。閾値は別のモデルでは測っていない。
 - 工程2: 値が `ProbeMin` 未満なら `edit`（REV-201）。
 - 工程3b のセル: 1 文の値が `WholeMin` 以上で、必須項目の値の最小が `ItemMin` 以上なら stated。値が 1 つでも取れなければ保留。それ以外で、答えの前後の空白を除いた文が「不明」で始まれば unknown、そうでなければ保留。
 - 著者が解いた記録 `src/reviews/resolved.tsv`: 列は `agent fact ref answer_sha key_sha decision reason`（タブ区切り、`#` で始まる行は読み飛ばす）。`ref` は `ask`・`reask`。`answer_sha` は答えの sha256 の先頭 12 桁、`key_sha` は `{question, must, extra}` の JSON の sha256 の先頭 12 桁。2 つとも今の値と合うときだけ効く。`accept` は stated、`reject` は unknown にする。
@@ -59,7 +59,20 @@ description: storyteller review（clarity・typo・interest・consult・turn・r
 ### 判定のキャッシュ
 
 - `<作品>/.storyteller/review/judge-cache.jsonl`。1 行 1 件の `{"key": "<hex>", "value": <float>}`。prayground の `judge-cache.jsonl` と同じ形で、そのまま写して使える。同じ鍵が 2 行あれば後の行を使う。
-- 判定はキャッシュを先に引く。外れたら判定モデルを呼び、値を 1 行足す。判定モデルが無いとき（オフライン）は、外れを失敗にする。
+- 判定はキャッシュを先に引く。外れたら判定モデルを呼び、値を問いごとに 1 行ずつ足す（束ね方は「問いを束ねて送る」）。`cache_hits` は、送らずに答えた問いの数（同じ実行で先に束ねて取った値を含む）。判定モデルが無いとき（オフライン）は、外れを失敗にする。
+
+### 問いを束ねて送る（速さのため。値は変えない）
+
+目的は、判定モデルへの送信の回数を減らすことである。値・判定・報告は 1 問ずつ送ったときと同じにする。根拠は R24 の実測（2026-11-15）。
+
+- 束ねる単位は「同じモデル・同じ state（`KeyState` が同じ）」の問い。工程3b では 1 セルの「1 文」と必須項目の問いが 1 回になる。答えの文が同じセルどうしも 1 回になる。工程2 は、期限章が同じ事実だけが 1 回になる（state が違うと値が変わる。door は 1 章だけで 0.931、1〜2 章で 0.979）。
+- 問いを引く順番は今のまま。キャッシュに無い問いに当たったら、同じ state でまだキャッシュに無い問いを、後ろの分まで一緒に送る。当たった問いは送らない。同じ鍵の問いは 1 問にする。
+- 送る本文は `{"model": <model>, "state": State, "questions": {"q0": {...}, "q1": {...}, …}}`。名前は、束ねた順の `q0` からの連番にする（前は全部 `f` で、束ねると重なる）。1 問だけのときも `q0`。`Query` の `Name` は消した。`State`・指示文・鍵は 1 バイトも変えない。
+- 鍵は問いごとで、今のまま（名前と、一緒に送った問いは鍵に入れない）。キャッシュは 1 問 1 行のままで、今の `judge-cache.jsonl` をそのまま使える。
+- 答えは `answers.q<N>.noul`。送った問いのうち 1 つでも値が無いか不正なら、その送信は失敗で、その送信の値はキャッシュに 1 つも書かない。同じ実行の中では、失敗した束を送り直さない（次の実行で送り直す）。
+- 報告の `sent.calls` は送信の回数、`sent.bytes` は送った本文の合計。`sent.probe` と `sent.judge_queries` は問いの数のまま。
+- 工程2 で閾値未満の事実があれば、今と同じ事実を REV-201 で報告する（先に見つかる事実が変わらない）。
+- やらないこと: 送信どうしの並列、判定を変える補助の問い、1 回に載せる問いの数の上限（20 問までは返ることを R24 で見た。それを超える束は見本にも 2 回目のパネルにも無い）。
 
 ### 止まる条件の指紋（`criteria`）と run の id
 
@@ -102,11 +115,11 @@ description: storyteller review（clarity・typo・interest・consult・turn・r
 
 - 0 `pass`・`done`、1 `edit`、2 `usage`、3 `author`、4 `error`、5 `reading`。
 - `--json` のときは、どの終了コードでも stdout に JSON を 1 個だけ出す（`Report`）。テキストのときは最後の行を `RESULT <VERDICT> exit=<N> …` にする。
-- 指摘の番号: REV-201 工程2 の閾値未満、REV-202 unknown・reject、REV-301 止まる条件の不備、REV-302 `--criteria` と違う、REV-303 判定モデルの設定が無いかモデルが `Profile` と違う、REV-304 読者がまだ読んでいない、REV-305 `--team` なのに名簿か ateam の場所が無い、REV-306 保留、REV-401 判定の失敗、REV-402 AI エージェントが止まった、REV-403 起動の失敗、REV-404 textlint が無い、REV-501 typo の指摘。工程1 の指摘は meta check の RDR 番号のまま出す。
+- 指摘の番号: REV-201 工程2 の閾値未満、REV-202 unknown・reject、REV-301 止まる条件の不備、REV-302 `--criteria` と違う、REV-303 判定モデルの設定が無いか `openrouter:<モデル>` の形でない、REV-304 読者がまだ読んでいない、REV-305 `--team` なのに名簿か ateam の場所が無い、REV-306 保留、REV-401 判定の失敗、REV-402 AI エージェントが止まった、REV-403 起動の失敗、REV-404 textlint が無い、REV-501 typo の指摘。工程1 の指摘は meta check の RDR 番号のまま出す。
 
 ### 外とのつなぎ
 
-- 判定モデル（`internal/external/decisions`）: `POST https://openrouter.ai/api/alpha/decisions`、`Authorization: Bearer $OPENROUTER_API_KEY`、本文は上の形。答えは `answers.<Name>.noul`。鍵が無い、200 以外、形が違う、は失敗。`net/http` を使うのはここだけ。
+- 判定モデル（`internal/external/decisions`）: `POST https://openrouter.ai/api/alpha/decisions`、`Authorization: Bearer $OPENROUTER_API_KEY`、本文は上の形。答えは `answers.q<N>.noul`。鍵が無い、200 以外、形が違う、は失敗。`net/http` を使うのはここだけ。
 - ateam（`internal/external/ateam`）: `<ateam> dispatch <起動の id> --project <作業ディレクトリ> --task "storyteller review" --assignments '[{"role": <agent>, "runtime": <runtime>, "model": <model>, "effort": <effort>, "brief": <起動の文面>}]'`。出力の `run_id=<id>` を控える。`run_id` の無い出力（同じ起動の id の再送）は、控えが無いまま成功とする。閉じるのは `<ateam> close <run_id>`。`~` は家のディレクトリに広げる。`process.Runner` を使う。
 - typo: textlint が無ければ（`textlint.IsAvailable`）`error`（REV-404）。原稿のディレクトリ直下の `.md` を 1 つずつ渡し、指摘ごとにファイル・行・その行の文・規則と説明を出す。
 
@@ -228,6 +241,44 @@ description: storyteller review（clarity・typo・interest・consult・turn・r
 - 確かめ方: 作品の本文を使わず、ダミーの作品（約 36KB の章を含む 10 章）を作り、`storyteller review clarity --team` で 3 種類のハーネスの AI エージェントを 1 体ずつ起動し、終わるまで同じ行を打ち直す。続けて `review consult` を 1 回。終わったら AI エージェントが閉じていることを `ateam.sh status` で見る。
 - 期待: 3 体とも作品の外のディレクトリで起動し、全ステップを返す。36KB の章の末尾に置いた合い言葉を記録に書く。判定モデルの外部送信はダミーの文だけ。
 
+### R19 束ねた送信の形
+
+- 単位: `internal/service/review` の束ね方と `internal/external/decisions/`。
+- 確かめ方: `go test ./internal/service/review/ ./internal/external/decisions/... -run Bundle`。
+- 期待: 見本の loc/ask のセル（3 問）が 1 回の送信になり、名前が `q0`・`q1`・`q2`、state が答えの文、指示文が正解の 3 問と同じ順で同じバイト列。`httptest` のサーバーが返した `q0`〜`q2` の値が、問いの順に戻る。
+- 落ちる形: 名前を全部 `f` にすると、問いが 1 つに潰れて落ちる。
+
+### R20 鍵と値が変わらない
+
+- 確かめ方: `go test ./internal/service/review/ -run 'Golden|BundleKey'`。
+- 期待: 束ねて送ったあとのキャッシュの行が、問いごとに R3 の正解の鍵と同じ。1 問ずつ送って作ったキャッシュを置くと、束ねる実装が 1 回も送らない。R3 は State・指示文・鍵で通る。
+- 落ちる形: 鍵に名前（`q1`）を混ぜると落ちる。
+
+### R21 外れだけを送り、報告が変わらない
+
+- 確かめ方: `go test ./internal/service/review/ -run 'Bundle|Run|Decide'`。
+- 期待: セルの 3 問のうち 1 問がキャッシュにあれば、送るのは残りの 2 問だけ。同じ Fake の値で、束ねる前と `Report`（判定・指摘・セルの数・保留）が同じ。R9 の壊し表が全部通る。工程2 が閾値未満のときは、束ねる前と同じ事実を REV-201 で返し、AI エージェントを起動しない。
+- 落ちる形: 当たった問いも送るようにすると落ちる。
+
+### R22 送信の回数が減る
+
+- 確かめ方: `go test ./internal/service/review/ -run BundleCalls`。再生のデータがあるときは R7 と同じ `-run Replay -v`（lead だけ。R7 の最後で、キャッシュを空にし、値を `judge-cache.jsonl` から返す Fake で引き直して、送信の回数を `bundled:` の行に出す。外へは送らない）。
+- 期待: 見本でキャッシュが空のとき、`sent.calls` が state の種類の数と同じで、問いの数（工程2 の 2 問と工程3b の 30 問）より少ない。再生のデータでは、照会 780 回に対する送信の回数を記録に書く。値と判定は R7 と同じ。
+- 落ちる形: 束ねるのをやめると、送信の回数が問いの数と同じになって落ちる。
+
+### R23 応答が欠けたとき
+
+- 確かめ方: `go test ./internal/service/review/ ./internal/external/decisions/... -run 'BundleFail|Partial'`。
+- 期待: 3 問送って 2 問しか返らない、値が 0〜1 の外、200 以外、のどれでも失敗（REV-401）。キャッシュの行は増えない。もう一度走らせると同じ 3 問を送り直す。
+- 落ちる形: 返った分だけ書くようにすると、行が増えて落ちる。
+
+### R24 実機で値が同じ（lead だけ）
+
+- 単位: `.claude/skills/verify-review-impl/fanout_probe.py`。送るのは見本の問いだけ。作品の本文と答えは送らない。
+- 確かめ方: `OPENROUTER_API_KEY` があるときに `python3 -I .claude/skills/verify-review-impl/fanout_probe.py internal/service/review/testdata/rainkey/golden-queries.json`。実装のあとは `STORYTELLER_REVIEW_LIVE=1 go test ./internal/external/decisions/ -run LiveBundle -v -count=1`（見本の loc/ask の 3 問を、束ねて 1 回と 1 問ずつ 3 回送って比べる）と、見本の写しでキャッシュを空にした `storyteller review clarity --json` を 1 回。
+- 期待: 12 問とも、1 問ずつ・名前違い・束ね・逆順・無関係な問いを足す、の全部で値が全桁同じ。20 問を 1 回で送って 20 個返る。実装のあとのキャッシュの値が、スクリプトの 1 問ずつの値と同じ。
+- 落ちる形: 値が 1 つでも違えば、束ねる実装を入れない（閾値を測り直す話になる）。
+
 ## 記録
 
 ### 2026-11-15（1 回目の実装。ateam coding の run 8453b711700c）
@@ -241,3 +292,17 @@ description: storyteller review（clarity・typo・interest・consult・turn・r
 - R18 consult: 同じダミーの作品で `storyteller review consult --path … "7章が長すぎる。どこを削るか相談したい"` を 2 回打ち、2 回目で `RESULT DONE exit=0`（約 1 分半）。種類ごとに 1 体（claude-code・codex・grok-build）が返答し、本文を引用して案を出した。終わったあと 3 体の起動は `closed`。
 - `--read` の別名を外した（著者の決定は `--team`）。`--read` は終了コード 2。
 - 実装中に、メンバーのどれかが見本「雨夜の鍵」を本物の判定モデルにかけた（工程2 の 2 問。見本は公開のダミー）。指示に反する。見本の loc は工程2 が 0.194 で、本物の判定モデルでは REV-201 になる。
+
+### 2026-11-15（問いを束ねる前の実測。R24 のスクリプトだけ）
+
+- R24: `fanout_probe.py` を 2 回走らせた。見本の 12 問（工程2 の 2 問、工程3b の 4 セル 10 問）は、1 問ずつ 2 回・名前違い・束ね・逆順・無関係な問いを 3 つ足す、の全部で値が全桁同じ。20 問を 1 回で送ると 20 個返り、0.6 秒だった。1 問だけの送信は平均 0.59 秒、1 セルを束ねた送信は 0.55〜0.62 秒。工程3b の 10 問は 4 回の送信で済んだ。モデルは `google/gemini-decision-1`。実作品の長い本文では測っていない。
+- R19〜R23 は未実装で、走らせていない。
+- モデルを替えたときの出方（同じスクリプトに `~typesafe/jev-latest` を渡した。1 回）: モデル名を替えるだけで同じ送り先から 12 問とも値が返った。値は小数 2 桁。同じ問いを 2 回送って値が違うことがあった（工程2 の door が 0.83 と 0.82）。束ねると最大 0.04 動いた（loc/ask の 1 文が 0.75 から 0.71）。見本の 12 問は、どの条件でも今の閾値の同じ側だった（door は 0.81 以上、loc の工程2 は 0.05〜0.06 で、今のモデルと同じく閾値未満）。1 問だけの送信は平均 0.37 秒。このモデルでは「同じ入力に同じ値」と R24 の「全桁同じ」は成り立たない。替えるときは、閾値の近くの問いが揺れで入れ替わらないかを先に測る。`latest` は指す版が変わりうる名前で、キャッシュの鍵は名前のままなので、版が変わっても古い値が残る。
+
+### 2026-11-15（問いを束ねて送る実装）
+
+- R19〜R23: 各項目の確かめ方が通った。落ちる形は 5 項目とも、壊すとその項目の試験が落ちることを見て、元に戻した（R19 名前を全部 `f`、R20 鍵に名前を足す、R21 当たりも送る、R22 束ねない、R23 値の数を見ない）。
+- R22: 見本では、キャッシュが空のとき 12 問（工程2 の 2 問、工程3b の 10 問）が 6 回の送信になる（前は 12 回）。再生のデータ（照会 780 回）での回数は、lead が R7 を走らせて `bundled:` の行を書く。未実行。
+- R24: `TestDecisions_LiveBundleEqualsSingles` が通った（見本の 3 問。束ねた値と 1 問ずつの値が同じ）。見本の写しで `storyteller review clarity --json` を 1 回打ち、`sent.calls` は 2、キャッシュの値は 0.9308704840039911 と 0.19353102962377153 で、束ねる前の実測と全桁同じ。見本の loc は工程2 が閾値未満なので REV-201 で終わる（前からの挙動）。
+- R17: `go vet ./...` 出力なし、`go test ./...` → `Go test: 1327 passed in 48 packages`（実機の試験は環境変数が無いと skip）。
+- `Query` の `Name` と `Query.Request` を消した。判定モデルの interface は、同じ state の問いの列を受けて値の列を返す形にした。

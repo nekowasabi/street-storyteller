@@ -196,6 +196,10 @@ func loadProject(path string) (*reviewProject, error) {
 	if p.Manifest.Review != nil {
 		r.config = *p.Manifest.Review
 	}
+	if model, ok := strings.CutPrefix(r.config.Judge, "openrouter:"); ok && model != "" && model != r.spec.Profile.JudgeModel {
+		// 閾値は google/gemini-decision-1 で測った値のまま。別のモデルでは測っていない。
+		r.spec.Profile.Name, r.spec.Profile.JudgeModel = model, model
+	}
 	if r.config.StallMinutes == 0 {
 		r.config.StallMinutes = 60
 	}
