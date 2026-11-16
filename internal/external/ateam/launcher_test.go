@@ -56,7 +56,7 @@ func TestAteam_DispatchArgvAndRunID(t *testing.T) {
 	if !reflect.DeepEqual(assignments, want) {
 		t.Errorf("assignments = %v, want %v", assignments, want)
 	}
-	if calls[0].Stdin != nil && len(calls[0].Stdin) != 0 {
+	if len(calls[0].Stdin) != 0 {
 		t.Errorf("stdin sent: %q", calls[0].Stdin)
 	}
 }
